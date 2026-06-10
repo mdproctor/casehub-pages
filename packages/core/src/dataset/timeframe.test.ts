@@ -152,7 +152,7 @@ describe("resolveInstant", () => {
     expect(result.toISOString()).toBe("2024-04-15T10:30:45.500Z");
   });
 
-  it("offset +1month from Jan 31 — overflows to March 3 (JS Date behavior, matches Java)", () => {
+  it("offset +1month from Jan 31 — overflows to March 3 (JS Date overflow; Java Calendar clamps to Feb 28)", () => {
     const jan31 = new Date(Date.UTC(2023, 0, 31));
     const result = resolveInstant(
       { mode: "relative", offset: { amount: 1, unit: "MONTH" } },
