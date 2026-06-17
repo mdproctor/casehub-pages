@@ -9,7 +9,7 @@ import { wireInteractivity } from "./interactive.js";
 
 // Subset of INTERACTIVE_TYPES (navigation.ts, runtime package). All lazy types
 // are interactive; accordion is interactive but not lazy (all sections start expanded).
-const LAZY_TYPES = new Set(["tabs", "pills", "sidebar", "carousel", "stack"]);
+const LAZY_TYPES = new Set(["tabs", "pills", "sidebar", "carousel", "stack", "tree", "menu", "tiles"]);
 
 export interface RenderOptions {
   readonly permissions?: PermissionContext;

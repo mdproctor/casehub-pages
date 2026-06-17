@@ -22,6 +22,9 @@ export function wireInteractivity(
   switch (type) {
     case "tabs":
     case "pills":
+    case "tree":
+    case "menu":
+    case "tiles":
       wireTabs(container, type, slotNames, panels, doc, lazy);
       break;
     case "sidebar":
@@ -131,7 +134,11 @@ function wireTabs(
 ): void {
   const bar = doc.createElement("div");
   bar.dataset.tabBar = "";
-  bar.className = type === "pills" ? "casehub-pills" : "casehub-tabs";
+  bar.className = type === "pills" ? "casehub-pills"
+    : type === "tree" ? "casehub-tree"
+    : type === "menu" ? "casehub-menu"
+    : type === "tiles" ? "casehub-tiles"
+    : "casehub-tabs";
 
   slotNames.forEach((name) => {
     const button = doc.createElement("button");

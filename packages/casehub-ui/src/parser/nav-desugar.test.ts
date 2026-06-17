@@ -214,6 +214,65 @@ describe("resolveNavigation", () => {
   });
 });
 
+describe("resolveNavigation — slot-target preserves nav type", () => {
+  it("TREE nav type propagates to slot-target replacement", () => {
+    const pages: Component[] = [
+      { type: "page", props: { name: "P1" }, slots: { content: [{ type: "html" }] } },
+    ];
+    const components: Component[] = [
+      { type: "tree", props: { navGroupId: "G", targetDivId: "t" } },
+      { type: "slot-target", props: { id: "t" } },
+    ];
+    const navTree = { root_items: [{ type: "GROUP", id: "G", children: [{ page: "P1" }] }] };
+    const result = resolveNavigation(components, pages, navTree);
+    const content = result.find((c) => c.slots);
+    expect(content).toBeDefined();
+    expect(content!.type).toBe("tree");
+  });
+
+  it("MENU nav type propagates to slot-target replacement", () => {
+    const pages: Component[] = [
+      { type: "page", props: { name: "P1" }, slots: { content: [{ type: "html" }] } },
+    ];
+    const components: Component[] = [
+      { type: "menu", props: { navGroupId: "G", targetDivId: "t" } },
+      { type: "slot-target", props: { id: "t" } },
+    ];
+    const navTree = { root_items: [{ type: "GROUP", id: "G", children: [{ page: "P1" }] }] };
+    const result = resolveNavigation(components, pages, navTree);
+    const content = result.find((c) => c.slots);
+    expect(content!.type).toBe("menu");
+  });
+
+  it("TILES nav type propagates to slot-target replacement", () => {
+    const pages: Component[] = [
+      { type: "page", props: { name: "P1" }, slots: { content: [{ type: "html" }] } },
+    ];
+    const components: Component[] = [
+      { type: "tiles", props: { navGroupId: "G", targetDivId: "t" } },
+      { type: "slot-target", props: { id: "t" } },
+    ];
+    const navTree = { root_items: [{ type: "GROUP", id: "G", children: [{ page: "P1" }] }] };
+    const result = resolveNavigation(components, pages, navTree);
+    const content = result.find((c) => c.slots);
+    expect(content!.type).toBe("tiles");
+  });
+
+  it("TABS nav type still works (existing behavior)", () => {
+    const pages: Component[] = [
+      { type: "page", props: { name: "P1" }, slots: { content: [{ type: "html" }] } },
+    ];
+    const components: Component[] = [
+      { type: "tabs", props: { navGroupId: "G", targetDivId: "t" } },
+      { type: "slot-target", props: { id: "t" } },
+    ];
+    const navTree = { root_items: [{ type: "GROUP", id: "G", children: [{ page: "P1" }] }] };
+    const result = resolveNavigation(components, pages, navTree);
+    const content = result.find((c) => c.slots);
+    expect(content!.type).toBe("tabs");
+  });
+});
+
 describe("collectNavTreePageNames", () => {
   it("collects all page names from all groups", () => {
     const navTree = {

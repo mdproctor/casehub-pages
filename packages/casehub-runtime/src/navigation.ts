@@ -6,6 +6,7 @@ export type ActiveSlots = Map<string, string>;
 
 const INTERACTIVE_TYPES = new Set([
   "tabs", "pills", "sidebar", "accordion", "carousel", "stack",
+  "tree", "menu", "tiles",
 ]);
 
 export function buildPageIndex(

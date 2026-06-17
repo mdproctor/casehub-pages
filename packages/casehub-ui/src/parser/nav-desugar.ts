@@ -39,7 +39,7 @@ export function resolveNavigation(
 
   // Pass 1: Collect nav groups that specify a targetDivId.
   // Their page slots go to the matching slot-target, not into the nav component.
-  const targetSlots = new Map<string, Record<string, Component[]>>();
+  const targetSlots = new Map<string, { type: string; slots: Record<string, Component[]> }>();
 
   const resolved = components
     .map((component) => {
@@ -56,7 +56,10 @@ export function resolveNavigation(
         if (targetDivId) {
           const group = resolveNavGroup(component, pages, typedNavTree);
           if (group.slots) {
-            targetSlots.set(targetDivId, group.slots as Record<string, Component[]>);
+            targetSlots.set(targetDivId, {
+              type: component.type,
+              slots: group.slots as Record<string, Component[]>,
+            });
           }
           // Strip slots from the nav component — they'll render at the target
           const { slots: _s, ...navOnly } = group;
@@ -74,9 +77,9 @@ export function resolveNavigation(
       if (component.type === "slot-target") {
         const divId = component.props?.["id"] as string | undefined;
         if (divId && targetSlots.has(divId)) {
-          const slots = targetSlots.get(divId)!;
+          const { type, slots } = targetSlots.get(divId)!;
           return {
-            type: "tabs" as const,
+            type,
             props: {},
             slots,
           };

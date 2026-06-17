@@ -405,6 +405,45 @@ describe("renderComponent — lazy rendering for one-at-a-time containers", () =
     expect(slots[1]!.children).toHaveLength(0);
   });
 
+  it("tree: only first slot children rendered (lazy)", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "tree",
+      slots: { A: [{ type: "html" }], B: [{ type: "html" }] },
+    };
+    renderComponent(target, component);
+    const container = target.firstElementChild as HTMLElement;
+    const slots = container.querySelectorAll<HTMLElement>(":scope > div[data-slot]");
+    expect(slots[0]!.querySelectorAll("[data-component-type]")).toHaveLength(1);
+    expect(slots[1]!.children).toHaveLength(0);
+  });
+
+  it("menu: only first slot children rendered (lazy)", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "menu",
+      slots: { A: [{ type: "html" }], B: [{ type: "html" }] },
+    };
+    renderComponent(target, component);
+    const container = target.firstElementChild as HTMLElement;
+    const slots = container.querySelectorAll<HTMLElement>(":scope > div[data-slot]");
+    expect(slots[0]!.querySelectorAll("[data-component-type]")).toHaveLength(1);
+    expect(slots[1]!.children).toHaveLength(0);
+  });
+
+  it("tiles: only first slot children rendered (lazy)", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "tiles",
+      slots: { A: [{ type: "html" }], B: [{ type: "html" }] },
+    };
+    renderComponent(target, component);
+    const container = target.firstElementChild as HTMLElement;
+    const slots = container.querySelectorAll<HTMLElement>(":scope > div[data-slot]");
+    expect(slots[0]!.querySelectorAll("[data-component-type]")).toHaveLength(1);
+    expect(slots[1]!.children).toHaveLength(0);
+  });
+
   it("accordion: all slot children rendered (eager)", () => {
     const target = document.createElement("div");
     const component: Component = {
