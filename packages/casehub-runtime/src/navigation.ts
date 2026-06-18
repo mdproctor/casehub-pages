@@ -19,6 +19,14 @@ export function buildPageIndex(
   return index;
 }
 
+export function extendPageIndex(
+  root: Component,
+  paths: PagePathMap,
+  index: PageIndex,
+): void {
+  walkPages(root, paths, index);
+}
+
 function walkPages(
   component: Component,
   paths: PagePathMap,

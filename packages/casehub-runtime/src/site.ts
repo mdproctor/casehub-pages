@@ -196,7 +196,15 @@ export async function loadSite(
 
   // --- Render (AFTER event listeners — connectedCallback fires during render) ---
 
-  const onNode = createActivationCallback(registry, pagePathMap);
+  const onNode = createActivationCallback(registry, pagePathMap, {
+    fetchFn: options?.fetch ?? globalThis.fetch?.bind(globalThis),
+    baseUrl: options?.baseUrl,
+    abortSignal: abortController.signal,
+    permissions,
+    pageIndex,
+    dataSetScope,
+    lazyPageResolutions,
+  });
   renderComponent(target, root, { permissions, onNode });
 
   // popstate — back/forward browser navigation

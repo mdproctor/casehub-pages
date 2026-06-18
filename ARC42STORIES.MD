@@ -214,8 +214,8 @@ Webpack bundle. Host applications include `@casehub/runtime` as an npm dependenc
 | Issue | Title | Status |
 |---|---|---|
 | #15 | View state persistence | 🔲 open |
-| #16 | Dataset refresh timers | 🔲 open |
-| #17 | Minor runtime improvements | 🔲 open |
+| #16 | Dataset refresh timers | ✅ closed |
+| #17 | Minor runtime improvements | ✅ closed |
 | #18 | Event handler integration tests | 🔲 open |
 | #23 | Domain-specific example dashboards | 🔲 open |
 | #24 | Epic: Move to casehubio org | 🔲 open |

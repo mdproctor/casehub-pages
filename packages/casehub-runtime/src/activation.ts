@@ -1,12 +1,21 @@
-import type { Component } from "@casehub/component/dist/model/types.js";
+import type { Component, PermissionContext } from "@casehub/component/dist/model/types.js";
 import type { DataSetLookup } from "@casehub/data/dist/dataset/lookup.js";
 import { ColumnType } from "@casehub/data/dist/dataset/types.js";
-import type { ColumnId } from "@casehub/data/dist/dataset/types.js";
+import type { ColumnId, DataSetId } from "@casehub/data/dist/dataset/types.js";
+import type { ExternalDataSetDef } from "@casehub/data/dist/dataset/external/types.js";
 import { toTypedDataSet } from "@casehub/data/dist/dataset/conversion.js";
 import type { CasehubElement } from "@casehub/viz/dist/base/CasehubElement.js";
 import type { VizComponentProps } from "@casehub/viz/dist/base/types.js";
+import { renderComponent } from "@casehub/component/dist/renderer/render.js";
+import { parsePage } from "@casehub/ui/dist/parser/page-parser.js";
+import { load as yamlLoad } from "js-yaml";
 import type { ComponentRegistry } from "./registry.js";
 import type { PagePathMap } from "./page-paths.js";
+import { extendPagePathMap } from "./page-paths.js";
+import type { PageIndex } from "./navigation.js";
+import { extendPageIndex } from "./navigation.js";
+import type { DataSetScope } from "./dataset-scope.js";
+import { extendDataSetScope } from "./dataset-scope.js";
 import { renderTitle, renderHtml, renderMarkdown } from "./content.js";
 
 const DATA_COMPONENT_TYPES = new Set([
@@ -25,11 +34,25 @@ const DATA_COMPONENT_TYPES = new Set([
   "iframe-plugin",
 ]);
 
+export interface LazyPageOptions {
+  readonly fetchFn: typeof globalThis.fetch;
+  readonly baseUrl: string | undefined;
+  readonly abortSignal: AbortSignal;
+  readonly permissions: PermissionContext;
+  readonly pageIndex: PageIndex;
+  readonly dataSetScope: DataSetScope;
+  readonly lazyPageResolutions: Map<Component, Component>;
+}
+
 export function createActivationCallback(
   registry: ComponentRegistry,
   pagePathMap: PagePathMap,
+  options?: LazyPageOptions,
 ): (el: HTMLElement, component: Component) => void {
-  return (el: HTMLElement, component: Component): void => {
+  const yamlCache = new Map<string, string>();
+
+  let callback: (el: HTMLElement, component: Component) => void;
+  callback = (el: HTMLElement, component: Component): void => {
     const componentId = el.dataset.componentId;
     if (!componentId) return;
 
@@ -80,8 +103,75 @@ export function createActivationCallback(
       return;
     }
 
-    // Layout, page, lazy-page, unknown: no activation needed
+    if (component.type === "lazy-page" && component.props && options) {
+      const props = component.props as { name?: string; href?: string };
+      if (!props.href) return;
+
+      const { fetchFn, baseUrl, abortSignal, permissions, pageIndex, dataSetScope, lazyPageResolutions } = options;
+
+      // Path A: re-activation — resolved root available, re-render synchronously
+      const resolved = lazyPageResolutions.get(component);
+      if (resolved) {
+        renderComponent(el, resolved, { permissions, onNode: callback });
+        return;
+      }
+
+      const url = baseUrl ? new URL(props.href, baseUrl).href : props.href;
+      const cached = yamlCache.get(url);
+
+      if (cached) {
+        // Path B: YAML cache hit — synchronous
+        const parsed = parsePage(yamlLoad(cached));
+        integrateAndRender(el, component, parsed, pagePath, pagePathMap, pageIndex, dataSetScope, lazyPageResolutions, permissions, callback);
+      } else {
+        // Path C: cache miss — async
+        fetchFn(url, { signal: abortSignal })
+          .then((response) => response.text())
+          .then((text) => {
+            yamlCache.set(url, text);
+            const parsed = parsePage(yamlLoad(text));
+            integrateAndRender(el, component, parsed, pagePath, pagePathMap, pageIndex, dataSetScope, lazyPageResolutions, permissions, callback);
+          })
+          .catch((err) => {
+            if (err instanceof DOMException && err.name === "AbortError") return;
+            el.textContent = `Failed to load lazy page: ${err instanceof Error ? err.message : String(err)}`;
+          });
+      }
+      return;
+    }
+
+    // Layout, page, unknown: no activation needed
   };
+
+  return callback;
+}
+
+function integrateAndRender(
+  el: HTMLElement,
+  lazyPageComponent: Component,
+  dashboardRoot: Component,
+  basePath: string,
+  pagePathMap: PagePathMap,
+  pageIndex: PageIndex,
+  dataSetScope: DataSetScope,
+  lazyPageResolutions: Map<Component, Component>,
+  permissions: PermissionContext,
+  onNode: (el: HTMLElement, component: Component) => void,
+): void {
+  // Extract the first page from the dashboard's content slot
+  const pages = dashboardRoot.slots?.["content"];
+  if (!pages || pages.length === 0) {
+    el.textContent = "Lazy page YAML must contain at least one page";
+    return;
+  }
+  const pageComponent = pages[0]!;
+
+  extendPagePathMap(pageComponent, basePath, pagePathMap);
+  const inheritedScope = dataSetScope.get(basePath) ?? new Map();
+  extendDataSetScope(pageComponent, inheritedScope, pagePathMap, dataSetScope);
+  extendPageIndex(pageComponent, pagePathMap, pageIndex);
+  lazyPageResolutions.set(lazyPageComponent, pageComponent);
+  renderComponent(el, pageComponent, { permissions, onNode });
 }
 
 function resolveInlineDataSet(

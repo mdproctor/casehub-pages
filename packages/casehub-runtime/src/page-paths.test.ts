@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "@casehub/component/dist/model/types.js";
-import { buildPagePathMap } from "./page-paths.js";
+import { buildPagePathMap, extendPagePathMap, type PagePathMap } from "./page-paths.js";
 
 describe("buildPagePathMap", () => {
   it("root page maps to empty string", () => {
@@ -82,5 +82,44 @@ describe("buildPagePathMap", () => {
     const map = buildPagePathMap(root);
     expect(map.get(chart)).toBe("");
     expect(map.get(grid)).toBe("");
+  });
+});
+
+describe("extendPagePathMap", () => {
+  it("extends existing map with subtree rooted at basePath", () => {
+    const existingRoot: Component = { type: "page", props: { name: "App" } };
+    const map = buildPagePathMap(existingRoot);
+    expect(map.get(existingRoot)).toBe("");
+
+    const detail: Component = { type: "page", props: { name: "Detail" } };
+    const fetchedRoot: Component = {
+      type: "page",
+      slots: { Detail: [detail] },
+    };
+
+    extendPagePathMap(fetchedRoot, "Sales", map);
+
+    expect(map.get(fetchedRoot)).toBe("Sales");
+    expect(map.get(detail)).toBe("Sales/Detail");
+  });
+
+  it("handles nested subtree with non-page components", () => {
+    const map: PagePathMap = new Map();
+    const chart: Component = { type: "bar-chart" };
+    const page: Component = {
+      type: "page",
+      props: { name: "Stats" },
+      slots: { default: [chart] },
+    };
+    const fetchedRoot: Component = {
+      type: "page",
+      slots: { Stats: [page] },
+    };
+
+    extendPagePathMap(fetchedRoot, "Parent", map);
+
+    expect(map.get(fetchedRoot)).toBe("Parent");
+    expect(map.get(page)).toBe("Parent/Stats");
+    expect(map.get(chart)).toBe("Parent/Stats");
   });
 });

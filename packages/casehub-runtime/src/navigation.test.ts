@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "@casehub/component/dist/model/types.js";
-import { buildPageIndex, computeCurrentPage, walkNavigate } from "./navigation.js";
-import { buildPagePathMap } from "./page-paths.js";
+import { buildPageIndex, computeCurrentPage, walkNavigate, extendPageIndex } from "./navigation.js";
+import { buildPagePathMap, extendPagePathMap, type PagePathMap } from "./page-paths.js";
 import { activateSlot } from "@casehub/component/dist/renderer/activate-slot.js";
 import { wireInteractivity } from "@casehub/component/dist/renderer/interactive.js";
 
@@ -332,5 +332,28 @@ describe("walkNavigate", () => {
 
     const result = walkNavigate(root, ["LazySection", "Detail"], target, lazyResolutions);
     expect(result).toBe("LazySection/Detail");
+  });
+});
+
+describe("extendPageIndex", () => {
+  it("extends existing index with subtree pages", () => {
+    const existingRoot: Component = { type: "page", props: { name: "App" } };
+    const existingPaths = buildPagePathMap(existingRoot);
+    const index = buildPageIndex(existingRoot, existingPaths);
+    expect(index.get("")).toBe(existingRoot);
+
+    const detail: Component = { type: "page", props: { name: "Detail" } };
+    const fetchedRoot: Component = {
+      type: "page",
+      slots: { Detail: [detail] },
+    };
+
+    const newPaths: PagePathMap = new Map();
+    extendPagePathMap(fetchedRoot, "Sales", newPaths);
+    extendPageIndex(fetchedRoot, newPaths, index);
+
+    expect(index.get("Sales")).toBe(fetchedRoot);
+    expect(index.get("Sales/Detail")).toBe(detail);
+    expect(index.get("")).toBe(existingRoot);
   });
 });

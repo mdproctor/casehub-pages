@@ -8,6 +8,14 @@ export function buildPagePathMap(root: Component): PagePathMap {
   return map;
 }
 
+export function extendPagePathMap(
+  root: Component,
+  basePath: string,
+  map: PagePathMap,
+): void {
+  walk(root, basePath, undefined, map);
+}
+
 function walk(
   component: Component,
   currentPath: string,

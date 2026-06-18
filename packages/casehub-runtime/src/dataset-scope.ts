@@ -14,6 +14,15 @@ export function buildDataSetScope(
   return scope;
 }
 
+export function extendDataSetScope(
+  root: Component,
+  inherited: Map<DataSetId, ExternalDataSetDef>,
+  paths: PagePathMap,
+  scope: DataSetScope,
+): void {
+  walkScope(root, inherited, paths, scope);
+}
+
 function walkScope(
   component: Component,
   inherited: Map<DataSetId, ExternalDataSetDef>,
