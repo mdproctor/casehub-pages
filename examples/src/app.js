@@ -110,6 +110,7 @@ function renderStats() {
 // Load a dashboard
 function loadDashboard(dashboard) {
     currentDashboard = dashboard;
+    propertyOverrides = {};
 
     // Update active state
     document.querySelectorAll('.dashboard-item').forEach(item => {
@@ -149,11 +150,77 @@ function loadDashboardFromHash(category, dashboardPath) {
     }
 }
 
+// Property overrides from the config bar
+let propertyOverrides = {};
+
+function extractUrlProperties(yamlText) {
+    const props = {};
+    const match = yamlText.match(/^properties:\s*\n((?:[ \t]+\S.*\n)*)/m);
+    if (!match) return props;
+    for (const line of match[1].split('\n')) {
+        const kv = line.match(/^\s+(\w+):\s*(.+)/);
+        if (kv && (kv[2].includes('http') || kv[2].includes('localhost') || kv[2].includes('url') || kv[1].toLowerCase().includes('url'))) {
+            props[kv[1]] = kv[2].trim();
+        }
+    }
+    return props;
+}
+
+function renderConfigBar(urlProps, dashboardPath) {
+    const configBar = document.getElementById('config-bar');
+    const keys = Object.keys(urlProps);
+    if (keys.length === 0) {
+        configBar.style.display = 'none';
+        return;
+    }
+    configBar.style.display = 'flex';
+    configBar.innerHTML = '';
+    for (const key of keys) {
+        const defaultVal = urlProps[key];
+        const override = propertyOverrides[key] || '';
+        const field = document.createElement('div');
+        field.className = 'config-field';
+        field.innerHTML = `<label>${key}</label><input type="text" data-prop="${key}" value="${override.replace(/"/g, '&quot;')}" placeholder="${defaultVal.replace(/"/g, '&quot;')}" />`;
+        configBar.appendChild(field);
+    }
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'config-apply';
+    applyBtn.textContent = 'Apply';
+    applyBtn.addEventListener('click', () => {
+        for (const input of configBar.querySelectorAll('input[data-prop]')) {
+            const val = input.value.trim();
+            if (val) propertyOverrides[input.dataset.prop] = val;
+            else delete propertyOverrides[input.dataset.prop];
+        }
+        loadDashboardInTarget(dashboardPath);
+    });
+    configBar.appendChild(applyBtn);
+    if (Object.keys(propertyOverrides).length > 0) {
+        const status = document.createElement('span');
+        status.className = 'config-status';
+        status.textContent = 'Using custom URLs';
+        configBar.appendChild(status);
+    }
+}
+
+function applyPropertyOverrides(yamlText) {
+    let result = yamlText;
+    for (const [key, value] of Object.entries(propertyOverrides)) {
+        const re = new RegExp(`(^\\s+${key}:\\s*).+`, 'm');
+        result = result.replace(re, `$1${value}`);
+    }
+    return result;
+}
+
 // Load dashboard in target div using casehub loadSite
 async function loadDashboardInTarget(dashboardPath) {
     try {
         const response = await fetch(`dashboards/${dashboardPath}`);
-        const yamlText = await response.text();
+        let yamlText = await response.text();
+
+        const urlProps = extractUrlProperties(yamlText);
+        renderConfigBar(urlProps, dashboardPath);
+        yamlText = applyPropertyOverrides(yamlText);
 
         if (currentSite) {
             currentSite.dispose();

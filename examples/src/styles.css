@@ -374,3 +374,76 @@ body {
 .code-sidebar::-webkit-scrollbar-thumb:hover {
     background: #777;
 }
+
+.config-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: end;
+    padding: 10px 16px;
+    margin: 0 0 12px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.config-bar .config-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.config-bar label {
+    font-weight: 600;
+    color: #555;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.config-bar input {
+    padding: 6px 10px;
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: monospace;
+    color: #333;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.config-bar input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.config-bar input::placeholder {
+    color: #98a2b3;
+}
+
+.config-bar .config-apply {
+    padding: 6px 16px;
+    background: #4f46e5;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.config-bar .config-apply:hover {
+    background: #4338ca;
+}
+
+.config-bar .config-status {
+    font-size: 11px;
+    color: #98a2b3;
+    align-self: center;
+}
