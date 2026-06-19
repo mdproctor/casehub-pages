@@ -57,7 +57,41 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     };
   }
 
+  // Form input shorthands
+  const FORM_INPUT_TYPES = ["text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea"] as const;
+  for (const formType of FORM_INPUT_TYPES) {
+    if (formType in raw) {
+      const props = raw[formType] as Record<string, unknown>;
+      const style = extractStyle(raw.properties);
+      return {
+        type: formType,
+        props,
+        ...(style ? { style } : {}),
+      };
+    }
+  }
+
   // Navigation references (transient)
+  // Page with src → lazy-page
+  if ("page" in raw && "src" in raw) {
+    const style = extractStyle(raw.properties);
+    return {
+      type: "lazy-page",
+      props: { name: raw.page as string, href: raw.src as string },
+      ...(style ? { style } : {}),
+    };
+  }
+
+  // Page without src → page-ref (canonical keyword for screen)
+  if ("page" in raw && !("src" in raw)) {
+    const style = extractStyle(raw.properties);
+    return {
+      type: "page-ref",
+      props: { name: raw.page as string },
+      ...(style ? { style } : {}),
+    };
+  }
+
   if ("screen" in raw) {
     return {
       type: "page-ref",

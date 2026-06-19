@@ -31,7 +31,10 @@ function walk(
 
   if (component.items) {
     for (const item of component.items) {
-      walk(item.component, path, undefined, map);
+      const itemSlotName = item.component.type === "page"
+        ? (item.component.props as Record<string, unknown> | undefined)?.name as string | undefined
+        : undefined;
+      walk(item.component, path, itemSlotName, map);
     }
   }
 

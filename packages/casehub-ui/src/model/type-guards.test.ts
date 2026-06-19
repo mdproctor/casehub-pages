@@ -15,6 +15,13 @@ import {
   isSelector,
   isMap,
   isIframePlugin,
+  isTextInput,
+  isNumberInput,
+  isDropdown,
+  isCheckbox,
+  isDatePicker,
+  isTextarea,
+  isFormInput,
   getProps,
 } from "./type-guards.js";
 
@@ -175,6 +182,70 @@ describe("type guards - plugin components", () => {
     if (isIframePlugin(c)) {
       expect(c.props.componentId).toBe("custom-viz");
     }
+  });
+});
+
+describe("type guards - form input components", () => {
+  it("isTextInput matches text-input type", () => {
+    const c: Component = { type: "text-input", props: { field: "name" } };
+    expect(isTextInput(c)).toBe(true);
+    expect(isFormInput(c)).toBe(true);
+  });
+
+  it("isNumberInput matches number-input type", () => {
+    const c: Component = { type: "number-input", props: { field: "age" } };
+    expect(isNumberInput(c)).toBe(true);
+    expect(isFormInput(c)).toBe(true);
+  });
+
+  it("isDropdown matches dropdown type", () => {
+    const c: Component = {
+      type: "dropdown",
+      props: { field: "dept", options: { values: ["Sales", "Engineering"] } },
+    };
+    expect(isDropdown(c)).toBe(true);
+    expect(isFormInput(c)).toBe(true);
+  });
+
+  it("isCheckbox matches checkbox type", () => {
+    const c: Component = { type: "checkbox", props: { field: "active" } };
+    expect(isCheckbox(c)).toBe(true);
+    expect(isFormInput(c)).toBe(true);
+  });
+
+  it("isDatePicker matches date-picker type", () => {
+    const c: Component = { type: "date-picker", props: { field: "start" } };
+    expect(isDatePicker(c)).toBe(true);
+    expect(isFormInput(c)).toBe(true);
+  });
+
+  it("isTextarea matches textarea type", () => {
+    const c: Component = { type: "textarea", props: { field: "notes" } };
+    expect(isTextarea(c)).toBe(true);
+    expect(isFormInput(c)).toBe(true);
+  });
+
+  it("isFormInput rejects non-form types", () => {
+    const c: Component = {
+      type: "bar-chart",
+      props: { lookup: { dataSetId: "sales" } },
+    };
+    expect(isFormInput(c)).toBe(false);
+  });
+
+  it("isFormInput returns true for all form input types", () => {
+    const formTypes: Component[] = [
+      { type: "text-input", props: { field: "f1" } },
+      { type: "number-input", props: { field: "f2" } },
+      { type: "dropdown", props: { field: "f3", options: { values: [] } } },
+      { type: "checkbox", props: { field: "f4" } },
+      { type: "date-picker", props: { field: "f5" } },
+      { type: "textarea", props: { field: "f6" } },
+    ];
+
+    formTypes.forEach((c) => {
+      expect(isFormInput(c)).toBe(true);
+    });
   });
 });
 

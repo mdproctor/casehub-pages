@@ -6,6 +6,7 @@ import type { ExternalDataSetDef } from "@casehub/data/dist/dataset/external/typ
 import { toTypedDataSet } from "@casehub/data/dist/dataset/conversion.js";
 import type { CasehubElement } from "@casehub/viz/dist/base/CasehubElement.js";
 import type { VizComponentProps } from "@casehub/viz/dist/base/types.js";
+import type { PageProps } from "@casehub/ui/dist/model/page-types.js";
 import { renderComponent } from "@casehub/component/dist/renderer/render.js";
 import { parsePage } from "@casehub/ui/dist/parser/page-parser.js";
 import { load as yamlLoad } from "js-yaml";
@@ -16,7 +17,18 @@ import type { PageIndex } from "./navigation.js";
 import { extendPageIndex } from "./navigation.js";
 import type { DataSetScope } from "./dataset-scope.js";
 import { extendDataSetScope } from "./dataset-scope.js";
+import type { DataScopeRegistry } from "./data-scope-registry.js";
+import type { SaveConfigRegistry } from "./save-config-registry.js";
 import { renderTitle, renderHtml, renderMarkdown } from "./content.js";
+
+const FORM_INPUT_TYPES = new Set([
+  "text-input",
+  "number-input",
+  "dropdown",
+  "checkbox",
+  "date-picker",
+  "textarea",
+]);
 
 const DATA_COMPONENT_TYPES = new Set([
   "bar-chart",
@@ -32,6 +44,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "selector",
   "map",
   "iframe-plugin",
+  ...FORM_INPUT_TYPES,
 ]);
 
 export interface LazyPageOptions {
@@ -41,6 +54,8 @@ export interface LazyPageOptions {
   readonly permissions: PermissionContext;
   readonly pageIndex: PageIndex;
   readonly dataSetScope: DataSetScope;
+  readonly dataScopeRegistry: DataScopeRegistry;
+  readonly saveConfigRegistry: SaveConfigRegistry;
   readonly lazyPageResolutions: Map<Component, Component>;
 }
 
@@ -58,13 +73,38 @@ export function createActivationCallback(
 
     const pagePath = pagePathMap.get(component) ?? "";
 
+    // Register DataScope and SaveConfig for page components
+    if (component.type === "page" && options) {
+      const pageProps = component.props as PageProps | undefined;
+      if (pageProps?.dataScope) {
+        options.dataScopeRegistry.set(pagePath, pageProps.dataScope);
+      }
+      if (pageProps?.save) {
+        options.saveConfigRegistry.set(pagePath, pageProps.save);
+      }
+    }
+
     if (DATA_COMPONENT_TYPES.has(component.type)) {
       const tagName = `casehub-${component.type}`;
       const vizEl = document.createElement(tagName) as CasehubElement<VizComponentProps>;
 
-      const lookup = (component.props as Record<string, unknown> | undefined)?.lookup as
+      const isFormInput = FORM_INPUT_TYPES.has(component.type);
+
+      let lookup = (component.props as Record<string, unknown> | undefined)?.lookup as
         | DataSetLookup
         | undefined;
+
+      // Form input implicit lookup injection
+      if (isFormInput && options) {
+        const pageDataScope = options.dataScopeRegistry.get(pagePath);
+        if (pageDataScope) {
+          lookup = { dataSetId: pageDataScope.dataset, operations: [] };
+          const hasSave = options.saveConfigRegistry.has(pagePath);
+          (vizEl as unknown as { editable: boolean }).editable = hasSave;
+        } else {
+          vizEl.error = "Form input requires page dataScope";
+        }
+      }
 
       const entry = {
         element: el,
@@ -75,7 +115,10 @@ export function createActivationCallback(
       };
       registry.set(componentId, entry);
 
-      if (component.props) {
+      if (isFormInput && lookup) {
+        // Merge implicit lookup into props for form inputs
+        vizEl.props = { ...component.props, lookup } as VizComponentProps;
+      } else if (component.props) {
         vizEl.props = component.props as VizComponentProps;
       }
       el.appendChild(vizEl);
@@ -213,3 +256,4 @@ function resolveInlineDataSet(
     vizEl.error = "Failed to parse inline dataSet";
   }
 }
+

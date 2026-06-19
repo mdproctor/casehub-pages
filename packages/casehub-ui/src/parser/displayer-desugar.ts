@@ -259,6 +259,8 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     }
     if (props.filter === undefined) {
       props.filter = { enabled: true };
+    } else if ((props.filter as Record<string, unknown>).enabled === undefined) {
+      props.filter = { ...(props.filter as Record<string, unknown>), enabled: true };
     }
   }
 

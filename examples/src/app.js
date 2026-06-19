@@ -281,18 +281,68 @@ async function loadDashboardInTarget(dashboardPath) {
     }
 }
 
+// Source code state
+let currentYamlSource = '';
+let currentTsSource = '';
+let showingTs = true; // default to TS
+
 // Load and display dashboard source code
 async function loadDashboardSourceCode(dashboardPath) {
     try {
         const response = await fetch(`dashboards/${dashboardPath}`);
-        const sourceCode = await response.text();
-        sourceCodeElement.textContent = sourceCode;
+        currentYamlSource = await response.text();
 
-        // Show the code toggle button
+        // Try to load TS companion file
+        const tsPath = dashboardPath.replace(/\.(dash\.ya?ml|ya?ml|yaml)$/i, '.ts');
+        currentTsSource = '';
+        try {
+            const tsResponse = await fetch(`dashboards/${tsPath}`);
+            if (tsResponse.ok) {
+                currentTsSource = await tsResponse.text();
+            }
+        } catch { /* no TS version */ }
+
+        // Show TS by default if available, otherwise YAML
+        if (currentTsSource) {
+            sourceCodeElement.textContent = currentTsSource;
+            showingTs = true;
+        } else {
+            sourceCodeElement.textContent = currentYamlSource;
+            showingTs = false;
+        }
+
+        // Update toggle button
+        updateSourceToggle();
         codeToggleBtn.style.display = 'flex';
     } catch (error) {
         console.error('Error loading dashboard source:', error);
         sourceCodeElement.textContent = 'Error loading source code';
+    }
+}
+
+function updateSourceToggle() {
+    let toggleBtn = document.getElementById('source-format-toggle');
+    if (!toggleBtn) {
+        toggleBtn = document.createElement('button');
+        toggleBtn.id = 'source-format-toggle';
+        toggleBtn.style.cssText = 'position:absolute;top:8px;right:8px;padding:4px 12px;border:1px solid #666;border-radius:4px;background:#333;color:#eee;cursor:pointer;font-size:12px;z-index:10';
+        const codeContainer = sourceCodeElement.parentElement;
+        if (codeContainer) {
+            codeContainer.style.position = 'relative';
+            codeContainer.appendChild(toggleBtn);
+        }
+        toggleBtn.addEventListener('click', () => {
+            showingTs = !showingTs;
+            sourceCodeElement.textContent = showingTs && currentTsSource ? currentTsSource : currentYamlSource;
+            updateSourceToggle();
+        });
+    }
+    if (currentTsSource) {
+        toggleBtn.textContent = showingTs ? 'TS ▼' : 'YAML ▼';
+        toggleBtn.title = `Showing ${showingTs ? 'TypeScript' : 'YAML'} — click to switch`;
+        toggleBtn.style.display = '';
+    } else {
+        toggleBtn.style.display = 'none';
     }
 }
 

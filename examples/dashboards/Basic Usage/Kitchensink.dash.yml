@@ -68,37 +68,27 @@ pages:
           targetDivId: navigation_div
       - div: navigation_div
   - name: Forms
+    dataScope:
+      dataset: products
+      idColumn: Product
     components:
-      - type: EXTERNAL
-        properties:
-          height: 500px
-          componentId: uniforms
-          uniforms.url: http://acme.com
-          uniforms.schema: >-
-            {
-               "title":"",
-               "type":"object",
-               "properties":{
-                  "workflowdata": {
-                      "title": "Sample Form",
-                      "default": { "language": "English", "name": "John" },
-                      "type": "object",
-                      "properties": {
-                          "name":{
-                             "type":"string"
-                          },
-                          "language":{
-                             "type":"string",
-                             "allowedValues": ["English", "Spanish"]
-                          }
-                      },
-                      "required":[
-                         "name", "language"
-                      ]
-                  }
-                  
-               }
-            }
+      - html: >-
+          <p>Forms use native input components bound to page data via <i>dataScope</i>. 
+          See the <strong>Contact Manager</strong> example for a complete master-detail demo.</p>
+      - text-input:
+          field: Product
+          label: Product
+          readonly: true
+      - number-input:
+          field: Quantity
+          label: Quantity
+          readonly: true
+      - dropdown:
+          field: Section
+          label: Section
+          readonly: true
+          options:
+            values: [Computers, Electronics]
   - name: SVG Heatmap
     components:
       - displayer:
@@ -852,6 +842,7 @@ navTree:
         - page: HTML & CSS
         - page: Data Sets
         - page: External Components
+        - page: Forms
         - page: Navigation
         - page: Settings and Global
     - type: GROUP

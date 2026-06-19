@@ -54,13 +54,36 @@ export function parsePage(raw: unknown): Component {
         ? pageProps
         : undefined;
 
+    // Extract dataScope
+    const dataScope = p["dataScope"] as Record<string, unknown> | undefined;
+
+    // Extract save config
+    let save: Record<string, unknown> | undefined;
+    if (p["save"]) {
+      const rawSave = p["save"] as Record<string, unknown>;
+      const adapter = rawSave["adapter"] as string | undefined;
+      const adapterConfig = adapter && adapter in rawSave
+        ? rawSave[adapter] as Record<string, unknown>
+        : undefined;
+      save = {
+        ...(rawSave["trigger"] !== undefined && { trigger: rawSave["trigger"] }),
+        ...(rawSave["delay"] !== undefined && { delay: rawSave["delay"] }),
+        ...(adapter && { adapter }),
+        ...(adapterConfig && { adapterConfig }),
+      };
+    }
+
     // Parse content — either "components" shorthand or "rows" explicit layout
     const displayerDefaults = (global?.["displayer"] ?? global?.["settings"]) as Record<string, unknown> | undefined;
     const layout = parsePageContent(p, pageIndex, displayerDefaults);
 
     return {
       type: "page" as const,
-      props: { name: pageName },
+      props: {
+        name: pageName,
+        ...(dataScope && { dataScope }),
+        ...(save && { save }),
+      },
       ...(pageStyle ? { style: pageStyle } : {}),
       ...layout,
     };

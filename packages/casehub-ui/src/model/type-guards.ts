@@ -19,6 +19,14 @@ import type {
   MapProps,
   IframePluginProps,
 } from "./displayer-types.js";
+import type {
+  TextInputProps,
+  NumberInputProps,
+  DropdownProps,
+  CheckboxProps,
+  DatePickerProps,
+  TextareaProps,
+} from "./form-input-types.js";
 
 // Re-export all base guards
 export {
@@ -56,6 +64,12 @@ export interface ComponentTypeRegistry extends BaseRegistry {
   selector: SelectorProps;
   map: MapProps;
   "iframe-plugin": IframePluginProps;
+  "text-input": TextInputProps;
+  "number-input": NumberInputProps;
+  dropdown: DropdownProps;
+  checkbox: CheckboxProps;
+  "date-picker": DatePickerProps;
+  textarea: TextareaProps;
 }
 
 // IMPORTANT: Type assertion to widen the generic constraint.
@@ -152,4 +166,47 @@ export function isIframePlugin(
   c: Component,
 ): c is Component & { props: IframePluginProps } {
   return c.type === "iframe-plugin";
+}
+
+// Form input components
+export function isTextInput(
+  c: Component,
+): c is Component & { props: TextInputProps } {
+  return c.type === "text-input";
+}
+
+export function isNumberInput(
+  c: Component,
+): c is Component & { props: NumberInputProps } {
+  return c.type === "number-input";
+}
+
+export function isDropdown(
+  c: Component,
+): c is Component & { props: DropdownProps } {
+  return c.type === "dropdown";
+}
+
+export function isCheckbox(
+  c: Component,
+): c is Component & { props: CheckboxProps } {
+  return c.type === "checkbox";
+}
+
+export function isDatePicker(
+  c: Component,
+): c is Component & { props: DatePickerProps } {
+  return c.type === "date-picker";
+}
+
+export function isTextarea(
+  c: Component,
+): c is Component & { props: TextareaProps } {
+  return c.type === "textarea";
+}
+
+const FORM_INPUT_TYPES = new Set(["text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea"]);
+
+export function isFormInput(c: Component): boolean {
+  return FORM_INPUT_TYPES.has(c.type);
 }

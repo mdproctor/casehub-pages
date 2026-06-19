@@ -10,6 +10,7 @@ import type { DataSetScope } from "./dataset-scope.js";
 import { createFilterState } from "./cross-filter.js";
 import { getActiveFilterOps } from "./cross-filter.js";
 import type { FilterState } from "./cross-filter.js";
+import { createDataScopeRegistry } from "./data-scope-registry.js";
 import type { ResolverContext } from "@casehub/data/dist/dataset/external/resolver.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
@@ -45,6 +46,7 @@ describe("createDataPipeline", () => {
       new Map() as DataSetScope,
       registry,
       createFilterState(),
+      createDataScopeRegistry(),
     );
 
     const target = makeTarget();
@@ -68,6 +70,7 @@ describe("createDataPipeline", () => {
       new Map() as DataSetScope,
       registry,
       createFilterState(),
+      createDataScopeRegistry(),
     );
 
     const target = makeTarget();
@@ -84,6 +87,7 @@ describe("createDataPipeline", () => {
       new Map() as DataSetScope,
       registry,
       createFilterState(),
+      createDataScopeRegistry(),
     );
 
     const target = makeTarget();
@@ -153,7 +157,7 @@ describe("data pipeline with filters", () => {
       ])],
     ]);
 
-    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, filterState);
+    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, filterState, createDataScopeRegistry());
 
     const target = makeTarget();
     pipeline.handleDataRequest(target, { dataSetId: "sales" as DataSetId, operations: [] }, "chart-1");
@@ -184,7 +188,7 @@ describe("data pipeline deduplication", () => {
       ["", new Map([[def.uuid, def]])],
     ]);
 
-    const pipeline = createDataPipeline(manager, scope, registry, createFilterState());
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry());
 
     let resolveCount = 0;
     const mockCtx: ResolverContext = {

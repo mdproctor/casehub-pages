@@ -27,5 +27,15 @@ export { CasehubMetric } from "./components/CasehubMetric.js";
 export { CasehubSelector } from "./components/CasehubSelector.js";
 export { CasehubIframePlugin } from "./components/CasehubIframePlugin.js";
 
+// Form inputs
+export { CasehubFormInput } from "./form-inputs/CasehubFormInput.js";
+export type { CasehubFieldChangeDetail } from "./form-inputs/CasehubFormInput.js";
+export { CasehubTextInput } from "./form-inputs/CasehubTextInput.js";
+export { CasehubNumberInput } from "./form-inputs/CasehubNumberInput.js";
+export { CasehubDropdown } from "./form-inputs/CasehubDropdown.js";
+export { CasehubCheckbox } from "./form-inputs/CasehubCheckbox.js";
+export { CasehubDatePicker } from "./form-inputs/CasehubDatePicker.js";
+export { CasehubTextarea } from "./form-inputs/CasehubTextarea.js";
+
 // Shared pipeline
 export { datasetToSource, applyChartSettings } from "./charts/option-pipeline.js";

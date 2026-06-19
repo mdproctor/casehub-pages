@@ -82,6 +82,21 @@ export function deriveActiveFilters(
   return merged;
 }
 
+export function collectAncestorFilterOps(
+  filterState: FilterState,
+  pagePath: string,
+  group: string | undefined,
+): DataSetOp[] {
+  const ops: DataSetOp[] = [];
+  let path: string | undefined = pagePath;
+  while (path !== undefined) {
+    ops.push(...getActiveFilterOps(filterState, path, group));
+    const lastSlash = path.lastIndexOf("/");
+    path = lastSlash > 0 ? path.substring(0, lastSlash) : (path === "" ? undefined : "");
+  }
+  return ops;
+}
+
 function collectFilterOps(
   filters: Map<string, string[]>,
   ops: DataSetOp[],

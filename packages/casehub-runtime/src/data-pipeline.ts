@@ -9,7 +9,10 @@ import type { ComponentRegistry } from "./registry.js";
 import type { DataSetScope } from "./dataset-scope.js";
 import { resolveDataSetDef } from "./dataset-scope.js";
 import type { FilterState } from "./cross-filter.js";
-import { getActiveFilterOps } from "./cross-filter.js";
+import { getActiveFilterOps, collectAncestorFilterOps } from "./cross-filter.js";
+import type { DataScopeRegistry } from "./data-scope-registry.js";
+import { getDataScope } from "./data-scope-registry.js";
+import { resolveRefBindings } from "./ref-resolution.js";
 
 export interface VizTarget {
   dataSet: unknown;
@@ -35,6 +38,7 @@ export function createDataPipeline(
   scope: DataSetScope,
   registry: ComponentRegistry,
   filterState: FilterState,
+  dataScopeRegistry: DataScopeRegistry,
 ): DataPipeline {
   const pendingResolutions = new Map<DataSetId, Promise<ResolveResult>>();
   const refreshTimers = new Map<DataSetId, ReturnType<typeof setInterval>>();
@@ -48,7 +52,23 @@ export function createDataPipeline(
     options?: LookupOptions,
   ): void {
     try {
-      const filterOps = getActiveFilterOps(filterState, pagePath, filterGroup);
+      const dataScope = getDataScope(dataScopeRegistry, pagePath);
+      let filterOps;
+
+      if (dataScope?.filter) {
+        // $ref mode: resolved bindings + own-page interactive filters
+        filterOps = [
+          ...resolveRefBindings(dataScope, dataScopeRegistry, filterState, manager, pagePath),
+          ...getActiveFilterOps(filterState, pagePath, filterGroup),
+        ];
+      } else if (dataScope) {
+        // Same-dataset mode: walk up ancestors
+        filterOps = collectAncestorFilterOps(filterState, pagePath, filterGroup);
+      } else {
+        // No dataScope: existing same-page behavior
+        filterOps = getActiveFilterOps(filterState, pagePath, filterGroup);
+      }
+
       const effectiveOps = [...filterOps, ...lookup.operations];
       const effectiveLookup: DataSetLookup = { ...lookup, operations: effectiveOps };
       const result = manager.lookup(effectiveLookup, options);

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { Component } from "../model/types.js";
 import type { PageSettings } from "../model/page-types.js";
+import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
 import {
   page,
   grid,
@@ -25,6 +26,12 @@ import {
   withStyle,
   dataset,
   inlineDataset,
+  textInput,
+  numberInput,
+  dropdown,
+  checkbox,
+  datePicker,
+  textarea,
   type PageOptions,
 } from "./builders.js";
 
@@ -523,6 +530,69 @@ describe("builders", () => {
       expect(decorated.access).toEqual({ roles: ["admin"] });
       expect(decorated.style).toEqual({ color: "red" });
       expect(comp).not.toBe(decorated); // Original unchanged
+    });
+  });
+
+  describe("form input builders", () => {
+    it("textInput creates text-input component", () => {
+      const c = textInput({ field: "name", label: "Name" });
+      expect(c.type).toBe("text-input");
+      expect(c.props).toEqual({ field: "name", label: "Name" });
+      expect(Object.isFrozen(c)).toBe(true);
+    });
+
+    it("numberInput creates number-input component", () => {
+      const c = numberInput({ field: "age", min: 0, max: 120 });
+      expect(c.type).toBe("number-input");
+      expect(c.props).toEqual({ field: "age", min: 0, max: 120 });
+    });
+
+    it("dropdown creates dropdown component with fixed options", () => {
+      const c = dropdown({ field: "dept", options: { values: ["A", "B"] } });
+      expect(c.type).toBe("dropdown");
+      expect(c.props).toEqual({ field: "dept", options: { values: ["A", "B"] } });
+    });
+
+    it("checkbox creates checkbox component", () => {
+      const c = checkbox({ field: "active" });
+      expect(c.type).toBe("checkbox");
+    });
+
+    it("datePicker creates date-picker component", () => {
+      const c = datePicker({ field: "start", min: "2024-01-01" });
+      expect(c.type).toBe("date-picker");
+    });
+
+    it("textarea creates textarea component", () => {
+      const c = textarea({ field: "notes", rows: 5 });
+      expect(c.type).toBe("textarea");
+    });
+  });
+
+  describe("page() with dataScope and save", () => {
+    it("accepts dataScope and save in PageOptions", () => {
+      const ds = "employees" as DataSetId;
+      const p = page("Form",
+        textInput({ field: "name" }),
+        {
+          dataScope: { dataset: ds, idColumn: "id" },
+          save: { trigger: "auto", delay: 2000, adapter: "local" },
+        },
+      );
+      expect(p.type).toBe("page");
+      expect((p.props as any).dataScope.dataset).toBe(ds);
+      expect((p.props as any).save.trigger).toBe("auto");
+      expect(p.slots!.content).toHaveLength(1);
+    });
+
+    it("detects PageOptions with only dataScope (no datasets/settings/properties)", () => {
+      const ds = "emps" as DataSetId;
+      const p = page("Form",
+        textInput({ field: "name" }),
+        { dataScope: { dataset: ds, idColumn: "id" }, save: { adapter: "local" } },
+      );
+      expect((p.props as any).dataScope).toBeDefined();
+      expect(p.slots!.content).toHaveLength(1);
     });
   });
 });

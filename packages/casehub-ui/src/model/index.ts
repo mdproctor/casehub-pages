@@ -44,6 +44,9 @@ export type {
   LayoutOverride,
   DeepLink,
   Site,
+  DataScope,
+  DataScopeRef,
+  SaveConfig,
 } from "./page-types.js";
 
 // Displayer types
@@ -64,6 +67,20 @@ export type {
   MapProps,
   IframePluginProps,
 } from "./displayer-types.js";
+
+// Form input types
+export type {
+  FormInputCommon,
+  TextInputProps,
+  NumberInputProps,
+  FixedOptions,
+  DataSetOptions,
+  DropdownProps,
+  CheckboxProps,
+  DatePickerProps,
+  TextareaProps,
+} from "./form-input-types.js";
+export { isFixedOptions } from "./form-input-types.js";
 
 // Type guards
 export type { ComponentTypeRegistry } from "./type-guards.js";
@@ -100,4 +117,11 @@ export {
   isSelector,
   isMap,
   isIframePlugin,
+  isTextInput,
+  isNumberInput,
+  isDropdown,
+  isCheckbox,
+  isDatePicker,
+  isTextarea,
+  isFormInput,
 } from "./type-guards.js";

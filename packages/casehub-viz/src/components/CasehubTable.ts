@@ -222,12 +222,9 @@ export class CasehubTable extends CasehubElement<TableProps> {
         if (expr) raw = applyCellExpression(raw, expr);
         td.textContent = raw === null ? "" : String(raw);
 
-        const realRowIdx = serverSide
-          ? rowIdx
-          : (pageSize ? this._currentPage * pageSize + rowIdx : rowIdx);
-
         if (props.filter?.enabled) {
           const columnId = dataset.columns[colIdx]!.id;
+          const clickedRow = row;
           td.addEventListener("click", () => {
             this.dispatchEvent(
               new CustomEvent("casehub-filter", {
@@ -235,7 +232,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
                 composed: true,
                 detail: {
                   columnId,
-                  rowIndex: realRowIdx,
+                  row: clickedRow,
                   reset: false,
                   group: props.filter?.group,
                 },

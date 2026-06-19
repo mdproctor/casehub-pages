@@ -12,7 +12,7 @@ import type {
   GridProps,
   ColumnsProps,
 } from "../model/component-props.js";
-import type { PageProps, PageSettings } from "../model/page-types.js";
+import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehub/data/dist/dataset/external/types.js";
 import type { DataSetId } from "@casehub/data/dist/dataset/types.js";
 import type {
@@ -30,6 +30,14 @@ import type {
   MapProps,
   IframePluginProps,
 } from "../model/displayer-types.js";
+import type {
+  TextInputProps,
+  NumberInputProps,
+  DropdownProps,
+  CheckboxProps,
+  DatePickerProps,
+  TextareaProps,
+} from "../model/form-input-types.js";
 
 // Grid ID counter — scoped per page tree via resetGridCounter()
 let gridCounter = 0;
@@ -42,6 +50,8 @@ export interface PageOptions {
   readonly datasets?: readonly ExternalDataSetDef[];
   readonly settings?: PageSettings;
   readonly properties?: Record<string, string>;
+  readonly dataScope?: DataScope;
+  readonly save?: SaveConfig;
 }
 
 function isPageOptions(arg: unknown): arg is PageOptions {
@@ -50,7 +60,8 @@ function isPageOptions(arg: unknown): arg is PageOptions {
   // PageOptions has no 'type' property (Components always do)
   if ("type" in obj) return false;
   // Must have at least one of the PageOptions fields
-  return "datasets" in obj || "settings" in obj || "properties" in obj;
+  return "datasets" in obj || "settings" in obj || "properties" in obj
+      || "dataScope" in obj || "save" in obj;
 }
 
 function freeze<T>(obj: T): T {
@@ -97,6 +108,8 @@ export function page(
     ...(options?.datasets && { datasets: options.datasets }),
     ...(options?.settings && { settings: options.settings }),
     ...(options?.properties && { properties: options.properties }),
+    ...(options?.dataScope && { dataScope: options.dataScope }),
+    ...(options?.save && { save: options.save }),
   };
 
   return freeze({
@@ -388,6 +401,31 @@ export function iframePlugin(props: IframePluginProps): Component {
     type: "iframe-plugin",
     props: { ...props } as unknown as Record<string, unknown>,
   });
+}
+
+// Form input builders
+export function textInput(props: TextInputProps): Component {
+  return freeze({ type: "text-input" as const, props: freeze({ ...props }) });
+}
+
+export function numberInput(props: NumberInputProps): Component {
+  return freeze({ type: "number-input" as const, props: freeze({ ...props }) });
+}
+
+export function dropdown(props: DropdownProps): Component {
+  return freeze({ type: "dropdown" as const, props: freeze({ ...props }) });
+}
+
+export function checkbox(props: CheckboxProps): Component {
+  return freeze({ type: "checkbox" as const, props: freeze({ ...props }) });
+}
+
+export function datePicker(props: DatePickerProps): Component {
+  return freeze({ type: "date-picker" as const, props: freeze({ ...props }) });
+}
+
+export function textarea(props: TextareaProps): Component {
+  return freeze({ type: "textarea" as const, props: freeze({ ...props }) });
 }
 
 // Dataset helpers

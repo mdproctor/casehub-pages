@@ -46,6 +46,13 @@ export {
   selector,
   mapChart,
   iframePlugin,
+  // Form input builders
+  textInput,
+  numberInput,
+  dropdown,
+  checkbox,
+  datePicker,
+  textarea,
 } from "./builders.js";
 
 // Re-export all lookup helpers
