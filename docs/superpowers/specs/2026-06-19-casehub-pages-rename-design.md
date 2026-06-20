@@ -128,6 +128,10 @@ Rename `examples/scripts/copy-melviz.js` to `copy-pages.js`. Update all 7 intern
 
 Update `examples/package.json` scripts that reference this filename.
 
+### UMD library name
+
+`examples/webpack.config.js` line 43: `library.name: "casehub"` → `"casehubPages"`. The bare `casehub` namespace is a collision risk — any other casehub module exporting a UMD bundle would overwrite it. `casehubPages` matches the `casehubPages` global in setup.js.
+
 ## ARC42STORIES.MD Update
 
 The project's architectural record must reflect the rename. Every section (§1–§13) is updated:
@@ -230,7 +234,24 @@ pages (no casehub deps — independent foundation)
 - Check memory files in both project dirs for hardcoded melviz paths
 - Check other workspace memories that might reference melviz
 
-## README Lineage
+## README — Full Rewrite
+
+The root README (279 lines) describes the old GWT-based hybrid architecture and cannot be fixed by search-and-replace. The content itself is wrong after GWT removal:
+
+- Prerequisites list Java 17 and Maven (no longer needed)
+- Architecture described as "Hybrid Java/Maven + JavaScript/Yarn monorepo" (now TypeScript-only)
+- Build steps include `build:core` for GWT compilation (removed)
+- Data flow diagram shows YAML → Java Core (GWT) → Dataset Processing → Component API → React Components — the GWT step no longer exists
+- Component API described as "TypeScript bridge between GWT core and React components" — now the postMessage bridge between the runtime and iframe components
+- "Adding a New Component" instructions reference `melviz-component-` naming
+
+**Full rewrite** reflecting:
+- TypeScript-only architecture (no Java/Maven prerequisites)
+- `loadSite()` API entry point via `@casehub/pages-runtime`
+- Data flow: YAML → `@casehub/pages-ui` (parse) → `@casehub/pages-data` (resolve) → `@casehub/pages-component` (layout) → `@casehub/pages-viz` (render)
+- Standalone iframe components via `@casehub/pages-iframe-api` postMessage bridge
+- New `@casehub/pages-component-*` naming for standalone components
+- Lineage paragraph preserved:
 
 > **History:** casehub-pages descends from [dashbuilder](https://github.com/kiegroup/kie-tools), a full GWT dashboard authoring platform. The melviz fork modernised the frontend, progressively replacing GWT with TypeScript Web Components. casehub-pages completes that journey — 100% TypeScript, near feature parity with dashbuilder, and designed as a foundational building block for the CaseHub platform.
 
@@ -239,6 +260,16 @@ pages (no casehub deps — independent foundation)
 - #24 on `mdproctor/melviz` tracks this work
 - After move, new issues go to `mdproctor/casehub-pages`
 - Existing open issues on `mdproctor/melviz` — close with pointer to new repo, or leave as historical
+
+## Mechanical Rename Checklist
+
+Items covered by "purge every melviz reference" — enumerated here for implementation completeness:
+
+- **tsconfig extends:** 5 packages/components have `"extends": "@melviz/tsconfig/tsconfig.json"` → `"@casehub/pages-tsconfig/tsconfig.json"`
+- **repository/bugs/homepage URLs:** at least 8 `package.json` files reference `melviz-org/melviz` → `casehubio/casehub-pages`
+- **workspace:\* dependencies:** all `@melviz/*` cross-references in `package.json` files → `@casehub/pages-*`
+- **JSDoc comments:** `ComponentController.ts` and `InternalComponentListener.ts` reference "melviz" in documentation strings
+- **keywords:** `examples/package.json` line 37 has keyword `"melviz"` → `"casehub-pages"`
 
 ## Follow-up Issues (filed before leaving brainstorming)
 
