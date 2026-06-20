@@ -1,40 +1,33 @@
-Melviz
+casehub-pages
 --
 
-[![Java CI](https://github.com/melviz-org/melviz/actions/workflows/ci-java.yml/badge.svg)](https://github.com/melviz-org/melviz/actions/workflows/ci-java.yml)
-[![JavaScript CI](https://github.com/melviz-org/melviz/actions/workflows/ci-javascript.yml/badge.svg)](https://github.com/melviz-org/melviz/actions/workflows/ci-javascript.yml)
-[![CodeQL](https://github.com/melviz-org/melviz/actions/workflows/codeql.yml/badge.svg)](https://github.com/melviz-org/melviz/actions/workflows/codeql.yml)
-[![Build and Publish](https://github.com/melviz-org/melviz/actions/workflows/build-publish-webapp.yml/badge.svg)](https://github.com/melviz-org/melviz/actions/workflows/build-publish-webapp.yml)
+casehub-pages is a foundational dashboard rendering runtime for the CaseHub platform — a pure TypeScript library for parsing YAML dashboard definitions and rendering interactive visualizations as Web Components.
 
-Melviz is a tool to create data visualizations, dashboards and reports built using YAML.
+**History:** casehub-pages descends from dashbuilder, a full GWT dashboard authoring platform. The melviz fork modernised the frontend, progressively replacing GWT with TypeScript Web Components. casehub-pages completes that journey — 100% TypeScript, near feature parity with dashbuilder, and designed as a foundational building block for the CaseHub platform.
 
-* Supports YAML based pages, allowing users to build dahsboards and reports in a declarative way;
-* Can read data from JSON, metrics and CSV sources;
-* Data can be transformed using JSONAta;
-* Support microfrontends for custom visualizations;
-* Can pull real-time data from its datasets;
-* Allow Communication between components using Filter components;
+* Supports YAML-based pages, allowing users to build dashboards and reports declaratively
+* Reads data from JSON, metrics, and CSV sources
+* Data transformation using JSONata expressions
+* Iframe-isolated microfrontends for custom visualizations
+* Real-time data refresh from datasets
+* Cross-component communication using filter components
 
 Licensed under the Apache License, Version 2.0
 
-For further information, please visit the project web site <a href="http://melviz.org" target="_blank">melviz.org</a>
+This is the monorepo for all casehub-pages TypeScript packages, components, and web applications. Here's a brief description of each directory:
 
-This is the mono repo for all Melviz Javascript API, Components and Web Apps. Here's a brief description of each directory:
+* **packages**: Base TypeScript packages for building casehub-pages applications and components
+* **components**: Iframe-isolated microfrontends for visualizing data
+* **webapp**: casehub-pages web app distribution — embeddable in other applications or runnable standalone
+* **examples**: Interactive dashboard examples gallery
 
-* **core**: Core web app with HTML bundle
-* **packages**: Contains base APIs for building Melviz applications and components;
-* **components**: Micro frontends for visualizing data from Melviz
-* **webapp**: Melviz web app distribution. It can be embed in other applications or run as a standalone app.
+## Building casehub-pages
 
-## Building Melviz
-
-Melviz is a hybrid Java/Maven + JavaScript/Yarn monorepo. Build processes are separated by subsystem.
+casehub-pages is a TypeScript monorepo managed with Yarn workspaces.
 
 ### Prerequisites
 
-* Java 17 or higher
-* Maven 3.6+
-* Node.js 16+
+* Node.js 18+
 * Yarn 4.10.3 (included via Yarn Berry)
 
 ### Quick Start - Full Build
@@ -58,49 +51,42 @@ yarn build
 The final application will be in [webapp/dist/](webapp/dist/).
 
 The `yarn build` command:
-1. Builds shared packages (`@melviz/component-api`, `@melviz/component-echarts-base`, `@melviz/component-dev`)
-2. Builds Java core with Maven (GWT compilation)
-3. Builds all React components in parallel
-4. Assembles final webapp bundle with all assets
+1. Builds shared packages (`@casehub/pages-data`, `@casehub/pages-ui`, `@casehub/pages-viz`, `@casehub/pages-component`, `@casehub/pages-runtime`)
+2. Builds iframe-isolated components in parallel
+3. Assembles final webapp bundle with all assets
 
-### Java Core (GWT-based webapp)
+### Production Build
 
 ```bash
-# Go into core App
-cd core
-
-# Build all Java modules
-yarn build
-
-# Run tests only
-yarn test
-
-# Production build
 yarn build:prod
 ```
 
-The compiled web application will be in [core/melviz-webapp-parent/melviz-webapp/target/melviz-webapp/](core/melviz-webapp-parent/melviz-webapp/target/melviz-webapp/).
+Production build includes:
+* Full optimized webpack builds for all packages
+* Examples gallery with validation tests
+* Minified bundles ready for deployment
 
-### JavaScript Components and Webapp
+The output will be in [webapp/dist/](webapp/dist/).
 
-**Individual Build Steps** (if you need granular control):
+### Individual Build Steps
+
+**If you need granular control:**
 
 ```bash
 # Build only shared packages
 yarn build:packages
 
-# Build only Java core
-yarn build:core
-
-# Build only React components (requires packages to be built first)
+# Build only iframe components (requires packages to be built first)
 yarn build:components
 
 # Build only final webapp (requires everything else to be built first)
 yarn build:webapp
 
+# Build examples gallery (requires webapp to be built first)
+yarn build:examples
+
 # Build a specific component
-cd components/melviz-component-echarts
-yarn build
+yarn workspace @casehub/pages-component-echarts run build
 ```
 
 ### Development Mode
@@ -108,56 +94,123 @@ yarn build
 Run a component in development mode with hot reload:
 
 ```bash
-cd components/melviz-component-echarts
-yarn start  # Starts webpack-dev-server on port 9001
+yarn workspace @casehub/pages-component-echarts run start  # Starts webpack-dev-server on port 9001
+```
+
+Run the examples gallery:
+
+```bash
+# Serve examples gallery (port 8080) — requires webapp to be built first
+yarn workspace @casehub/pages-examples run serve
+
+# Dev mode with file watching
+yarn workspace @casehub/pages-examples run dev
 ```
 
 ### Testing
 
-To run test on all packages
+Run tests on all packages:
 
-JavaScript component tests:
 ```bash
 yarn workspaces foreach -A run test
 ```
 
-### Production Build
-
-The default build command already produces a production-ready package:
+Run tests for a specific package:
 
 ```bash
-yarn install
-yarn build
-```
+yarn workspace @casehub/pages-data run test
 
-The output will be in [webapp/dist/](webapp/dist/).
+# Run specific test file
+yarn workspace @casehub/pages-component-echarts run test -- <test-file-pattern>
+```
 
 ## Architecture Overview
 
 ### Monorepo Structure
 
-Melviz is organized as a monorepo with Yarn workspaces:
+casehub-pages is organized as a TypeScript monorepo with Yarn workspaces:
 
-- **`core/`** - Java/Maven-based backend using GWT (Google Web Toolkit) to compile Java to JavaScript
-- **`packages/`** - Shared TypeScript libraries and build tooling
-- **`components/`** - Independent React-based microfrontend visualization components
+- **`packages/`** - Core TypeScript libraries for dashboard rendering
+- **`components/`** - Iframe-isolated React microfrontends for visualizations
 - **`webapp/`** - Webpack orchestrator that assembles the final application
+- **`examples/`** - Interactive dashboard examples gallery
 
-### Hybrid Build System
+### Package Overview
 
-The build system combines two ecosystems:
+**Core Packages** (`packages/`):
+- `@casehub/pages-data` - DataSet model, operations engine (filter/group/sort), external data extraction (JSON, CSV, Prometheus)
+- `@casehub/pages-ui` - YAML parser, DashBuilder backward compatibility, component model
+- `@casehub/pages-viz` - Web Component wrappers for charts, tables, metrics, selectors
+- `@casehub/pages-component` - CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion)
+- `@casehub/pages-runtime` - Site orchestrator providing `loadSite()` API
 
-1. **Java/GWT Side**: Maven builds Java code in `core/`, compiling it to JavaScript via GWT. Uses Java 17.
-2. **JavaScript Side**: Yarn workspaces manage TypeScript/React components, shared packages, and final webapp assembly.
-3. **Integration**: The `webapp/` webpack build copies the GWT-compiled core and all component bundles into a unified `dist/` directory.
+**Iframe Component API** (`packages/`):
+- `@casehub/pages-iframe-api` - Component controller and communication interfaces
+- `@casehub/pages-iframe-dev` - Development utilities for component testing
+- `@casehub/pages-echarts-base` - Reusable ECharts wrapper library
 
-### Microfrontend Component Architecture
+**Build Configuration** (`packages/`):
+- `@casehub/pages-webpack-base` - Common webpack configuration
+- `@casehub/pages-tsconfig` - Shared TypeScript configuration
 
-Each component in `components/` is a self-contained React microfrontend that communicates with the core via the Component API.
+**Available Components** (`components/`):
+- `@casehub/pages-component-echarts` - Apache ECharts visualizations
+- `@casehub/pages-component-llm-prompter` - LLM prompt engineering UI
+- `@casehub/pages-component-svg-heatmap` - SVG-based heatmaps
+
+### Data Flow
+
+```
+YAML dashboard definition
+    ↓
+@casehub/pages-ui (parse YAML)
+    ↓
+ComponentNode tree + DataSetDef[]
+    ↓
+@casehub/pages-data (resolve datasets)
+    ↓
+DataSet (columns + rows)
+    ↓
+@casehub/pages-component (layout rendering)
+    ↓
+@casehub/pages-viz (chart/table/metric Web Components)
+    ↓
+casehub-filter / casehub-sort events → back to data layer
+```
+
+1. **@casehub/pages-ui** parses YAML dashboard definitions into a component tree
+2. **@casehub/pages-data** resolves datasets from JSON/CSV/metrics sources and applies JSONata transformations
+3. **@casehub/pages-component** renders CSS grid layouts with interactive containers
+4. **@casehub/pages-viz** provides Web Components for visualizations (powered by Apache ECharts)
+5. User interactions (filtering, sorting) flow back to the data layer via custom events
+
+### Entry Point
+
+Host applications load dashboards using the `loadSite()` API from `@casehub/pages-runtime`:
+
+```typescript
+import { loadSite } from '@casehub/pages-runtime';
+
+const yamlDashboard = `
+pages:
+  - components:
+    - markdown: "# Dashboard Title"
+    - bar:
+        dataset: sales
+`;
+
+loadSite(yamlDashboard, document.getElementById('container'));
+```
+
+Alternatively, dashboards can be configured in `setup.js` for static deployments or sent dynamically via `window.postMessage`.
+
+### Iframe-Isolated Component Architecture
+
+Each component in `components/` runs in an isolated `<iframe>` and communicates with the runtime through `window.postMessage`. The `@casehub/pages-iframe-api` package provides the TypeScript bridge.
 
 **Component Lifecycle Pattern**:
 ```typescript
-// 1. Component gets controller from ComponentApi
+// 1. Get controller from ComponentApi
 const api = new ComponentApi();
 const controller = api.getComponentController();
 
@@ -174,69 +227,23 @@ controller.setOnInit((params) => {
 // 4. Signal ready
 controller.ready();
 
-// 5. Send filters back to core
+// 5. Send filters back to runtime
 controller.filter(filterRequest);
 ```
 
-**Key Interface (`@melviz/component-api`)**:
+**Key Interface (`@casehub/pages-iframe-api`)**:
 - `ComponentController` - Manages component lifecycle and communication
 - `ComponentBus` - Message bus for inter-component communication
-- `DataSet` - Data structure passed from core to components
-- `FilterRequest` - Filter queries sent from components back to core
+- `DataSet` - Data structure passed from runtime to components
+- `FilterRequest` - Filter queries sent from components back to runtime
 - `FunctionCallRequest` - Backend function calls
-
-### Data Flow
-
-```
-YAML Definition → Java Core (GWT) → Dataset Processing → Component API → React Components
-                                        ↑                                    ↓
-                                        └────────── Filters/Events ──────────┘
-```
-
-1. **Java Core** (`core/melviz-webapp-shared`, `core/melviz-dataset/`, etc.):
-   - Parses YAML dashboard definitions
-   - Loads data from JSON/CSV/metrics sources
-   - Applies JSONata transformations
-   - Manages filter state
-   - Compiled to JavaScript via GWT
-
-2. **Component API** (`packages/melviz-component-api`):
-   - TypeScript bridge between GWT core and React components
-   - Uses message bus pattern for async communication
-   - Type-safe interfaces ensure contract compliance
-
-3. **React Components** (`components/*/`):
-   - Pure presentation/visualization logic
-   - Receive datasets via `setOnDataSet` callback
-   - Send filters back via `controller.filter()`
-   - Independently bundled and deployed
-
-### Module Organization
-
-**Core Java Modules** (`core/`):
-- `melviz-base/` - Foundational modules (dataset, JSON handling)
-- `melviz-shared/` - Shared API contracts (displayer, navigation, services)
-- `melviz-client/` - GWT-compilable client code (UI components, editors, renderers)
-- `melviz-webapp-parent/melviz-webapp/` - Main web application assembly (produces WAR)
-
-**Shared Packages** (`packages/`):
-- `melviz-component-api` - Component controller and communication interfaces
-- `melviz-component-dev` - Development utilities for component testing
-- `webpack-base` - Common webpack configuration with TypeScript loader
-- `tsconfig` - Shared TypeScript configuration
-
-**Available Components** (`components/`):
-- `melviz-component-echarts` - Apache ECharts visualizations
-- `melviz-component-echarts-base` - Reusable ECharts wrapper
-- `melviz-component-llm-prompter` - LLM prompt engineering UI
-- `melviz-component-svg-heatmap` - SVG-based heatmaps
 
 ### Adding a New Component
 
-1. Create new directory in `components/melviz-component-<name>/`
-2. Add `package.json` with dependency on `@melviz/component-api`
+1. Create new directory in `components/@casehub/pages-component-<name>/`
+2. Add `package.json` with dependency on `@casehub/pages-iframe-api`
 3. Create `src/index.tsx` with ComponentController integration
-4. Add webpack configuration (can extend `webpack-base`)
+4. Add webpack configuration (can extend `@casehub/pages-webpack-base`)
 5. Register component in `webapp/package.json` devDependencies
 6. Update `webapp/webpack.config.js` to copy component bundle
 7. Build with `yarn build` - output goes to `dist/index.js`
@@ -244,7 +251,7 @@ YAML Definition → Java Core (GWT) → Dataset Processing → Component API →
 ### Deployment
 
 The final artifact is a single directory (`webapp/dist/`) containing:
-- GWT-compiled Java core (from `core/melviz-webapp/target/`)
+- Core casehub-pages runtime bundles
 - All component bundles (from `components/*/dist/`)
 - Static assets and HTML entry points
 
@@ -252,7 +259,7 @@ This can be deployed to any static web server or GitHub Pages.
 
 ## Working with YAML Dashboards
 
-Melviz renders dashboards defined in YAML. The application can receive content dynamically via `postMessage`:
+casehub-pages renders dashboards defined in YAML. The application can receive content dynamically via `postMessage`:
 
 ```javascript
 window.postMessage(`pages:
@@ -265,14 +272,11 @@ Alternatively, use `setup.js` to configure static dashboards that load on startu
 
 ## Key Technologies
 
-- **Java**: JDK 17
-- **Maven**: Build orchestration for Java modules
-- **GWT (Google Web Toolkit)**: Compiles Java to JavaScript for client-side execution
 - **Yarn**: v4.10.3 for workspace management
-- **TypeScript**: 4.6.2 for type-safe component development
+- **TypeScript**: 5.x for type-safe development
 - **React**: 17.0.2 for component UI
 - **Webpack**: 5.x for module bundling
-- **Jest**: Testing framework with ts-jest for TypeScript
+- **Vitest / Jest**: Testing frameworks with ts-jest for TypeScript
 - **Apache ECharts**: Visualization library used by echarts component
 - **Patternfly**: React Components Package
 - **JSONata**: Data transformation language for dataset processing

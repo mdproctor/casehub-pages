@@ -1,0 +1,28 @@
+{
+  "name": "@casehub/pages-ui",
+  "version": "0.0.1",
+  "description": "CaseHub Pages UI — component model, layout primitives, DSL, YAML parser",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@casehub/pages-component": "workspace:*",
+    "@casehub/pages-data": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "glob": "^11.0.0",
+    "js-yaml": "^4.1.0",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "Apache-2.0"
+}

@@ -138,12 +138,9 @@ dist-tests/
 
 # Core related gitignore rules
 
-**/.melviz/
 **/out/
 **/.DS_Store
 *.log
-core/.classpath
-core/.project
 **/.settings/
 
 
@@ -163,20 +160,12 @@ core/.project
 **/.errai
 
 **/WEB-INF/classes/
-core/packages/melviz/**/org.uberfire
-core/packages/melviz/**/org.melviz
-core/packages/melviz/**/WEB-INF/classes/
-core/packages/melviz/dashboard.zip
-core/packages/melviz/nbproject
-core/packages/melviz/uberfire-docs/src/main/asciidoc/*.html
-core/packages/melviz/**/gwt-unitCache
-core/packages/melviz/melviz-authoring/src/main/webapp/WEB-INF/lib/
-core/packages/melviz/melviz-authoring/src/main/webapp/WEB-INF/classes/
-core/packages/melviz/**/dependency-reduced-pom.xml
-core/packages/melviz/melviz-runtime-parent/melviz-runtime-client/src/main/webapp/melviz/component
-core/packages/melviz/**/.checkstyle
 **/.apt_generated/
 **/.apt_generated_tests/
+
+# Legacy GWT code
+_legacy/
+package-lock.json
 **/.checkstyle
 **/target/
 
