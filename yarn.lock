@@ -2922,30 +2922,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@melviz/core-gwt@npm:0.0.0, @melviz/core-gwt@workspace:core":
-  version: 0.0.0-use.local
-  resolution: "@melviz/core-gwt@workspace:core"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@melviz/tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    copyfiles: "npm:^2.4.1"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^4.6.2"
-  languageName: unknown
-  linkType: soft
-
 "@melviz/examples@workspace:examples":
   version: 0.0.0-use.local
   resolution: "@melviz/examples@workspace:examples"
@@ -2980,7 +2956,6 @@ __metadata:
     "@melviz/component-echarts": "npm:0.0.0"
     "@melviz/component-llm-prompter": "npm:0.0.0"
     "@melviz/component-svg-heatmap": "npm:0.0.0"
-    "@melviz/core-gwt": "npm:0.0.0"
     copy-webpack-plugin: "npm:^11.0.0"
     rimraf: "npm:^6.1.2"
     webpack: "npm:^5.104.1"

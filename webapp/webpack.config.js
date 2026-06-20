@@ -6,11 +6,6 @@ const common = require("webpack-base/webpack.common.config");
 module.exports = async (webpackEnv) => {
   const components = ["echarts", "llm-prompter", "svg-heatmap"];
   const copyResources = [];
-  // Melviz Core
-  copyResources.push({
-    from: `../core/melviz-webapp-parent/melviz-webapp/target/melviz-webapp`,
-    to: `./`,
-  });
 
   components.forEach((component) => {
     copyResources.push({
