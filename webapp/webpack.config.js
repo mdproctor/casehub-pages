@@ -1,7 +1,7 @@
 
 const CopyPlugin = require("copy-webpack-plugin");
 const { merge } = require("webpack-merge");
-const common = require("webpack-base/webpack.common.config");
+const common = require("@casehub/pages-webpack-base/webpack.common.config");
 
 module.exports = async (webpackEnv) => {
   const components = ["echarts", "llm-prompter", "svg-heatmap"];

@@ -20,7 +20,7 @@ pages:
       - type: TABS
         properties:
           width: 100%
-          navGroupId: Displayers
+          navGroupId: MainGroup
           targetDivId: all_div
       - div: all_div
   - name: Tree

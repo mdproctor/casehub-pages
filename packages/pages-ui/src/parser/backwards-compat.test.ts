@@ -325,7 +325,17 @@ describe("backwards compatibility — existing dashboards", () => {
 
     it("parses lowercase type: timeseries", () => {
       const page = root.slots!["content"]![0]!;
-      const timeseries = page.items!.find((item) => item.component.type === "timeseries");
+      function findComponentByType(c: Component, type: string): Component | undefined {
+        if (c.type === type) return c;
+        if (c.items) {
+          for (const item of c.items) {
+            const found = findComponentByType(item.component, type);
+            if (found) return found;
+          }
+        }
+        return undefined;
+      }
+      const timeseries = findComponentByType(page, "timeseries");
       expect(timeseries).toBeDefined();
     });
   });
