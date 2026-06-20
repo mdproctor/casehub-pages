@@ -1,10 +1,6 @@
 casehub-pages
 --
 
-[![JavaScript CI](https://github.com/melviz-org/melviz/actions/workflows/ci-javascript.yml/badge.svg)](https://github.com/melviz-org/melviz/actions/workflows/ci-javascript.yml)
-[![CodeQL](https://github.com/melviz-org/melviz/actions/workflows/codeql.yml/badge.svg)](https://github.com/melviz-org/melviz/actions/workflows/codeql.yml)
-[![Build and Publish](https://github.com/melviz-org/melviz/actions/workflows/build-publish-webapp.yml/badge.svg)](https://github.com/melviz-org/melviz/actions/workflows/build-publish-webapp.yml)
-
 casehub-pages is a foundational dashboard rendering runtime for the CaseHub platform — a pure TypeScript library for parsing YAML dashboard definitions and rendering interactive visualizations as Web Components.
 
 **History:** casehub-pages descends from dashbuilder, a full GWT dashboard authoring platform. The melviz fork modernised the frontend, progressively replacing GWT with TypeScript Web Components. casehub-pages completes that journey — 100% TypeScript, near feature parity with dashbuilder, and designed as a foundational building block for the CaseHub platform.
@@ -17,8 +13,6 @@ casehub-pages is a foundational dashboard rendering runtime for the CaseHub plat
 * Cross-component communication using filter components
 
 Licensed under the Apache License, Version 2.0
-
-For further information, please visit the project web site <a href="http://melviz.org" target="_blank">melviz.org</a>
 
 This is the monorepo for all casehub-pages TypeScript packages, components, and web applications. Here's a brief description of each directory:
 
