@@ -1,1 +1,1 @@
-melviz = { allowExternal: true, mode: "CLIENT" };
+casehubPages = { allowExternal: true, mode: "CLIENT" };

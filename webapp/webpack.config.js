@@ -9,8 +9,8 @@ module.exports = async (webpackEnv) => {
 
   components.forEach((component) => {
     copyResources.push({
-      from: `../components/melviz-component-${component}/dist/`,
-      to: `./melviz/component/${component}/`,
+      from: `../components/pages-component-${component}/dist/`,
+      to: `./pages/component/${component}/`,
     });
   });
 

@@ -1579,9 +1579,119 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@casehub/component@workspace:*, @casehub/component@workspace:packages/casehub-component":
+"@casehub/pages-component-echarts@npm:0.0.0, @casehub/pages-component-echarts@workspace:components/pages-component-echarts":
   version: 0.0.0-use.local
-  resolution: "@casehub/component@workspace:packages/casehub-component"
+  resolution: "@casehub/pages-component-echarts@workspace:components/pages-component-echarts"
+  dependencies:
+    "@babel/core": "npm:^7.28.6"
+    "@babel/preset-env": "npm:^7.28.6"
+    "@babel/preset-react": "npm:^7.28.5"
+    "@casehub/pages-echarts-base": "workspace:*"
+    "@casehub/pages-iframe-api": "workspace:*"
+    "@casehub/pages-iframe-dev": "workspace:*"
+    "@casehub/pages-tsconfig": "workspace:*"
+    "@casehub/pages-webpack-base": "workspace:*"
+    "@testing-library/jest-dom": "npm:^6.4.2"
+    "@types/jest": "npm:^29.5.12"
+    "@types/jest-when": "npm:^3.5.5"
+    "@types/react": "npm:^17.0.6"
+    "@types/react-dom": "npm:^17.0.5"
+    copy-webpack-plugin: "npm:^11.0.0"
+    html-webpack-plugin: "npm:^5.6.6"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    jest-junit: "npm:^16.0.0"
+    jest-when: "npm:^3.7.0"
+    react: "npm:^17.0.2"
+    react-dom: "npm:^17.0.2"
+    rimraf: "npm:^6.1.2"
+    ts-jest: "npm:^29.1.2"
+    typescript: "npm:^4.6.2"
+    webpack: "npm:^5.104.1"
+    webpack-cli: "npm:^6.0.1"
+    webpack-dev-server: "npm:^5.2.3"
+    webpack-merge: "npm:^5.8.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-component-llm-prompter@npm:0.0.0, @casehub/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-component-llm-prompter@workspace:components/pages-component-llm-prompter"
+  dependencies:
+    "@babel/core": "npm:^7.28.6"
+    "@babel/preset-env": "npm:^7.28.6"
+    "@babel/preset-react": "npm:^7.28.5"
+    "@casehub/pages-iframe-api": "workspace:*"
+    "@casehub/pages-iframe-dev": "workspace:*"
+    "@casehub/pages-tsconfig": "workspace:*"
+    "@casehub/pages-webpack-base": "workspace:*"
+    "@testing-library/jest-dom": "npm:^6.4.2"
+    "@types/heatmap.js": "npm:^2.0.36"
+    "@types/jest": "npm:^29.5.12"
+    "@types/jest-when": "npm:^3.5.5"
+    "@types/react": "npm:^17.0.6"
+    "@types/react-dom": "npm:^17.0.5"
+    copy-webpack-plugin: "npm:^11.0.0"
+    css-loader: "npm:^7.1.2"
+    heatmap.js: "npm:^2.0.5"
+    html-webpack-plugin: "npm:^5.6.6"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    jest-junit: "npm:^16.0.0"
+    jest-when: "npm:^3.7.0"
+    react: "npm:^17.0.2"
+    react-dom: "npm:^17.0.2"
+    react-markdown: "npm:^9.0.3"
+    rimraf: "npm:^6.1.2"
+    style-loader: "npm:^4.0.0"
+    ts-jest: "npm:^29.1.2"
+    typescript: "npm:^4.6.2"
+    webpack: "npm:^5.104.1"
+    webpack-cli: "npm:^6.0.1"
+    webpack-dev-server: "npm:^5.2.3"
+    webpack-merge: "npm:^5.8.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-component-svg-heatmap@npm:0.0.0, @casehub/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-component-svg-heatmap@workspace:components/pages-component-svg-heatmap"
+  dependencies:
+    "@babel/core": "npm:^7.28.6"
+    "@babel/preset-env": "npm:^7.28.6"
+    "@babel/preset-react": "npm:^7.28.5"
+    "@casehub/pages-iframe-api": "workspace:*"
+    "@casehub/pages-iframe-dev": "workspace:*"
+    "@casehub/pages-tsconfig": "workspace:*"
+    "@casehub/pages-webpack-base": "workspace:*"
+    "@testing-library/jest-dom": "npm:^6.4.2"
+    "@types/heatmap.js": "npm:^2.0.36"
+    "@types/jest": "npm:^29.5.12"
+    "@types/jest-when": "npm:^3.5.5"
+    "@types/react": "npm:^17.0.6"
+    "@types/react-dom": "npm:^17.0.5"
+    copy-webpack-plugin: "npm:^11.0.0"
+    heatmap.js: "npm:^2.0.5"
+    html-webpack-plugin: "npm:^5.6.6"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    jest-junit: "npm:^16.0.0"
+    jest-when: "npm:^3.7.0"
+    react: "npm:^17.0.2"
+    react-dom: "npm:^17.0.2"
+    rimraf: "npm:^6.1.2"
+    ts-jest: "npm:^29.1.2"
+    typescript: "npm:^4.6.2"
+    webpack: "npm:^5.104.1"
+    webpack-cli: "npm:^6.0.1"
+    webpack-dev-server: "npm:^5.2.3"
+    webpack-merge: "npm:^5.8.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-component@workspace:*, @casehub/pages-component@workspace:packages/pages-component":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-component@workspace:packages/pages-component"
   dependencies:
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
@@ -1589,9 +1699,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/data@workspace:*, @casehub/data@workspace:packages/core":
+"@casehub/pages-data@workspace:*, @casehub/pages-data@workspace:packages/pages-data":
   version: 0.0.0-use.local
-  resolution: "@casehub/data@workspace:packages/core"
+  resolution: "@casehub/pages-data@workspace:packages/pages-data"
   dependencies:
     "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
     "@typescript-eslint/parser": "npm:^8.0.0"
@@ -1604,14 +1714,113 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/runtime@workspace:*, @casehub/runtime@workspace:packages/casehub-runtime":
+"@casehub/pages-echarts-base@workspace:*, @casehub/pages-echarts-base@workspace:packages/pages-echarts-base":
   version: 0.0.0-use.local
-  resolution: "@casehub/runtime@workspace:packages/casehub-runtime"
+  resolution: "@casehub/pages-echarts-base@workspace:packages/pages-echarts-base"
   dependencies:
-    "@casehub/component": "workspace:*"
-    "@casehub/data": "workspace:*"
-    "@casehub/ui": "workspace:*"
-    "@casehub/viz": "workspace:*"
+    "@babel/core": "npm:^7.28.6"
+    "@babel/preset-env": "npm:^7.28.6"
+    "@babel/preset-react": "npm:^7.28.5"
+    "@casehub/pages-tsconfig": "workspace:*"
+    "@testing-library/jest-dom": "npm:^6.4.2"
+    "@types/echarts": "npm:^4.9.15"
+    "@types/jest": "npm:^29.5.12"
+    "@types/jest-when": "npm:^3.5.5"
+    "@types/react": "npm:^17.0.6"
+    copyfiles: "npm:^2.4.1"
+    echarts: "npm:^5.6.0"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    jest-junit: "npm:^16.0.0"
+    jest-when: "npm:^3.7.0"
+    react: "npm:^17.0.2"
+    react-dom: "npm:^17.0.2"
+    rimraf: "npm:^6.1.2"
+    ts-jest: "npm:^29.1.2"
+    typescript: "npm:^4.6.2"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-examples@workspace:examples":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-examples@workspace:examples"
+  dependencies:
+    "@casehub/pages-runtime": "workspace:*"
+    "@casehub/pages-viz": "workspace:*"
+    "@casehub/pages-webpack-base": "workspace:*"
+    "@playwright/test": "npm:^1.50.0"
+    browser-sync: "npm:^2.29.3"
+    chokidar: "npm:^3.5.3"
+    http-server: "npm:^14.1.1"
+    js-yaml: "npm:^4.1.0"
+    rimraf: "npm:^6.1.0"
+    source-map-loader: "npm:^5.0.0"
+    ts-loader: "npm:^9.5.0"
+    typescript: "npm:^5.6.0"
+    webpack: "npm:^5.90.0"
+    webpack-cli: "npm:^5.1.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-iframe-api@workspace:*, @casehub/pages-iframe-api@workspace:packages/pages-iframe-api":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-iframe-api@workspace:packages/pages-iframe-api"
+  dependencies:
+    "@babel/core": "npm:^7.28.6"
+    "@babel/preset-env": "npm:^7.28.6"
+    "@babel/preset-react": "npm:^7.28.5"
+    "@casehub/pages-tsconfig": "workspace:*"
+    "@testing-library/jest-dom": "npm:^6.4.2"
+    "@types/jest": "npm:^29.5.12"
+    "@types/jest-when": "npm:^3.5.5"
+    copyfiles: "npm:^2.4.1"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    jest-junit: "npm:^16.0.0"
+    jest-when: "npm:^3.7.0"
+    react: "npm:^17.0.2"
+    react-dom: "npm:^17.0.2"
+    rimraf: "npm:^6.1.2"
+    ts-jest: "npm:^29.1.2"
+    typescript: "npm:^4.6.2"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-iframe-dev@workspace:*, @casehub/pages-iframe-dev@workspace:packages/pages-iframe-dev":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-iframe-dev@workspace:packages/pages-iframe-dev"
+  dependencies:
+    "@babel/core": "npm:^7.28.6"
+    "@babel/preset-env": "npm:^7.28.6"
+    "@babel/preset-react": "npm:^7.28.5"
+    "@casehub/pages-iframe-api": "workspace:*"
+    "@casehub/pages-tsconfig": "workspace:*"
+    "@testing-library/jest-dom": "npm:^6.4.2"
+    "@types/jest": "npm:^29.5.12"
+    "@types/jest-when": "npm:^3.5.5"
+    "@types/react": "npm:^17.0.6"
+    "@types/react-dom": "npm:^17.0.5"
+    copyfiles: "npm:^2.4.1"
+    jest: "npm:^29.7.0"
+    jest-environment-jsdom: "npm:^29.7.0"
+    jest-junit: "npm:^16.0.0"
+    jest-when: "npm:^3.7.0"
+    react: "npm:^17.0.2"
+    react-dom: "npm:^17.0.2"
+    rimraf: "npm:^6.1.2"
+    ts-jest: "npm:^29.1.2"
+    typescript: "npm:^4.6.2"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-runtime@workspace:*, @casehub/pages-runtime@workspace:packages/pages-runtime":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-runtime@workspace:packages/pages-runtime"
+  dependencies:
+    "@casehub/pages-component": "workspace:*"
+    "@casehub/pages-data": "workspace:*"
+    "@casehub/pages-ui": "workspace:*"
+    "@casehub/pages-viz": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
     js-yaml: "npm:^4.1.0"
     marked: "npm:^15.0.0"
@@ -1621,12 +1830,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/ui@workspace:*, @casehub/ui@workspace:packages/casehub-ui":
+"@casehub/pages-tsconfig@workspace:*, @casehub/pages-tsconfig@workspace:packages/pages-tsconfig":
   version: 0.0.0-use.local
-  resolution: "@casehub/ui@workspace:packages/casehub-ui"
+  resolution: "@casehub/pages-tsconfig@workspace:packages/pages-tsconfig"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-ui@workspace:*, @casehub/pages-ui@workspace:packages/pages-ui":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-ui@workspace:packages/pages-ui"
   dependencies:
-    "@casehub/component": "workspace:*"
-    "@casehub/data": "workspace:*"
+    "@casehub/pages-component": "workspace:*"
+    "@casehub/pages-data": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
     glob: "npm:^11.0.0"
     js-yaml: "npm:^4.1.0"
@@ -1637,16 +1852,47 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehub/viz@workspace:*, @casehub/viz@workspace:packages/casehub-viz":
+"@casehub/pages-viz@workspace:*, @casehub/pages-viz@workspace:packages/pages-viz":
   version: 0.0.0-use.local
-  resolution: "@casehub/viz@workspace:packages/casehub-viz"
+  resolution: "@casehub/pages-viz@workspace:packages/pages-viz"
   dependencies:
-    "@casehub/data": "workspace:*"
-    "@casehub/ui": "workspace:*"
+    "@casehub/pages-data": "workspace:*"
+    "@casehub/pages-ui": "workspace:*"
     echarts: "npm:^5.6.0"
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
     vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-webapp@workspace:webapp":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-webapp@workspace:webapp"
+  dependencies:
+    "@casehub/pages-component-echarts": "npm:0.0.0"
+    "@casehub/pages-component-llm-prompter": "npm:0.0.0"
+    "@casehub/pages-component-svg-heatmap": "npm:0.0.0"
+    "@casehub/pages-webpack-base": "workspace:*"
+    copy-webpack-plugin: "npm:^11.0.0"
+    rimraf: "npm:^6.1.2"
+    webpack: "npm:^5.104.1"
+    webpack-merge: "npm:^5.9.0"
+  languageName: unknown
+  linkType: soft
+
+"@casehub/pages-webpack-base@workspace:*, @casehub/pages-webpack-base@workspace:packages/pages-webpack-base":
+  version: 0.0.0-use.local
+  resolution: "@casehub/pages-webpack-base@workspace:packages/pages-webpack-base"
+  dependencies:
+    "@babel/traverse": "npm:^7.16.0"
+    css-loader: "npm:^7.1.2"
+    os-browserify: "npm:^0.3.0"
+    path-browserify: "npm:^1.0.1"
+    querystring-es3: "npm:^0.2.1"
+    source-map-loader: "npm:^5.0.0"
+    style-loader: "npm:^4.0.0"
+    ts-loader: "npm:^9.4.2"
+    webpack: "npm:^5.104.1"
   languageName: unknown
   linkType: soft
 
@@ -2733,236 +2979,6 @@ __metadata:
   checksum: 10c0/14a0112bd59615eef9e3446fea018045720cd3da85a98f801a685a818b0d96ef2a1f7227e8d271def546b2e2a0fe91ef915ba9dc912ab7967d2317b1a051d66b
   languageName: node
   linkType: hard
-
-"@melviz/component-api@workspace:*, @melviz/component-api@workspace:packages/melviz-component-api":
-  version: 0.0.0-use.local
-  resolution: "@melviz/component-api@workspace:packages/melviz-component-api"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@melviz/tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    copyfiles: "npm:^2.4.1"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^4.6.2"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/component-dev@workspace:*, @melviz/component-dev@workspace:packages/melviz-component-dev":
-  version: 0.0.0-use.local
-  resolution: "@melviz/component-dev@workspace:packages/melviz-component-dev"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@melviz/component-api": "workspace:*"
-    "@melviz/tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    "@types/react": "npm:^17.0.6"
-    "@types/react-dom": "npm:^17.0.5"
-    copyfiles: "npm:^2.4.1"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^4.6.2"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/component-echarts-base@workspace:*, @melviz/component-echarts-base@workspace:components/melviz-component-echarts-base":
-  version: 0.0.0-use.local
-  resolution: "@melviz/component-echarts-base@workspace:components/melviz-component-echarts-base"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@melviz/tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/echarts": "npm:^4.9.15"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    "@types/react": "npm:^17.0.6"
-    copyfiles: "npm:^2.4.1"
-    echarts: "npm:^5.6.0"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^4.6.2"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/component-echarts@npm:0.0.0, @melviz/component-echarts@workspace:components/melviz-component-echarts":
-  version: 0.0.0-use.local
-  resolution: "@melviz/component-echarts@workspace:components/melviz-component-echarts"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@melviz/component-api": "workspace:*"
-    "@melviz/component-dev": "workspace:*"
-    "@melviz/component-echarts-base": "workspace:*"
-    "@melviz/tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    "@types/react": "npm:^17.0.6"
-    "@types/react-dom": "npm:^17.0.5"
-    copy-webpack-plugin: "npm:^11.0.0"
-    html-webpack-plugin: "npm:^5.6.6"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^4.6.2"
-    webpack: "npm:^5.104.1"
-    webpack-base: "workspace:*"
-    webpack-cli: "npm:^6.0.1"
-    webpack-dev-server: "npm:^5.2.3"
-    webpack-merge: "npm:^5.8.0"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/component-llm-prompter@npm:0.0.0, @melviz/component-llm-prompter@workspace:components/melviz-component-llm-prompter":
-  version: 0.0.0-use.local
-  resolution: "@melviz/component-llm-prompter@workspace:components/melviz-component-llm-prompter"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@melviz/component-api": "workspace:*"
-    "@melviz/component-dev": "workspace:*"
-    "@melviz/tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/heatmap.js": "npm:^2.0.36"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    "@types/react": "npm:^17.0.6"
-    "@types/react-dom": "npm:^17.0.5"
-    copy-webpack-plugin: "npm:^11.0.0"
-    css-loader: "npm:^7.1.2"
-    heatmap.js: "npm:^2.0.5"
-    html-webpack-plugin: "npm:^5.6.6"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    react-markdown: "npm:^9.0.3"
-    rimraf: "npm:^6.1.2"
-    style-loader: "npm:^4.0.0"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^4.6.2"
-    webpack: "npm:^5.104.1"
-    webpack-base: "workspace:*"
-    webpack-cli: "npm:^6.0.1"
-    webpack-dev-server: "npm:^5.2.3"
-    webpack-merge: "npm:^5.8.0"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/component-svg-heatmap@npm:0.0.0, @melviz/component-svg-heatmap@workspace:components/melviz-component-svg-heatmap":
-  version: 0.0.0-use.local
-  resolution: "@melviz/component-svg-heatmap@workspace:components/melviz-component-svg-heatmap"
-  dependencies:
-    "@babel/core": "npm:^7.28.6"
-    "@babel/preset-env": "npm:^7.28.6"
-    "@babel/preset-react": "npm:^7.28.5"
-    "@melviz/component-api": "workspace:*"
-    "@melviz/component-dev": "workspace:*"
-    "@melviz/tsconfig": "workspace:*"
-    "@testing-library/jest-dom": "npm:^6.4.2"
-    "@types/heatmap.js": "npm:^2.0.36"
-    "@types/jest": "npm:^29.5.12"
-    "@types/jest-when": "npm:^3.5.5"
-    "@types/react": "npm:^17.0.6"
-    "@types/react-dom": "npm:^17.0.5"
-    copy-webpack-plugin: "npm:^11.0.0"
-    heatmap.js: "npm:^2.0.5"
-    html-webpack-plugin: "npm:^5.6.6"
-    jest: "npm:^29.7.0"
-    jest-environment-jsdom: "npm:^29.7.0"
-    jest-junit: "npm:^16.0.0"
-    jest-when: "npm:^3.7.0"
-    react: "npm:^17.0.2"
-    react-dom: "npm:^17.0.2"
-    rimraf: "npm:^6.1.2"
-    ts-jest: "npm:^29.1.2"
-    typescript: "npm:^4.6.2"
-    webpack: "npm:^5.104.1"
-    webpack-base: "workspace:*"
-    webpack-cli: "npm:^6.0.1"
-    webpack-dev-server: "npm:^5.2.3"
-    webpack-merge: "npm:^5.8.0"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/examples@workspace:examples":
-  version: 0.0.0-use.local
-  resolution: "@melviz/examples@workspace:examples"
-  dependencies:
-    "@casehub/runtime": "workspace:*"
-    "@casehub/viz": "workspace:*"
-    "@playwright/test": "npm:^1.50.0"
-    browser-sync: "npm:^2.29.3"
-    chokidar: "npm:^3.5.3"
-    http-server: "npm:^14.1.1"
-    js-yaml: "npm:^4.1.0"
-    rimraf: "npm:^6.1.0"
-    source-map-loader: "npm:^5.0.0"
-    ts-loader: "npm:^9.5.0"
-    typescript: "npm:^5.6.0"
-    webpack: "npm:^5.90.0"
-    webpack-base: "workspace:*"
-    webpack-cli: "npm:^5.1.0"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/tsconfig@workspace:*, @melviz/tsconfig@workspace:packages/tsconfig":
-  version: 0.0.0-use.local
-  resolution: "@melviz/tsconfig@workspace:packages/tsconfig"
-  languageName: unknown
-  linkType: soft
-
-"@melviz/webapp@workspace:webapp":
-  version: 0.0.0-use.local
-  resolution: "@melviz/webapp@workspace:webapp"
-  dependencies:
-    "@melviz/component-echarts": "npm:0.0.0"
-    "@melviz/component-llm-prompter": "npm:0.0.0"
-    "@melviz/component-svg-heatmap": "npm:0.0.0"
-    copy-webpack-plugin: "npm:^11.0.0"
-    rimraf: "npm:^6.1.2"
-    webpack: "npm:^5.104.1"
-    webpack-base: "workspace:*"
-    webpack-merge: "npm:^5.9.0"
-  languageName: unknown
-  linkType: soft
 
 "@noble/hashes@npm:1.4.0":
   version: 1.4.0
@@ -5221,6 +5237,12 @@ __metadata:
   checksum: 10c0/cecc8f9a3758c486fc68434a3cca5f4ca7077db5ac9cdb1689786abf63c4aa9891bf70f2df2c3e549d5e284e8da36a218d0e131ebb26dd59280bc99db49640f6
   languageName: node
   linkType: hard
+
+"casehub-pages@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "casehub-pages@workspace:."
+  languageName: unknown
+  linkType: soft
 
 "ccount@npm:^2.0.0":
   version: 2.0.1
@@ -9024,12 +9046,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"melviz@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "melviz@workspace:."
-  languageName: unknown
-  linkType: soft
-
 "memfs@npm:^4.43.1":
   version: 4.56.10
   resolution: "memfs@npm:4.56.10"
@@ -12693,22 +12709,6 @@ __metadata:
   checksum: 10c0/228d8cb6d270c23b0720cb2d95c579202db3aaf8f633b4e9dd94ec2000a04e7e6e43b76a94509cdb30479bd00ae253ab2371a2da9f81446cc313f89a4213a2c4
   languageName: node
   linkType: hard
-
-"webpack-base@workspace:*, webpack-base@workspace:packages/webpack-base":
-  version: 0.0.0-use.local
-  resolution: "webpack-base@workspace:packages/webpack-base"
-  dependencies:
-    "@babel/traverse": "npm:^7.16.0"
-    css-loader: "npm:^7.1.2"
-    os-browserify: "npm:^0.3.0"
-    path-browserify: "npm:^1.0.1"
-    querystring-es3: "npm:^0.2.1"
-    source-map-loader: "npm:^5.0.0"
-    style-loader: "npm:^4.0.0"
-    ts-loader: "npm:^9.4.2"
-    webpack: "npm:^5.104.1"
-  languageName: unknown
-  linkType: soft
 
 "webpack-cli@npm:^5.1.0":
   version: 5.1.4

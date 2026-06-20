@@ -41,7 +41,7 @@ module.exports = (env = {}) => {
       path: path.resolve(__dirname, "dist"),
       filename: "[name].js",
       library: {
-        name: "casehub",
+        name: "casehubPages",
         type: "umd",
       },
       globalObject: "this",
@@ -49,11 +49,11 @@ module.exports = (env = {}) => {
     resolve: {
       ...common.resolve,
       alias: {
-        "@casehub/runtime": path.resolve(__dirname, "../packages/casehub-runtime"),
-        "@casehub/viz": path.resolve(__dirname, "../packages/casehub-viz"),
-        "@casehub/ui": path.resolve(__dirname, "../packages/casehub-ui"),
-        "@casehub/component": path.resolve(__dirname, "../packages/casehub-component"),
-        "@casehub/data": path.resolve(__dirname, "../packages/core"),
+        "@casehub/pages-runtime": path.resolve(__dirname, "../packages/pages-runtime"),
+        "@casehub/pages-viz": path.resolve(__dirname, "../packages/pages-viz"),
+        "@casehub/pages-ui": path.resolve(__dirname, "../packages/pages-ui"),
+        "@casehub/pages-component": path.resolve(__dirname, "../packages/pages-component"),
+        "@casehub/pages-data": path.resolve(__dirname, "../packages/pages-data"),
       },
     },
   };

@@ -1,6 +1,6 @@
-import "@casehub/viz";
-import { loadSite } from "@casehub/runtime";
-import type { LiveSite, SiteOptions } from "@casehub/runtime";
+import "@casehub/pages-viz";
+import { loadSite } from "@casehub/pages-runtime";
+import type { LiveSite, SiteOptions } from "@casehub/pages-runtime";
 
 export { loadSite };
 export type { LiveSite, SiteOptions };

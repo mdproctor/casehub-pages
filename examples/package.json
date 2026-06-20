@@ -1,7 +1,7 @@
 {
-  "name": "@melviz/examples",
+  "name": "@casehub/pages-examples",
   "version": "0.0.0",
-  "description": "Melviz Dashboard Examples Gallery",
+  "description": "CaseHub Pages Dashboard Examples Gallery",
   "private": true,
   "scripts": {
     "clean": "rimraf dist",
@@ -16,11 +16,12 @@
     "test:headed": "npx playwright test --headed"
   },
   "dependencies": {
-    "@casehub/runtime": "workspace:*",
-    "@casehub/viz": "workspace:*",
+    "@casehub/pages-runtime": "workspace:*",
+    "@casehub/pages-viz": "workspace:*",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@casehub/pages-webpack-base": "workspace:*",
     "@playwright/test": "^1.50.0",
     "browser-sync": "^2.29.3",
     "chokidar": "^3.5.3",
@@ -30,11 +31,10 @@
     "ts-loader": "^9.5.0",
     "typescript": "^5.6.0",
     "webpack": "^5.90.0",
-    "webpack-base": "workspace:*",
     "webpack-cli": "^5.1.0"
   },
   "keywords": [
-    "melviz",
+    "casehub-pages",
     "dashboard",
     "examples"
   ],
