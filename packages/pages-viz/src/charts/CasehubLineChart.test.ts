@@ -65,7 +65,7 @@ describe("CasehubLineChart", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-line-chart") as CasehubLineChart;
+    el = document.createElement("casehub-line-chart");
   });
 
   afterEach(() => {

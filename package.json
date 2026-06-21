@@ -26,7 +26,12 @@
     "build:webapp": "yarn workspace @casehub/pages-webapp run build",
     "build:examples": "yarn workspace @casehub/pages-examples run build",
     "typecheck": "npx tsc --build",
+    "lint": "npx eslint .",
     "clean": "yarn workspaces foreach -Apt run clean || true",
     "test": "yarn workspaces foreach -Apt run test"
+  },
+  "devDependencies": {
+    "eslint": "^10.5.0",
+    "typescript-eslint": "^8.61.1"
   }
 }

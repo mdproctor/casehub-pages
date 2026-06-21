@@ -90,7 +90,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     // Wait for form inputs
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    ) as Array<HTMLElement & { dataSet?: any; editable?: boolean }>;
+    );
     expect(formInputs.length).toBeGreaterThan(0);
 
     const start2 = Date.now();
@@ -214,7 +214,7 @@ describe("form ↔ table interaction (real DOM)", () => {
         rowIndex: d.rowIndex,
         rowName: d.row?.cells?.[1]?.value,
       });
-    }) as EventListener);
+    }));
 
     // Step F: Click Bob's id cell (col 0)
     cells[0]!.click();

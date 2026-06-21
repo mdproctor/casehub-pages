@@ -94,7 +94,7 @@ export const fillProperties = (props: Map<string, any>, option?: any): any => {
   const optionStr = props.get(OPTION_PARAM);
   if (optionStr) {
     try {
-      const parsedOption: Object = JSON.parse(optionStr);
+      const parsedOption: object = JSON.parse(optionStr);
       option = { ...option, ...parsedOption };
     } catch (e) {
       console.log("Not able to parse option property");

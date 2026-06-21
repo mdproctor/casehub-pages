@@ -22,6 +22,6 @@ import { SVGHeatmapComponent } from "./SVGHeatmapComponent";
 
 const api = new ComponentApi();
 
-ReactDOM.render(<SVGHeatmapComponent controller={api.getComponentController()} />, document.getElementById("app")!);
+ReactDOM.render(<SVGHeatmapComponent controller={api.getComponentController()} />, document.getElementById("app"));
 
 new ComponentDev().start();

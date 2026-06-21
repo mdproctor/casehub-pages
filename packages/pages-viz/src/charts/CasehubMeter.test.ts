@@ -72,7 +72,7 @@ describe("CasehubMeter", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-meter") as CasehubMeter;
+    el = document.createElement("casehub-meter");
   });
 
   afterEach(() => {

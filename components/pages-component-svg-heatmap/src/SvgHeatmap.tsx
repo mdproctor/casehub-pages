@@ -115,11 +115,11 @@ export function SvgHeatmap(props: SvgHeatmapProps) {
     }
   }, [svgHeatmap, props.svgNodesValues, props.sizeFactor, repaint]);
 
-  const onResize = useCallback(() => setRepaint((previous) => !previous), [repaint]);
+  const onResize = useCallback(() => { setRepaint((previous) => !previous); }, [repaint]);
 
   useEffect(() => {
     window.addEventListener("resize", onResize, false);
-    return () => window.removeEventListener("resize", onResize, false);
+    return () => { window.removeEventListener("resize", onResize, false); };
   }, [repaint]);
 
   return (

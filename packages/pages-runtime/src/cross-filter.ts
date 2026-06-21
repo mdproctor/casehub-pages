@@ -72,8 +72,8 @@ export function deriveActiveFilters(
         merged[col] = [...values];
       } else {
         for (const v of values) {
-          if (!merged[col]!.includes(v)) {
-            merged[col]!.push(v);
+          if (!merged[col].includes(v)) {
+            merged[col].push(v);
           }
         }
       }

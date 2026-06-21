@@ -249,7 +249,7 @@ export class CasehubSelector extends CasehubElement<SelectorProps> {
         } else {
           // Select (and clear previous selection)
           const allChips = labelsDiv.querySelectorAll(".label-chip");
-          allChips.forEach((c) => c.classList.remove("selected"));
+          allChips.forEach((c) => { c.classList.remove("selected"); });
 
           chip.classList.add("selected");
           this._selectedLabelIndex = i;

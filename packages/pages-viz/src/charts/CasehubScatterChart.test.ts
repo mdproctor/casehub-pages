@@ -63,7 +63,7 @@ describe("CasehubScatterChart", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-scatter-chart") as CasehubScatterChart;
+    el = document.createElement("casehub-scatter-chart");
   });
 
   afterEach(() => {

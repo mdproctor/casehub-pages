@@ -60,7 +60,7 @@ describe("CasehubTable", () => {
   let el: CasehubTable;
 
   beforeEach(() => {
-    el = document.createElement("casehub-table") as CasehubTable;
+    el = document.createElement("casehub-table");
   });
 
   afterEach(() => {

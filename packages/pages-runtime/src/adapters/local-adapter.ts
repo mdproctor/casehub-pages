@@ -24,7 +24,7 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
       const oldRow = existing.rows[rowIndex]!;
       const newCells: CellValue[] = oldRow.cells.map((cell, i) => {
         const col = existing.columns[i]!;
-        if (changedFields.includes(col.id as string)) {
+        if (changedFields.includes(col.id)) {
           const newValue = record[col.id as string];
           if (newValue === null || newValue === undefined) {
             return { type: "NULL" as const };

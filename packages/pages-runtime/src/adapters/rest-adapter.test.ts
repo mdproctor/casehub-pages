@@ -13,7 +13,7 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as typeof globalThis.fetch,
+      mockFetch,
     );
 
     const result = await adapter.save(
@@ -51,7 +51,7 @@ describe("rest-adapter", () => {
         headers: { "X-Custom-Header": "value" },
       },
       "https://api.example.com/users",
-      mockFetch as typeof globalThis.fetch,
+      mockFetch,
     );
 
     await adapter.save(
@@ -84,7 +84,7 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as typeof globalThis.fetch,
+      mockFetch,
     );
 
     const result = await adapter.save(
@@ -107,7 +107,7 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as typeof globalThis.fetch,
+      mockFetch,
     );
 
     const result = await adapter.save(
@@ -131,7 +131,7 @@ describe("rest-adapter", () => {
     const adapter = createRestAdapter(
       undefined,
       "https://api.example.com/users",
-      mockFetch as typeof globalThis.fetch,
+      mockFetch,
     );
 
     const result = await adapter.save(

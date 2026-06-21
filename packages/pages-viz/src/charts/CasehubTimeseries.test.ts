@@ -65,7 +65,7 @@ describe("CasehubTimeseries", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-timeseries") as CasehubTimeseries;
+    el = document.createElement("casehub-timeseries");
   });
 
   afterEach(() => {

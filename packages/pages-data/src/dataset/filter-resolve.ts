@@ -46,7 +46,7 @@ export function resolveFilterTypes(
   }
 
   // Already resolved
-  return expression as ResolvedFilterExpression;
+  return expression;
 }
 
 function resolveLeaf(

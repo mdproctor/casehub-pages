@@ -149,7 +149,7 @@ export function createDataPipeline(
               const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
                 ?.filter as { group?: string } | undefined;
               pushData(
-                entry.vizElement as unknown as VizTarget,
+                entry.vizElement,
                 entry.originalLookup,
                 entry.pagePath,
                 filterGroup?.group,

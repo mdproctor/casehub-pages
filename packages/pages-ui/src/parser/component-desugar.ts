@@ -77,7 +77,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     const style = extractStyle(raw.properties);
     return {
       type: "lazy-page",
-      props: { name: raw.page as string, href: raw.src as string },
+      props: { name: raw.page, href: raw.src },
       ...(style ? { style } : {}),
     };
   }
@@ -87,7 +87,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     const style = extractStyle(raw.properties);
     return {
       type: "page-ref",
-      props: { name: raw.page as string },
+      props: { name: raw.page },
       ...(style ? { style } : {}),
     };
   }
@@ -195,7 +195,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
   // Unknown component — wrap as generic
   return {
     type: "unknown",
-    props: raw as Record<string, unknown>,
+    props: raw,
   };
 }
 

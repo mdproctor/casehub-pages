@@ -81,7 +81,7 @@ describe("form editing + local save (real DOM)", () => {
   }> {
     site = await loadSite(target, YAML);
 
-    const tableEl = target.querySelector("casehub-table") as DataElement | null;
+    const tableEl = target.querySelector("casehub-table");
     expect(tableEl).not.toBeNull();
 
     const start = Date.now();
@@ -92,7 +92,7 @@ describe("form editing + local save (real DOM)", () => {
 
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    ) as DataElement[];
+    );
     expect(formInputs.length).toBe(2);
 
     const start2 = Date.now();

@@ -21,4 +21,4 @@ import { EChartsComponent } from "./EChartsComponent";
 
 const api = new ComponentApi();
 
-ReactDOM.render(<EChartsComponent controller={api.getComponentController()} />, document.getElementById("app")!);
+ReactDOM.render(<EChartsComponent controller={api.getComponentController()} />, document.getElementById("app"));

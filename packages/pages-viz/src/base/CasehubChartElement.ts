@@ -92,7 +92,7 @@ export abstract class CasehubChartElement<
 
   private registerClickHandler(chart: ECharts): void {
     chart.on("click", (params: { dataIndex: number }) => {
-      const filter = this.props?.filter as FilterSettings | undefined;
+      const filter = this.props?.filter;
       if (!filter?.enabled) return;
 
       const ds = this.dataSet;

@@ -40,7 +40,7 @@ export function parsePage(raw: unknown): Component {
   // 4. Get datasets, global settings, navTree
   const datasets = substituted["datasets"] as unknown[] | undefined;
   const global = substituted["global"] as Record<string, unknown> | undefined;
-  const navTree = substituted["navTree"] as unknown;
+  const navTree = substituted["navTree"];
 
   // 5. Parse each page into a Component
   const childPages: Component[] = pagesRaw.map((pageRaw, pageIndex) => {

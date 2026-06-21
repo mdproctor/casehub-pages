@@ -45,7 +45,7 @@ export function applyOps(
     const op = ops[i]!;
 
     if (op.type === "filter") {
-      current = applyFilter(current, op as ResolvedFilterOp, options?.referenceDate);
+      current = applyFilter(current, op, options?.referenceDate);
       i++;
     } else if (op.type === "group") {
       // Collect consecutive GroupOps for deferred materialisation

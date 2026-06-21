@@ -33,7 +33,7 @@ describe("CasehubMetric", () => {
   let el: CasehubMetric;
 
   beforeEach(() => {
-    el = document.createElement("casehub-metric") as CasehubMetric;
+    el = document.createElement("casehub-metric");
   });
 
   afterEach(() => {

@@ -21,4 +21,4 @@ import { LLMPrompterComponent } from "./LLMPrompterComponent";
 
 const api = new ComponentApi();
 
-ReactDOM.render(<LLMPrompterComponent controller={api.getComponentController()} />, document.getElementById("app")!);
+ReactDOM.render(<LLMPrompterComponent controller={api.getComponentController()} />, document.getElementById("app"));

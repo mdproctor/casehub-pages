@@ -101,11 +101,11 @@ describe("form integration — YAML end-to-end", () => {
       target.querySelectorAll(
         "casehub-text-input, casehub-number-input, casehub-dropdown, casehub-checkbox, casehub-date-picker, casehub-textarea"
       ),
-    ) as DataElement[];
+    );
   }
 
   function getTable(): DataElement | null {
-    return target.querySelector("casehub-table") as DataElement | null;
+    return target.querySelector("casehub-table");
   }
 
   it("loadSite renders table and form inputs from YAML", async () => {

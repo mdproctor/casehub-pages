@@ -63,7 +63,7 @@ describe("CasehubBubbleChart", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-bubble-chart") as CasehubBubbleChart;
+    el = document.createElement("casehub-bubble-chart");
   });
 
   afterEach(() => {

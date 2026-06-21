@@ -77,7 +77,7 @@ export async function loadSite(
   let currentPage = "";
 
   function findComponentId(e: Event): string | undefined {
-    const el = (e.target as HTMLElement).closest("[data-component-id]") as HTMLElement | null;
+    const el = (e.target as HTMLElement).closest("[data-component-id]");
     return el?.dataset.componentId;
   }
 
@@ -167,7 +167,7 @@ export async function loadSite(
       // Post-save sync: re-push all components referencing this dataset
       for (const [id, entry] of registry) {
         if (entry.originalLookup?.dataSetId === scope.dataset && entry.vizElement) {
-          pipeline.handleDataRequest(entry.vizElement as unknown as VizTarget, entry.originalLookup, id);
+          pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, id);
         }
       }
     } else {
@@ -179,7 +179,7 @@ export async function loadSite(
     const existing = saveTimers.get(pagePath);
     if (existing) clearTimeout(existing);
     const timer = setTimeout(() => {
-      flushSave(pagePath).catch((err) => console.error("Auto-save failed:", err));
+      flushSave(pagePath).catch((err) => { console.error("Auto-save failed:", err); });
     }, delay);
     saveTimers.set(pagePath, timer);
   }
@@ -204,7 +204,7 @@ export async function loadSite(
     if (componentId) {
       pipeline.handleDataRequest(vizTarget, lookup, componentId);
     }
-  }) as EventListener, { signal: abortController.signal });
+  }), { signal: abortController.signal });
 
   target.addEventListener("casehub-slot-change", ((e: Event) => {
     const detail = (e as CustomEvent).detail;
@@ -217,7 +217,7 @@ export async function loadSite(
     if (!_navigating) {
       syncUrl("pushState");
     }
-  }) as EventListener, { signal: abortController.signal });
+  }), { signal: abortController.signal });
 
   target.addEventListener("casehub-field-change", ((e: Event) => {
     const detail = (e as CustomEvent).detail;
@@ -235,9 +235,9 @@ export async function loadSite(
     if (saveConfig.trigger === "auto" || saveConfig.trigger === undefined) {
       resetAutoSaveTimer(entry.pagePath, saveConfig.delay ?? 2000);
     } else if (saveConfig.trigger === "field" && detail.committed) {
-      flushSave(entry.pagePath).catch((err) => console.error("Field save failed:", err));
+      flushSave(entry.pagePath).catch((err) => { console.error("Field save failed:", err); });
     }
-  }) as EventListener, { signal: abortController.signal });
+  }), { signal: abortController.signal });
 
   target.addEventListener("casehub-filter", ((e: Event) => {
     const detail = (e as CustomEvent).detail;
@@ -290,14 +290,14 @@ export async function loadSite(
       // Flush pending edits BEFORE changing the selection filter —
       // flushSave reads the current filter to find the record ID.
       if (isDirty(editState, childScopePath)) {
-        flushSave(childScopePath).catch((err) => console.error("Pre-switch save failed:", err));
+        flushSave(childScopePath).catch((err) => { console.error("Pre-switch save failed:", err); });
       }
       // Record selection: store filter at the child DataScope's pagePath
       const childFilters = filterState.get(childScopePath);
       if (childFilters) {
         for (const [, columnMap] of childFilters) columnMap.clear();
       }
-      const idCell = row.cell(childScope.idColumn as ColumnId);
+      const idCell = row.cell(childScope.idColumn);
       const idValue = String(cellToRaw(idCell));
       updateFilter(filterState, childScopePath, group, childScope.idColumn, [idValue], reset);
     } else {
@@ -316,7 +316,7 @@ export async function loadSite(
       if (group !== undefined && filterProps?.group !== undefined && filterProps.group !== group) continue;
 
       if (candidate.vizElement && candidate.originalLookup) {
-        pipeline.handleDataRequest(candidate.vizElement as unknown as VizTarget, candidate.originalLookup, id);
+        pipeline.handleDataRequest(candidate.vizElement, candidate.originalLookup, id);
       }
     }
 
@@ -328,12 +328,12 @@ export async function loadSite(
       if (!hasDataScope(dataScopeRegistry, candidate.pagePath)) continue;
 
       if (candidate.vizElement && candidate.originalLookup) {
-        pipeline.handleDataRequest(candidate.vizElement as unknown as VizTarget, candidate.originalLookup, id);
+        pipeline.handleDataRequest(candidate.vizElement, candidate.originalLookup, id);
       }
     }
 
     syncUrl("replaceState");
-  }) as EventListener, { signal: abortController.signal });
+  }), { signal: abortController.signal });
 
   target.addEventListener("casehub-page", ((e: Event) => {
     const detail = (e as CustomEvent).detail;
@@ -358,7 +358,7 @@ export async function loadSite(
     } catch (err) {
       (entry.vizElement as unknown as VizTarget).error = err instanceof Error ? err.message : String(err);
     }
-  }) as EventListener, { signal: abortController.signal });
+  }), { signal: abortController.signal });
 
   target.addEventListener("casehub-sort", ((e: Event) => {
     const detail = (e as CustomEvent).detail;
@@ -385,7 +385,7 @@ export async function loadSite(
     } catch (err) {
       (entry.vizElement as unknown as VizTarget).error = err instanceof Error ? err.message : String(err);
     }
-  }) as EventListener, { signal: abortController.signal });
+  }), { signal: abortController.signal });
 
   // --- Render (AFTER event listeners — connectedCallback fires during render) ---
 
@@ -413,7 +413,7 @@ export async function loadSite(
   }
 
   // ViewState
-  const state: ViewState = Object.defineProperties({} as ViewState, {
+  const state: ViewState = Object.defineProperties({}, {
     currentPage: { get: () => currentPage, enumerable: true },
     activeFilters: { get: () => deriveActiveFilters(filterState, currentPage), enumerable: true },
   });

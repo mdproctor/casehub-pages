@@ -212,7 +212,7 @@ function wireTabs(
     container, slotNames, panels, lazy,
     () => currentSlot,
     (s) => { currentSlot = s; },
-    (slotName) => updateButtons(bar, slotName),
+    (slotName) => { updateButtons(bar, slotName); },
   );
 
   bar.addEventListener("click", (e) => {
@@ -251,7 +251,7 @@ function wireSidebar(
     container, slotNames, panels, lazy,
     () => currentSlot,
     (s) => { currentSlot = s; },
-    (slotName) => updateButtons(bar, slotName),
+    (slotName) => { updateButtons(bar, slotName); },
   );
 
   bar.addEventListener("click", (e) => {

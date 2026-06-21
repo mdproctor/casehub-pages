@@ -117,9 +117,9 @@ export function createActivationCallback(
 
       if (isFormInput && lookup) {
         // Merge implicit lookup into props for form inputs
-        vizEl.props = { ...component.props, lookup } as VizComponentProps;
+        vizEl.props = { ...component.props, lookup };
       } else if (component.props) {
-        vizEl.props = component.props as VizComponentProps;
+        vizEl.props = component.props;
       }
       el.appendChild(vizEl);
 
@@ -132,17 +132,17 @@ export function createActivationCallback(
     }
 
     if (component.type === "title" && component.props) {
-      renderTitle(el, component.props as Record<string, unknown>);
+      renderTitle(el, component.props);
       return;
     }
 
     if (component.type === "html" && component.props) {
-      renderHtml(el, component.props as Record<string, unknown>);
+      renderHtml(el, component.props);
       return;
     }
 
     if (component.type === "markdown" && component.props) {
-      renderMarkdown(el, component.props as Record<string, unknown>);
+      renderMarkdown(el, component.props);
       return;
     }
 

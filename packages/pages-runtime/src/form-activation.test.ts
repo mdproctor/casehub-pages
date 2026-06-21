@@ -26,7 +26,7 @@ describe("form input activation", () => {
   ): Promise<HTMLElement & { dataSet?: unknown }> {
     const el = await waitForElement(target, selector);
     const vizTag = el.dataset.componentType;
-    const vizEl = el.querySelector(`casehub-${vizTag}`) as (HTMLElement & { dataSet?: unknown }) | null;
+    const vizEl = el.querySelector(`casehub-${vizTag}`);
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {
@@ -83,14 +83,14 @@ describe("form input activation", () => {
       dataSet?: unknown;
     };
     expect(vizEl).not.toBeNull();
-    expect(vizEl!.editable).toBe(true);
+    expect(vizEl.editable).toBe(true);
 
     // Wait for data to load (async resolution)
     const start = Date.now();
-    while (!vizEl!.dataSet && Date.now() - start < 500) {
+    while (!vizEl.dataSet && Date.now() - start < 500) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    expect(vizEl!.dataSet).toBeTruthy();
+    expect(vizEl.dataSet).toBeTruthy();
 
     site.dispose();
     document.body.removeChild(target);
@@ -117,7 +117,7 @@ describe("form input activation", () => {
       error?: string;
     };
     expect(vizEl).not.toBeNull();
-    expect(vizEl!.error).toBe("Form input requires page dataScope");
+    expect(vizEl.error).toBe("Form input requires page dataScope");
 
     site.dispose();
     document.body.removeChild(target);
@@ -162,7 +162,7 @@ describe("form input activation", () => {
       editable?: boolean;
     };
     expect(vizEl).not.toBeNull();
-    expect(vizEl!.editable).toBe(false);
+    expect(vizEl.editable).toBe(false);
 
     site.dispose();
     document.body.removeChild(target);

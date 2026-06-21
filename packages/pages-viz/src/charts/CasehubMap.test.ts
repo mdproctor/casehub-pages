@@ -66,7 +66,7 @@ describe("CasehubMap", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-map") as CasehubMap;
+    el = document.createElement("casehub-map");
   });
 
   afterEach(() => {

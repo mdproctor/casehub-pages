@@ -125,25 +125,25 @@ export function SVGHeatmapComponent(props: Props) {
       fetch(htParams.svg)
         .then((r) => r.text())
         .then((urlSvgContent) =>
-          setAppState((previousState) => ({
+          { setAppState((previousState) => ({
             ...previousState,
             ...htParams,
             svgNodesValues: extractNodeInfo(ds.data),
             svgContent: urlSvgContent,
-          }))
+          })); }
         )
         .catch((e) =>
-          setAppState((previousState) => ({
+          { setAppState((previousState) => ({
             ...previousState,
             svgNodesValues: [],
             svgContent: "",
             errorMessage: e,
-          }))
+          })); }
         );
     }
   };
 
-  useEffect(() => props.controller.setOnDataSet(onDataset), [appState.svgNodesValues]);
+  useEffect(() => { props.controller.setOnDataSet(onDataset); }, [appState.svgNodesValues]);
 
   return <>{appState?.errorMessage ? <em>{appState.errorMessage}</em> : <SvgHeatmap {...appState} />};</>;
 }

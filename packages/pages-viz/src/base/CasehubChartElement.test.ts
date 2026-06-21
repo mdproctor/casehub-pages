@@ -69,7 +69,7 @@ function mockDataSet(columnId = "col1" as ColumnId): TypedDataSet {
       { id: columnId, name: "Column 1", type: "LABEL" as ColumnType },
     ] as readonly Column[],
     rows: [],
-  } as unknown as TypedDataSet;
+  };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ describe("CasehubChartElement", () => {
 
     it("does not throw when no chart exists", () => {
       // No chart created yet — onResize should be safe
-      expect(() => el.onResize()).not.toThrow();
+      expect(() => { el.onResize(); }).not.toThrow();
     });
   });
 
@@ -314,20 +314,20 @@ describe("CasehubChartElement", () => {
 
   describe("container sizing from props", () => {
     it("numeric height sets container minHeight and height in px", () => {
-      el.props = { lookup: mockLookup("s"), height: "200px" } as TestChartProps;
+      el.props = { lookup: mockLookup("s"), height: "200px" };
       const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
       expect(container.style.minHeight).toBe("200px");
       expect(container.style.height).toBe("200px");
     });
 
     it("string height with units is passed through", () => {
-      el.props = { lookup: mockLookup("s"), height: "50vh" } as TestChartProps;
+      el.props = { lookup: mockLookup("s"), height: "50vh" };
       const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
       expect(container.style.height).toBe("50vh");
     });
 
     it("numeric width sets container width in px", () => {
-      el.props = { lookup: mockLookup("s"), width: "400px" } as TestChartProps;
+      el.props = { lookup: mockLookup("s"), width: "400px" };
       const container = el.shadowRoot!.querySelector("div") as HTMLDivElement;
       expect(container.style.width).toBe("400px");
     });

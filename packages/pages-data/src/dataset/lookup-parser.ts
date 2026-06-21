@@ -211,7 +211,7 @@ function parseFilterNode(node: z.infer<typeof filterNodeSchema>): FilterExpressi
     return {
       type: "unresolved",
       columnId: columnId(node.column),
-      fn: node.function as CoreFunctionType,
+      fn: node.function,
       args: node.args.map(String),
     };
   }

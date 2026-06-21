@@ -325,11 +325,11 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     selector: string,
     maxWait = 500,
   ): Promise<HTMLElement> {
-    const el = target.querySelector(selector) as HTMLElement | null;
+    const el = target.querySelector(selector);
     if (!el) throw new Error(`Element not found: ${selector}`);
     const vizEl = el.querySelector(
       `casehub-${el.dataset.componentType}`,
-    ) as (HTMLElement & { dataSet?: unknown }) | null;
+    );
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {

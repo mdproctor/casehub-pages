@@ -15,37 +15,37 @@ const sort: SortOp = { type: "sort", columns: [{ columnId: columnId("x"), order:
 
 describe("validateOpOrder", () => {
   it("accepts empty ops", () => {
-    expect(() => validateOpOrder([])).not.toThrow();
+    expect(() => { validateOpOrder([]); }).not.toThrow();
   });
 
   it("accepts F*G*S? patterns", () => {
-    expect(() => validateOpOrder([filter])).not.toThrow();
-    expect(() => validateOpOrder([filter, group])).not.toThrow();
-    expect(() => validateOpOrder([filter, group, sort])).not.toThrow();
-    expect(() => validateOpOrder([group, sort])).not.toThrow();
-    expect(() => validateOpOrder([group, group])).not.toThrow();
-    expect(() => validateOpOrder([sort])).not.toThrow();
-    expect(() => validateOpOrder([filter, filter, group, group, sort])).not.toThrow();
+    expect(() => { validateOpOrder([filter]); }).not.toThrow();
+    expect(() => { validateOpOrder([filter, group]); }).not.toThrow();
+    expect(() => { validateOpOrder([filter, group, sort]); }).not.toThrow();
+    expect(() => { validateOpOrder([group, sort]); }).not.toThrow();
+    expect(() => { validateOpOrder([group, group]); }).not.toThrow();
+    expect(() => { validateOpOrder([sort]); }).not.toThrow();
+    expect(() => { validateOpOrder([filter, filter, group, group, sort]); }).not.toThrow();
   });
 
   it("rejects group before filter", () => {
-    expect(() => validateOpOrder([group, filter])).toThrow("INVALID_OPERATION");
+    expect(() => { validateOpOrder([group, filter]); }).toThrow("INVALID_OPERATION");
   });
 
   it("rejects sort before group", () => {
-    expect(() => validateOpOrder([sort, group])).toThrow("INVALID_OPERATION");
+    expect(() => { validateOpOrder([sort, group]); }).toThrow("INVALID_OPERATION");
   });
 
   it("rejects multiple sorts", () => {
-    expect(() => validateOpOrder([sort, sort])).toThrow("INVALID_OPERATION");
+    expect(() => { validateOpOrder([sort, sort]); }).toThrow("INVALID_OPERATION");
   });
 
   it("rejects filter after group", () => {
-    expect(() => validateOpOrder([filter, group, filter])).toThrow("INVALID_OPERATION");
+    expect(() => { validateOpOrder([filter, group, filter]); }).toThrow("INVALID_OPERATION");
   });
 
   it("rejects sort before filter", () => {
-    expect(() => validateOpOrder([sort, filter])).toThrow("INVALID_OPERATION");
+    expect(() => { validateOpOrder([sort, filter]); }).toThrow("INVALID_OPERATION");
   });
 });
 

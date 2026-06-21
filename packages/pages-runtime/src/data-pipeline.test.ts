@@ -191,7 +191,7 @@ describe("data pipeline deduplication", () => {
 
     const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry());
 
-    let resolveCount = 0;
+    const resolveCount = 0;
     const mockCtx: ResolverContext = {
       manager,
       providerFactory: { create: () => undefined },

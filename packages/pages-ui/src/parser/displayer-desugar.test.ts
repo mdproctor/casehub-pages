@@ -425,7 +425,7 @@ describe("desugarDisplayer", () => {
     const lookup = getProps(result, "bar-chart").lookup;
     expect(lookup.dataSetId).toBe("sales");
     expect(lookup.operations).toHaveLength(1);
-    expect(lookup.operations![0]!.type).toBe("group");
+    expect(lookup.operations[0]!.type).toBe("group");
   });
 
   it("parses lookup with filter and sort", () => {
@@ -440,8 +440,8 @@ describe("desugarDisplayer", () => {
     const lookup = getProps(result, "table").lookup;
     expect(lookup.dataSetId).toBe("data");
     expect(lookup.operations).toHaveLength(2);
-    expect(lookup.operations![0]!.type).toBe("filter");
-    expect(lookup.operations![1]!.type).toBe("sort");
+    expect(lookup.operations[0]!.type).toBe("filter");
+    expect(lookup.operations[1]!.type).toBe("sort");
   });
 
   it("parses simple lookup with uuid only", () => {

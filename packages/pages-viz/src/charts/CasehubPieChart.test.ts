@@ -62,7 +62,7 @@ describe("CasehubPieChart", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-pie-chart") as CasehubPieChart;
+    el = document.createElement("casehub-pie-chart");
   });
 
   afterEach(() => {

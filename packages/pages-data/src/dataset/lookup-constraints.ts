@@ -59,7 +59,7 @@ export function validateLookup(
   }
 
   // Check group allowed / required
-  const groupOps = lookup.operations.filter((op) => op.type === "group") as GroupOp[];
+  const groupOps = lookup.operations.filter((op) => op.type === "group");
   const hasGroup = groupOps.length > 0;
 
   if (hasGroup && !constraints.groupAllowed) {

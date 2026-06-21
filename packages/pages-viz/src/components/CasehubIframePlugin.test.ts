@@ -18,7 +18,7 @@ describe("CasehubIframePlugin", () => {
   let element: CasehubIframePlugin;
 
   beforeEach(() => {
-    element = document.createElement("casehub-iframe-plugin") as CasehubIframePlugin;
+    element = document.createElement("casehub-iframe-plugin");
     document.body.appendChild(element);
   });
 

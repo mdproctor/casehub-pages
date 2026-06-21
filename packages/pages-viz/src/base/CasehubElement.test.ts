@@ -27,7 +27,7 @@ function mockLookup(id: string): DataSetLookup {
 }
 
 function mockDataSet(): TypedDataSet {
-  return { columns: [], rows: [] } as unknown as TypedDataSet;
+  return { columns: [], rows: [] };
 }
 
 describe("CasehubElement", () => {

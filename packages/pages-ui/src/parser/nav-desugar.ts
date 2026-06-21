@@ -63,7 +63,7 @@ export function resolveNavigation(
           }
           // Strip slots from the nav component — they'll render at the target
           const { slots: _s, ...navOnly } = group;
-          return navOnly as Component;
+          return navOnly;
         }
         return resolveNavGroup(component, pages, typedNavTree);
       }

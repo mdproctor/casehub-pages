@@ -57,7 +57,7 @@ function handleDevConf(text: string) {
   document.body.prepend(devPane);
 
   ReactDOM.render(
-    <ComponentDevPane sendDataSet={() => sendMessage(dataSetMessage)} sendInit={() => sendMessage(initMessage)} />,
+    <ComponentDevPane sendDataSet={() => { sendMessage(dataSetMessage); }} sendInit={() => { sendMessage(initMessage); }} />,
     devPane
   );
 
@@ -167,7 +167,7 @@ export class ComponentDev {
   public start() {
     fetch(DEV_FILE)
       .then((r) => r.text())
-      .then((text) => handleDevConf(text))
-      .catch((e) => console.log("Not able to load manifest DEV file: " + e));
+      .then((text) => { handleDevConf(text); })
+      .catch((e) => { console.log("Not able to load manifest DEV file: " + e); });
   }
 }

@@ -65,7 +65,7 @@ describe("CasehubBarChart", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("casehub-bar-chart") as CasehubBarChart;
+    el = document.createElement("casehub-bar-chart");
   });
 
   afterEach(() => {

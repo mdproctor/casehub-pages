@@ -65,7 +65,7 @@ function renderNode(
 
   // 5. Panel title
   if (component.type === "panel" && component.props) {
-    const { title } = component.props as Readonly<Record<string, unknown>>;
+    const { title } = component.props;
     if (typeof title === "string" && title) {
       const titleEl = doc.createElement("div");
       titleEl.dataset.panelTitle = "";

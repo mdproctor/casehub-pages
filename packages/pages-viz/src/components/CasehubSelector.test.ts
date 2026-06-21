@@ -33,7 +33,7 @@ describe("CasehubSelector", () => {
   let el: CasehubSelector;
 
   beforeEach(() => {
-    el = document.createElement("casehub-selector") as CasehubSelector;
+    el = document.createElement("casehub-selector");
   });
 
   afterEach(() => {

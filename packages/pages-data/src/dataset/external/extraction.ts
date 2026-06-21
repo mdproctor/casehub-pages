@@ -68,7 +68,7 @@ function parseRaw(result: FetchResult, def: ExternalDataSetDef): unknown {
   // Already structured — pass through
   if (typeof data !== "string") return data;
 
-  const raw = data as string;
+  const raw = data;
 
   // Empty string — nothing to parse
   if (raw.trim() === "") {
@@ -329,7 +329,7 @@ function tabulateShapeA(data: ShapeAData): { columns: Column[]; rows: (string | 
   if (data.values.length > 0 && !Array.isArray(data.values[0])) {
     valueRows = [data.values];
   } else {
-    valueRows = data.values as readonly (readonly unknown[])[];
+    valueRows = data.values;
   }
 
   const rows: (string | null)[][] = valueRows.map((row) =>
@@ -367,7 +367,7 @@ function tabulateShapeC(data: unknown[][]): { columns: Column[]; rows: (string |
   const columns: Column[] = Array.from({ length: maxCols }, (_, i) => {
     const values = data.map((row) => row[i]);
     return {
-      id: `Column ${i}` as ColumnId,
+      id: columnId(`Column ${i}`),
       name: `Column ${i}`,
       type: inferColumnType(values),
     };
@@ -408,7 +408,7 @@ function tabulate(
   } else if (Array.isArray(data) && data.every(v => typeof v !== "object" || v === null)) {
     // Shape D: flat array of primitives → single row with auto-generated columns
     columns = data.map((_, i) => ({
-      id: `Column ${i}` as ColumnId,
+      id: columnId(`Column ${i}`),
       name: `Column ${i}`,
       type: inferColumnType([data[i]]),
     }));
@@ -465,7 +465,7 @@ export async function extractDataSet(
   // Detect by URL pattern OR by checking if the raw data was Prometheus-shaped.
   const PROMETHEUS_COL_NAMES = ["metric", "labels", "value"];
   const isPrometheus = (def.url !== undefined && /metrics$/.test(def.url))
-    || (typeof result.data === "string" && looksLikePrometheus(result.data as string));
+    || (typeof result.data === "string" && looksLikePrometheus(result.data));
   if (
     inferredColumns &&
     wireDataSet.columns.length === 3 &&
@@ -473,7 +473,7 @@ export async function extractDataSet(
     isPrometheus
   ) {
     const renamedCols = wireDataSet.columns.map((c, i) =>
-      i < 3 ? { ...c, id: PROMETHEUS_COL_NAMES[i]! as ColumnId, name: PROMETHEUS_COL_NAMES[i]! } : c,
+      i < 3 ? { ...c, id: columnId(PROMETHEUS_COL_NAMES[i]!), name: PROMETHEUS_COL_NAMES[i]! } : c,
     );
     wireDataSet = { ...wireDataSet, columns: renamedCols };
   }

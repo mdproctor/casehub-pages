@@ -623,7 +623,7 @@ function resolveStrategy(ds: TypedDataSet, key: GroupingKey): GroupingKey {
       resolved = { ...key, strategy: { mode: "distinct" } };
       break;
     case ColumnType.DATE: {
-      const dynamicStrategy = key.strategy as { readonly mode: "dynamic"; readonly preferredUnit?: DateIntervalType };
+      const dynamicStrategy = key.strategy;
       const rangeStrategy: GroupStrategy = dynamicStrategy.preferredUnit !== undefined
         ? { mode: "dynamicRange", preferredUnit: dynamicStrategy.preferredUnit }
         : { mode: "dynamicRange" };
@@ -749,14 +749,14 @@ function buildOutputColumns(
       case "key":
         columns.push({
           id: rc.columnId,
-          name: rc.columnId as string,
+          name: rc.columnId,
           type: ColumnType.LABEL,
         });
         break;
       case "aggregate":
         columns.push({
           id: rc.columnId,
-          name: rc.columnId as string,
+          name: rc.columnId,
           type: inferAggregateColumnType(ds, rc),
         });
         break;
@@ -804,7 +804,7 @@ function materialise(
   // Validate aggregation column types before materialising
   for (const col of resultColumns) {
     if (col.kind === "aggregate") {
-      validateAggregationColumnType(ds, col as ResultColumn & { kind: "aggregate" });
+      validateAggregationColumnType(ds, col);
     }
   }
 
@@ -912,7 +912,7 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
         const subDs = narrowDataSet(ds, partition.rowIndices);
         const resolvedKey = resolveStrategy(ds, op.groupingKey);
         const intervals = computeBuckets(subDs, resolvedKey);
-        const selected = filterToSelectedIntervals(intervals, op.selectedIntervals!);
+        const selected = filterToSelectedIntervals(intervals, op.selectedIntervals);
         // Map sub-dataset row indices back to original dataset row indices
         const selectedOriginalIndices: number[] = [];
         for (const iv of selected) {
@@ -976,7 +976,7 @@ export function applyGroupSequence(ds: TypedDataSet, ops: readonly GroupOp[]): T
   // Validate aggregation column types
   for (const col of resultColumns) {
     if (col.kind === "aggregate") {
-      validateAggregationColumnType(ds, col as ResultColumn & { kind: "aggregate" });
+      validateAggregationColumnType(ds, col);
     }
   }
 

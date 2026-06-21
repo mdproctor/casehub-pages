@@ -43,7 +43,7 @@ describe("CasehubTextInput", () => {
   let el: CasehubTextInput;
 
   beforeEach(() => {
-    el = document.createElement("casehub-text-input") as CasehubTextInput;
+    el = document.createElement("casehub-text-input");
   });
 
   afterEach(() => {
@@ -163,7 +163,7 @@ describe("CasehubNumberInput", () => {
   let el: CasehubNumberInput;
 
   beforeEach(() => {
-    el = document.createElement("casehub-number-input") as CasehubNumberInput;
+    el = document.createElement("casehub-number-input");
   });
 
   afterEach(() => {
@@ -179,7 +179,7 @@ describe("CasehubNumberInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.type).toBe("number");
     expect(input.value).toBe("42");
   });
@@ -196,7 +196,7 @@ describe("CasehubNumberInput", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "25";
     input.dispatchEvent(new Event("input"));
 
@@ -217,7 +217,7 @@ describe("CasehubNumberInput", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "abc";
     input.dispatchEvent(new Event("input"));
 
@@ -238,7 +238,7 @@ describe("CasehubNumberInput", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.min).toBe("0");
     expect(input.max).toBe("100");
     expect(input.step).toBe("5");
@@ -251,7 +251,7 @@ describe("CasehubCheckbox", () => {
   let el: CasehubCheckbox;
 
   beforeEach(() => {
-    el = document.createElement("casehub-checkbox") as CasehubCheckbox;
+    el = document.createElement("casehub-checkbox");
   });
 
   afterEach(() => {
@@ -267,7 +267,7 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.checked).toBe(true);
   });
 
@@ -278,7 +278,7 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.checked).toBe(true);
   });
 
@@ -289,7 +289,7 @@ describe("CasehubCheckbox", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.checked).toBe(false);
   });
 
@@ -305,7 +305,7 @@ describe("CasehubCheckbox", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.checked = true;
     input.dispatchEvent(new Event("change"));
 
@@ -332,7 +332,7 @@ describe("CasehubTextarea", () => {
   let el: CasehubTextarea;
 
   beforeEach(() => {
-    el = document.createElement("casehub-textarea") as CasehubTextarea;
+    el = document.createElement("casehub-textarea");
   });
 
   afterEach(() => {
@@ -396,7 +396,7 @@ describe("CasehubDatePicker", () => {
   let el: CasehubDatePicker;
 
   beforeEach(() => {
-    el = document.createElement("casehub-date-picker") as CasehubDatePicker;
+    el = document.createElement("casehub-date-picker");
   });
 
   afterEach(() => {
@@ -413,7 +413,7 @@ describe("CasehubDatePicker", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.type).toBe("date");
     expect(input.value).toBe("2024-01-15");
   });
@@ -425,7 +425,7 @@ describe("CasehubDatePicker", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.value).toBe("2024-01-15");
   });
 
@@ -441,7 +441,7 @@ describe("CasehubDatePicker", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "2025-12-31";
     input.dispatchEvent(new Event("change"));
 
@@ -462,7 +462,7 @@ describe("CasehubDatePicker", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const input = el.shadowRoot!.querySelector("input")! as HTMLInputElement;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.min).toBe("2000-01-01");
     expect(input.max).toBe("2030-12-31");
   });
@@ -474,7 +474,7 @@ describe("CasehubDropdown", () => {
   let el: CasehubDropdown;
 
   beforeEach(() => {
-    el = document.createElement("casehub-dropdown") as CasehubDropdown;
+    el = document.createElement("casehub-dropdown");
   });
 
   afterEach(() => {
@@ -513,7 +513,7 @@ describe("CasehubDropdown", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
-    const select = el.shadowRoot!.querySelector("select")! as HTMLSelectElement;
+    const select = el.shadowRoot!.querySelector("select")!;
     expect(select.value).toBe("inactive");
   });
 
@@ -533,7 +533,7 @@ describe("CasehubDropdown", () => {
       events.push((e as CustomEvent).detail),
     );
 
-    const select = el.shadowRoot!.querySelector("select")! as HTMLSelectElement;
+    const select = el.shadowRoot!.querySelector("select")!;
     select.value = "inactive";
     select.dispatchEvent(new Event("change"));
 

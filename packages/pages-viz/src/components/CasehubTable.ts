@@ -141,13 +141,13 @@ export class CasehubTable extends CasehubElement<TableProps> {
       firstBtn.innerHTML = "&#171;";
       firstBtn.title = "First page";
       firstBtn.disabled = this._currentPage === 0;
-      firstBtn.addEventListener("click", () => this.goToPage(0, props, dataset, pageSize, serverSide));
+      firstBtn.addEventListener("click", () => { this.goToPage(0, props, dataset, pageSize, serverSide); });
 
       const prevBtn = document.createElement("button");
       prevBtn.innerHTML = "&#8249;";
       prevBtn.title = "Previous page";
       prevBtn.disabled = this._currentPage === 0;
-      prevBtn.addEventListener("click", () => this.goToPage(this._currentPage - 1, props, dataset, pageSize, serverSide));
+      prevBtn.addEventListener("click", () => { this.goToPage(this._currentPage - 1, props, dataset, pageSize, serverSide); });
 
       const pageInput = document.createElement("input");
       pageInput.type = "number";
@@ -173,13 +173,13 @@ export class CasehubTable extends CasehubElement<TableProps> {
       nextBtn.innerHTML = "&#8250;";
       nextBtn.title = "Next page";
       nextBtn.disabled = this._currentPage >= totalPages - 1;
-      nextBtn.addEventListener("click", () => this.goToPage(this._currentPage + 1, props, dataset, pageSize, serverSide));
+      nextBtn.addEventListener("click", () => { this.goToPage(this._currentPage + 1, props, dataset, pageSize, serverSide); });
 
       const lastBtn = document.createElement("button");
       lastBtn.innerHTML = "&#187;";
       lastBtn.title = "Last page";
       lastBtn.disabled = this._currentPage >= totalPages - 1;
-      lastBtn.addEventListener("click", () => this.goToPage(totalPages - 1, props, dataset, pageSize, serverSide));
+      lastBtn.addEventListener("click", () => { this.goToPage(totalPages - 1, props, dataset, pageSize, serverSide); });
 
       paging.append(firstBtn, prevBtn, pageInput, ofLabel, nextBtn, lastBtn);
       toolbar.appendChild(paging);
@@ -201,7 +201,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
       }
       th.textContent = displayName + sortIndicator;
       if (props.sortable) {
-        th.addEventListener("click", () => this.handleSort(col.id, serverSide));
+        th.addEventListener("click", () => { this.handleSort(col.id, serverSide); });
       }
       headerRow.appendChild(th);
     }

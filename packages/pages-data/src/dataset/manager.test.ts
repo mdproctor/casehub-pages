@@ -439,7 +439,7 @@ describe("DataSetManager — accumulate", () => {
       data: [["Bob", "text"]],
     });
 
-    expect(() => mgr.accumulate(ID_A, differentSchema)).toThrow(DataSetError);
+    expect(() => { mgr.accumulate(ID_A, differentSchema); }).toThrow(DataSetError);
     // Existing dataset preserved
     expect(mgr.get(ID_A)!.rows).toHaveLength(1);
     expect(mgr.get(ID_A)!.rows[0]!.text(columnId("name"))).toBe("Alice");
