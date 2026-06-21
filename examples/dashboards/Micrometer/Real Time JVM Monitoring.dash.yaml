@@ -1,6 +1,6 @@
 properties:
-  metricsUrl: data/quarkus/metrics
-  historyUrl: data/quarkus/history.json
+  metricsUrl: /data/quarkus/metrics
+  historyUrl: /data/quarkus/history.json
 global:
   displayer:
     chart:
@@ -10,6 +10,15 @@ global:
 datasets:
   - uuid: history
     url: ${historyUrl}
+    columns:
+      - id: metric
+        type: LABEL
+      - id: labels
+        type: LABEL
+      - id: value
+        type: NUMBER
+      - id: timestamp
+        type: NUMBER
   - uuid: metrics
     url: ${metricsUrl}
     accumulate: true

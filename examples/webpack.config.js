@@ -1,5 +1,5 @@
 const path = require("path");
-const commonConfig = require("webpack-base/webpack.common.config");
+const commonConfig = require("@casehub/pages-webpack-base/webpack.common.config");
 
 module.exports = (env = {}) => {
   const common = commonConfig({ dev: !!env.dev });

@@ -1,6 +1,6 @@
 properties:
     refreshInterval: 5
-    metricsUrl: data/quarkus/metrics
+    metricsUrl: /data/quarkus/metrics
 global:
     displayer:
         chart:

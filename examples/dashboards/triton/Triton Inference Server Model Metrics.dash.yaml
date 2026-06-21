@@ -1,5 +1,5 @@
 properties:
-  metricsUrl: data/triton/metrics
+  metricsUrl: /data/triton/metrics
 global:
   displayer:
     chart:

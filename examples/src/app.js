@@ -269,7 +269,7 @@ async function loadDashboardInTarget(dashboardPath) {
             }
         };
 
-        currentSite = await window.casehub.loadSite(dashboardTarget, yamlText, { baseUrl, fetch: galleryFetch });
+        currentSite = await window.casehubPages.loadSite(dashboardTarget, yamlText, { baseUrl, fetch: galleryFetch });
     } catch (error) {
         console.error('Error loading dashboard:', error);
         dashboardTarget.innerHTML = `
