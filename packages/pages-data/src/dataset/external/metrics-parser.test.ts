@@ -48,4 +48,11 @@ describe("parseMetrics", () => {
     const result = parseMetrics('jvm_memory_used_bytes{area="heap",id="G1 Eden Space",} 52428800');
     expect(result[0]![1]).toBe("heap, G1 Eden Space");
   });
+
+  it("handles curly braces inside label values (URI path params)", () => {
+    const result = parseMetrics('http_server_requests_seconds_count{method="GET",uri="/api/users/{id}",status="200",} 8934');
+    expect(result[0]![0]).toBe("http_server_requests_seconds_count");
+    expect(result[0]![1]).toBe("GET, /api/users/{id}, 200");
+    expect(result[0]![2]).toBe("8934");
+  });
 });

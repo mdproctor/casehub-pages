@@ -1,0 +1,80 @@
+pages:
+  - name: Reports Detail
+    rows:
+      - columns:
+          - components:
+              - html: >-
+                  <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+                    ↳ Loaded from <code>reports.dash.yml</code>
+                  </div>
+      - columns:
+          - span: 4
+            components:
+              - displayer:
+                  type: METRIC
+                  general:
+                    title: Reports Generated
+                  columns:
+                    - id: Count
+                      pattern: "#,##0"
+                  lookup:
+                    uuid: report-stats
+                    filter:
+                      - column: Metric
+                        function: EQUALS_TO
+                        args:
+                          - Generated
+                    group:
+                      - functions:
+                          - source: Count
+                            function: SUM
+          - span: 4
+            components:
+              - displayer:
+                  type: METRIC
+                  general:
+                    title: Avg Generation Time
+                  columns:
+                    - id: Count
+                      pattern: "#,##0 ms"
+                  lookup:
+                    uuid: report-stats
+                    filter:
+                      - column: Metric
+                        function: EQUALS_TO
+                        args:
+                          - AvgTime
+                    group:
+                      - functions:
+                          - source: Count
+                            function: SUM
+          - span: 4
+            components:
+              - displayer:
+                  type: METRIC
+                  general:
+                    title: Failed Reports
+                  columns:
+                    - id: Count
+                      pattern: "#,##0"
+                  lookup:
+                    uuid: report-stats
+                    filter:
+                      - column: Metric
+                        function: EQUALS_TO
+                        args:
+                          - Failed
+                    group:
+                      - functions:
+                          - source: Count
+                            function: SUM
+      - columns:
+          - components:
+              - displayer:
+                  table:
+                    pageSize: 6
+                    sortable: true
+                  general:
+                    title: Recent Report Runs
+                  lookup:
+                    uuid: report-runs

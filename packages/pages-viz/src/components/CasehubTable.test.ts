@@ -507,12 +507,11 @@ describe("CasehubTable", () => {
       firstCell.click();
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail).toEqual({
-        columnId: "name",
-        rowIndex: 1,
-        reset: false,
-        group: "myGroup",
-      });
+      expect(events[0]!.detail.columnId).toBe("name");
+      expect(events[0]!.detail.rowIndex).toBe(1);
+      expect(events[0]!.detail.reset).toBe(false);
+      expect(events[0]!.detail.group).toBe("myGroup");
+      expect(events[0]!.detail.row).toBeDefined();
     });
 
     it("filter event has correct columnId for non-first column", () => {

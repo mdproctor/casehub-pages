@@ -3,6 +3,7 @@ import { wireInteractivity } from "./interactive.js";
 import type { Component } from "../model/types.js";
 import { slotSwapRegistry } from "./slot-swap.js";
 import type { LazyConfig } from "./interactive.js";
+import { isLayoutType, applyLayoutCSS } from "./layout.js";
 
 function makeSlotContainers(slotNames: string[]): {
   container: HTMLDivElement;
@@ -400,5 +401,282 @@ describe("wireInteractivity — lazy stack", () => {
     expect(panels.get("L2")!.querySelector("[data-component-type='table']")).toBeTruthy();
     expect(panels.get("L1")!.style.display).toBe("none");
     expect(panels.get("L2")!.style.display).not.toBe("none");
+  });
+});
+
+describe("wireInteractivity — tabs CSS", () => {
+  it("has casehub-tabs CSS class on bar", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    wireInteractivity(container, "tabs", ["A", "B"], panels);
+    const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
+    expect(bar.classList.contains("casehub-tabs")).toBe(true);
+  });
+});
+
+describe("wireInteractivity — menu CSS", () => {
+  it("has casehub-menu CSS class on bar", () => {
+    const { container, panels } = makeSlotContainers(["File", "Edit"]);
+    wireInteractivity(container, "menu", ["File", "Edit"], panels);
+    const bar = container.querySelector("[data-tab-bar]") as HTMLElement;
+    expect(bar.classList.contains("casehub-menu")).toBe(true);
+  });
+
+  it("first item visible by default, rest hidden", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    wireInteractivity(container, "menu", ["A", "B"], panels);
+    expect(panels.get("A")!.style.display).not.toBe("none");
+    expect(panels.get("B")!.style.display).toBe("none");
+  });
+});
+
+describe("layout — tree and tiles", () => {
+  it("isLayoutType('tree') returns true", () => {
+    expect(isLayoutType("tree")).toBe(true);
+  });
+
+  it("isLayoutType('tiles') returns false", () => {
+    expect(isLayoutType("tiles")).toBe(false);
+  });
+
+  it("applyLayoutCSS for tree sets grid: auto 1fr", () => {
+    const el = document.createElement("div");
+    applyLayoutCSS(el, { type: "tree" });
+    expect(el.style.display).toBe("grid");
+    expect(el.style.gridTemplateColumns).toBe("auto 1fr");
+  });
+});
+
+describe("wireInteractivity — tiles", () => {
+  it("builds grid of card divs", () => {
+    const { container, panels } = makeSlotContainers(["Dashboard", "Reports"]);
+    wireInteractivity(container, "tiles", ["Dashboard", "Reports"], panels);
+
+    const grid = container.querySelector(".casehub-tiles-grid") as HTMLElement;
+    expect(grid).toBeTruthy();
+
+    const cards = grid.querySelectorAll(".tile-card");
+    expect(cards).toHaveLength(2);
+    expect(cards[0]!.textContent).toBe("Dashboard");
+    expect(cards[1]!.textContent).toBe("Reports");
+  });
+
+  it("first panel visible by default, rest hidden", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    wireInteractivity(container, "tiles", ["A", "B"], panels);
+    expect(panels.get("A")!.style.display).not.toBe("none");
+    expect(panels.get("B")!.style.display).toBe("none");
+  });
+
+  it("card click shows target panel, hides others", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    wireInteractivity(container, "tiles", ["A", "B"], panels);
+
+    const cards = container.querySelectorAll(".tile-card");
+    (cards[1] as HTMLElement).click();
+
+    expect(panels.get("A")!.style.display).toBe("none");
+    expect(panels.get("B")!.style.display).not.toBe("none");
+  });
+
+  it("card click dispatches casehub-slot-change", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    container.dataset.componentId = "tiles-1";
+    wireInteractivity(container, "tiles", ["A", "B"], panels);
+
+    const events: Array<{ activeSlot: string }> = [];
+    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+      events.push(e.detail);
+    }) as EventListener);
+
+    const cards = container.querySelectorAll(".tile-card");
+    (cards[1] as HTMLElement).click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.activeSlot).toBe("B");
+  });
+
+  it("active card gets data-active attribute", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    wireInteractivity(container, "tiles", ["A", "B"], panels);
+
+    const cards = container.querySelectorAll(".tile-card");
+    expect((cards[0] as HTMLElement).dataset.active).toBeDefined();
+    expect((cards[1] as HTMLElement).dataset.active).toBeUndefined();
+
+    (cards[1] as HTMLElement).click();
+    expect((cards[0] as HTMLElement).dataset.active).toBeUndefined();
+    expect((cards[1] as HTMLElement).dataset.active).toBeDefined();
+  });
+
+  it("lazy swap: tile click clears old slot and renders new slot", () => {
+    const { container, panels } = makeSlotContainers(["X", "Y"]);
+    const lazy = makeLazyConfig({
+      X: [{ type: "html" }],
+      Y: [{ type: "table" }],
+    });
+    wireInteractivity(container, "tiles", ["X", "Y"], panels, document, lazy);
+
+    expect(panels.get("X")!.children.length).toBeGreaterThan(0);
+    expect(panels.get("Y")!.children).toHaveLength(0);
+
+    const cards = container.querySelectorAll(".tile-card");
+    (cards[1] as HTMLElement).click();
+
+    expect(panels.get("X")!.children).toHaveLength(0);
+    expect(panels.get("Y")!.querySelector("[data-component-type='table']")).toBeTruthy();
+  });
+});
+
+describe("wireInteractivity — tree", () => {
+  it("builds nested ul/li from /-separated slot names", () => {
+    const { container, panels } = makeSlotContainers([
+      "Dashboard", "Settings/Profile", "Settings/Security", "Reports",
+    ]);
+    wireInteractivity(container, "tree", [
+      "Dashboard", "Settings/Profile", "Settings/Security", "Reports",
+    ], panels);
+
+    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    expect(nav).toBeTruthy();
+
+    const topItems = nav.querySelectorAll(":scope > ul > li");
+    expect(topItems).toHaveLength(3); // Dashboard, Settings (group), Reports
+  });
+
+  it("displays last segment as leaf label, group id as parent label", () => {
+    const { container, panels } = makeSlotContainers([
+      "Settings/Profile", "Settings/Security",
+    ]);
+    wireInteractivity(container, "tree", [
+      "Settings/Profile", "Settings/Security",
+    ], panels);
+
+    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const groupLabel = nav.querySelector(".tree-group-label");
+    expect(groupLabel!.textContent).toContain("Settings");
+
+    const leaves = nav.querySelectorAll(".tree-leaf");
+    expect(leaves).toHaveLength(2);
+    expect(leaves[0]!.textContent).toBe("Profile");
+    expect(leaves[1]!.textContent).toBe("Security");
+  });
+
+  it("flat slot names render as flat ul (no nesting)", () => {
+    const { container, panels } = makeSlotContainers(["A", "B", "C"]);
+    wireInteractivity(container, "tree", ["A", "B", "C"], panels);
+
+    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    const leaves = nav.querySelectorAll(".tree-leaf");
+    expect(leaves).toHaveLength(3);
+
+    // No group labels
+    expect(nav.querySelector(".tree-group-label")).toBeNull();
+  });
+
+  it("first leaf visible by default, rest hidden", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    wireInteractivity(container, "tree", ["A", "B"], panels);
+    expect(panels.get("A")!.style.display).not.toBe("none");
+    expect(panels.get("B")!.style.display).toBe("none");
+  });
+
+  it("leaf click shows target panel, hides others", () => {
+    const { container, panels } = makeSlotContainers(["A", "Settings/B"]);
+    wireInteractivity(container, "tree", ["A", "Settings/B"], panels);
+
+    const leaves = container.querySelectorAll(".tree-leaf");
+    (leaves[1] as HTMLElement).click();
+
+    expect(panels.get("A")!.style.display).toBe("none");
+    expect(panels.get("Settings/B")!.style.display).not.toBe("none");
+  });
+
+  it("leaf click dispatches casehub-slot-change with full hierarchical key", () => {
+    const { container, panels } = makeSlotContainers(["A", "Settings/B"]);
+    container.dataset.componentId = "tree-1";
+    wireInteractivity(container, "tree", ["A", "Settings/B"], panels);
+
+    const events: Array<{ activeSlot: string; containerId: string }> = [];
+    container.addEventListener("casehub-slot-change", ((e: CustomEvent) => {
+      events.push(e.detail);
+    }) as EventListener);
+
+    const leaves = container.querySelectorAll(".tree-leaf");
+    (leaves[1] as HTMLElement).click();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.activeSlot).toBe("Settings/B");
+    expect(events[0]!.containerId).toBe("tree-1");
+  });
+
+  it("expand/collapse toggles group children visibility", () => {
+    const { container, panels } = makeSlotContainers([
+      "Settings/Profile", "Settings/Security",
+    ]);
+    wireInteractivity(container, "tree", [
+      "Settings/Profile", "Settings/Security",
+    ], panels);
+
+    const groupLabel = container.querySelector(".tree-group-label") as HTMLElement;
+    const children = container.querySelector(".tree-children") as HTMLElement;
+
+    // Top-level groups start expanded
+    expect(children.style.display).not.toBe("none");
+
+    // Click to collapse
+    groupLabel.click();
+    expect(children.style.display).toBe("none");
+
+    // Click to expand
+    groupLabel.click();
+    expect(children.style.display).not.toBe("none");
+  });
+
+  it("self-contained: tree nav and panels are children of the container", () => {
+    const { container, panels } = makeSlotContainers(["A", "B"]);
+    wireInteractivity(container, "tree", ["A", "B"], panels);
+
+    const nav = container.querySelector(".casehub-tree-nav");
+    expect(nav!.parentElement).toBe(container);
+    expect(panels.get("A")!.parentElement).toBe(container);
+  });
+
+  it("programmatic swap auto-expands collapsed parent groups", () => {
+    const { container, panels } = makeSlotContainers([
+      "Dashboard", "Settings/Profile",
+    ]);
+    wireInteractivity(container, "tree", [
+      "Dashboard", "Settings/Profile",
+    ], panels);
+
+    // Collapse the Settings group
+    const groupLabel = container.querySelector(".tree-group-label") as HTMLElement;
+    groupLabel.click();
+    const children = container.querySelector(".tree-children") as HTMLElement;
+    expect(children.style.display).toBe("none");
+
+    // Programmatic swap to a leaf inside the collapsed group
+    const swap = slotSwapRegistry.get(container)!;
+    swap("Settings/Profile");
+
+    // Group should be auto-expanded
+    expect(children.style.display).not.toBe("none");
+    expect(panels.get("Settings/Profile")!.style.display).not.toBe("none");
+  });
+
+  it("deep nesting: 3-level tree renders correctly", () => {
+    const { container, panels } = makeSlotContainers([
+      "Settings/Advanced/Logging",
+    ]);
+    wireInteractivity(container, "tree", [
+      "Settings/Advanced/Logging",
+    ], panels);
+
+    const nav = container.querySelector(".casehub-tree-nav") as HTMLElement;
+    // Settings > Advanced > Logging
+    const groupLabels = nav.querySelectorAll(".tree-group-label");
+    expect(groupLabels).toHaveLength(2); // Settings and Advanced
+    expect(groupLabels[0]!.textContent).toContain("Settings");
+    expect(groupLabels[1]!.textContent).toContain("Advanced");
   });
 });

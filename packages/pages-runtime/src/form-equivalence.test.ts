@@ -245,8 +245,8 @@ describe("YAML ↔ TS equivalence", () => {
     const yamlTable = yamlTarget.querySelector("casehub-table");
     const tsTable = tsTarget.querySelector("casehub-table");
 
-    expect(yamlTable?.dataSet?.rows?.length).toBe(3);
-    expect(tsTable?.dataSet?.rows?.length).toBe(3);
+    expect((yamlTable as DataElement | null)?.dataSet?.rows?.length).toBe(3);
+    expect((tsTable as DataElement | null)?.dataSet?.rows?.length).toBe(3);
 
     const yamlInputs = yamlTarget.querySelectorAll("casehub-text-input");
     const tsInputs = tsTarget.querySelectorAll("casehub-text-input");
@@ -266,7 +266,7 @@ describe("YAML ↔ TS equivalence", () => {
     const inputs = tsTarget.querySelectorAll("casehub-text-input");
     expect(inputs.length).toBeGreaterThan(0);
     for (const input of inputs) {
-      expect(input.editable).toBe(true);
+      expect((input as HTMLElement & { editable?: boolean }).editable).toBe(true);
     }
 
     document.body.removeChild(tsTarget);

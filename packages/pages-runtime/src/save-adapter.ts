@@ -14,6 +14,11 @@ export interface SaveAdapter {
     idColumn: string,
     idValue: unknown,
   ): Promise<SaveResult>;
+
+  create?(
+    dataSetId: DataSetId,
+    record: Readonly<Record<string, unknown>>,
+  ): Promise<SaveResult>;
 }
 
 export interface SaveResult {

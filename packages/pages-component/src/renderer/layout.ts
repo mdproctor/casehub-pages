@@ -5,7 +5,7 @@ import { isGrid, isColumns } from "../model/type-guards.js";
 const LAYOUT_TYPES = new Set([
   "grid", "columns", "rows", "stack",
   "tabs", "pills", "accordion", "carousel",
-  "sidebar", "panel", "app-grid",
+  "sidebar", "tree", "panel", "app-grid",
 ]);
 
 export function isLayoutType(type: string): boolean {
@@ -48,6 +48,7 @@ export function applyLayoutCSS(
       element.style.flexDirection = "column";
       break;
     case "sidebar":
+    case "tree":
       element.style.display = "grid";
       element.style.gridTemplateColumns = "auto 1fr";
       break;

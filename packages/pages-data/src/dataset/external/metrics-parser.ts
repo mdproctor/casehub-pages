@@ -16,7 +16,7 @@ export function parseMetrics(input: string): string[][] {
     if (trimmed === "" || trimmed.startsWith("#")) continue;
 
     const braceOpen = trimmed.indexOf("{");
-    const braceClose = trimmed.indexOf("}");
+    const braceClose = trimmed.lastIndexOf("}");
 
     let name: string;
     let labels: string;

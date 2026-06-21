@@ -1,0 +1,15 @@
+pages:
+  - name: Profile Detail
+    components:
+      - html: >-
+          <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+            ↳ Loaded from <code>settings-profile.dash.yml</code>
+          </div>
+      - displayer:
+          table:
+            pageSize: 5
+            sortable: true
+          general:
+            title: User Profile Fields
+          lookup:
+            uuid: profile

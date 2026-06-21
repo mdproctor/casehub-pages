@@ -180,6 +180,15 @@ describe("desugarComponent", () => {
       expect(result.props).toEqual({ navGroupId: "apps" });
     });
 
+    it("type: SIDEBAR", () => {
+      const result = desugarComponent({
+        type: "SIDEBAR",
+        properties: { navGroupId: "main" },
+      });
+      expect(result.type).toBe("sidebar");
+      expect(result.props).toEqual({ navGroupId: "main" });
+    });
+
     it("navigation type without properties", () => {
       const result = desugarComponent({ type: "TABS" });
       expect(result.type).toBe("tabs");

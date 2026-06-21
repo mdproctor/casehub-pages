@@ -325,11 +325,11 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     selector: string,
     maxWait = 500,
   ): Promise<HTMLElement> {
-    const el = target.querySelector(selector);
+    const el = target.querySelector(selector) as HTMLElement | null;
     if (!el) throw new Error(`Element not found: ${selector}`);
     const vizEl = el.querySelector(
       `casehub-${el.dataset.componentType}`,
-    );
+    ) as (HTMLElement & { dataSet?: unknown }) | null;
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {
@@ -562,6 +562,90 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     // Navigate away — tab content destroyed
     site.navigate("Overview");
     expect(target.querySelector("[data-component-id='filter-tbl']")).toBeNull();
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
+describe("loadSite — navigation type rendering", () => {
+  it("SIDEBAR type parses and renders sidebar nav", async () => {
+    const yaml = `
+pages:
+  - name: App
+    components:
+      - type: SIDEBAR
+        properties:
+          navGroupId: main
+  - name: Overview
+    components:
+      - html: "Overview"
+  - name: Detail
+    components:
+      - html: "Detail"
+navTree:
+  root_items:
+    - type: GROUP
+      id: main
+      children:
+        - page: Overview
+        - page: Detail
+`;
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const site = await loadSite(target, yaml);
+
+    const sidebar = target.querySelector(".casehub-sidebar");
+    expect(sidebar).not.toBeNull();
+    const buttons = sidebar!.querySelectorAll("button[data-slot]");
+    expect(buttons).toHaveLength(2);
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("TREE type with nested groups renders hierarchical tree", async () => {
+    const yaml = `
+pages:
+  - name: App
+    components:
+      - type: TREE
+        properties:
+          navGroupId: nav
+  - name: Dashboard
+    components:
+      - html: "Dashboard"
+  - name: Profile
+    components:
+      - html: "Profile"
+  - name: Security
+    components:
+      - html: "Security"
+navTree:
+  root_items:
+    - type: GROUP
+      id: nav
+      children:
+        - page: Dashboard
+        - type: GROUP
+          id: Settings
+          children:
+            - page: Profile
+            - page: Security
+`;
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const site = await loadSite(target, yaml);
+
+    const treeNav = target.querySelector(".casehub-tree-nav");
+    expect(treeNav).not.toBeNull();
+
+    const groupLabels = treeNav!.querySelectorAll(".tree-group-label");
+    expect(groupLabels).toHaveLength(1);
+    expect(groupLabels[0]!.textContent).toContain("Settings");
+
+    const leaves = treeNav!.querySelectorAll(".tree-leaf");
+    expect(leaves).toHaveLength(3); // Dashboard, Profile, Security
 
     site.dispose();
     document.body.removeChild(target);

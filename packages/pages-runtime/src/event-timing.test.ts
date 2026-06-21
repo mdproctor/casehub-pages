@@ -131,7 +131,7 @@ describe("registry timing — entry must exist before appendChild", () => {
 
     // Simulate: listener checks registry when data-request fires
     target.addEventListener("casehub-data-request", ((e: Event) => {
-      const el = (e.target as HTMLElement).closest("[data-component-id]");
+      const el = (e.target as HTMLElement).closest<HTMLElement>("[data-component-id]");
       const id = el?.dataset.componentId;
       if (id) {
         registryHadEntry = registry.has(id);
@@ -171,7 +171,7 @@ describe("closest() traversal from custom element", () => {
 
     const found = customEl.closest("[data-component-id]");
     expect(found).toBe(container);
-    expect(found?.dataset.componentId).toBe("grid_0_0_1");
+    expect((found as HTMLElement | null)?.dataset.componentId).toBe("grid_0_0_1");
   });
 
   it("closest returns null when no data-component-id ancestor exists", () => {

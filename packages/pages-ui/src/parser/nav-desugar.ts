@@ -53,7 +53,7 @@ export function resolveNavigation(
 
       if (component.props?.["navGroupId"]) {
         const targetDivId = component.props["targetDivId"] as string | undefined;
-        if (targetDivId) {
+        if (targetDivId && component.type !== "tree") {
           const group = resolveNavGroup(component, pages, typedNavTree);
           if (group.slots) {
             targetSlots.set(targetDivId, {
@@ -138,24 +138,37 @@ function resolveNavGroup(
   navTree: NavTree | undefined,
 ): Component {
   const groupId = navComponent.props?.["navGroupId"] as string;
+  const isTree = navComponent.type === "tree";
 
   // Find matching group in navTree
   const group = navTree ? findGroup(navTree, groupId) : undefined;
 
-  // Get page names from group, or fall back to all pages
-  const pageNames: string[] = group
-    ? extractPageNames(group)
-    : pages
-        .filter((p) => p.type === "page")
-        .map((p) => p.props?.["name"] as string)
-        .filter(Boolean);
-
-  // Build slots: each page name → slot with that page's content
+  // Build slots
   const slots: Record<string, Component[]> = {};
-  for (const pageName of pageNames) {
-    const matchingPage = pages.find((p) => p.props?.["name"] === pageName);
-    if (matchingPage) {
-      slots[pageName] = [matchingPage];
+
+  if (group && isTree) {
+    // Tree: use hierarchical slot keys
+    const entries = extractHierarchicalPageNames(group);
+    for (const { slotKey, pageName } of entries) {
+      const matchingPage = pages.find((p) => p.props?.["name"] === pageName);
+      if (matchingPage) {
+        slots[slotKey] = [matchingPage];
+      }
+    }
+  } else {
+    // Non-tree or no group: use flat slot keys
+    const pageNames: string[] = group
+      ? extractPageNames(group)
+      : pages
+          .filter((p) => p.type === "page")
+          .map((p) => p.props?.["name"] as string)
+          .filter(Boolean);
+
+    for (const pageName of pageNames) {
+      const matchingPage = pages.find((p) => p.props?.["name"] === pageName);
+      if (matchingPage) {
+        slots[pageName] = [matchingPage];
+      }
     }
   }
 
@@ -248,6 +261,39 @@ function extractPageNames(group: NavTreeGroup): string[] {
   }
 
   return names;
+}
+
+interface HierarchicalEntry {
+  readonly slotKey: string;
+  readonly pageName: string;
+}
+
+/**
+ * Extracts hierarchical slot keys from a navTree group.
+ * Each entry has a slotKey (hierarchical path like "Settings/Profile")
+ * and a pageName (flat page name for lookup).
+ */
+function extractHierarchicalPageNames(
+  group: NavTreeGroup,
+  prefix?: string,
+): HierarchicalEntry[] {
+  const entries: HierarchicalEntry[] = [];
+  if (!group.children) return entries;
+
+  for (const child of group.children) {
+    if (child.page) {
+      const slotKey = prefix ? `${prefix}/${child.page}` : child.page;
+      entries.push({ slotKey, pageName: child.page });
+    }
+    if (child.type === "GROUP" && child.children) {
+      const childPrefix = prefix ? `${prefix}/${child.id}` : child.id!;
+      entries.push(
+        ...extractHierarchicalPageNames(child as NavTreeGroup, childPrefix),
+      );
+    }
+  }
+
+  return entries;
 }
 
 export function collectNavTreeGroupIds(navTree: unknown | undefined): Set<string> {

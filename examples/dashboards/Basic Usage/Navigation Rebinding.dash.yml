@@ -5,111 +5,221 @@ global:
       height: 300
 
 pages:
-  # === TOP LEVEL: choose layout variant ===
+  # === TOP LEVEL: choose nav variant ===
   - name: index
     components:
       - html: >-
           <div style="padding: 12px 20px; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #e0e0e0; margin-bottom: 16px; border-radius: 8px">
             <strong style="font-size: 1.3em">Navigation Rebinding</strong>
-            <span style="margin-left: 12px; opacity: 0.7">Same content pages, different navigation wrappers — switch tabs to compare</span>
+            <span style="margin-left: 12px; opacity: 0.7">Same three-level content hierarchy, different navigation wrappers — switch pills to compare</span>
           </div>
-      - type: TABS
+      - type: PILLS
         properties:
           width: 100%
-          navGroupId: LayoutVariants
-          targetDivId: layout_target
-      - div: layout_target
+          navGroupId: Variants
 
   # =============================================
-  # VARIANT 1: Tree (outer) → Tabs (inner)
+  # VARIANT 1: Tree View (self-contained)
   # =============================================
-  - name: "Tree + Tabs"
-    rows:
-      - columns:
-          - span: 3
-            components:
-              - type: TREE
-                properties:
-                  width: 200px
-                  navGroupId: TreeSections
-                  targetDivId: tree_content
-          - span: 9
-            components:
-              - div: tree_content
+  - name: "Tree View"
+    components:
+      - type: TREE
+        properties:
+          navGroupId: MainNav
 
-  - name: "T-Sales"
+  # =============================================
+  # VARIANT 2: Tabs View
+  # =============================================
+  - name: "Tabs View"
     components:
       - type: TABS
         properties:
           width: 100%
-          navGroupId: SalesPages
-          targetDivId: t_sales_inner
-      - div: t_sales_inner
-
-  - name: "T-Ops"
-    components:
-      - type: TABS
-        properties:
-          width: 100%
-          navGroupId: OpsPages
-          targetDivId: t_ops_inner
-      - div: t_ops_inner
+          navGroupId: MainNav
 
   # =============================================
-  # VARIANT 2: Menu (outer) → Pills (inner)
+  # VARIANT 3: Menu View
   # =============================================
-  - name: "Menu + Pills"
+  - name: "Menu View"
     components:
       - type: MENU
         properties:
           width: 100%
-          navGroupId: MenuSections
-          targetDivId: menu_content
-      - div: menu_content
-
-  - name: "M-Sales"
-    components:
-      - type: PILLS
-        properties:
-          width: 100%
-          navGroupId: SalesPages
-          targetDivId: m_sales_inner
-      - div: m_sales_inner
-
-  - name: "M-Ops"
-    components:
-      - type: PILLS
-        properties:
-          width: 100%
-          navGroupId: OpsPages
-          targetDivId: m_ops_inner
-      - div: m_ops_inner
+          navGroupId: MainNav
 
   # =============================================
-  # VARIANT 3: Tiles (outer) → Carousel (inner)
+  # VARIANT 4: Sidebar View (self-contained)
   # =============================================
-  - name: "Tiles + Carousel"
+  - name: "Sidebar View"
+    components:
+      - type: SIDEBAR
+        properties:
+          navGroupId: MainNav
+
+  # =============================================
+  # VARIANT 5: Tiles View
+  # =============================================
+  - name: "Tiles View"
     components:
       - type: TILES
         properties:
-          navGroupId: TilesSections
+          navGroupId: MainNav
 
-  - name: "C-Sales"
+  # =============================================
+  # VARIANT 6: Carousel View
+  # =============================================
+  - name: "Carousel View"
     components:
       - type: CAROUSEL
+        properties:
+          navGroupId: MainNav
+
+  # =============================================
+  # SHARED CONTENT PAGES (three-level hierarchy)
+  # =============================================
+
+  # Level 1: Dashboard (inline content)
+  - name: Dashboard
+    rows:
+      - columns:
+          - span: 3
+            components:
+              - displayer:
+                  type: METRIC
+                  general:
+                    title: Total Revenue
+                  columns:
+                    - id: Revenue
+                      pattern: "$#,##0"
+                  lookup:
+                    uuid: sales
+                    group:
+                      - functions:
+                          - source: Revenue
+                            function: SUM
+          - span: 3
+            components:
+              - displayer:
+                  type: METRIC
+                  general:
+                    title: Products
+                  columns:
+                    - id: Product
+                      pattern: "#"
+                  lookup:
+                    uuid: sales
+                    group:
+                      - columnGroup:
+                          source: Product
+                        functions:
+                          - source: Product
+                            function: COUNT
+          - span: 3
+            components:
+              - displayer:
+                  type: METRIC
+                  general:
+                    title: Regions
+                  columns:
+                    - id: Region
+                      pattern: "#"
+                  lookup:
+                    uuid: sales
+                    group:
+                      - columnGroup:
+                          source: Region
+                        functions:
+                          - source: Region
+                            function: COUNT
+          - span: 3
+            components:
+              - displayer:
+                  type: METRIC
+                  general:
+                    title: Avg Deal
+                  columns:
+                    - id: Revenue
+                      pattern: "$#,##0"
+                  lookup:
+                    uuid: sales
+                    group:
+                      - functions:
+                          - source: Revenue
+                            function: AVERAGE
+      - columns:
+          - span: 6
+            components:
+              - displayer:
+                  type: BARCHART
+                  general:
+                    title: Revenue by Product
+                  lookup:
+                    uuid: sales
+                    group:
+                      - columnGroup:
+                          source: Product
+                        functions:
+                          - source: Product
+                          - source: Revenue
+                            function: SUM
+          - span: 6
+            components:
+              - displayer:
+                  type: LINECHART
+                  subtype: SMOOTH
+                  general:
+                    title: Monthly Trend
+                  chart:
+                    height: 250
+                  lookup:
+                    uuid: monthly
+                    group:
+                      - columnGroup:
+                          source: Month
+                        functions:
+                          - source: Month
+                          - source: Revenue
+                          - source: Target
+
+  # Level 1: Settings (container with nested nav)
+  - name: Settings
+    components:
+      - type: TABS
+        properties:
+          navGroupId: SettingsPages
+
+  # Level 2: Profile (external file include)
+  - name: Profile
+    components:
+      - page: Profile Detail
+        src: includes/settings-profile.dash.yml
+
+  # Level 2: Security (inline content)
+  - name: Security
+    components:
+      - displayer:
+          table:
+            pageSize: 5
+            sortable: true
+          general:
+            title: Security Audit Log
+          lookup:
+            uuid: security-log
+
+  # Level 1: Reports (external file include)
+  - name: Reports
+    components:
+      - page: Reports Detail
+        src: includes/reports.dash.yml
+
+  # Level 1: Sales (container with nested content and visualizations)
+  - name: Sales
+    components:
+      - type: TABS
         properties:
           navGroupId: SalesPages
 
-  - name: "C-Ops"
-    components:
-      - type: CAROUSEL
-        properties:
-          navGroupId: OpsPages
-
-  # =============================================
-  # SHARED CONTENT PAGES
-  # =============================================
-
+  # Level 2: Revenue
   - name: Revenue
     rows:
       - columns:
@@ -145,17 +255,56 @@ pages:
                           - source: Revenue
                             function: SUM
 
+  # Level 2: Transactions (rebinds between Table and Form — three levels deep)
   - name: Transactions
+    components:
+      - type: PILLS
+        properties:
+          navGroupId: TransactionViews
+
+  # Level 3: Table view
+  - name: Txn Table
     components:
       - displayer:
           table:
             pageSize: 8
             sortable: true
+            filter:
+              enabled: true
+              notification: true
           general:
             title: Recent Transactions
           lookup:
             uuid: sales
 
+  # Level 3: Form view (same data, different presentation)
+  - name: Txn Form
+    dataScope:
+      dataset: sales
+      idColumn: id
+    save:
+      trigger: auto
+      delay: 500
+      adapter: local
+    components:
+      - html: >-
+          <div style="display:flex;gap:8px;padding:0 0 12px">
+            <button onclick="this.dispatchEvent(new CustomEvent('casehub-record-navigate',{bubbles:true,composed:true,detail:{direction:'prev'}}))"
+              style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">← Previous</button>
+            <button onclick="this.dispatchEvent(new CustomEvent('casehub-record-navigate',{bubbles:true,composed:true,detail:{direction:'next'}}))"
+              style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">Next →</button>
+          </div>
+      - text-input:
+          field: Product
+          label: Product
+      - text-input:
+          field: Region
+          label: Region
+      - number-input:
+          field: Revenue
+          label: Revenue
+
+  # Level 2: Pipeline
   - name: Pipeline
     rows:
       - columns:
@@ -225,6 +374,14 @@ pages:
                           - source: Revenue
                           - source: Target
 
+  # Level 1: Operations (container with nested content)
+  - name: Operations
+    components:
+      - type: TABS
+        properties:
+          navGroupId: OpsPages
+
+  # Level 2: Monitoring
   - name: Monitoring
     rows:
       - columns:
@@ -297,6 +454,7 @@ pages:
                           - source: Value
                             function: MAX
 
+  # Level 2: Services
   - name: Services
     rows:
       - columns:
@@ -342,35 +500,63 @@ pages:
 
 navTree:
   root_items:
+    # Top-level variant selector
     - type: GROUP
-      id: LayoutVariants
+      id: Variants
       children:
-        - page: "Tree + Tabs"
-        - page: "Menu + Pills"
-        - page: "Tiles + Carousel"
+        - page: "Tree View"
+        - page: "Tabs View"
+        - page: "Menu View"
+        - page: "Sidebar View"
+        - page: "Tiles View"
+        - page: "Carousel View"
 
+    # Main navigation (three-level hierarchy)
     - type: GROUP
-      id: TreeSections
+      id: MainNav
       children:
-        - page: "T-Sales"
-        - page: "T-Ops"
-    - type: GROUP
-      id: MenuSections
-      children:
-        - page: "M-Sales"
-        - page: "M-Ops"
-    - type: GROUP
-      id: TilesSections
-      children:
-        - page: "C-Sales"
-        - page: "C-Ops"
+        - page: Dashboard
+        - type: GROUP
+          id: Settings
+          children:
+            - page: Profile
+            - page: Security
+        - page: Reports
+        - type: GROUP
+          id: Sales
+          children:
+            - page: Revenue
+            - page: Transactions
+            - page: Pipeline
+        - type: GROUP
+          id: Operations
+          children:
+            - page: Monitoring
+            - page: Services
 
+    # Settings nested nav
+    - type: GROUP
+      id: SettingsPages
+      children:
+        - page: Profile
+        - page: Security
+
+    # Sales nested nav
     - type: GROUP
       id: SalesPages
       children:
         - page: Revenue
         - page: Transactions
         - page: Pipeline
+
+    # Transactions view rebinding (level 3)
+    - type: GROUP
+      id: TransactionViews
+      children:
+        - page: "Txn Table"
+        - page: "Txn Form"
+
+    # Operations nested nav
     - type: GROUP
       id: OpsPages
       children:
@@ -381,23 +567,25 @@ datasets:
   - uuid: sales
     content: >-
       [
-        ["Laptops", "North", 12500],
-        ["Laptops", "South", 9800],
-        ["Laptops", "East", 11200],
-        ["Phones", "North", 18300],
-        ["Phones", "South", 15600],
-        ["Phones", "East", 14200],
-        ["Tablets", "North", 6700],
-        ["Tablets", "South", 8900],
-        ["Tablets", "East", 7100],
-        ["Monitors", "North", 4300],
-        ["Monitors", "South", 3800],
-        ["Monitors", "East", 5200],
-        ["Accessories", "North", 2100],
-        ["Accessories", "South", 3400],
-        ["Accessories", "East", 2800]
+        [1, "Laptops", "North", 12500],
+        [2, "Laptops", "South", 9800],
+        [3, "Laptops", "East", 11200],
+        [4, "Phones", "North", 18300],
+        [5, "Phones", "South", 15600],
+        [6, "Phones", "East", 14200],
+        [7, "Tablets", "North", 6700],
+        [8, "Tablets", "South", 8900],
+        [9, "Tablets", "East", 7100],
+        [10, "Monitors", "North", 4300],
+        [11, "Monitors", "South", 3800],
+        [12, "Monitors", "East", 5200],
+        [13, "Accessories", "North", 2100],
+        [14, "Accessories", "South", 3400],
+        [15, "Accessories", "East", 2800]
       ]
     columns:
+      - id: id
+        type: NUMBER
       - id: Product
         type: LABEL
       - id: Region
@@ -459,4 +647,81 @@ datasets:
       - id: Latency
         type: NUMBER
       - id: ErrorRate
+        type: NUMBER
+
+  - uuid: security-log
+    content: >-
+      [
+        ["2026-06-21 09:14", "Login", "mark@example.com", "Success"],
+        ["2026-06-21 08:02", "API Key Rotated", "system", "Success"],
+        ["2026-06-20 23:45", "Login", "admin@example.com", "Failed"],
+        ["2026-06-20 18:30", "Permission Changed", "mark@example.com", "Success"],
+        ["2026-06-20 14:12", "Login", "dev@example.com", "Success"],
+        ["2026-06-19 11:00", "MFA Enabled", "mark@example.com", "Success"],
+        ["2026-06-19 09:22", "Login", "admin@example.com", "Success"],
+        ["2026-06-18 16:40", "Password Changed", "dev@example.com", "Success"]
+      ]
+    columns:
+      - id: Timestamp
+        type: LABEL
+      - id: Action
+        type: LABEL
+      - id: User
+        type: LABEL
+      - id: Result
+        type: LABEL
+
+  - uuid: profile
+    content: >-
+      [
+        ["Display Name", "Mark Proctor", "Yes"],
+        ["Email", "mark@example.com", "Yes"],
+        ["Role", "Platform Admin", "No"],
+        ["Timezone", "Europe/London", "Yes"],
+        ["Language", "English (UK)", "Yes"],
+        ["MFA", "Enabled (TOTP)", "No"],
+        ["Last Login", "2026-06-21 09:14", "No"],
+        ["API Key", "ch_live_•••••k4f", "No"]
+      ]
+    columns:
+      - id: Field
+        type: LABEL
+      - id: Value
+        type: LABEL
+      - id: Editable
+        type: LABEL
+
+  - uuid: report-stats
+    content: >-
+      [
+        ["Generated", 1247],
+        ["AvgTime", 3420],
+        ["Failed", 23]
+      ]
+    columns:
+      - id: Metric
+        type: LABEL
+      - id: Count
+        type: NUMBER
+
+  - uuid: report-runs
+    content: >-
+      [
+        ["Sales Q2 Summary", "2026-06-21 08:00", "Completed", 2140],
+        ["Ops Weekly Digest", "2026-06-20 23:00", "Completed", 4520],
+        ["Revenue Forecast", "2026-06-20 18:30", "Completed", 8930],
+        ["Inventory Alert", "2026-06-20 12:00", "Failed", 0],
+        ["Customer Churn", "2026-06-19 09:00", "Completed", 5670],
+        ["Pipeline Health", "2026-06-19 06:00", "Completed", 3100],
+        ["Monthly KPIs", "2026-06-18 00:00", "Completed", 12400],
+        ["SLA Compliance", "2026-06-17 23:00", "Completed", 6780]
+      ]
+    columns:
+      - id: Report
+        type: LABEL
+      - id: RunTime
+        type: LABEL
+      - id: Status
+        type: LABEL
+      - id: Duration
         type: NUMBER

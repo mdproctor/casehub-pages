@@ -30,3 +30,10 @@ export function isDirty(state: EditState, pagePath: string): boolean {
   const ps = state.get(pagePath);
   return ps !== undefined && ps.size > 0;
 }
+
+export function isAnyDirty(state: EditState): boolean {
+  for (const ps of state.values()) {
+    if (ps.size > 0) return true;
+  }
+  return false;
+}

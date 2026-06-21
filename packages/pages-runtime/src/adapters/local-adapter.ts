@@ -60,5 +60,60 @@ export function createLocalAdapter(manager: DataSetManager): SaveAdapter {
 
       return { success: true };
     },
+
+    async delete(dataSetId, idColumn, idValue): Promise<SaveResult> {
+      const existing = manager.get(dataSetId);
+      if (!existing) {
+        return { success: false, error: `Dataset "${String(dataSetId)}" not found` };
+      }
+
+      const rowIndex = existing.rows.findIndex(row => {
+        const cell = row.cell(idColumn as ColumnId);
+        return cell.type !== "NULL" && String(cell.value) === String(idValue);
+      });
+
+      if (rowIndex === -1) {
+        return { success: false, error: `Record with ${idColumn}=${String(idValue)} not found` };
+      }
+
+      const newRows = [...existing.rows];
+      newRows.splice(rowIndex, 1);
+      const newDataset: TypedDataSet = { columns: existing.columns, rows: newRows };
+      manager.register(dataSetId, newDataset);
+
+      return { success: true };
+    },
+
+    async create(dataSetId, record): Promise<SaveResult> {
+      const existing = manager.get(dataSetId);
+      if (!existing) {
+        return { success: false, error: `Dataset "${String(dataSetId)}" not found` };
+      }
+
+      const newCells: CellValue[] = existing.columns.map((col) => {
+        const value = record[col.id as string];
+        if (value === null || value === undefined) {
+          return { type: "NULL" as const };
+        }
+        switch (col.type) {
+          case ColumnType.NUMBER:
+            return { type: ColumnType.NUMBER, value: Number(value) } as const;
+          case ColumnType.DATE:
+            return { type: ColumnType.DATE, value: new Date(String(value)) } as const;
+          case ColumnType.TEXT:
+            return { type: ColumnType.TEXT, value: String(value) } as const;
+          case ColumnType.LABEL:
+            return { type: ColumnType.LABEL, value: String(value) } as const;
+          default:
+            return { type: "NULL" as const };
+        }
+      });
+
+      const newRow = createTypedRow(newCells, existing.columns);
+      const newDataset: TypedDataSet = { columns: existing.columns, rows: [...existing.rows, newRow] };
+      manager.register(dataSetId, newDataset);
+
+      return { success: true };
+    },
   };
 }

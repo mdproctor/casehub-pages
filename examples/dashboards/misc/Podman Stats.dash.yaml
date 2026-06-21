@@ -1,5 +1,5 @@
 properties:
-  baseUrl: http://localhost:8000
+  baseUrl: /data/podman
 global:
   displayer:
     chart:
@@ -9,7 +9,7 @@ global:
         enabled: true
 datasets:
   - uuid: images
-    expression: $.[Id, Names[0], $fromMillis(Created * 1000), Size, Containers]
+    expression: $.[Id, Names[0], $fromMillis(Created * 1000), $round(Size / 1000000), Containers]
     url: ${baseUrl}/images/json
     columns:
       - id: ID
@@ -18,13 +18,13 @@ datasets:
         type: label
       - id: created
         type: date
-      - id: size
+      - id: Size (MB)
         type: number
       - id: containers
         type: number
   - uuid: containers
     expression: $.[Id, Names[0], Image, $fromMillis(Created * 1000), State, Status]
-    url: ${baseUrl}/containers/json?filters={%22status%22:%20[%22created%22,%22running%22,%22paused%22,%22exited%22]}
+    url: ${baseUrl}/containers/json
     columns:
       - id: ID
         type: label
@@ -67,10 +67,10 @@ pages:
                           source: name
                         functions:
                           - source: name
-                          - source: size
-                            column: Total Size
+                          - source: Size (MB)
+                            column: Total Size (MB)
                     sortOps:
-                      - column: Total Size
+                      - column: Total Size (MB)
                         sortOrder: DESCENDING
           - span: "6"
             components:

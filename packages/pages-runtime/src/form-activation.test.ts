@@ -26,7 +26,7 @@ describe("form input activation", () => {
   ): Promise<HTMLElement & { dataSet?: unknown }> {
     const el = await waitForElement(target, selector);
     const vizTag = el.dataset.componentType;
-    const vizEl = el.querySelector(`casehub-${vizTag}`);
+    const vizEl = el.querySelector(`casehub-${vizTag}`) as (HTMLElement & { dataSet?: unknown }) | null;
     if (!vizEl) throw new Error(`Viz element not found in ${selector}`);
     const start = Date.now();
     while (!vizEl.dataSet && Date.now() - start < maxWait) {

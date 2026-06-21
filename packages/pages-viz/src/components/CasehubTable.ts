@@ -232,6 +232,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
                 composed: true,
                 detail: {
                   columnId,
+                  rowIndex: rowIdx,
                   row: clickedRow,
                   reset: false,
                   group: props.filter?.group,

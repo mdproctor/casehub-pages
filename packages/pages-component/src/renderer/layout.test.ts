@@ -13,6 +13,7 @@ describe("isLayoutType", () => {
     expect(isLayoutType("accordion")).toBe(true);
     expect(isLayoutType("carousel")).toBe(true);
     expect(isLayoutType("sidebar")).toBe(true);
+    expect(isLayoutType("tree")).toBe(true);
     expect(isLayoutType("panel")).toBe(true);
     expect(isLayoutType("app-grid")).toBe(true);
   });
@@ -21,7 +22,6 @@ describe("isLayoutType", () => {
     expect(isLayoutType("bar-chart")).toBe(false);
     expect(isLayoutType("html")).toBe(false);
     expect(isLayoutType("page")).toBe(false);
-    expect(isLayoutType("tree")).toBe(false);
     expect(isLayoutType("menu")).toBe(false);
   });
 });
@@ -61,6 +61,14 @@ describe("applyLayoutCSS", () => {
   it("applies sidebar CSS", () => {
     const el = document.createElement("div");
     const component: Component = { type: "sidebar" };
+    applyLayoutCSS(el, component);
+    expect(el.style.display).toBe("grid");
+    expect(el.style.gridTemplateColumns).toBe("auto 1fr");
+  });
+
+  it("applies tree CSS", () => {
+    const el = document.createElement("div");
+    const component: Component = { type: "tree" };
     applyLayoutCSS(el, component);
     expect(el.style.display).toBe("grid");
     expect(el.style.gridTemplateColumns).toBe("auto 1fr");

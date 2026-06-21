@@ -14,6 +14,7 @@ function findDashboards(dir, baseDir = dir) {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
+      if (file === 'includes') continue;
       dashboards.push(...findDashboards(filePath, baseDir));
     } else if (file.endsWith('.dash.yaml') || file.endsWith('.dash.yml') || file.endsWith('.yml')) {
       const relativePath = path.relative(baseDir, filePath);

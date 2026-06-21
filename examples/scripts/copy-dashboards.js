@@ -58,6 +58,8 @@ const mockEndpoints = {
   'mock-data/jupyterhub-metrics.txt': 'dashboards/jupyterhub/metrics/metrics',
   'mock-data/ansible-metrics.txt': 'data/metrics',
   'mock-data/triton-metrics.txt': 'data/triton/metrics',
+  'mock-data/podman-images.json': 'data/podman/images/json',
+  'mock-data/podman-containers.json': 'data/podman/containers/json',
 };
 
 for (const [src, dest] of Object.entries(mockEndpoints)) {

@@ -157,4 +157,87 @@ describe("local-adapter", () => {
     const emailCell = updatedDataset.rows[0]!.cell("email" as ColumnId);
     expect(emailCell.type).toBe("NULL");
   });
+
+  it("should delete a record from the dataset", async () => {
+    const columns: Column[] = [
+      { id: "id" as ColumnId, name: "ID", type: ColumnType.NUMBER },
+      { id: "name" as ColumnId, name: "Name", type: ColumnType.TEXT },
+    ];
+
+    const row1 = createTypedRow([
+      { type: ColumnType.NUMBER, value: 1 },
+      { type: ColumnType.TEXT, value: "Alice" },
+    ], columns);
+    const row2 = createTypedRow([
+      { type: ColumnType.NUMBER, value: 2 },
+      { type: ColumnType.TEXT, value: "Bob" },
+    ], columns);
+
+    const dataset: TypedDataSet = { columns, rows: [row1, row2] };
+    let storedDataset = dataset;
+
+    const manager: DataSetManager = {
+      register: vi.fn((_id, ds) => { storedDataset = ds; }),
+      get: vi.fn(() => storedDataset),
+      remove: vi.fn(),
+      has: vi.fn(() => true),
+      accumulate: vi.fn(),
+      lookup: vi.fn(),
+    };
+
+    const adapter = createLocalAdapter(manager);
+    const result = await adapter.delete!("users" as DataSetId, "id", 1);
+
+    expect(result.success).toBe(true);
+    expect(storedDataset.rows.length).toBe(1);
+    expect(storedDataset.rows[0]!.text("name" as ColumnId)).toBe("Bob");
+  });
+
+  it("should create a new record in the dataset", async () => {
+    const columns: Column[] = [
+      { id: "id" as ColumnId, name: "ID", type: ColumnType.NUMBER },
+      { id: "name" as ColumnId, name: "Name", type: ColumnType.TEXT },
+    ];
+
+    const row1 = createTypedRow([
+      { type: ColumnType.NUMBER, value: 1 },
+      { type: ColumnType.TEXT, value: "Alice" },
+    ], columns);
+
+    const dataset: TypedDataSet = { columns, rows: [row1] };
+    let storedDataset = dataset;
+
+    const manager: DataSetManager = {
+      register: vi.fn((_id, ds) => { storedDataset = ds; }),
+      get: vi.fn(() => storedDataset),
+      remove: vi.fn(),
+      has: vi.fn(() => true),
+      accumulate: vi.fn(),
+      lookup: vi.fn(),
+    };
+
+    const adapter = createLocalAdapter(manager);
+    const result = await adapter.create!("users" as DataSetId, { id: 2, name: "Bob" });
+
+    expect(result.success).toBe(true);
+    expect(storedDataset.rows.length).toBe(2);
+    expect(storedDataset.rows[1]!.text("name" as ColumnId)).toBe("Bob");
+  });
+
+  it("delete returns error if dataset not found", async () => {
+    const manager: DataSetManager = {
+      register: vi.fn(),
+      get: vi.fn(() => undefined),
+      remove: vi.fn(),
+      has: vi.fn(() => false),
+      accumulate: vi.fn(),
+      lookup: vi.fn(),
+    };
+
+    const adapter = createLocalAdapter(manager);
+    const result = await adapter.delete!("unknown" as DataSetId, "id", 1);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("not found");
+  });
 });

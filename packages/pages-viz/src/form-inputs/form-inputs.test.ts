@@ -542,9 +542,8 @@ describe("CasehubDropdown", () => {
     expect(events[0]!.committed).toBe(true);
   });
 
-  it("DataSetOptions not implemented yet (returns empty)", () => {
+  it("DataSetOptions renders empty until optionsDataSet is provided", () => {
     const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
-
     el.props = {
       field: "category",
       options: { dataset: dataSetId("categories"), labelColumn: "label", valueColumn: "value" },
@@ -555,12 +554,10 @@ describe("CasehubDropdown", () => {
     el.dataSet = ds;
 
     const select = el.shadowRoot!.querySelector("select")!;
-    const options = Array.from(select.querySelectorAll("option"));
-    // DataSetOptions is parsed but not resolved — returns empty until runtime wiring is implemented
-    expect(options).toHaveLength(0);
+    expect(Array.from(select.querySelectorAll("option"))).toHaveLength(0);
   });
 
-  it("renders empty select when dataset options not yet loaded", () => {
+  it("DataSetOptions populates options from optionsDataSet", () => {
     const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
     el.props = {
       field: "category",
@@ -571,8 +568,123 @@ describe("CasehubDropdown", () => {
     document.body.appendChild(el);
     el.dataSet = ds;
 
+    const optionsDs = makeDataSet(
+      [["value", "LABEL"], ["label", "LABEL"]],
+      [["electronics", "Electronics"], ["clothing", "Clothing"], ["food", "Food"]],
+    );
+    el.optionsDataSet = optionsDs;
+
     const select = el.shadowRoot!.querySelector("select")!;
-    const options = Array.from(select.querySelectorAll("option"));
-    expect(options).toHaveLength(0);
+    const opts = Array.from(select.querySelectorAll("option"));
+    expect(opts).toHaveLength(3);
+    expect(opts[0]!.value).toBe("electronics");
+    expect(opts[0]!.textContent).toBe("Electronics");
+    expect(opts[1]!.value).toBe("clothing");
+    expect(opts[1]!.textContent).toBe("Clothing");
+    expect(opts[2]!.value).toBe("food");
+    expect(opts[2]!.textContent).toBe("Food");
+  });
+
+  it("DataSetOptions selects current field value from optionsDataSet", () => {
+    const ds = makeDataSet([["category", "LABEL"]], [["clothing"]]);
+    el.props = {
+      field: "category",
+      options: { dataset: dataSetId("categories"), labelColumn: "label", valueColumn: "value" },
+      lookup: mockLookup("test"),
+    };
+    el.editable = true;
+    document.body.appendChild(el);
+    el.dataSet = ds;
+
+    const optionsDs = makeDataSet(
+      [["value", "LABEL"], ["label", "LABEL"]],
+      [["electronics", "Electronics"], ["clothing", "Clothing"]],
+    );
+    el.optionsDataSet = optionsDs;
+
+    const select = el.shadowRoot!.querySelector("select")!;
+    expect(select.value).toBe("clothing");
+  });
+
+  it("DataSetOptions dispatches casehub-data-request for options dataset", () => {
+    const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
+    el.props = {
+      field: "category",
+      options: { dataset: dataSetId("categories"), labelColumn: "label", valueColumn: "value" },
+      lookup: mockLookup("test"),
+    };
+    el.editable = true;
+
+    const requests: Array<{ dataSetId: string }> = [];
+    const wrapper = document.createElement("div");
+    wrapper.dataset.componentId = "test-dropdown";
+    wrapper.addEventListener("casehub-data-request", (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      requests.push({ dataSetId: detail.lookup.dataSetId });
+    });
+    wrapper.appendChild(el);
+    document.body.appendChild(wrapper);
+    el.dataSet = ds;
+
+    const optionsReq = requests.find(r => r.dataSetId === "categories");
+    expect(optionsReq).toBeDefined();
+
+    wrapper.remove();
+  });
+
+  it("cascading: re-requests options when filterField changes", () => {
+    const ds = makeDataSet([["city", "LABEL"], ["country", "LABEL"]], [["Paris", "France"]]);
+    el.props = {
+      field: "city",
+      options: {
+        dataset: dataSetId("cities"),
+        labelColumn: "name",
+        valueColumn: "name",
+        filterField: "country",
+        filterColumn: "country",
+      },
+      lookup: mockLookup("test"),
+    };
+    el.editable = true;
+
+    const requests: Array<{ dataSetId: string; operations: unknown[] }> = [];
+    const wrapper = document.createElement("div");
+    wrapper.dataset.componentId = "test-cascade";
+    wrapper.addEventListener("casehub-data-request", (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      requests.push({ dataSetId: detail.lookup.dataSetId, operations: detail.lookup.operations });
+    });
+    wrapper.appendChild(el);
+    document.body.appendChild(wrapper);
+    el.dataSet = ds;
+
+    const optionsRequests = requests.filter(r => r.dataSetId === "cities");
+    expect(optionsRequests.length).toBe(1);
+
+    // Simulate parent field change
+    el.dispatchEvent(
+      new CustomEvent("casehub-field-change", {
+        bubbles: true,
+        composed: true,
+        detail: { field: "country", value: "Germany", committed: true },
+      }),
+    );
+
+    const updatedOptionsRequests = requests.filter(r => r.dataSetId === "cities");
+    expect(updatedOptionsRequests.length).toBe(2);
+    const secondReq = updatedOptionsRequests[1]!;
+    expect(secondReq.dataSetId).toBe("cities");
+    expect(secondReq.operations).toHaveLength(1);
+    expect(secondReq.operations[0]).toEqual({
+      type: "filter",
+      expressions: [{
+        type: "unresolved",
+        columnId: "country",
+        fn: "EQUALS_TO",
+        args: ["Germany"],
+      }],
+    });
+
+    wrapper.remove();
   });
 });

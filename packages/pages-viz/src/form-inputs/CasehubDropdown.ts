@@ -1,8 +1,10 @@
 import { CasehubFormInput } from "./CasehubFormInput.js";
 import type { DropdownProps, FixedOptions, DataSetOptions } from "@casehub/pages-component";
 import { isFixedOptions } from "@casehub/pages-component";
-import type { TypedDataSet } from "@casehub/pages-data/dist/dataset/types.js";
+import type { TypedDataSet, ColumnId } from "@casehub/pages-data/dist/dataset/types.js";
 import type { DataSetLookup } from "@casehub/pages-data/dist/dataset/lookup.js";
+import type { DataSetOp } from "@casehub/pages-data/dist/dataset/ops.js";
+import { cellToRaw } from "../base/cell-extract.js";
 
 const DROPDOWN_CSS = `
 :host {
@@ -38,6 +40,22 @@ select:disabled {
 `;
 
 export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
+  private _optionsDataSet: TypedDataSet | undefined;
+  private _optionsRequested = false;
+  private _cascadeListener: ((e: Event) => void) | undefined;
+  private _cascadeFilterValue: string | undefined;
+
+  set optionsDataSet(value: TypedDataSet) {
+    this._optionsDataSet = value;
+    if (this.isConnected && this.dataSet) {
+      this.render(this.container, this.props! as DropdownProps & { lookup?: DataSetLookup }, this.dataSet);
+    }
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.removeCascadeListener();
+  }
 
   protected render(
     container: HTMLElement,
@@ -46,7 +64,6 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
   ): void {
     container.innerHTML = "";
 
-    // Style
     const style = document.createElement("style");
     style.textContent = DROPDOWN_CSS;
     container.appendChild(style);
@@ -63,7 +80,6 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
     const select = document.createElement("select");
     const value = this.extractFieldValue(dataset);
 
-    // Populate options
     const optionEntries = this.getOptionEntries(props.options);
     for (const opt of optionEntries) {
       const option = document.createElement("option");
@@ -84,6 +100,13 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
 
     wrapper.appendChild(select);
     container.appendChild(wrapper);
+
+    if (!isFixedOptions(props.options)) {
+      if (!this._optionsRequested) {
+        this.requestOptionsData(props.options);
+      }
+      this.setupCascadeListener(props.options);
+    }
   }
 
   private getOptionEntries(
@@ -91,10 +114,85 @@ export class CasehubDropdown extends CasehubFormInput<DropdownProps> {
   ): Array<{ value: string; label: string }> {
     if (isFixedOptions(options)) {
       return options.values.map((v) => ({ value: v, label: v }));
-    } else {
-      // DataSetOptions is parsed but not resolved at runtime — see spec Out of Scope
-      // "Cascading dropdown options" remains future work
-      return [];
+    }
+    if (this._optionsDataSet) {
+      return this.extractOptionsFromDataSet(options, this._optionsDataSet);
+    }
+    return [];
+  }
+
+  private extractOptionsFromDataSet(
+    options: DataSetOptions,
+    ds: TypedDataSet,
+  ): Array<{ value: string; label: string }> {
+    const entries: Array<{ value: string; label: string }> = [];
+    for (const row of ds.rows) {
+      const rawValue = cellToRaw(row.cell(options.valueColumn as ColumnId));
+      const rawLabel = cellToRaw(row.cell(options.labelColumn as ColumnId));
+      entries.push({
+        value: rawValue === null ? "" : String(rawValue),
+        label: rawLabel === null ? "" : String(rawLabel),
+      });
+    }
+    return entries;
+  }
+
+  private requestOptionsData(options: DataSetOptions): void {
+    this._optionsRequested = true;
+    const self = this;
+    const proxy = {
+      set dataSet(ds: TypedDataSet) { self.optionsDataSet = ds; },
+      set totalRows(_n: number) { /* ignored */ },
+      set theme(_t: string) { /* ignored */ },
+      set error(msg: string) { console.error("Options dataset error:", msg); },
+    };
+
+    const ops: DataSetOp[] = [];
+    if (options.filterField && options.filterColumn && this._cascadeFilterValue !== undefined) {
+      ops.push({
+        type: "filter" as const,
+        expressions: [{
+          type: "unresolved" as const,
+          columnId: options.filterColumn as ColumnId,
+          fn: "EQUALS_TO" as const,
+          args: [this._cascadeFilterValue],
+        }],
+      });
+    }
+
+    this.dispatchEvent(
+      new CustomEvent("casehub-data-request", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          element: proxy,
+          lookup: { dataSetId: options.dataset, operations: ops } as DataSetLookup,
+        },
+      }),
+    );
+  }
+
+  private setupCascadeListener(options: DataSetOptions): void {
+    if (!options.filterField || !options.filterColumn) return;
+    this.removeCascadeListener();
+
+    const filterField = options.filterField;
+    this._cascadeListener = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.field === filterField) {
+        this._cascadeFilterValue = detail.value !== undefined ? String(detail.value) : undefined;
+        this._optionsRequested = false;
+        this._optionsDataSet = undefined;
+        this.requestOptionsData(options);
+      }
+    };
+    this.addEventListener("casehub-field-change", this._cascadeListener);
+  }
+
+  private removeCascadeListener(): void {
+    if (this._cascadeListener) {
+      this.removeEventListener("casehub-field-change", this._cascadeListener);
+      this._cascadeListener = undefined;
     }
   }
 }

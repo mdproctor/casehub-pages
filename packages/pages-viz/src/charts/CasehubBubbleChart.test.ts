@@ -155,7 +155,7 @@ describe("CasehubBubbleChart", () => {
 
     it("returns minRadius when value is not a number", () => {
       const ds = makeDataSet(
-        [["x", "NUMBER"], ["y", "NUMBER"], ["size", "LABEL"]],
+        [["x", "NUMBER"], ["y", "NUMBER"], ["size", "NUMBER"]],
         [[10, 20, null], [30, 40, 50]],
       );
       const props: BubbleChartProps = { lookup: mockLookup("test") };

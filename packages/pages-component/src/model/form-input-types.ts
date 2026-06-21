@@ -26,6 +26,8 @@ export interface DataSetOptions {
   readonly dataset: DataSetId;
   readonly labelColumn: string;
   readonly valueColumn: string;
+  readonly filterField?: string;
+  readonly filterColumn?: string;
 }
 
 export interface DropdownProps extends FormInputCommon {

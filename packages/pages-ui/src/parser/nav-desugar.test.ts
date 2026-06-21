@@ -316,3 +316,164 @@ describe("collectNavTreePageNames", () => {
     expect(collectNavTreePageNames({})).toEqual(new Set());
   });
 });
+
+describe("resolveNavigation — tree hierarchical slot names", () => {
+  function makePage(name: string): Component {
+    return { type: "page", props: { name } };
+  }
+
+  const pages = [
+    makePage("Dashboard"),
+    makePage("Profile"),
+    makePage("Security"),
+    makePage("Logging"),
+    makePage("Reports"),
+  ];
+
+  const navTree = {
+    root_items: [{
+      type: "GROUP",
+      id: "MainNav",
+      children: [
+        { page: "Dashboard" },
+        {
+          type: "GROUP",
+          id: "Settings",
+          children: [
+            { page: "Profile" },
+            { page: "Security" },
+            {
+              type: "GROUP",
+              id: "Advanced",
+              children: [{ page: "Logging" }],
+            },
+          ],
+        },
+        { page: "Reports" },
+      ],
+    }],
+  };
+
+  it("tree type produces hierarchical slot keys from nested GROUPs", () => {
+    const components: Component[] = [{
+      type: "tree",
+      props: { navGroupId: "MainNav" },
+    }];
+
+    const resolved = resolveNavigation(components, pages, navTree);
+    const treeComp = resolved[0]!;
+    const slotKeys = Object.keys(treeComp.slots!);
+
+    expect(slotKeys).toEqual([
+      "Dashboard",
+      "Settings/Profile",
+      "Settings/Security",
+      "Settings/Advanced/Logging",
+      "Reports",
+    ]);
+  });
+
+  it("tree slot keys map to correct pages (flat page name lookup)", () => {
+    const components: Component[] = [{
+      type: "tree",
+      props: { navGroupId: "MainNav" },
+    }];
+
+    const resolved = resolveNavigation(components, pages, navTree);
+    const treeComp = resolved[0]!;
+    const profileSlot = treeComp.slots!["Settings/Profile"]!;
+
+    expect(profileSlot).toHaveLength(1);
+    expect(profileSlot[0]!.props?.["name"]).toBe("Profile");
+  });
+
+  it("non-tree type produces flat slot keys (no hierarchy)", () => {
+    const components: Component[] = [{
+      type: "tabs",
+      props: { navGroupId: "MainNav" },
+    }];
+
+    const resolved = resolveNavigation(components, pages, navTree);
+    const tabsComp = resolved[0]!;
+    const slotKeys = Object.keys(tabsComp.slots!);
+
+    expect(slotKeys).toEqual([
+      "Dashboard", "Profile", "Security", "Logging", "Reports",
+    ]);
+  });
+
+  it("deep nesting (3+ levels) produces full-path slot keys", () => {
+    const components: Component[] = [{
+      type: "tree",
+      props: { navGroupId: "MainNav" },
+    }];
+
+    const resolved = resolveNavigation(components, pages, navTree);
+    const treeComp = resolved[0]!;
+
+    expect(treeComp.slots!["Settings/Advanced/Logging"]).toBeDefined();
+    expect(treeComp.slots!["Settings/Advanced/Logging"]![0]!.props?.["name"]).toBe("Logging");
+  });
+
+  it("same page under multiple groups produces distinct slots", () => {
+    const multiNavTree = {
+      root_items: [{
+        type: "GROUP",
+        id: "Multi",
+        children: [
+          { type: "GROUP", id: "A", children: [{ page: "Profile" }] },
+          { type: "GROUP", id: "B", children: [{ page: "Profile" }] },
+        ],
+      }],
+    };
+
+    const components: Component[] = [{
+      type: "tree",
+      props: { navGroupId: "Multi" },
+    }];
+
+    const resolved = resolveNavigation(components, pages, multiNavTree);
+    const treeComp = resolved[0]!;
+
+    expect(treeComp.slots!["A/Profile"]).toBeDefined();
+    expect(treeComp.slots!["B/Profile"]).toBeDefined();
+  });
+
+  it("tree without navTree falls back to flat slot names", () => {
+    const components: Component[] = [{
+      type: "tree",
+      props: { navGroupId: "Missing" },
+    }];
+
+    const resolved = resolveNavigation(components, pages, undefined);
+    const treeComp = resolved[0]!;
+    const slotKeys = Object.keys(treeComp.slots!);
+
+    expect(slotKeys).toEqual([
+      "Dashboard", "Profile", "Security", "Logging", "Reports",
+    ]);
+  });
+
+  it("tree ignores targetDivId (self-contained)", () => {
+    const components: Component[] = [
+      {
+        type: "tree",
+        props: { navGroupId: "MainNav", targetDivId: "some_div" },
+      },
+      {
+        type: "slot-target",
+        props: { id: "some_div" },
+      },
+    ];
+
+    const resolved = resolveNavigation(components, pages, navTree);
+
+    // Tree keeps its slots (targetDivId ignored)
+    const treeComp = resolved.find(c => c.type === "tree")!;
+    expect(treeComp.slots).toBeDefined();
+    expect(Object.keys(treeComp.slots!).length).toBeGreaterThan(0);
+
+    // slot-target is filtered out
+    expect(resolved.find(c => c.type === "slot-target")).toBeUndefined();
+  });
+});

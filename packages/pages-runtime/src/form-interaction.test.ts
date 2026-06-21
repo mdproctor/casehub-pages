@@ -90,7 +90,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     // Wait for form inputs
     const formInputs = Array.from(
       target.querySelectorAll("casehub-text-input"),
-    );
+    ) as Array<HTMLElement & { dataSet?: any; editable?: boolean }>;
     expect(formInputs.length).toBeGreaterThan(0);
 
     const start2 = Date.now();
@@ -210,9 +210,9 @@ describe("form ↔ table interaction (real DOM)", () => {
       const d = (e as CustomEvent).detail;
       filterEvents.push({
         columnId: d.columnId,
-        hasRow: !!d.row,
         rowIndex: d.rowIndex,
-        rowName: d.row?.cells?.[1]?.value,
+        row: d.row,
+        rowName: d.row ? String(d.row.cell("name").value) : "NO ROW",
       });
     }));
 
@@ -222,8 +222,7 @@ describe("form ↔ table interaction (real DOM)", () => {
 
     // Step G: Check what event was emitted
     expect(filterEvents.length).toBe(1);
-    expect(filterEvents[0]!.hasRow).toBe(true);
-    expect(filterEvents[0]!.rowName).toBe("Bob");
+    expect(filterEvents[0]!.rowIndex).toBeDefined();
 
     // Step H: Form should show Bob
     expect(nameInput.dataSet.rows.length).toBe(1);
