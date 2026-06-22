@@ -171,55 +171,58 @@ Webpack bundle. Host applications include `@casehub/pages-runtime` as an npm dep
 
 ## §9 Journeys and Chapters
 
-### Chapter 1: TypeScript DataSet Core (Epic #1)
+### Chapter 1: TypeScript DataSet Core
 
-**Status:** 🟡 in progress
+**Status:** ✅ complete
 
-| Issue | Title | Status |
-|---|---|---|
-| #2 | GroupOp + AggregateFunctionType | ✅ closed |
-| #3 | Expression evaluator (JSONata bridge) | 🔲 open |
-| #4 | SortOp + DataSetLookup | ✅ closed |
-| #5 | Zod schemas + YAML parser | ✅ closed |
-| #6 | ExternalDataSetDef + typed extraction | ✅ closed |
-| #7 | DataSetManager service layer | ✅ closed |
-| #8 | Full dashboard YAML schema | ✅ closed |
-| #11 | @casehub/viz Web Components | ✅ closed |
-| #12 | @casehub/component CSS grid layout | ✅ closed |
-| #13 | Site runtime — loadSite() | ✅ closed |
+GWT-to-TypeScript migration of the core data and rendering pipeline. All packages shipped: DataSet model, operations engine, YAML parser, Web Components, CSS grid layout, and site runtime.
 
-### Chapter 2: DashBuilder Demo Gallery (Epic #19)
+| Milestone | Status |
+|---|---|
+| DataSet model + operations (group, sort, filter, aggregate) | ✅ shipped |
+| Expression evaluator (JSONata bridge) | ✅ shipped |
+| YAML parser + dashboard schema | ✅ shipped |
+| External data extraction (JSON, CSV, Prometheus) | ✅ shipped |
+| @casehub/pages-viz Web Components | ✅ shipped |
+| @casehub/pages-component CSS grid layout | ✅ shipped |
+| @casehub/pages-runtime — loadSite() | ✅ shipped |
 
-**Status:** ✅ complete — all issues closed
+### Chapter 2: DashBuilder Demo Gallery
 
-| Issue | Title | Status |
-|---|---|---|
-| #20 | Dashboard demo runner — host page + dev server | ✅ closed |
-| #21 | Wire axis and grid settings | ✅ closed |
-| #14 | Markdown parser | ✅ closed |
-| #22 | Migrate and validate DashBuilder samples | ✅ closed |
-| #25 | Global displayer defaults | ✅ closed |
-| #26 | Inline content extraction | ✅ closed |
-| #27 | Navigation types: tree, menu, tiles | ✅ closed |
-| #28 | fetch this-binding in webpack | ✅ closed |
-| #30 | Canonical kie-samples versions | ✅ closed |
-| #31 | Case-insensitive column matching | ✅ closed |
-| #32 | Tab navigation duplicates | ✅ closed |
-| #33 | Mock data for Prometheus dashboards | ✅ closed |
+**Status:** ✅ complete
+
+Interactive gallery with DashBuilder sample dashboards, dev server, and Playwright smoke tests.
+
+| Milestone | Status |
+|---|---|
+| Dashboard demo runner — host page + dev server | ✅ shipped |
+| Axis and grid settings | ✅ shipped |
+| Markdown parser | ✅ shipped |
+| DashBuilder sample migration and validation | ✅ shipped |
+| Global displayer defaults | ✅ shipped |
+| Inline content extraction | ✅ shipped |
+| Navigation types: tree, menu, tiles, sidebar | ✅ shipped |
+| Case-insensitive column matching | ✅ shipped |
+| Mock data for Prometheus dashboards | ✅ shipped |
 
 ### Backlog
 
 | Issue | Title | Status |
 |---|---|---|
-| #15 | View state persistence | 🔲 open |
-| #16 | Dataset refresh timers | ✅ closed |
-| #17 | Minor runtime improvements | ✅ closed |
-| #18 | Event handler integration tests | 🔲 open |
-| #23 | Domain-specific example dashboards | 🔲 open |
-| #24 | Epic: Move to casehubio org | ✅ closed |
-| #29 | Gallery URL configuration form | ✅ closed |
-| #34 | Type-safe TypeScript audit | ✅ closed |
-| #35 | Prometheus API response extraction | ✅ closed |
+| #12 | Lazy on-demand pagination for datasets | 🔲 open |
+| #14 | Domain-specific example dashboards for the gallery | 🔲 open |
+| #15 | Accessibility: ARIA attributes, keyboard navigation, screen reader support | 🔲 open |
+| #16 | CSP compliance: replace new Function() in column expressions | 🔲 open |
+| #17 | Theming system and dark mode support | 🔲 open |
+| #18 | Table data export (CSV, clipboard) | 🔲 open |
+| #19 | Loading and error states for components | 🔲 open |
+| #20 | Chart click → cross-filter event protocol | 🔲 open |
+| #21 | Optional Quarkus backend MVP | 🔲 open |
+| #22 | Server-side data provider: Prometheus | 🔲 open |
+| #23 | Server-side data provider: Elasticsearch | 🔲 open |
+| #24 | View state persistence (URL-based) | 🔲 open |
+| #25 | LLM-friendly API documentation for host application integration | 🔲 open |
+| #26 | Platform convention: Quarkus + TypeScript frontend via Quinoa | 🔲 open |
 
 ---
 
@@ -249,7 +252,7 @@ Decisions not captured inline in §4:
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| `new Function()` requires CSP `unsafe-eval` | Blocks deployment in strict CSP environments | Column expressions could be moved to a sandboxed evaluator (#3 JSONata bridge) |
+| `new Function()` requires CSP `unsafe-eval` | Blocks deployment in strict CSP environments | Column expressions could be moved to a sandboxed evaluator (#16) |
 | Kitchensink map component rendering | `regions` property undefined — map tab empty | Map page is an orphan (commented out of navTree) |
 
 ---
