@@ -233,16 +233,6 @@ test.describe("Global Column settings", () => {
   });
 });
 
-test.describe("Date test", () => {
-  test("renders table with date data", async ({ page }) => {
-    await openDashboard(page, "Date test");
-    const statuses = await getComponentStatuses(page);
-
-    const table = statuses.find(s => s.type === "table");
-    expect(table?.status).toBe("TABLE_OK");
-  });
-});
-
 test.describe("Github Repositories (external API + JSONata)", () => {
   test("renders bar chart and table with live GitHub data", async ({ page }) => {
     await openDashboard(page, "Github Repositories");

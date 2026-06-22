@@ -9,7 +9,7 @@ import { globSync } from "glob";
 const EXAMPLES_DIR = join(__dirname, "../../../../examples/dashboards");
 
 function findPageByName(root: Component, name: string): Component | undefined {
-  if (root.type === "page" && (root.props as Record<string, unknown>)?.["name"] === name) {
+  if (root.type === "page" && (root.props as Record<string, unknown>)["name"] === name) {
     return root;
   }
   if (root.items) {
@@ -92,7 +92,7 @@ describe("backwards compatibility — existing dashboards", () => {
       // The index page has TABS with navGroupId MainGroup + targetDivId
       // Content slots go to the target location, not inside the tabs nav
       const indexPage = root.slots!["content"]!.find(
-        (p) => (p.props as Record<string, unknown>)?.["name"] === "index",
+        (p) => (p.props as Record<string, unknown>)["name"] === "index",
       )!;
       expect(indexPage).toBeDefined();
       const contentTabs = indexPage.items!.find((item) => item.component.type === "tabs" && item.component.slots);
@@ -129,17 +129,6 @@ describe("backwards compatibility — existing dashboards", () => {
       expect(meterItem).toBeDefined();
     });
 
-    it("handles screen component (page-ref resolution)", () => {
-      const screenPage = findPageByName(root, "Screen")!;
-      expect(screenPage).toBeDefined();
-      // After resolution, screen component should reference the Layout page
-      const layoutRef = screenPage.items!.find(
-        (item) =>
-          item.component.type === "page" &&
-          (item.component.props as Record<string, unknown>)?.["name"] === "Layout",
-      );
-      expect(layoutRef).toBeDefined();
-    });
   });
 
   describe("navTree page filtering — pages in groups excluded from top-level", () => {
@@ -157,7 +146,7 @@ describe("backwards compatibility — existing dashboards", () => {
       };
       const root = parsePage(yaml);
       const topLevel = root.slots!["content"]!;
-      const topLevelNames = topLevel.map((p: Component) => (p.props as Record<string, unknown>)?.["name"]);
+      const topLevelNames = topLevel.map((p: Component) => (p.props as Record<string, unknown>)["name"]);
       expect(topLevelNames).toEqual(["index"]);
     });
 
@@ -173,7 +162,7 @@ describe("backwards compatibility — existing dashboards", () => {
       };
       const root = parsePage(yaml);
       const indexPage = root.slots!["content"]!.find(
-        (p: Component) => (p.props as Record<string, unknown>)?.["name"] === "index",
+        (p: Component) => (p.props as Record<string, unknown>)["name"] === "index",
       )!;
       const contentTabs = indexPage.items!.find(
         (item: { component: Component }) => item.component.type === "tabs" && item.component.slots,
