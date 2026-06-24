@@ -61,5 +61,5 @@ jobs:
       - name: Lint (ESLint strict-type-checked)
         run: yarn lint
 
-      - name: Run tests
-        run: yarn test
+      - name: Run unit tests (excludes examples — Playwright not installed)
+        run: yarn workspaces foreach -Apt --exclude @casehubio/pages-examples run test
