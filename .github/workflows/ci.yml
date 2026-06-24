@@ -52,17 +52,14 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build packages (creates dist/ for cross-package imports)
-        run: yarn build:packages
+      - name: Build all (packages → components → webapp → examples)
+        run: yarn build:prod
 
       - name: Type check (tsc --build)
         run: yarn typecheck
 
       - name: Lint (ESLint strict-type-checked)
         run: yarn lint
-
-      - name: Build components and webapp
-        run: yarn build:components && yarn build:webapp
 
       - name: Run tests
         run: yarn test
