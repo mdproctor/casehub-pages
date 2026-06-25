@@ -109,22 +109,9 @@ test.describe("View State Persistence", () => {
   test("Test 1: Sort table → URL contains sort param", async ({ page }) => {
     await loadFixture(page);
 
-    // Check if table has data
-    const tableHasData = await page.evaluate(() => {
-      const table = document.querySelector("casehub-table") as any;
-      return {
-        hasDataSet: !!table?.dataSet,
-        rowCount: table?.dataSet?.rows?.length,
-        colCount: table?.dataSet?.columns?.length,
-      };
-    });
-    console.log("Table data:", tableHasData);
-
-    // Click "name" column header to sort
     await sortTableByColumn(page, "casehub-table", "name");
 
     const hash = await getHash(page);
-    console.log("Hash after click:", hash);
     expect(hash).toContain("sort=test-table:");
   });
 

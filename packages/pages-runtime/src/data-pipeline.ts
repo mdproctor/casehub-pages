@@ -16,7 +16,7 @@ import type { DataScopeRegistry } from "./data-scope-registry.js";
 import { getDataScope } from "./data-scope-registry.js";
 import { resolveRefBindings } from "./ref-resolution.js";
 import type { ComponentViewState } from "./component-view-state.js";
-import { getComponentState } from "./component-view-state.js";
+import { getComponentState, updatePage } from "./component-view-state.js";
 
 export interface VizTarget {
   dataSet: unknown;
@@ -111,6 +111,7 @@ export function createDataPipeline(
         if (result.totalRows > 0 && (!result.dataset || (result.dataset as unknown as { rows: unknown[] }).rows.length === 0)) {
           const lastPage = Math.floor((result.totalRows - 1) / pageSize);
           requestedPage = lastPage;
+          updatePage(componentViewState, componentId, lastPage);
           const clampedOffset = lastPage * pageSize;
           const clampedResult = manager.lookup(effectiveLookup, { ...options, rowOffset: clampedOffset, rowCount: pageSize });
           target.activePage = lastPage;

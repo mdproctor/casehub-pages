@@ -218,15 +218,15 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | #14 | Domain-specific example dashboards for the gallery | 🔲 open |
 | #15 | Accessibility: ARIA attributes, keyboard navigation, screen reader support | 🔲 open |
 | #16 | CSP compliance: replace new Function() in column expressions | 🔲 open |
-| #17 | Theming system and dark mode support | 🔲 open |
-| #18 | Table data export (CSV, clipboard) | 🔲 open |
-| #19 | Loading and error states for components | 🔲 open |
+| #17 | Theming system and dark mode support | ✅ shipped |
+| #18 | Table data export (CSV, clipboard) | ✅ shipped |
+| #19 | Loading and error states for components | ✅ shipped |
 | #20 | Chart click → cross-filter event protocol | ✅ shipped |
 | #21 | Optional Quarkus backend MVP | 🔲 open |
 | #22 | Server-side data provider: Prometheus | 🔲 open |
 | #23 | Server-side data provider: Elasticsearch | 🔲 open |
-| #24 | View state persistence (URL-based) | 🔲 open |
-| #25 | LLM-friendly API documentation for host application integration | 🔲 open |
+| #24 | View state persistence (URL-based) | ✅ shipped |
+| #25 | LLM-friendly API documentation for host application integration | ✅ shipped |
 | #26 | Platform convention: Quarkus + TypeScript frontend via Quinoa | ✅ shipped |
 | #28 | Remove redundant iframe ECharts component — migrate to inline Web Components | ✅ shipped |
 
