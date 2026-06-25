@@ -1,4 +1,5 @@
 import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
 import type { TableProps } from "@casehubio/pages-component";
 import { CasehubElement } from "../base/CasehubElement.js";
 import { cellToRaw, resolveColumnName, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
@@ -70,10 +71,6 @@ tr.selected { background: var(--casehub-bg-selected, #d3e3fd); }
 const SEARCH_ICON = `<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>`;
 
 export class CasehubTable extends CasehubElement<TableProps> {
-  private _currentPage = 0;
-  private _sortColumn: ColumnId | undefined;
-  private _sortOrder: "ASCENDING" | "DESCENDING" = "ASCENDING";
-  private _lastDataSet: TypedDataSet | undefined;
   private _filterText = "";
   private _selectedColumnId: ColumnId | undefined;
   private _selectedValue: string | undefined;
@@ -105,32 +102,20 @@ export class CasehubTable extends CasehubElement<TableProps> {
     props: TableProps,
     dataset: TypedDataSet,
   ): void {
-    if (dataset !== this._lastDataSet) {
-      this._currentPage = 0;
-      this._lastDataSet = dataset;
-    }
-
     container.textContent = "";
 
     const style = document.createElement("style");
     style.textContent = TABLE_CSS;
     container.appendChild(style);
 
-    const serverSide = this.isServerSide(dataset);
     const pageSize = props.pageSize;
+    const currentPage = this.activePage ?? 0;
 
-    // Apply text filter and sorting (client-side only)
-    const filteredRows = serverSide ? dataset.rows : this.getFilteredRows(dataset);
-    const sortedRows = this.getSortedRows([...filteredRows], dataset, serverSide);
-    const totalCount = serverSide ? this.totalRows : sortedRows.length;
+    // Apply text filter only (pipeline already sorted and paginated)
+    const filteredRows = this.getFilteredRows(dataset);
+    const displayRows = filteredRows;
+    const totalCount = this.totalRows;
     const totalPages = pageSize ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1;
-
-    if (this._currentPage >= totalPages) this._currentPage = totalPages - 1;
-    if (this._currentPage < 0) this._currentPage = 0;
-
-    const displayRows = (!serverSide && pageSize)
-      ? sortedRows.slice(this._currentPage * pageSize, (this._currentPage + 1) * pageSize)
-      : sortedRows;
 
     // Toolbar: filter (left) + pagination (right)
     const toolbar = document.createElement("div");
@@ -147,7 +132,6 @@ export class CasehubTable extends CasehubElement<TableProps> {
     filterInput.addEventListener("input", () => {
       this._filterText = filterInput.value;
       const cursorPos = filterInput.selectionStart;
-      this._currentPage = 0;
       this.rerender(props, dataset);
       const restored = this.shadowRoot.querySelector<HTMLInputElement>(".filter-box input");
       if (restored) {
@@ -196,7 +180,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
       const paging = document.createElement("div");
       paging.className = "paging";
 
-      const startRow = this._currentPage * pageSize + 1;
+      const startRow = currentPage * pageSize + 1;
       const endRow = Math.min(startRow + pageSize - 1, totalCount);
 
       const range = document.createElement("span");
@@ -207,26 +191,26 @@ export class CasehubTable extends CasehubElement<TableProps> {
       const firstBtn = document.createElement("button");
       firstBtn.innerHTML = "&#171;";
       firstBtn.title = "First page";
-      firstBtn.disabled = this._currentPage === 0;
-      firstBtn.addEventListener("click", () => { this.goToPage(0, props, dataset, pageSize, serverSide); });
+      firstBtn.disabled = currentPage === 0;
+      firstBtn.addEventListener("click", () => { this.goToPage(0, pageSize); });
 
       const prevBtn = document.createElement("button");
       prevBtn.innerHTML = "&#8249;";
       prevBtn.title = "Previous page";
-      prevBtn.disabled = this._currentPage === 0;
-      prevBtn.addEventListener("click", () => { this.goToPage(this._currentPage - 1, props, dataset, pageSize, serverSide); });
+      prevBtn.disabled = currentPage === 0;
+      prevBtn.addEventListener("click", () => { this.goToPage(currentPage - 1, pageSize); });
 
       const pageInput = document.createElement("input");
       pageInput.type = "number";
       pageInput.min = "1";
       pageInput.max = String(totalPages);
-      pageInput.value = String(this._currentPage + 1);
+      pageInput.value = String(currentPage + 1);
       pageInput.addEventListener("change", () => {
         const val = parseInt(pageInput.value, 10);
         if (!isNaN(val) && val >= 1 && val <= totalPages) {
-          this.goToPage(val - 1, props, dataset, pageSize, serverSide);
+          this.goToPage(val - 1, pageSize);
         } else {
-          pageInput.value = String(this._currentPage + 1);
+          pageInput.value = String(currentPage + 1);
         }
       });
       pageInput.addEventListener("keydown", (e) => {
@@ -239,14 +223,14 @@ export class CasehubTable extends CasehubElement<TableProps> {
       const nextBtn = document.createElement("button");
       nextBtn.innerHTML = "&#8250;";
       nextBtn.title = "Next page";
-      nextBtn.disabled = this._currentPage >= totalPages - 1;
-      nextBtn.addEventListener("click", () => { this.goToPage(this._currentPage + 1, props, dataset, pageSize, serverSide); });
+      nextBtn.disabled = currentPage >= totalPages - 1;
+      nextBtn.addEventListener("click", () => { this.goToPage(currentPage + 1, pageSize); });
 
       const lastBtn = document.createElement("button");
       lastBtn.innerHTML = "&#187;";
       lastBtn.title = "Last page";
-      lastBtn.disabled = this._currentPage >= totalPages - 1;
-      lastBtn.addEventListener("click", () => { this.goToPage(totalPages - 1, props, dataset, pageSize, serverSide); });
+      lastBtn.disabled = currentPage >= totalPages - 1;
+      lastBtn.addEventListener("click", () => { this.goToPage(totalPages - 1, pageSize); });
 
       paging.append(firstBtn, prevBtn, pageInput, ofLabel, nextBtn, lastBtn);
       toolbar.appendChild(paging);
@@ -263,12 +247,12 @@ export class CasehubTable extends CasehubElement<TableProps> {
       const th = document.createElement("th");
       const displayName = resolveColumnName(col, props.columns);
       let sortIndicator = "";
-      if (props.sortable && this._sortColumn === col.id) {
-        sortIndicator = this._sortOrder === "ASCENDING" ? " ▲" : " ▼";
+      if (props.sortable && this.activeSort?.columnId === col.id) {
+        sortIndicator = this.activeSort.order === "ASCENDING" ? " ▲" : " ▼";
       }
       th.textContent = displayName + sortIndicator;
       if (props.sortable) {
-        th.addEventListener("click", () => { this.handleSort(col.id, serverSide); });
+        th.addEventListener("click", () => { this.handleSort(col.id); });
       }
       headerRow.appendChild(th);
     }
@@ -351,22 +335,14 @@ export class CasehubTable extends CasehubElement<TableProps> {
     container.appendChild(table);
   }
 
-  private goToPage(page: number, props: TableProps, dataset: TypedDataSet, pageSize: number, serverSide: boolean): void {
-    this._currentPage = page;
-    if (serverSide) {
-      this.dispatchEvent(
-        new CustomEvent("casehub-page", {
-          bubbles: true,
-          composed: true,
-          detail: { offset: page * pageSize, count: pageSize },
-        }),
-      );
-    }
-    this.rerender(props, dataset);
-  }
-
-  private isServerSide(dataset: TypedDataSet): boolean {
-    return this.totalRows > 0 && this.totalRows > dataset.rows.length;
+  private goToPage(page: number, pageSize: number): void {
+    this.dispatchEvent(
+      new CustomEvent("casehub-page", {
+        bubbles: true,
+        composed: true,
+        detail: { offset: page * pageSize, count: pageSize },
+      }),
+    );
   }
 
   private getFilteredRows(dataset: TypedDataSet): readonly import("@casehubio/pages-data/dist/dataset/types.js").TypedRow[] {
@@ -380,57 +356,17 @@ export class CasehubTable extends CasehubElement<TableProps> {
     );
   }
 
-  private getSortedRows(
-    rows: readonly import("@casehubio/pages-data/dist/dataset/types.js").TypedRow[],
-    dataset: TypedDataSet,
-    serverSide: boolean,
-  ): readonly import("@casehubio/pages-data/dist/dataset/types.js").TypedRow[] {
-    if (serverSide || this._sortColumn === undefined) return rows;
+  private handleSort(columnId: ColumnId): void {
+    const currentOrder = this.activeSort?.columnId === columnId ? this.activeSort.order : undefined;
+    const newOrder: SortOrder = currentOrder === "ASCENDING" ? "DESCENDING" : "ASCENDING";
 
-    const colIdx = dataset.columns.findIndex((c) => c.id === this._sortColumn);
-    if (colIdx < 0) return rows;
-
-    const sorted = [...rows];
-    sorted.sort((a, b) => {
-      const aCellVal = a.cells[colIdx];
-      const bCellVal = b.cells[colIdx];
-      if (!aCellVal || !bCellVal) return 0;
-      const cellA = cellToRaw(aCellVal);
-      const cellB = cellToRaw(bCellVal);
-      if (cellA === null && cellB === null) return 0;
-      if (cellA === null) return 1;
-      if (cellB === null) return -1;
-      let cmp: number;
-      if (typeof cellA === "number" && typeof cellB === "number") {
-        cmp = cellA - cellB;
-      } else if (cellA instanceof Date && cellB instanceof Date) {
-        cmp = cellA.getTime() - cellB.getTime();
-      } else {
-        cmp = String(cellA).localeCompare(String(cellB));
-      }
-      return this._sortOrder === "DESCENDING" ? -cmp : cmp;
-    });
-    return sorted;
-  }
-
-  private handleSort(columnId: ColumnId, serverSide: boolean): void {
-    if (this._sortColumn === columnId) {
-      this._sortOrder = this._sortOrder === "ASCENDING" ? "DESCENDING" : "ASCENDING";
-    } else {
-      this._sortColumn = columnId;
-      this._sortOrder = "ASCENDING";
-    }
-    if (serverSide) {
-      this.dispatchEvent(
-        new CustomEvent("casehub-sort", {
-          bubbles: true,
-          composed: true,
-          detail: { columnId, order: this._sortOrder },
-        }),
-      );
-    } else if (this.props && this.dataSet) {
-      this.rerender(this.props, this.dataSet);
-    }
+    this.dispatchEvent(
+      new CustomEvent("casehub-sort", {
+        bubbles: true,
+        composed: true,
+        detail: { columnId, order: newOrder },
+      }),
+    );
   }
 
   private rerender(props: TableProps, dataset: TypedDataSet): void {

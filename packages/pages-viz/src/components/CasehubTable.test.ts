@@ -176,9 +176,9 @@ describe("CasehubTable", () => {
     });
   });
 
-  // ── Client-side pagination ────────────────────────────────────────
+  // ── Pagination rendering ────────────────────────────────────────
 
-  describe("client-side pagination", () => {
+  describe("pagination rendering", () => {
     it("without pageSize shows all rows", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
@@ -194,55 +194,62 @@ describe("CasehubTable", () => {
       expect(rows).toHaveLength(5);
     });
 
-    it("with pageSize shows correct page of rows", () => {
+    it("renders all received rows (pipeline controls the slice)", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"], ["D"], ["E"]],
+        [["A"], ["B"]], // pipeline already sliced to page 1
       );
       const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 5;
       el.dataSet = ds;
 
       const rows = queryRows(el);
-      expect(rows).toHaveLength(2);
+      expect(rows).toHaveLength(2); // renders exactly what pipeline provided
       expect(queryCells(rows[0]!)[0]).toBe("A");
       expect(queryCells(rows[1]!)[0]).toBe("B");
     });
 
-    it("clicking next page updates displayed rows", () => {
+    it("emits casehub-page when next button clicked", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"], ["D"], ["E"]],
+        [["A"], ["B"]],
       );
       const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 5;
       el.dataSet = ds;
 
-      // Click next (4th button: first, prev, next, last)
-      const pagingBtns = el.shadowRoot.querySelectorAll(".paging button");
-      const nextBtn = pagingBtns[2] as HTMLButtonElement;
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-page", (e) => events.push(e as CustomEvent));
+
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
+      const nextBtn = btns[2] as HTMLButtonElement; // buttons: first(0), prev(1), next(2), last(3)
       expect(nextBtn).not.toBeNull();
       nextBtn.click();
 
-      const rows = queryRows(el);
-      expect(rows).toHaveLength(2);
-      expect(queryCells(rows[0]!)[0]).toBe("C");
-      expect(queryCells(rows[1]!)[0]).toBe("D");
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail.offset).toBe(2);
+      expect(events[0]!.detail.count).toBe(2);
     });
 
     it("shows range and page count", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"], ["D"], ["E"]],
+        [["A"], ["B"]],
       );
       const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 5;
       el.dataSet = ds;
 
       const paging = el.shadowRoot.querySelector(".paging");
@@ -255,12 +262,14 @@ describe("CasehubTable", () => {
     it("first and prev buttons are disabled on first page", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"]],
+        [["A"], ["B"]],
       );
       const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 3;
       el.dataSet = ds;
 
       const btns = el.shadowRoot.querySelectorAll(".paging button");
@@ -271,21 +280,19 @@ describe("CasehubTable", () => {
     it("next and last buttons are disabled on last page", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"]],
+        [["C"]],
       );
       const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 1; // last page (totalRows=3, pageSize=2 → 2 pages)
+      el.totalRows = 3;
       el.dataSet = ds;
 
-      // Navigate to last page via last button
       const btns = el.shadowRoot.querySelectorAll(".paging button");
-      (btns[3] as HTMLButtonElement).click(); // last
-
-      const btnsAfter = el.shadowRoot.querySelectorAll(".paging button");
-      expect((btnsAfter[2] as HTMLButtonElement).disabled).toBe(true); // next
-      expect((btnsAfter[3] as HTMLButtonElement).disabled).toBe(true); // last
+      expect((btns[2] as HTMLButtonElement).disabled).toBe(true); // next
+      expect((btns[3] as HTMLButtonElement).disabled).toBe(true); // last
     });
 
     it("no paging controls when pageSize is not set", () => {
@@ -303,34 +310,35 @@ describe("CasehubTable", () => {
       expect(paging).toBeNull();
     });
 
-    it("clicking prev page goes back", () => {
+    it("emits casehub-page when prev button clicked", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"], ["D"]],
+        [["C"], ["D"]],
       );
       const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 1;
+      el.totalRows = 4;
       el.dataSet = ds;
 
-      // Go to page 2 via next
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-page", (e) => events.push(e as CustomEvent));
+
       const btns = el.shadowRoot.querySelectorAll(".paging button");
-      (btns[2] as HTMLButtonElement).click(); // next
+      (btns[1] as HTMLButtonElement).click(); // prev
 
-      // Go back via prev
-      const btns2 = el.shadowRoot.querySelectorAll(".paging button");
-      (btns2[1] as HTMLButtonElement).click(); // prev
-
-      const rows = queryRows(el);
-      expect(queryCells(rows[0]!)[0]).toBe("A");
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail.offset).toBe(0);
+      expect(events[0]!.detail.count).toBe(2);
     });
   });
 
-  // ── Server-side pagination ────────────────────────────────────────
+  // ── Event emission (pagination) ─────────────────────────────────────
 
-  describe("server-side pagination", () => {
-    it("emits casehub-page on page change when totalRows > rows.length", () => {
+  describe("event emission (pagination)", () => {
+    it("emits casehub-page with correct offset on next click", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
         [["A"], ["B"]],
@@ -339,21 +347,22 @@ describe("CasehubTable", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
       el.totalRows = 10;
       el.dataSet = ds;
 
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-page", (e) => events.push(e as CustomEvent));
 
-      // Click next page (3rd button: first, prev, next, last)
+      // Click next page
       const btns = el.shadowRoot.querySelectorAll(".paging button");
-      (btns[2] as HTMLButtonElement).click();
+      (btns[2] as HTMLButtonElement).click(); // next
 
       expect(events).toHaveLength(1);
       expect(events[0]!.detail).toEqual({ offset: 2, count: 2 });
     });
 
-    it("does not slice locally in server-side mode", () => {
+    it("renders all received rows without slicing", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
         [["A"], ["B"]],
@@ -362,10 +371,11 @@ describe("CasehubTable", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
       el.totalRows = 10;
       el.dataSet = ds;
 
-      // All received rows should be displayed (server controls the slice)
+      // All received rows should be displayed (pipeline controls the slice)
       const rows = queryRows(el);
       expect(rows).toHaveLength(2);
     });
@@ -379,6 +389,7 @@ describe("CasehubTable", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
       el.totalRows = 10;
       el.dataSet = ds;
 
@@ -390,7 +401,7 @@ describe("CasehubTable", () => {
   // ── Sorting ───────────────────────────────────────────────────────
 
   describe("sorting", () => {
-    it("click header sorts client-side", () => {
+    it("emits casehub-sort when header clicked", () => {
       const ds = makeDataSet(
         [["name", "LABEL"], ["score", "NUMBER"]],
         [["Charlie", 30], ["Alice", 10], ["Bob", 20]],
@@ -400,19 +411,20 @@ describe("CasehubTable", () => {
       el.props = props;
       document.body.appendChild(el);
       el.dataSet = ds;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-sort", (e) => events.push(e as CustomEvent));
 
       // Click on "score" header (second column)
       const headers = queryHeaders(el);
       headers[1]!.click();
 
-      const rows = queryRows(el);
-      // Ascending sort: 10, 20, 30
-      expect(queryCells(rows[0]!)[1]).toBe("10");
-      expect(queryCells(rows[1]!)[1]).toBe("20");
-      expect(queryCells(rows[2]!)[1]).toBe("30");
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail.columnId).toBe("score");
+      expect(events[0]!.detail.order).toBe("ASCENDING");
     });
 
-    it("second click reverses sort order", () => {
+    it("toggles sort order on second click of same column", () => {
       const ds = makeDataSet(
         [["name", "LABEL"], ["score", "NUMBER"]],
         [["Charlie", 30], ["Alice", 10], ["Bob", 20]],
@@ -421,44 +433,38 @@ describe("CasehubTable", () => {
 
       el.props = props;
       document.body.appendChild(el);
-      el.dataSet = ds;
-
-      const headers = queryHeaders(el);
-      // First click — ascending
-      headers[1]!.click();
-      // Second click — descending
-      headers[1]!.click();
-
-      const rows = queryRows(el);
-      expect(queryCells(rows[0]!)[1]).toBe("30");
-      expect(queryCells(rows[1]!)[1]).toBe("20");
-      expect(queryCells(rows[2]!)[1]).toBe("10");
-    });
-
-    it("server-side sort emits casehub-sort", () => {
-      const ds = makeDataSet(
-        [["name", "LABEL"]],
-        [["A"], ["B"]],
-      );
-      const props: TableProps = { lookup: mockLookup("test"), sortable: true };
-
-      el.props = props;
-      document.body.appendChild(el);
-      el.totalRows = 100;
+      el.activeSort = { columnId: "score" as ColumnId, order: "ASCENDING" };
       el.dataSet = ds;
 
       const events: CustomEvent[] = [];
       el.addEventListener("casehub-sort", (e) => events.push(e as CustomEvent));
 
       const headers = queryHeaders(el);
-      headers[0]!.click();
+      headers[1]!.click(); // second click on score
 
       expect(events).toHaveLength(1);
-      expect(events[0]!.detail.columnId).toBe("name");
-      expect(events[0]!.detail.order).toBe("ASCENDING");
+      expect(events[0]!.detail.order).toBe("DESCENDING");
     });
 
-    it("does not sort when sortable is false", () => {
+    it("renders rows in the order provided by pipeline", () => {
+      const ds = makeDataSet(
+        [["name", "LABEL"], ["score", "NUMBER"]],
+        [["Alice", 10], ["Bob", 20], ["Charlie", 30]], // pipeline already sorted
+      );
+      const props: TableProps = { lookup: mockLookup("test"), sortable: true };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.activeSort = { columnId: "score" as ColumnId, order: "ASCENDING" };
+      el.dataSet = ds;
+
+      const rows = queryRows(el);
+      expect(queryCells(rows[0]!)[1]).toBe("10");
+      expect(queryCells(rows[1]!)[1]).toBe("20");
+      expect(queryCells(rows[2]!)[1]).toBe("30");
+    });
+
+    it("does not emit event when sortable is false", () => {
       const ds = makeDataSet(
         [["name", "LABEL"], ["score", "NUMBER"]],
         [["Charlie", 30], ["Alice", 10], ["Bob", 20]],
@@ -469,14 +475,13 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-sort", (e) => events.push(e as CustomEvent));
+
       const headers = queryHeaders(el);
       headers[1]!.click();
 
-      // Order should be unchanged
-      const rows = queryRows(el);
-      expect(queryCells(rows[0]!)[0]).toBe("Charlie");
-      expect(queryCells(rows[1]!)[0]).toBe("Alice");
-      expect(queryCells(rows[2]!)[0]).toBe("Bob");
+      expect(events).toHaveLength(0);
     });
   });
 
@@ -626,44 +631,49 @@ describe("CasehubTable", () => {
       expect(queryCells(rows[0]!)[0]).toBe("Alice");
     });
 
-    it("filter resets page to 0", () => {
+    it("filter only searches current page rows (known limitation)", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"], ["D"], ["E"], ["F"]],
+        [["C"], ["D"]], // pipeline provided page 2 (rows C, D)
       );
       el.props = { lookup: mockLookup("test"), pageSize: 2 };
       document.body.appendChild(el);
+      el.activePage = 1;
+      el.totalRows = 6; // A,B,C,D,E,F total
       el.dataSet = ds;
 
-      // Go to page 2
-      const btns = el.shadowRoot.querySelectorAll(".paging button");
-      (btns[2] as HTMLButtonElement).click();
-
-      // Now filter
       const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
-      input.value = "A";
+      input.value = "C";
       input.dispatchEvent(new Event("input"));
 
+      // Only searches rows C,D (current page) — finds C
       const rows = queryRows(el);
-      expect(queryCells(rows[0]!)[0]).toBe("A");
+      expect(rows).toHaveLength(1);
+      expect(queryCells(rows[0]!)[0]).toBe("C");
     });
 
-    it("filter updates pagination count", () => {
+    it("text filter does not update pagination count (uses totalRows)", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
         [["Alice"], ["Bob"], ["Charlie"], ["Dave"], ["Eve"]],
       );
-      el.props = { lookup: mockLookup("test"), pageSize: 2 };
+      el.props = { lookup: mockLookup("test"), pageSize: 5 };
       document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 5;
       el.dataSet = ds;
 
       const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "e";
       input.dispatchEvent(new Event("input"));
 
-      // "Alice", "Charlie", "Dave", "Eve" match "e" → 4 results
-      const range = el.shadowRoot.querySelector(".paging .range")!;
-      expect(range.textContent).toContain("4");
+      // Text filter is component-local — doesn't affect totalRows count
+      // Pagination count stays "1 – 5 of 5" even though only 4 rows match filter
+      const paging = el.shadowRoot.querySelector(".paging");
+      if (paging) {
+        const range = paging.querySelector(".range")!;
+        expect(range.textContent).toContain("5"); // totalRows unchanged
+      }
     });
 
     it("clearing filter restores all rows", () => {
@@ -707,30 +717,149 @@ describe("CasehubTable", () => {
   // ── Re-render ─────────────────────────────────────────────────────
 
   describe("re-render", () => {
-    it("resets page to 0 when new data arrives", () => {
+    it("renders new dataset rows as provided", () => {
       const ds1 = makeDataSet(
         [["name", "LABEL"]],
-        [["A"], ["B"], ["C"], ["D"]],
+        [["A"], ["B"]],
       );
       const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
 
       el.props = props;
       document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 4;
       el.dataSet = ds1;
 
-      // Navigate to page 2 via next button
-      const btns = el.shadowRoot.querySelectorAll(".paging button");
-      (btns[2] as HTMLButtonElement).click();
-
-      // New data arrives — page should reset to 0
+      // New data arrives from pipeline (different page)
       const ds2 = makeDataSet(
         [["name", "LABEL"]],
         [["X"], ["Y"], ["Z"]],
       );
+      el.activePage = 1;
+      el.totalRows = 3;
       el.dataSet = ds2;
 
       const rows = queryRows(el);
+      expect(rows).toHaveLength(3);
       expect(queryCells(rows[0]!)[0]).toBe("X");
+      expect(queryCells(rows[1]!)[0]).toBe("Y");
+      expect(queryCells(rows[2]!)[0]).toBe("Z");
+    });
+  });
+
+  // ── Stateless sort/pagination ────────────────────────────────────
+
+  describe("stateless sort/pagination", () => {
+    it("always emits casehub-sort on column header click", () => {
+      const ds = makeDataSet([["name", "LABEL"], ["value", "NUMBER"]], [["A", 1], ["B", 2]]);
+      const props: TableProps = { lookup: mockLookup("test"), sortable: true };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.dataSet = ds;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-sort", ((e: Event) => { events.push(e as CustomEvent); }) as EventListener);
+
+      const headers = queryHeaders(el);
+      headers[0]!.click();
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail.columnId).toBe("name");
+      expect(events[0]!.detail.order).toBe("ASCENDING");
+    });
+
+    it("reads activeSort for sort indicator", () => {
+      const ds = makeDataSet([["name", "LABEL"], ["value", "NUMBER"]], [["A", 1], ["B", 2]]);
+      const props: TableProps = { lookup: mockLookup("test"), sortable: true };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.activeSort = { columnId: "name" as ColumnId, order: "DESCENDING" };
+      el.dataSet = ds;
+
+      const headers = queryHeaders(el);
+      expect(headers[0]!.textContent).toContain("▼");
+    });
+
+    it("toggles sort order based on activeSort", () => {
+      const ds = makeDataSet([["name", "LABEL"]], [["A"], ["B"]]);
+      const props: TableProps = { lookup: mockLookup("test"), sortable: true };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.activeSort = { columnId: "name" as ColumnId, order: "ASCENDING" };
+      el.dataSet = ds;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-sort", ((e: Event) => { events.push(e as CustomEvent); }) as EventListener);
+
+      const headers = queryHeaders(el);
+      headers[0]!.click(); // same column → should toggle to DESCENDING
+
+      expect(events[0]!.detail.order).toBe("DESCENDING");
+    });
+
+    it("always emits casehub-page on page button click", () => {
+      const ds = makeDataSet(
+        [["name", "LABEL"]],
+        [["A"], ["B"]], // pipeline provides first page only
+      );
+      const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 5;
+      el.dataSet = ds;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener("casehub-page", ((e: Event) => { events.push(e as CustomEvent); }) as EventListener);
+
+      // Use querySelectorAll on buttons and get the next button (index 2: first, prev, next, last)
+      const btns = el.shadowRoot.querySelectorAll(".paging button");
+      const nextBtn = btns[2] as HTMLButtonElement;
+      expect(nextBtn).not.toBeUndefined();
+      expect(nextBtn.disabled).toBe(false);
+      nextBtn.click();
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.detail.offset).toBe(2);
+      expect(events[0]!.detail.count).toBe(2);
+    });
+
+    it("renders pagination controls from activePage", () => {
+      const ds = makeDataSet(
+        [["name", "LABEL"]],
+        [["C"], ["D"]],
+      );
+      const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.activePage = 1;
+      el.totalRows = 5;
+      el.dataSet = ds;
+
+      const pageInput = el.shadowRoot.querySelector(".paging input") as HTMLInputElement;
+      expect(pageInput?.value).toBe("2"); // page 1 → display "2"
+    });
+
+    it("renders all received rows without local slicing", () => {
+      const ds = makeDataSet(
+        [["name", "LABEL"]],
+        [["A"], ["B"]], // pipeline already paginated — 2 rows
+      );
+      const props: TableProps = { lookup: mockLookup("test"), pageSize: 2 };
+
+      el.props = props;
+      document.body.appendChild(el);
+      el.activePage = 0;
+      el.totalRows = 5;
+      el.dataSet = ds;
+
+      const rows = queryRows(el);
+      expect(rows).toHaveLength(2); // renders exactly what pipeline provided
     });
   });
 

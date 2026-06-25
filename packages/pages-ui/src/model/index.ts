@@ -43,8 +43,6 @@ export type {
   DataScopeRef,
   SaveConfig,
   ViewState,
-  DrillDownStep,
-  LayoutOverride,
   DeepLink,
   Site,
 } from "./page-types.js";

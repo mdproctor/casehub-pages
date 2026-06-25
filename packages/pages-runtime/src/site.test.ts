@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import type { Component } from "@casehubio/pages-component/dist/model/types.js";
 import type { DataSetId, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
 import "@casehubio/pages-viz";
@@ -647,6 +647,237 @@ navTree:
 
     const leaves = treeNav!.querySelectorAll(".tree-leaf");
     expect(leaves).toHaveLength(3); // Dashboard, Profile, Security
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
+describe("view state persistence", () => {
+  afterEach(() => {
+    // Reset URL hash between tests
+    history.replaceState(null, "", location.pathname);
+  });
+
+  it("sort event updates URL for explicit-ID table", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const root: Component = {
+      type: "page",
+      props: {
+        name: "App",
+        datasets: [{
+          uuid: "ds" as DataSetId,
+          content: JSON.stringify([
+            { name: "A", value: 1 },
+            { name: "B", value: 2 },
+          ]),
+        }],
+      },
+      slots: {
+        default: [{
+          type: "table",
+          id: "t1",
+          props: {
+            lookup: { dataSetId: "ds" as DataSetId, operations: [] },
+            sortable: true,
+          },
+        }],
+      },
+    };
+
+    const site = await loadSite(target, root);
+
+    const tableEl = target.querySelector("[data-component-id='t1']") as HTMLElement;
+    expect(tableEl).toBeTruthy();
+
+    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+      bubbles: true,
+      composed: true,
+      detail: { columnId: "name", order: "ASCENDING" },
+    }));
+
+    expect(location.hash).toContain("sort=t1:name:ASCENDING");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("page event updates URL for explicit-ID table", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const root: Component = {
+      type: "page",
+      props: {
+        name: "App",
+        datasets: [{
+          uuid: "ds" as DataSetId,
+          content: JSON.stringify([
+            { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 },
+          ]),
+        }],
+      },
+      slots: {
+        default: [{
+          type: "table",
+          id: "t1",
+          props: {
+            lookup: { dataSetId: "ds" as DataSetId, operations: [] },
+            pageSize: 2,
+          },
+        }],
+      },
+    };
+
+    const site = await loadSite(target, root);
+
+    const tableEl = target.querySelector("[data-component-id='t1']") as HTMLElement;
+    expect(tableEl).toBeTruthy();
+
+    tableEl.dispatchEvent(new CustomEvent("casehub-page", {
+      bubbles: true,
+      composed: true,
+      detail: { offset: 4, count: 2 },
+    }));
+
+    expect(location.hash).toContain("page=t1:2");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("sort resets pagination to 0", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const root: Component = {
+      type: "page",
+      props: {
+        name: "App",
+        datasets: [{
+          uuid: "ds" as DataSetId,
+          content: JSON.stringify([{ a: 1 }, { a: 2 }, { a: 3 }]),
+        }],
+      },
+      slots: {
+        default: [{
+          type: "table",
+          id: "t1",
+          props: {
+            lookup: { dataSetId: "ds" as DataSetId, operations: [] },
+            pageSize: 2,
+            sortable: true,
+          },
+        }],
+      },
+    };
+
+    const site = await loadSite(target, root);
+    const tableEl = target.querySelector("[data-component-id='t1']") as HTMLElement;
+    expect(tableEl).toBeTruthy();
+
+    // Set page to 1
+    tableEl.dispatchEvent(new CustomEvent("casehub-page", {
+      bubbles: true,
+      composed: true,
+      detail: { offset: 2, count: 2 },
+    }));
+    expect(location.hash).toContain("page=t1:1");
+
+    // Sort should reset page to 0 (page param omitted when page is 0)
+    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+      bubbles: true,
+      composed: true,
+      detail: { columnId: "a", order: "DESCENDING" },
+    }));
+    expect(location.hash).toContain("sort=t1:a:DESCENDING");
+    expect(location.hash).not.toContain("page=");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("ViewState exposes sort and pagination", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const root: Component = {
+      type: "page",
+      props: {
+        name: "App",
+        datasets: [{
+          uuid: "ds" as DataSetId,
+          content: JSON.stringify([{ a: 1 }]),
+        }],
+      },
+      slots: {
+        default: [{
+          type: "table",
+          id: "t1",
+          props: {
+            lookup: { dataSetId: "ds" as DataSetId, operations: [] },
+            sortable: true,
+          },
+        }],
+      },
+    };
+
+    const site = await loadSite(target, root);
+    const tableEl = target.querySelector("[data-component-id='t1']") as HTMLElement;
+    expect(tableEl).toBeTruthy();
+
+    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+      bubbles: true,
+      composed: true,
+      detail: { columnId: "a", order: "ASCENDING" },
+    }));
+
+    expect(site.state.sort).toEqual({ t1: { columnId: "a", order: "ASCENDING" } });
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+
+  it("table without explicit ID — sort works but not in URL", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const root: Component = {
+      type: "page",
+      props: {
+        name: "App",
+        datasets: [{
+          uuid: "ds" as DataSetId,
+          content: JSON.stringify([{ a: 1 }]),
+        }],
+      },
+      slots: {
+        default: [{
+          type: "table",
+          props: {
+            lookup: { dataSetId: "ds" as DataSetId, operations: [] },
+            sortable: true,
+          },
+        }],
+      },
+    };
+
+    const site = await loadSite(target, root);
+
+    // Find the auto-ID'd table by component type
+    const tableEl = target.querySelector("[data-component-type='table']") as HTMLElement;
+    expect(tableEl).toBeTruthy();
+
+    tableEl.dispatchEvent(new CustomEvent("casehub-sort", {
+      bubbles: true,
+      composed: true,
+      detail: { columnId: "a", order: "ASCENDING" },
+    }));
+
+    // Sort should NOT appear in URL because table has no explicit ID
+    expect(location.hash).not.toContain("sort=");
 
     site.dispose();
     document.body.removeChild(target);

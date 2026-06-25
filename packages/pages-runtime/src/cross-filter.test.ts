@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createFilterState, updateFilter, collectAncestorFilterOps } from "./cross-filter.js";
+import { createFilterState, updateFilter, collectAncestorFilterOps, clearPageFilters } from "./cross-filter.js";
 
 describe("collectAncestorFilterOps", () => {
   it("collects filters from ancestor pages", () => {
@@ -39,5 +39,42 @@ describe("collectAncestorFilterOps", () => {
     expect(withGroup).toHaveLength(1);
     const wrongGroup = collectAncestorFilterOps(fs, "Root/Child", "g2");
     expect(wrongGroup).toHaveLength(0);
+  });
+});
+
+describe("clearPageFilters", () => {
+  it("clears all filters for a specific page", () => {
+    const fs = createFilterState();
+    updateFilter(fs, "Sales", undefined, "region", ["North"], false);
+    updateFilter(fs, "Sales", undefined, "year", ["2024"], false);
+    clearPageFilters(fs, "Sales");
+    const ops = collectAncestorFilterOps(fs, "Sales", undefined);
+    expect(ops).toHaveLength(0);
+  });
+
+  it("does not affect other pages", () => {
+    const fs = createFilterState();
+    updateFilter(fs, "Sales", undefined, "region", ["North"], false);
+    updateFilter(fs, "HR", undefined, "dept", ["Eng"], false);
+    clearPageFilters(fs, "Sales");
+    const salesOps = collectAncestorFilterOps(fs, "Sales", undefined);
+    const hrOps = collectAncestorFilterOps(fs, "HR", undefined);
+    expect(salesOps).toHaveLength(0);
+    expect(hrOps).toHaveLength(1);
+  });
+
+  it("no-op for page with no filters", () => {
+    const fs = createFilterState();
+    clearPageFilters(fs, "Unknown");
+    expect(fs.size).toBe(0);
+  });
+
+  it("clears grouped filters", () => {
+    const fs = createFilterState();
+    updateFilter(fs, "Sales", "g1", "region", ["North"], false);
+    updateFilter(fs, "Sales", undefined, "year", ["2024"], false);
+    clearPageFilters(fs, "Sales");
+    const ops = collectAncestorFilterOps(fs, "Sales", "g1");
+    expect(ops).toHaveLength(0);
   });
 });

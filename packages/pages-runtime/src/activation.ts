@@ -105,11 +105,14 @@ export function createActivationCallback(
         }
       }
 
+      const hasExplicitId = component.id !== undefined;
+
       const entry = {
         element: el,
         vizElement: vizEl,
         component,
         pagePath,
+        hasExplicitId,
         ...(lookup !== undefined && { originalLookup: lookup }),
       };
       registry.set(componentId, entry);

@@ -4,8 +4,8 @@ import { renderComponent } from "@casehubio/pages-component/dist/renderer/render
 import type { DataSetId, ColumnId, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataProviderConfig, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
 import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
+import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
 import { createDataProviderFactory, createPresetRegistry } from "@casehubio/pages-data/dist/dataset/external/index.js";
 import type { Site, ViewState, DeepLink } from "@casehubio/pages-ui/dist/model/page-types.js";
@@ -23,7 +23,10 @@ import { createActivationCallback } from "./activation.js";
 import type { ComponentRegistry } from "./registry.js";
 import { createDataPipeline } from "./data-pipeline.js";
 import type { VizTarget } from "./data-pipeline.js";
-import { createFilterState, updateFilter, deriveActiveFilters, getActiveFilterOps, collectAncestorFilterOps } from "./cross-filter.js";
+import { createFilterState, updateFilter, deriveActiveFilters, getActiveFilterOps, collectAncestorFilterOps, clearPageFilters } from "./cross-filter.js";
+import type { FilterState } from "./cross-filter.js";
+import { createComponentViewState, updateSort, updatePage, getComponentState } from "./component-view-state.js";
+import type { ComponentViewState } from "./component-view-state.js";
 import { createDataScopeRegistry, hasDataScope, getDataScope } from "./data-scope-registry.js";
 import { createSaveConfigRegistry, getSaveConfig } from "./save-config-registry.js";
 import { createEditState, updateEditState, clearEditState, isDirty, isAnyDirty, getEditState } from "./edit-state.js";
@@ -117,8 +120,9 @@ export function loadSite(
   const saveConfigRegistry = createSaveConfigRegistry();
   const editState = createEditState();
   const saveTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  const componentViewState = createComponentViewState();
 
-  const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry);
+  const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry, componentViewState);
   pipeline.setResolverCtx({
     manager,
     providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch.bind(globalThis), options?.baseUrl),
@@ -168,11 +172,81 @@ export function loadSite(
     return el?.dataset.componentId;
   }
 
+  function deriveUrlSort(
+    cvs: ComponentViewState,
+    reg: ComponentRegistry,
+  ): Readonly<Record<string, { readonly columnId: string; readonly order: SortOrder }>> {
+    const result: Record<string, { readonly columnId: string; readonly order: SortOrder }> = {};
+    for (const [id, state] of cvs) {
+      if (!state.sort) continue;
+      const entry = reg.get(id);
+      if (!entry?.hasExplicitId) continue;
+      result[id] = { columnId: state.sort.columnId, order: state.sort.order };
+    }
+    return result;
+  }
+
+  function deriveUrlPagination(
+    cvs: ComponentViewState,
+    reg: ComponentRegistry,
+  ): Readonly<Record<string, number>> {
+    const result: Record<string, number> = {};
+    for (const [id, state] of cvs) {
+      if (state.page === undefined || state.page === 0) continue;
+      const entry = reg.get(id);
+      if (!entry?.hasExplicitId) continue;
+      result[id] = state.page;
+    }
+    return result;
+  }
+
+  function restoreFromUrl(
+    hash: string,
+    fs: FilterState,
+    cvs: ComponentViewState,
+  ): DeepLink {
+    const link = parseFromUrl(hash);
+    if (link.filters) {
+      for (const [col, values] of Object.entries(link.filters)) {
+        updateFilter(fs, link.page, undefined, col, [...values], false);
+      }
+    }
+    if (link.sort) {
+      for (const [id, s] of Object.entries(link.sort)) {
+        updateSort(cvs, id, {
+          columnId: s.columnId as ColumnId,
+          order: s.order,
+        });
+      }
+    }
+    if (link.pagination) {
+      for (const [id, page] of Object.entries(link.pagination)) {
+        updatePage(cvs, id, page);
+      }
+    }
+    return link;
+  }
+
+  function navigateInternal(path: string): void {
+    _navigating = true;
+    const segments = path.split("/").filter(Boolean);
+    currentPage = walkNavigate(root, segments, target, lazyPageResolutions);
+    _navigating = false;
+  }
+
   function syncUrl(method: "pushState" | "replaceState"): void {
     if (typeof history === "undefined") return;
+
     const filters = deriveActiveFilters(filterState, currentPage);
-    const hasFilters = Object.keys(filters).length > 0;
-    const link: DeepLink = { page: currentPage, ...(hasFilters ? { filters } : {}) };
+    const sort = deriveUrlSort(componentViewState, registry);
+    const pagination = deriveUrlPagination(componentViewState, registry);
+
+    const link: DeepLink = {
+      page: currentPage,
+      ...(Object.keys(filters).length > 0 ? { filters } : {}),
+      ...(Object.keys(sort).length > 0 ? { sort } : {}),
+      ...(Object.keys(pagination).length > 0 ? { pagination } : {}),
+    };
     history[method](null, "", serializeToUrl(link));
   }
 
@@ -392,6 +466,7 @@ export function loadSite(
       if (group !== undefined && filterProps?.group !== undefined && filterProps.group !== group) continue;
 
       if (candidate.vizElement && candidate.originalLookup) {
+        updatePage(componentViewState, id, 0);
         pipeline.handleDataRequest(candidate.vizElement, candidate.originalLookup, id);
       }
     }
@@ -404,6 +479,7 @@ export function loadSite(
       if (!hasDataScope(dataScopeRegistry, candidate.pagePath)) continue;
 
       if (candidate.vizElement && candidate.originalLookup) {
+        updatePage(componentViewState, id, 0);
         pipeline.handleDataRequest(candidate.vizElement, candidate.originalLookup, id);
       }
     }
@@ -419,19 +495,13 @@ export function loadSite(
     const entry = registry.get(componentId);
     if (!entry?.vizElement || !entry.originalLookup) return;
 
-    const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
-      ?.filter as { group?: string } | undefined;
-    const filterOps = getActiveFilterOps(filterState, entry.pagePath, filterGroup?.group);
-    const effectiveOps: DataSetOp[] = [...filterOps, ...entry.originalLookup.operations];
-    const effectiveLookup: DataSetLookup = { ...entry.originalLookup, operations: effectiveOps };
-
-    try {
-      const result = manager.lookup(effectiveLookup, { rowOffset: offset, rowCount: count });
-      entry.vizElement.dataSet = result.dataset;
-      entry.vizElement.totalRows = result.totalRows;
-    } catch (err) {
-      entry.vizElement.error = err instanceof Error ? err.message : String(err);
+    if (count > 0 && offset % count !== 0) {
+      console.warn(`casehub-page: unaligned offset ${String(offset)} for count ${String(count)}, rounding down`);
     }
+    const page = count > 0 ? Math.floor(offset / count) : 0;
+    updatePage(componentViewState, componentId, page);
+    pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, componentId);
+    syncUrl("replaceState");
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-sort", ((e: Event) => {
@@ -442,21 +512,10 @@ export function loadSite(
     const entry = registry.get(componentId);
     if (!entry?.vizElement || !entry.originalLookup) return;
 
-    const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
-      ?.filter as { group?: string } | undefined;
-    const filterOps = getActiveFilterOps(filterState, entry.pagePath, filterGroup?.group);
-    const existingOps = entry.originalLookup.operations.filter((op: DataSetOp) => op.type !== "sort");
-    const sortOp: DataSetOp = { type: "sort" as const, columns: [{ columnId: columnId as ColumnId, order }] };
-    const effectiveOps: DataSetOp[] = [...filterOps, ...existingOps, sortOp];
-    const effectiveLookup: DataSetLookup = { ...entry.originalLookup, operations: effectiveOps };
-
-    try {
-      const result = manager.lookup(effectiveLookup);
-      entry.vizElement.dataSet = result.dataset;
-      entry.vizElement.totalRows = result.totalRows;
-    } catch (err) {
-      entry.vizElement.error = err instanceof Error ? err.message : String(err);
-    }
+    updateSort(componentViewState, componentId, { columnId: columnId as ColumnId, order });
+    updatePage(componentViewState, componentId, 0);
+    pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, componentId);
+    syncUrl("replaceState");
   }), { signal: abortController.signal });
 
   target.addEventListener("casehub-record-navigate", ((e: Event) => {
@@ -618,17 +677,33 @@ export function loadSite(
   // popstate — back/forward browser navigation
   if (typeof window !== "undefined") {
     window.addEventListener("popstate", () => {
-      const deepLink = parseFromUrl(location.hash);
-      if (deepLink.page !== currentPage) {
-        site.navigate(deepLink.page);
+      const link = parseFromUrl(location.hash);
+
+      // DOM navigation only — no URL push (URL is already correct)
+      if (link.page !== currentPage) {
+        navigateInternal(link.page);
+      }
+
+      // Full state replacement — not additive merge
+      clearPageFilters(filterState, currentPage);
+      componentViewState.clear();
+      restoreFromUrl(location.hash, filterState, componentViewState);
+
+      // Re-push all registered components
+      for (const [id, entry] of registry) {
+        if (entry.vizElement && entry.originalLookup) {
+          pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, id);
+        }
       }
     }, { signal: abortController.signal });
   }
 
   // ViewState
-  const state: ViewState = Object.defineProperties({}, {
+  const state: ViewState = Object.defineProperties({} as ViewState, {
     currentPage: { get: () => currentPage, enumerable: true },
     activeFilters: { get: () => deriveActiveFilters(filterState, currentPage), enumerable: true },
+    sort: { get: () => deriveUrlSort(componentViewState, registry), enumerable: true },
+    pagination: { get: () => deriveUrlPagination(componentViewState, registry), enumerable: true },
   });
 
   const site: LiveSite = {
@@ -656,17 +731,8 @@ export function loadSite(
     },
 
     navigate(path: string): void {
-      _navigating = true;
-      const segments = path.split("/").filter(Boolean);
-      currentPage = walkNavigate(root, segments, target, lazyPageResolutions);
-      _navigating = false;
-
-      if (typeof history !== "undefined") {
-        const filters = deriveActiveFilters(filterState, currentPage);
-        const hasFilters = Object.keys(filters).length > 0;
-        const link: DeepLink = { page: currentPage, ...(hasFilters ? { filters } : {}) };
-        history.pushState(null, "", serializeToUrl(link));
-      }
+      navigateInternal(path);
+      syncUrl("pushState");
     },
 
     dispose(): void {
@@ -682,22 +748,21 @@ export function loadSite(
         clearTimeout(timer);
       }
       saveTimers.clear();
+      componentViewState.clear();
       registry.clear();
       target.innerHTML = "";
     },
   };
 
-  // Apply initial URL state
+  // Initialization reorder: parse URL and populate state BEFORE navigation
+  // This fixes the race where components received unfiltered data because
+  // filters were populated after rendering.
   if (typeof location !== "undefined" && location.hash) {
-    const deepLink = parseFromUrl(location.hash);
+    const deepLink = restoreFromUrl(location.hash, filterState, componentViewState);
     if (deepLink.page) {
-      site.navigate(deepLink.page);
+      navigateInternal(deepLink.page);
     }
-    if (deepLink.filters) {
-      for (const [col, values] of Object.entries(deepLink.filters)) {
-        updateFilter(filterState, currentPage, undefined, col, [...values], false);
-      }
-    }
+    syncUrl("replaceState");
   }
 
   return Promise.resolve(site);

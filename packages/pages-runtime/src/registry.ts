@@ -9,6 +9,7 @@ export interface ComponentEntry {
   readonly component: Component;
   readonly pagePath: string;
   readonly originalLookup?: DataSetLookup;
+  readonly hasExplicitId: boolean;
 }
 
 export type ComponentRegistry = Map<string, ComponentEntry>;

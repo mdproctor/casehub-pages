@@ -1,6 +1,7 @@
-import type { Component, GridPlacement } from "./types.js";
+import type { Component } from "./types.js";
 import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
 
 // Re-export types that moved to pages-component
 export type {
@@ -16,33 +17,17 @@ export type {
 
 // Runtime types stay in pages-ui
 export interface ViewState {
-  readonly currentPage?: string;
-  readonly expandedNodes?: readonly string[];
-  readonly activeFilters?: Readonly<Record<string, readonly string[]>>;
-  readonly drillDownPath?: readonly DrillDownStep[];
-  readonly layoutOverrides?: readonly LayoutOverride[];
-  readonly collapsedPanels?: readonly string[];
-  readonly scrollPositions?: Readonly<Record<string, number>>;
-}
-
-export interface DrillDownStep {
-  readonly source: string;
-  readonly column: string;
-  readonly value: string;
-  readonly targetPage: string;
-}
-
-export interface LayoutOverride {
-  readonly componentId: string;
-  readonly placement: GridPlacement;
+  readonly currentPage: string;
+  readonly activeFilters: Readonly<Record<string, readonly string[]>>;
+  readonly sort: Readonly<Record<string, { readonly columnId: string; readonly order: SortOrder }>>;
+  readonly pagination: Readonly<Record<string, number>>;
 }
 
 export interface DeepLink {
   readonly page: string;
-  readonly parameters?: Readonly<Record<string, string>>;
   readonly filters?: Readonly<Record<string, readonly string[]>>;
-  readonly drillDown?: readonly DrillDownStep[];
-  readonly sort?: { readonly column: string; readonly order: "ASC" | "DESC" };
+  readonly sort?: Readonly<Record<string, { readonly columnId: string; readonly order: SortOrder }>>;
+  readonly pagination?: Readonly<Record<string, number>>;
 }
 
 export interface Site {

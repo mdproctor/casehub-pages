@@ -120,27 +120,13 @@ export function page(
 export function grid(columns: number, ...items: GridItem[]): TypedComponent<"grid"> {
   const gridId = `grid_${String(gridCounter++)}`;
 
-
-  // Assign IDs to items if they don't have one
-  const itemsWithIds = items.map((item) => {
-    if (item.component.id) {
-      return item;
-    }
-    const { x, y } = item.placement;
-    const id = `${gridId}_${String(x)}_${String(y)}`;
-    return {
-      ...item,
-      component: { ...item.component, id },
-    };
-  });
-
   const props: GridProps = { columns };
 
   return freeze({
     type: "grid" as const,
     id: gridId,
     props,
-    items: itemsWithIds,
+    items,
   });
 }
 

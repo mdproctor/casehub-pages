@@ -115,7 +115,7 @@ describe("builders", () => {
       expect(result.items?.[1]!.placement).toEqual({ x: 1, y: 0, w: 1, h: 1 });
     });
 
-    it("generates deterministic IDs for grid and items", () => {
+    it("generates deterministic ID for grid container", () => {
       const comp1 = html("a");
       const comp2 = html("b");
       const item1 = at(0, 0, 1, 1, comp1);
@@ -125,11 +125,10 @@ describe("builders", () => {
 
       // Grid gets an ID
       expect(result.id).toMatch(/^grid_\d+$/);
-      const gridId = result.id!;
 
-      // Items get IDs based on grid ID and placement
-      expect(result.items?.[0]!.component.id).toBe(`${gridId}_0_0`);
-      expect(result.items?.[1]!.component.id).toBe(`${gridId}_6_3`);
+      // Items without withId() do not get auto-assigned IDs
+      expect(result.items?.[0]!.component.id).toBeUndefined();
+      expect(result.items?.[1]!.component.id).toBeUndefined();
     });
 
     it("does not override existing component IDs", () => {
@@ -423,18 +422,44 @@ describe("builders", () => {
   });
 
   describe("grid() ID determinism", () => {
-    it("produces identical IDs when called with identical structure", () => {
-      // Reset by re-importing module — but deterministic IDs should not
-      // depend on call order. Two grids with same structure get same ID base.
+    it("produces different grid IDs across calls (incremental counter)", () => {
       const grid1 = grid(2, at(0, 0, 6, 1, html("a")), at(6, 0, 6, 1, html("b")));
       const grid2 = grid(2, at(0, 0, 6, 1, html("a")), at(6, 0, 6, 1, html("b")));
 
-      // They should have different IDs (different calls produce distinct grids),
-      // but each grid's item IDs should be deterministic based on placement
-      expect(grid1.items?.[0]?.component.id).toMatch(/_0_0$/);
-      expect(grid1.items?.[1]?.component.id).toMatch(/_6_0$/);
-      expect(grid2.items?.[0]?.component.id).toMatch(/_0_0$/);
-      expect(grid2.items?.[1]?.component.id).toMatch(/_6_0$/);
+      // Each grid call gets a unique ID from the counter
+      expect(grid1.id).toBeTruthy();
+      expect(grid2.id).toBeTruthy();
+      expect(grid1.id).not.toBe(grid2.id);
+
+      // Items without withId() don't get auto-assigned IDs
+      expect(grid1.items?.[0]?.component.id).toBeUndefined();
+      expect(grid1.items?.[1]?.component.id).toBeUndefined();
+      expect(grid2.items?.[0]?.component.id).toBeUndefined();
+      expect(grid2.items?.[1]?.component.id).toBeUndefined();
+    });
+  });
+
+  describe("grid — component IDs", () => {
+    it("grid items without withId have component.id undefined", () => {
+      const g = grid(12,
+        at(0, 0, 6, 1, { type: "bar-chart", props: { lookup: { dataSetId: "x", operations: [] } } }),
+      );
+      const item = g.items![0]!;
+      expect(item.component.id).toBeUndefined();
+    });
+
+    it("grid items with withId preserve their ID", () => {
+      const g = grid(12,
+        at(0, 0, 6, 1, withId("my-chart", { type: "bar-chart", props: { lookup: { dataSetId: "x", operations: [] } } })),
+      );
+      const item = g.items![0]!;
+      expect(item.component.id).toBe("my-chart");
+    });
+
+    it("grid container itself gets auto-ID", () => {
+      const g = grid(12, at(0, 0, 6, 1, { type: "bar-chart" }));
+      expect(g.id).toBeDefined();
+      expect(g.id).toMatch(/^grid_/);
     });
   });
 

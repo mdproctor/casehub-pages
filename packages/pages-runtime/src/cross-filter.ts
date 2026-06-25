@@ -99,6 +99,16 @@ export function collectAncestorFilterOps(
   return ops;
 }
 
+export function clearPageFilters(
+  filterState: FilterState,
+  pagePath: string,
+): void {
+  const pageFilters = filterState.get(pagePath);
+  if (pageFilters) {
+    for (const [, columnMap] of pageFilters) columnMap.clear();
+  }
+}
+
 function collectFilterOps(
   filters: Map<string, string[]>,
   ops: DataSetOp[],

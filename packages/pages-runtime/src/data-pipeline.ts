@@ -1,6 +1,8 @@
 import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataSetManager, LookupOptions } from "@casehubio/pages-data/dist/dataset/manager.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
+import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
 import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
@@ -13,12 +15,16 @@ import { getActiveFilterOps, collectAncestorFilterOps } from "./cross-filter.js"
 import type { DataScopeRegistry } from "./data-scope-registry.js";
 import { getDataScope } from "./data-scope-registry.js";
 import { resolveRefBindings } from "./ref-resolution.js";
+import type { ComponentViewState } from "./component-view-state.js";
+import { getComponentState } from "./component-view-state.js";
 
 export interface VizTarget {
   dataSet: unknown;
   totalRows: number;
   theme: string;
   error: string;
+  activeSort: SortColumn | undefined;
+  activePage: number | undefined;
 }
 
 export interface DataPipeline {
@@ -39,6 +45,7 @@ export function createDataPipeline(
   registry: ComponentRegistry,
   filterState: FilterState,
   dataScopeRegistry: DataScopeRegistry,
+  componentViewState: ComponentViewState,
 ): DataPipeline {
   const pendingResolutions = new Map<DataSetId, Promise<ResolveResult>>();
   const refreshTimers = new Map<DataSetId, ReturnType<typeof setInterval>>();
@@ -49,6 +56,7 @@ export function createDataPipeline(
     lookup: DataSetLookup,
     pagePath: string,
     filterGroup: string | undefined,
+    componentId: string,
     options?: LookupOptions,
   ): void {
     try {
@@ -69,11 +77,55 @@ export function createDataPipeline(
         filterOps = getActiveFilterOps(filterState, pagePath, filterGroup);
       }
 
-      const effectiveOps = [...filterOps, ...lookup.operations];
+      // Apply centralized sort from ComponentViewState
+      const compState = getComponentState(componentViewState, componentId);
+      let sortOps: readonly DataSetOp[] = lookup.operations.filter((op) => op.type !== "sort");
+
+      if (compState?.sort) {
+        sortOps = [...sortOps, { type: "sort" as const, columns: [compState.sort] }];
+        target.activeSort = compState.sort;
+      } else {
+        // Preserve original lookup sort
+        sortOps = lookup.operations;
+        target.activeSort = undefined;
+      }
+
+      const effectiveOps = [...filterOps, ...sortOps];
       const effectiveLookup: DataSetLookup = { ...lookup, operations: effectiveOps };
-      const result = manager.lookup(effectiveLookup, options);
-      target.dataSet = result.dataset;
-      target.totalRows = result.totalRows;
+
+      // Apply pagination from ComponentViewState
+      const entry = registry.get(componentId);
+      const pageSize = (entry?.component.props as { pageSize?: number } | undefined)?.pageSize;
+      let paginationOptions = options;
+      let requestedPage = compState?.page;
+
+      if (pageSize !== undefined && requestedPage !== undefined) {
+        const rowOffset = requestedPage * pageSize;
+        paginationOptions = { ...options, rowOffset, rowCount: pageSize };
+      }
+
+      const result = manager.lookup(effectiveLookup, paginationOptions);
+
+      // Clamp page if result is empty but totalRows > 0
+      if (pageSize !== undefined && requestedPage !== undefined) {
+        if (result.totalRows > 0 && (!result.dataset || (result.dataset as unknown as { rows: unknown[] }).rows.length === 0)) {
+          const lastPage = Math.floor((result.totalRows - 1) / pageSize);
+          requestedPage = lastPage;
+          const clampedOffset = lastPage * pageSize;
+          const clampedResult = manager.lookup(effectiveLookup, { ...options, rowOffset: clampedOffset, rowCount: pageSize });
+          target.activePage = lastPage;
+          target.totalRows = clampedResult.totalRows;
+          target.dataSet = clampedResult.dataset;
+        } else {
+          target.activePage = requestedPage;
+          target.totalRows = result.totalRows;
+          target.dataSet = result.dataset;
+        }
+      } else {
+        target.activePage = undefined;
+        target.totalRows = result.totalRows;
+        target.dataSet = result.dataset;
+      }
     } catch (err) {
       target.error = err instanceof Error ? err.message : String(err);
     }
@@ -99,7 +151,7 @@ export function createDataPipeline(
         ?.filter as { group?: string } | undefined;
 
       if (manager.has(lookup.dataSetId)) {
-        pushData(target, lookup, entry.pagePath, filterGroup?.group);
+        pushData(target, lookup, entry.pagePath, filterGroup?.group, componentId);
 
         // Schedule refresh for datasets already in the manager (from a prior request)
         const def = resolveDataSetDef(lookup.dataSetId, entry.pagePath, scope);
@@ -127,7 +179,7 @@ export function createDataPipeline(
       pending
         .then(() => {
           pendingResolutions.delete(lookup.dataSetId);
-          pushData(target, lookup, entry.pagePath, filterGroup?.group);
+          pushData(target, lookup, entry.pagePath, filterGroup?.group, componentId);
           scheduleRefresh(def, lookup.dataSetId);
         })
         .catch((err: unknown) => {
@@ -144,7 +196,7 @@ export function createDataPipeline(
       if (!resolverCtx) return;
       resolveExternalDataSet(def, resolverCtx)
         .then(() => {
-          for (const [, entry] of registry) {
+          for (const [compId, entry] of registry) {
             if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
               const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
                 ?.filter as { group?: string } | undefined;
@@ -153,6 +205,7 @@ export function createDataPipeline(
                 entry.originalLookup,
                 entry.pagePath,
                 filterGroup?.group,
+                compId,
               );
             }
           }

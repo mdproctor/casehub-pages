@@ -1,4 +1,5 @@
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { VizComponentProps } from "./types.js";
 
@@ -20,6 +21,8 @@ export abstract class CasehubElement<
   private _dataRequested = false;
   private _refreshTimer: ReturnType<typeof setInterval> | undefined;
   private _resizeObserver: ResizeObserver | undefined;
+  private _activeSort: SortColumn | undefined;
+  private _activePage: number | undefined;
 
   protected readonly container: HTMLDivElement;
 
@@ -90,6 +93,22 @@ export abstract class CasehubElement<
     this._dataset = undefined;
     this._error = value;
     this.update();
+  }
+
+  get activeSort(): SortColumn | undefined {
+    return this._activeSort;
+  }
+
+  set activeSort(value: SortColumn | undefined) {
+    this._activeSort = value;
+  }
+
+  get activePage(): number | undefined {
+    return this._activePage;
+  }
+
+  set activePage(value: number | undefined) {
+    this._activePage = value;
   }
 
   // ── Lifecycle ───────────────────────────────────────────────────────

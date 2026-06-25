@@ -13,6 +13,8 @@ import { getActiveFilterOps } from "./cross-filter.js";
 import type { FilterState } from "./cross-filter.js";
 import { createDataScopeRegistry } from "./data-scope-registry.js";
 import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
+import { createComponentViewState, updateSort, updatePage } from "./component-view-state.js";
+import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
   return { id: id as ColumnId, name, type };
@@ -26,7 +28,7 @@ function regionDataSet(rows: string[][]) {
 }
 
 function makeTarget(): VizTarget {
-  return { dataSet: undefined, totalRows: -1, theme: "", error: "" };
+  return { dataSet: undefined, totalRows: -1, theme: "", error: "", activeSort: undefined, activePage: undefined };
 }
 
 describe("createDataPipeline", () => {
@@ -48,6 +50,7 @@ describe("createDataPipeline", () => {
       registry,
       createFilterState(),
       createDataScopeRegistry(),
+      createComponentViewState(),
     );
 
     const target = makeTarget();
@@ -72,6 +75,7 @@ describe("createDataPipeline", () => {
       registry,
       createFilterState(),
       createDataScopeRegistry(),
+      createComponentViewState(),
     );
 
     const target = makeTarget();
@@ -89,6 +93,7 @@ describe("createDataPipeline", () => {
       registry,
       createFilterState(),
       createDataScopeRegistry(),
+      createComponentViewState(),
     );
 
     const target = makeTarget();
@@ -158,7 +163,7 @@ describe("data pipeline with filters", () => {
       ])],
     ]);
 
-    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, filterState, createDataScopeRegistry());
+    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, filterState, createDataScopeRegistry(), createComponentViewState());
 
     const target = makeTarget();
     pipeline.handleDataRequest(target, { dataSetId: "sales" as DataSetId, operations: [] }, "chart-1");
@@ -187,7 +192,7 @@ describe("data pipeline deduplication", () => {
       ["", new Map([[def.uuid, def]])],
     ]);
 
-    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry());
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
 
     const mockCtx: ResolverContext = {
       manager,
@@ -205,5 +210,205 @@ describe("data pipeline deduplication", () => {
     pipeline.handleDataRequest(target2, { dataSetId: "sales" as DataSetId, operations: [] }, "chart-2");
 
     expect(pipeline.pendingResolutions.size).toBe(1);
+  });
+});
+
+describe("pipeline — sort from ComponentViewState", () => {
+  it("applies centralized sort to pushed data", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL), col("value", "Value", ColumnType.NUMBER)],
+      data: [["B", "2"], ["A", "1"], ["C", "3"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "ASCENDING" } as SortColumn);
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows[0]!.cells[0]!.value).toBe("A");
+    expect(rows[1]!.cells[0]!.value).toBe("B");
+    expect(rows[2]!.cells[0]!.value).toBe("C");
+  });
+
+  it("sets activeSort on VizTarget", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL)],
+      data: [["A"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    const sortCol: SortColumn = { columnId: "name" as ColumnId, order: "DESCENDING" };
+    updateSort(cvs, "t1", sortCol);
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    expect(target.activeSort).toEqual(sortCol);
+  });
+
+  it("no centralized sort preserves original lookup sort", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL), col("value", "Value", ColumnType.NUMBER)],
+      data: [["B", "2"], ["A", "1"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    // No sort in CVS — original lookup sort should be preserved
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const sortOp = { type: "sort" as const, columns: [{ columnId: "name" as ColumnId, order: "ASCENDING" as const }] };
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [sortOp] }, "t1");
+
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows[0]!.cells[0]!.value).toBe("A");
+  });
+
+  it("centralized sort replaces original lookup sort", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL)],
+      data: [["B"], ["A"], ["C"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "DESCENDING" } as SortColumn);
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    // Original lookup has ASCENDING sort — centralized DESCENDING should win
+    const sortOp = { type: "sort" as const, columns: [{ columnId: "name" as ColumnId, order: "ASCENDING" as const }] };
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [sortOp] }, "t1");
+
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows[0]!.cells[0]!.value).toBe("C");
+  });
+});
+
+describe("pipeline — pagination from ComponentViewState", () => {
+  it("applies pagination when pageSize prop exists", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL)],
+      data: [["A"], ["B"], ["C"], ["D"], ["E"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table", props: { pageSize: 2, lookup: { dataSetId: "test", operations: [] } } },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updatePage(cvs, "t1", 1); // page 1 = rows 2-3
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.cells[0]!.value).toBe("C");
+    expect(rows[1]!.cells[0]!.value).toBe("D");
+    expect(target.activePage).toBe(1);
+  });
+
+  it("clamps page when beyond total", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL)],
+      data: [["A"], ["B"], ["C"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table", props: { pageSize: 2, lookup: { dataSetId: "test", operations: [] } } },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updatePage(cvs, "t1", 5); // way beyond total
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows).toHaveLength(1); // last page: row C
+    expect(rows[0]!.cells[0]!.value).toBe("C");
+    expect(target.activePage).toBe(1); // clamped to last page
   });
 });
