@@ -51,6 +51,13 @@ if (fs.existsSync(mockDataDir)) {
   copyRecursive(mockDataDir, path.join(targetDir, 'mock-data'));
 }
 
+// Copy test fixtures
+const fixturesDir = path.join(__dirname, '../tests/fixtures');
+if (fs.existsSync(fixturesDir)) {
+  console.log('Copying test fixtures...');
+  copyRecursive(fixturesDir, path.join(targetDir, 'tests/fixtures'));
+}
+
 // Copy mock data to expected endpoint paths for dashboards that reference local APIs
 const mockEndpoints = {
   'mock-data/quarkus-metrics.txt': 'data/quarkus/metrics',

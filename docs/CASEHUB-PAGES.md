@@ -415,12 +415,60 @@ interface LiveSite {
   root: Component;                          // The component tree
   page(path: string): Component | null;     // Find page by path
   dataset(id, fromPage?): DataSetDef | null; // Find dataset definition
-  state: ViewState;                         // Current page + active filters
+  state: ViewState;                         // Current page, filters, sort, pagination
   navigate(path: string): void;             // Programmatic navigation
   setTheme(theme: "light" | "dark" | CasehubTheme): void;  // Switch theme
   dispose(): void;                          // Cleanup all listeners and timers
 }
 ```
+
+### ViewState
+
+```typescript
+interface ViewState {
+  readonly currentPage: string;      // Active page path (e.g., "Sales/Revenue")
+  readonly activeFilters: Readonly<Record<string, readonly string[]>>;  // Active cross-filters
+  readonly sort: Readonly<Record<string, { columnId: string; order: SortOrder }>>;  // Per-component sort
+  readonly pagination: Readonly<Record<string, number>>;  // Per-component page number
+}
+```
+
+`sort` and `pagination` are keyed by component ID — only components with explicit IDs (set via `withId()`) appear here.
+
+### URL State Persistence
+
+Dashboard state is persisted in the URL hash so dashboards are bookmarkable and shareable:
+
+```
+#/page/Sales/Revenue?filter=region:North|South&sort=sales-table:Revenue:DESCENDING&page=sales-table:2
+```
+
+| Param | Format | Description |
+|-------|--------|-------------|
+| Page path | `#/page/<path>` | Active page (from navigation) |
+| `filter` | `col:val\|val,col2:val` | Cross-filter state |
+| `sort` | `id:col:order` | Per-component sort (component ID : column : ASCENDING/DESCENDING) |
+| `page` | `id:num` | Per-component page number (0-indexed, page 0 omitted) |
+
+**Opt-in via `withId()`:** Only components with explicit IDs get their sort/pagination persisted to the URL. Components without IDs have ephemeral state that works within the session but is lost on reload.
+
+```typescript
+// This table's sort/pagination state is bookmarkable:
+withId("sales-table", table({
+  sortable: true,
+  pageSize: 10,
+  lookup: lookup("sales"),
+}))
+
+// This table's sort/pagination works but is lost on reload:
+table({
+  sortable: true,
+  pageSize: 10,
+  lookup: lookup("sales"),
+})
+```
+
+Component IDs must be globally unique across the component tree. If two pages use the same ID, they share state.
 
 ## Theming
 

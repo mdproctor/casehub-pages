@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View State Test Fixture</title>
+    <style>
+        body { margin: 0; padding: 16px; font-family: system-ui; }
+        #target { width: 100%; max-width: 1200px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <div id="target"></div>
+    <script src="/casehub-bundle.js"></script>
+    <script>
+        // Build a test site with:
+        // - Tabs (two pages for navigation tests)
+        // - First page has a table with explicit ID (test-table) — sortable, paginated
+        // - Second page has a table without explicit ID (no-id-table) — for negative test
+
+        const sampleData = [
+            { name: "Alice", age: 30, city: "New York" },
+            { name: "Bob", age: 25, city: "Paris" },
+            { name: "Charlie", age: 35, city: "London" },
+            { name: "Diana", age: 28, city: "Tokyo" },
+            { name: "Eve", age: 32, city: "Berlin" }
+        ];
+
+        const componentTree = {
+            type: "page",
+            props: {
+                name: "ViewStateTest",
+                datasets: [{
+                    uuid: "testData",
+                    content: JSON.stringify(sampleData)
+                }]
+            },
+            slots: {
+                default: [{
+                    type: "tabs",
+                    id: "main-tabs",
+                    props: {},
+                    slots: {
+                        "Page 1": [
+                            { type: "title", props: { text: "Table with Explicit ID" } },
+                            {
+                                id: "test-table",
+                                type: "table",
+                                props: {
+                                    lookup: {
+                                        dataSetId: "testData",
+                                        operations: []
+                                    },
+                                    sortable: true,
+                                    pageSize: 2
+                                }
+                            }
+                        ],
+                        "Page 2": [
+                            { type: "title", props: { text: "Table without Explicit ID" } },
+                            {
+                                type: "table",
+                                props: {
+                                    lookup: {
+                                        dataSetId: "testData",
+                                        operations: []
+                                    },
+                                    sortable: true,
+                                    pageSize: 2
+                                }
+                            }
+                        ]
+                    }
+                }]
+            }
+        };
+
+        // Load the site when casehubPages is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            const target = document.getElementById('target');
+            if (!target) {
+                console.error('Target element not found');
+                return;
+            }
+
+            if (!window.casehubPages || !window.casehubPages.loadSite) {
+                console.error('casehubPages not loaded');
+                return;
+            }
+
+            try {
+                const site = await window.casehubPages.loadSite(target, componentTree);
+                console.log('Site loaded successfully', site);
+                window.__testSite = site; // For debugging
+            } catch (error) {
+                console.error('Error loading site:', error);
+            }
+        });
+    </script>
+</body>
+</html>
