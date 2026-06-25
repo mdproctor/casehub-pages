@@ -296,7 +296,7 @@ describe("CasehubElement", () => {
       expect(el.totalRows).toBe(-1);
     });
 
-    it("can be set and triggers update", () => {
+    it("stores value without triggering render", () => {
       el.props = { label: "test" };
       document.body.appendChild(el);
       el.dataSet = mockDataSet();
@@ -304,8 +304,7 @@ describe("CasehubElement", () => {
 
       el.totalRows = 100;
       expect(el.totalRows).toBe(100);
-      // Should trigger update → render
-      expect(el.renderCalls).toHaveLength(1);
+      expect(el.renderCalls).toHaveLength(0);
     });
   });
 

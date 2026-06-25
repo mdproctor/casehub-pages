@@ -73,7 +73,6 @@ export abstract class CasehubElement<
 
   set totalRows(value: number) {
     this._totalRows = value;
-    this.update();
   }
 
   get theme(): string {
