@@ -13,7 +13,7 @@ import { getActiveFilterOps } from "./cross-filter.js";
 import type { FilterState } from "./cross-filter.js";
 import { createDataScopeRegistry } from "./data-scope-registry.js";
 import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import { createComponentViewState, updateSort, updatePage } from "./component-view-state.js";
+import { createComponentViewState, updateSort, updatePage, updateTextFilter } from "./component-view-state.js";
 import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
@@ -415,5 +415,108 @@ describe("pipeline — pagination from ComponentViewState", () => {
     expect(rows).toHaveLength(1); // last page: row C
     expect(rows[0]!.cells[0]!.value).toBe("C");
     expect(target.activePage).toBe(1); // clamped to last page
+  });
+});
+
+describe("pipeline — text filter from ComponentViewState", () => {
+  it("applies text filter to reduce rows", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL), col("city", "City", ColumnType.LABEL)],
+      data: [["Alice", "London"], ["Bob", "Paris"], ["Charlie", "London"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updateTextFilter(cvs, "t1", "London");
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    expect(target.totalRows).toBe(2);
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.cells[0]!.value).toBe("Alice");
+    expect(rows[1]!.cells[0]!.value).toBe("Charlie");
+  });
+
+  it("text filter is case-insensitive", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL)],
+      data: [["Alice"], ["bob"], ["CHARLIE"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updateTextFilter(cvs, "t1", "ali");
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    expect(target.totalRows).toBe(1);
+  });
+
+  it("text filter with pagination filters before paginating", () => {
+    const manager = createDataSetManager();
+    const ds = toTypedDataSet({
+      columns: [col("name", "Name", ColumnType.LABEL)],
+      data: [["A"], ["AB"], ["ABC"], ["B"], ["BC"]],
+    });
+    manager.register("test" as DataSetId, ds);
+
+    const registry: ComponentRegistry = new Map();
+    registry.set("t1", {
+      element: document.createElement("div"),
+      component: { type: "table", props: { pageSize: 2, lookup: { dataSetId: "test", operations: [] } } },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const cvs = createComponentViewState();
+    updateTextFilter(cvs, "t1", "B");
+    updatePage(cvs, "t1", 0);
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
+
+    // "B" matches: AB, ABC, B, BC = 4 rows. Page 0 with pageSize 2 → first 2
+    expect(target.totalRows).toBe(4);
+    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.cells[0]!.value).toBe("AB");
+    expect(rows[1]!.cells[0]!.value).toBe("ABC");
+    expect(target.activePage).toBe(0);
   });
 });

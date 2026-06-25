@@ -71,6 +71,7 @@ describe("form ↔ table interaction (real DOM)", () => {
     site?.dispose();
     site = null;
     document.body.removeChild(target);
+    location.hash = "";
   });
 
   async function setup(): Promise<{

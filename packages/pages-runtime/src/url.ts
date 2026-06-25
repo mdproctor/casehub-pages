@@ -50,6 +50,16 @@ export function serializeToUrl(link: DeepLink): string {
     }
   }
 
+  if (link.textFilter) {
+    const entries = Object.entries(link.textFilter).filter(([, t]) => t.length > 0);
+    if (entries.length > 0) {
+      const tfStr = entries
+        .map(([id, t]) => `${encodeURIComponent(id)}:${encodeURIComponent(t)}`)
+        .join(",");
+      params.push(`tf=${tfStr}`);
+    }
+  }
+
   if (params.length > 0) {
     url += `?${params.join("&")}`;
   }
@@ -69,6 +79,7 @@ export function parseFromUrl(hash: string): DeepLink {
   let filters: Record<string, readonly string[]> | undefined;
   let sort: Record<string, { readonly columnId: string; readonly order: "ASCENDING" | "DESCENDING" }> | undefined;
   let pagination: Record<string, number> | undefined;
+  let textFilter: Record<string, string> | undefined;
 
   if (qIndex !== -1) {
     const queryStr = withoutPrefix.substring(qIndex + 1);
@@ -113,6 +124,20 @@ export function parseFromUrl(hash: string): DeepLink {
         }
       }
     }
+
+    const tfStr = params.get("tf");
+    if (tfStr) {
+      textFilter = {};
+      for (const entry of tfStr.split(",")) {
+        const colonIdx = entry.indexOf(":");
+        if (colonIdx === -1) continue;
+        const id = decodeURIComponent(entry.substring(0, colonIdx));
+        const text = decodeURIComponent(entry.substring(colonIdx + 1));
+        if (text) {
+          textFilter[id] = text;
+        }
+      }
+    }
   }
 
   return {
@@ -120,5 +145,6 @@ export function parseFromUrl(hash: string): DeepLink {
     ...(filters ? { filters } : {}),
     ...(sort ? { sort } : {}),
     ...(pagination ? { pagination } : {}),
+    ...(textFilter ? { textFilter } : {}),
   };
 }

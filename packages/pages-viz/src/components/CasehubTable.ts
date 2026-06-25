@@ -111,9 +111,7 @@ export class CasehubTable extends CasehubElement<TableProps> {
     const pageSize = props.pageSize;
     const currentPage = this.activePage ?? 0;
 
-    // Apply text filter only (pipeline already sorted and paginated)
-    const filteredRows = this.getFilteredRows(dataset);
-    const displayRows = filteredRows;
+    const displayRows = dataset.rows;
     const totalCount = this.totalRows;
     const totalPages = pageSize ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1;
 
@@ -132,7 +130,11 @@ export class CasehubTable extends CasehubElement<TableProps> {
     filterInput.addEventListener("input", () => {
       this._filterText = filterInput.value;
       const cursorPos = filterInput.selectionStart;
-      this.rerender(props, dataset);
+      this.dispatchEvent(new CustomEvent("casehub-text-filter", {
+        bubbles: true,
+        composed: true,
+        detail: { text: this._filterText },
+      }));
       const restored = this.shadowRoot.querySelector<HTMLInputElement>(".filter-box input");
       if (restored) {
         restored.focus();
@@ -323,7 +325,8 @@ export class CasehubTable extends CasehubElement<TableProps> {
                 detail: { columnId, value, row: clickedRow, reset: false, group: props.filter?.group } satisfies CasehubFilterApply,
               }));
             }
-            this.rerender(props, dataset);
+            // Re-set dataSet to trigger render with current data + updated selection
+            this.dataSet = this.dataSet;
           });
         }
 
@@ -345,17 +348,6 @@ export class CasehubTable extends CasehubElement<TableProps> {
     );
   }
 
-  private getFilteredRows(dataset: TypedDataSet): readonly import("@casehubio/pages-data/dist/dataset/types.js").TypedRow[] {
-    if (!this._filterText) return dataset.rows;
-    const term = this._filterText.toLowerCase();
-    return dataset.rows.filter((row) =>
-      row.cells.some((cell) => {
-        const raw = cellToRaw(cell);
-        return raw !== null && String(raw).toLowerCase().includes(term);
-      }),
-    );
-  }
-
   private handleSort(columnId: ColumnId): void {
     const currentOrder = this.activeSort?.columnId === columnId ? this.activeSort.order : undefined;
     const newOrder: SortOrder = currentOrder === "ASCENDING" ? "DESCENDING" : "ASCENDING";
@@ -369,9 +361,6 @@ export class CasehubTable extends CasehubElement<TableProps> {
     );
   }
 
-  private rerender(props: TableProps, dataset: TypedDataSet): void {
-    this.render(this.container, props, dataset);
-  }
 }
 
 customElements.define("casehub-table", CasehubTable);

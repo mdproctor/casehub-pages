@@ -594,7 +594,7 @@ describe("CasehubTable", () => {
       expect(input!.placeholder).toBe("Filter");
     });
 
-    it("typing in filter reduces visible rows", () => {
+    it("typing in filter dispatches casehub-text-filter event", () => {
       const ds = makeDataSet(
         [["name", "LABEL"], ["city", "LABEL"]],
         [["Alice", "London"], ["Bob", "Paris"], ["Charlie", "London"]],
@@ -603,80 +603,38 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
+      const events: string[] = [];
+      el.addEventListener("casehub-text-filter", ((e: Event) => {
+        events.push((e as CustomEvent<{ text: string }>).detail.text);
+      }) as EventListener);
+
       const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "London";
       input.dispatchEvent(new Event("input"));
 
-      const rows = queryRows(el);
-      expect(rows).toHaveLength(2);
-      expect(queryCells(rows[0]!)[0]).toBe("Alice");
-      expect(queryCells(rows[1]!)[0]).toBe("Charlie");
+      expect(events).toEqual(["London"]);
+      // Table still shows all rows — pipeline handles filtering
+      expect(queryRows(el)).toHaveLength(3);
     });
 
-    it("filter is case-insensitive", () => {
+    it("pagination uses totalRows from pipeline (not local row count)", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
-        [["Alice"], ["bob"], ["CHARLIE"]],
-      );
-      el.props = { lookup: mockLookup("test") };
-      document.body.appendChild(el);
-      el.dataSet = ds;
-
-      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
-      input.value = "ali";
-      input.dispatchEvent(new Event("input"));
-
-      const rows = queryRows(el);
-      expect(rows).toHaveLength(1);
-      expect(queryCells(rows[0]!)[0]).toBe("Alice");
-    });
-
-    it("filter only searches current page rows (known limitation)", () => {
-      const ds = makeDataSet(
-        [["name", "LABEL"]],
-        [["C"], ["D"]], // pipeline provided page 2 (rows C, D)
+        [["Alice"], ["Bob"]],
       );
       el.props = { lookup: mockLookup("test"), pageSize: 2 };
       document.body.appendChild(el);
-      el.activePage = 1;
-      el.totalRows = 6; // A,B,C,D,E,F total
-      el.dataSet = ds;
-
-      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
-      input.value = "C";
-      input.dispatchEvent(new Event("input"));
-
-      // Only searches rows C,D (current page) — finds C
-      const rows = queryRows(el);
-      expect(rows).toHaveLength(1);
-      expect(queryCells(rows[0]!)[0]).toBe("C");
-    });
-
-    it("text filter does not update pagination count (uses totalRows)", () => {
-      const ds = makeDataSet(
-        [["name", "LABEL"]],
-        [["Alice"], ["Bob"], ["Charlie"], ["Dave"], ["Eve"]],
-      );
-      el.props = { lookup: mockLookup("test"), pageSize: 5 };
-      document.body.appendChild(el);
       el.activePage = 0;
-      el.totalRows = 5;
+      el.totalRows = 10;
       el.dataSet = ds;
 
-      const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
-      input.value = "e";
-      input.dispatchEvent(new Event("input"));
-
-      // Text filter is component-local — doesn't affect totalRows count
-      // Pagination count stays "1 – 5 of 5" even though only 4 rows match filter
       const paging = el.shadowRoot.querySelector(".paging");
-      if (paging) {
-        const range = paging.querySelector(".range")!;
-        expect(range.textContent).toContain("5"); // totalRows unchanged
-      }
+      expect(paging).not.toBeNull();
+      const range = paging!.querySelector(".range")!;
+      expect(range.textContent).toContain("10");
     });
 
-    it("clearing filter restores all rows", () => {
+    it("clearing filter dispatches empty text event", () => {
       const ds = makeDataSet(
         [["name", "LABEL"]],
         [["Alice"], ["Bob"]],
@@ -685,14 +643,18 @@ describe("CasehubTable", () => {
       document.body.appendChild(el);
       el.dataSet = ds;
 
+      const events: string[] = [];
+      el.addEventListener("casehub-text-filter", ((e: Event) => {
+        events.push((e as CustomEvent<{ text: string }>).detail.text);
+      }) as EventListener);
+
       const input = el.shadowRoot.querySelector<HTMLInputElement>(".filter-box input")!;
       input.value = "Alice";
       input.dispatchEvent(new Event("input"));
-      expect(queryRows(el)).toHaveLength(1);
-
       input.value = "";
       input.dispatchEvent(new Event("input"));
-      expect(queryRows(el)).toHaveLength(2);
+
+      expect(events).toEqual(["Alice", ""]);
     });
 
     it("filter input retains focus after typing", () => {

@@ -1,4 +1,4 @@
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetId, TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataSetManager, LookupOptions } from "@casehubio/pages-data/dist/dataset/manager.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
@@ -37,6 +37,16 @@ export interface DataPipeline {
   setResolverCtx(ctx: ResolverContext): void;
   readonly pendingResolutions: Map<DataSetId, Promise<ResolveResult>>;
   readonly refreshTimers: Map<DataSetId, ReturnType<typeof setInterval>>;
+}
+
+function applyTextFilter(ds: TypedDataSet, term: string): TypedDataSet {
+  const lower = term.toLowerCase();
+  const rows = ds.rows.filter(row =>
+    row.cells.some(cell =>
+      cell.type !== "NULL" && String(cell.value).toLowerCase().includes(lower),
+    ),
+  );
+  return { columns: ds.columns, rows };
 }
 
 export function createDataPipeline(
@@ -93,39 +103,62 @@ export function createDataPipeline(
       const effectiveOps = [...filterOps, ...sortOps];
       const effectiveLookup: DataSetLookup = { ...lookup, operations: effectiveOps };
 
-      // Apply pagination from ComponentViewState
       const entry = registry.get(componentId);
       const pageSize = (entry?.component.props as { pageSize?: number } | undefined)?.pageSize;
-      let paginationOptions = options;
+      const textFilter = compState?.textFilter;
       let requestedPage = compState?.page;
 
-      if (pageSize !== undefined && requestedPage !== undefined) {
-        const rowOffset = requestedPage * pageSize;
-        paginationOptions = { ...options, rowOffset, rowCount: pageSize };
-      }
+      if (textFilter) {
+        // Text filter active: lookup without pagination, filter, then paginate manually
+        const fullResult = manager.lookup(effectiveLookup, options);
+        const filtered = applyTextFilter(fullResult.dataset, textFilter);
+        const totalRows = filtered.rows.length;
 
-      const result = manager.lookup(effectiveLookup, paginationOptions);
-
-      // Clamp page if result is empty but totalRows > 0
-      if (pageSize !== undefined && requestedPage !== undefined) {
-        if (result.totalRows > 0 && (!result.dataset || (result.dataset as unknown as { rows: unknown[] }).rows.length === 0)) {
-          const lastPage = Math.floor((result.totalRows - 1) / pageSize);
-          requestedPage = lastPage;
-          updatePage(componentViewState, componentId, lastPage);
-          const clampedOffset = lastPage * pageSize;
-          const clampedResult = manager.lookup(effectiveLookup, { ...options, rowOffset: clampedOffset, rowCount: pageSize });
-          target.activePage = lastPage;
-          target.totalRows = clampedResult.totalRows;
-          target.dataSet = clampedResult.dataset;
-        } else {
+        if (pageSize !== undefined && requestedPage !== undefined) {
+          if (totalRows > 0 && requestedPage * pageSize >= totalRows) {
+            requestedPage = Math.floor((totalRows - 1) / pageSize);
+            updatePage(componentViewState, componentId, requestedPage);
+          }
+          const start = requestedPage * pageSize;
+          const pageRows = filtered.rows.slice(start, start + pageSize);
           target.activePage = requestedPage;
+          target.totalRows = totalRows;
+          target.dataSet = { columns: filtered.columns, rows: pageRows };
+        } else {
+          target.activePage = undefined;
+          target.totalRows = totalRows;
+          target.dataSet = filtered;
+        }
+      } else {
+        // No text filter: use manager pagination directly
+        let paginationOptions = options;
+        if (pageSize !== undefined && requestedPage !== undefined) {
+          const rowOffset = requestedPage * pageSize;
+          paginationOptions = { ...options, rowOffset, rowCount: pageSize };
+        }
+
+        const result = manager.lookup(effectiveLookup, paginationOptions);
+
+        if (pageSize !== undefined && requestedPage !== undefined) {
+          if (result.totalRows > 0 && (!result.dataset || (result.dataset as unknown as { rows: unknown[] }).rows.length === 0)) {
+            const lastPage = Math.floor((result.totalRows - 1) / pageSize);
+            requestedPage = lastPage;
+            updatePage(componentViewState, componentId, lastPage);
+            const clampedOffset = lastPage * pageSize;
+            const clampedResult = manager.lookup(effectiveLookup, { ...options, rowOffset: clampedOffset, rowCount: pageSize });
+            target.activePage = lastPage;
+            target.totalRows = clampedResult.totalRows;
+            target.dataSet = clampedResult.dataset;
+          } else {
+            target.activePage = requestedPage;
+            target.totalRows = result.totalRows;
+            target.dataSet = result.dataset;
+          }
+        } else {
+          target.activePage = undefined;
           target.totalRows = result.totalRows;
           target.dataSet = result.dataset;
         }
-      } else {
-        target.activePage = undefined;
-        target.totalRows = result.totalRows;
-        target.dataSet = result.dataset;
       }
     } catch (err) {
       target.error = err instanceof Error ? err.message : String(err);

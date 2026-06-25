@@ -25,7 +25,7 @@ import { createDataPipeline } from "./data-pipeline.js";
 import type { VizTarget } from "./data-pipeline.js";
 import { createFilterState, updateFilter, deriveActiveFilters, getActiveFilterOps, collectAncestorFilterOps, clearPageFilters } from "./cross-filter.js";
 import type { FilterState } from "./cross-filter.js";
-import { createComponentViewState, updateSort, updatePage, getComponentState } from "./component-view-state.js";
+import { createComponentViewState, updateSort, updatePage, updateTextFilter, getComponentState } from "./component-view-state.js";
 import type { ComponentViewState } from "./component-view-state.js";
 import { createDataScopeRegistry, hasDataScope, getDataScope } from "./data-scope-registry.js";
 import { createSaveConfigRegistry, getSaveConfig } from "./save-config-registry.js";
@@ -61,6 +61,10 @@ interface PageDetail {
 interface SortDetail {
   readonly columnId: string;
   readonly order: SortOrder;
+}
+
+interface TextFilterDetail {
+  readonly text: string;
 }
 
 interface RecordNavigateDetail {
@@ -224,6 +228,11 @@ export function loadSite(
         updatePage(cvs, id, page);
       }
     }
+    if (link.textFilter) {
+      for (const [id, text] of Object.entries(link.textFilter)) {
+        updateTextFilter(cvs, id, text);
+      }
+    }
     return link;
   }
 
@@ -234,18 +243,34 @@ export function loadSite(
     _navigating = false;
   }
 
+  function deriveUrlTextFilter(
+    cvs: ComponentViewState,
+    reg: ComponentRegistry,
+  ): Readonly<Record<string, string>> {
+    const result: Record<string, string> = {};
+    for (const [id, state] of cvs) {
+      if (!state.textFilter) continue;
+      const entry = reg.get(id);
+      if (!entry?.hasExplicitId) continue;
+      result[id] = state.textFilter;
+    }
+    return result;
+  }
+
   function syncUrl(method: "pushState" | "replaceState"): void {
     if (typeof history === "undefined") return;
 
     const filters = deriveActiveFilters(filterState, currentPage);
     const sort = deriveUrlSort(componentViewState, registry);
     const pagination = deriveUrlPagination(componentViewState, registry);
+    const textFilter = deriveUrlTextFilter(componentViewState, registry);
 
     const link: DeepLink = {
       page: currentPage,
       ...(Object.keys(filters).length > 0 ? { filters } : {}),
       ...(Object.keys(sort).length > 0 ? { sort } : {}),
       ...(Object.keys(pagination).length > 0 ? { pagination } : {}),
+      ...(Object.keys(textFilter).length > 0 ? { textFilter } : {}),
     };
     history[method](null, "", serializeToUrl(link));
   }
@@ -518,6 +543,20 @@ export function loadSite(
     syncUrl("replaceState");
   }), { signal: abortController.signal });
 
+  target.addEventListener("casehub-text-filter", ((e: Event) => {
+    const { text } = (e as CustomEvent<TextFilterDetail>).detail;
+    const componentId = findComponentId(e);
+    if (!componentId) return;
+
+    const entry = registry.get(componentId);
+    if (!entry?.vizElement || !entry.originalLookup) return;
+
+    updateTextFilter(componentViewState, componentId, text || undefined);
+    updatePage(componentViewState, componentId, 0);
+    pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, componentId);
+    syncUrl("replaceState");
+  }), { signal: abortController.signal });
+
   target.addEventListener("casehub-record-navigate", ((e: Event) => {
     const { direction } = (e as CustomEvent<RecordNavigateDetail>).detail;
 
@@ -704,6 +743,7 @@ export function loadSite(
     activeFilters: { get: () => deriveActiveFilters(filterState, currentPage), enumerable: true },
     sort: { get: () => deriveUrlSort(componentViewState, registry), enumerable: true },
     pagination: { get: () => deriveUrlPagination(componentViewState, registry), enumerable: true },
+    textFilter: { get: () => deriveUrlTextFilter(componentViewState, registry), enumerable: true },
   });
 
   const site: LiveSite = {

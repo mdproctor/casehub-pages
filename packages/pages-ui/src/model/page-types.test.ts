@@ -184,7 +184,7 @@ describe("DataSetDefaults", () => {
 });
 
 describe("ViewState", () => {
-  it("has currentPage, activeFilters, sort, pagination", () => {
+  it("has currentPage, activeFilters, sort, pagination, textFilter", () => {
     const state: ViewState = {
       currentPage: "overview",
       activeFilters: {
@@ -195,6 +195,7 @@ describe("ViewState", () => {
         "table-1": { columnId: "revenue", order: "ASCENDING" },
       },
       pagination: { "table-1": 2 },
+      textFilter: { "table-1": "search term" },
     };
 
     expect(state.currentPage).toBe("overview");
@@ -202,6 +203,7 @@ describe("ViewState", () => {
     expect(state.activeFilters.region).toEqual(["NA", "EU"]);
     expect(state.sort["table-1"]!.columnId).toBe("revenue");
     expect(state.pagination["table-1"]).toBe(2);
+    expect(state.textFilter["table-1"]).toBe("search term");
   });
 });
 
@@ -250,7 +252,7 @@ describe("DeepLink", () => {
 });
 
 function emptyViewState(overrides?: Partial<ViewState>): ViewState {
-  return { currentPage: "", activeFilters: {}, sort: {}, pagination: {}, ...overrides };
+  return { currentPage: "", activeFilters: {}, sort: {}, pagination: {}, textFilter: {}, ...overrides };
 }
 
 describe("Site", () => {

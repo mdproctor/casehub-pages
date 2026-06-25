@@ -21,6 +21,7 @@ export interface ViewState {
   readonly activeFilters: Readonly<Record<string, readonly string[]>>;
   readonly sort: Readonly<Record<string, { readonly columnId: string; readonly order: SortOrder }>>;
   readonly pagination: Readonly<Record<string, number>>;
+  readonly textFilter: Readonly<Record<string, string>>;
 }
 
 export interface DeepLink {
@@ -28,6 +29,7 @@ export interface DeepLink {
   readonly filters?: Readonly<Record<string, readonly string[]>>;
   readonly sort?: Readonly<Record<string, { readonly columnId: string; readonly order: SortOrder }>>;
   readonly pagination?: Readonly<Record<string, number>>;
+  readonly textFilter?: Readonly<Record<string, string>>;
 }
 
 export interface Site {

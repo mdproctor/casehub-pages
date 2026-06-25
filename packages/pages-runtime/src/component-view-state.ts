@@ -3,6 +3,7 @@ import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 export interface ComponentState {
   readonly sort?: SortColumn;
   readonly page?: number;
+  readonly textFilter?: string;
 }
 
 export type ComponentViewState = Map<string, ComponentState>;
@@ -42,6 +43,26 @@ export function updatePage(
     }
   } else {
     state.set(componentId, { ...existing, page });
+  }
+}
+
+export function updateTextFilter(
+  state: ComponentViewState,
+  componentId: string,
+  textFilter: string | undefined,
+): void {
+  const existing = state.get(componentId);
+  if (textFilter === undefined || textFilter === "") {
+    if (existing) {
+      const { textFilter: _, ...rest } = existing;
+      if (rest.sort !== undefined || rest.page !== undefined) {
+        state.set(componentId, rest);
+      } else {
+        state.delete(componentId);
+      }
+    }
+  } else {
+    state.set(componentId, { ...existing, textFilter });
   }
 }
 
