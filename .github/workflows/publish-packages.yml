@@ -5,7 +5,9 @@ on:
     branches: [main]
     paths:
       - 'packages/*/package.json'
+      - 'packages/*/src/**'
       - 'components/*/package.json'
+      - 'components/*/src/**'
   workflow_dispatch:
 
 concurrency:
@@ -60,8 +62,11 @@ jobs:
               echo "⏭ Skip (exists): $NAME@$VERSION"
             else
               echo "📦 Publishing: $NAME@$VERSION"
-              npm publish "$dir"
+              cd "$dir"
+              yarn npm publish --access restricted
+              cd -
             fi
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
