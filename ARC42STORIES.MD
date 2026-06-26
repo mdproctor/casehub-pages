@@ -215,7 +215,7 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | Issue | Title | Status |
 |---|---|---|
 | #12 | Lazy on-demand pagination for datasets | 🔲 open |
-| #14 | Domain-specific example dashboards for the gallery | 🔲 open |
+| #14 | Domain-specific example dashboards for the gallery | ✅ shipped |
 | #15 | Accessibility: ARIA attributes, keyboard navigation, screen reader support | 🔲 open |
 | #16 | CSP compliance: replace new Function() in column expressions | 🔲 open |
 | #17 | Theming system and dark mode support | ✅ shipped |
@@ -229,6 +229,9 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | #25 | LLM-friendly API documentation for host application integration | ✅ shipped |
 | #26 | Platform convention: Quarkus + TypeScript frontend via Quinoa | ✅ shipped |
 | #28 | Remove redundant iframe ECharts component — migrate to inline Web Components | ✅ shipped |
+| #35 | Map geo data loading — `registerMap()` for ECharts map/geo | 🔲 open |
+| #36 | Accumulate + expression for inline datasets | 🔲 open |
+| #44 | Minor polish for domain example dashboards | 🔲 open |
 
 ---
 
@@ -249,7 +252,7 @@ Decisions not captured inline in §4:
 | Requirement | Metric |
 |---|---|
 | DashBuilder compatibility | 28/31 sample dashboards render correctly (validation matrix: `examples/VALIDATION.md`) |
-| Test coverage | 615 tests (@casehubio/data), 158 tests (@casehubio/component), 183 tests (@casehubio/runtime) |
+| Test coverage | 615 tests (@casehubio/data), 158 tests (@casehubio/component), 183 tests (@casehubio/runtime), 77 Playwright tests (smoke + gallery + domain dashboards) |
 | No Java at runtime | `loadSite()` works without GWT compilation or Java process |
 
 ---
