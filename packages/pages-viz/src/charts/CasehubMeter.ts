@@ -83,8 +83,8 @@ export class CasehubMeter extends CasehubChartElement<MeterProps> {
       };
     });
 
-    const radius = showLegend ? "110%" : "120%";
-    const centerY = showLegend ? "65%" : "80%";
+    const radius = showLegend ? "110%" : "100%";
+    const centerY = showLegend ? "65%" : "75%";
 
     let option: Record<string, unknown> = {
       series: [

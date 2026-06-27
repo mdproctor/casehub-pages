@@ -185,7 +185,7 @@ test.describe("IoT Fleet Monitor", () => {
     expect(meters.every((m) => m.status === "CHART_OK")).toBe(true);
   });
 
-  test("meter gauges fit within their containers", async ({ page }) => {
+  test("meter gauges have numeric data and non-zero canvas", async ({ page }) => {
     await openDashboard(page, "Fleet Monitor");
     const meterInfo = await getChartDataInfo(page, "casehub-meter");
 
