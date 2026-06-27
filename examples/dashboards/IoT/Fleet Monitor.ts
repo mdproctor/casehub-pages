@@ -94,12 +94,12 @@ const sensorDataset = inlineDataset(
 const devicesDataset = inlineDataset(
   "devices",
   JSON.stringify([
-    ["DEV-001", "Environmental Sensor A1", 51.5074, -0.1278, "Environmental", "2025-01-15"],
-    ["DEV-002", "Environmental Sensor B1", 51.5080, -0.1290, "Environmental", "2025-02-20"],
-    ["DEV-003", "Industrial Monitor F1", 51.5060, -0.1250, "Industrial", "2025-03-10"],
-    ["DEV-004", "Cold Chain Tracker C1", 51.5090, -0.1300, "Storage", "2025-04-05"],
-    ["DEV-005", "Dock Sensor L1", 51.5055, -0.1240, "Environmental", "2025-05-12"],
-    ["DEV-006", "Server Room Monitor S1", 51.5070, -0.1265, "Industrial", "2024-11-01"],
+    ["DEV-001", "Environmental Sensor A1", 51.5074, -0.1278, "Environmental", "2025-01-15", "Online"],
+    ["DEV-002", "Environmental Sensor B1", 51.5080, -0.1290, "Environmental", "2025-02-20", "Online"],
+    ["DEV-003", "Industrial Monitor F1", 51.5060, -0.1250, "Industrial", "2025-03-10", "Warning"],
+    ["DEV-004", "Cold Chain Tracker C1", 51.5090, -0.1300, "Storage", "2025-04-05", "Online"],
+    ["DEV-005", "Dock Sensor L1", 51.5055, -0.1240, "Environmental", "2025-05-12", "Online"],
+    ["DEV-006", "Server Room Monitor S1", 51.5070, -0.1265, "Industrial", "2024-11-01", "Offline"],
   ]),
   {
     columns: [
@@ -109,6 +109,7 @@ const devicesDataset = inlineDataset(
       { id: "lon" as ColumnId, type: "NUMBER" },
       { id: "type" as ColumnId, type: "LABEL" },
       { id: "installDate" as ColumnId, type: "DATE" },
+      { id: "status" as ColumnId, type: "LABEL" },
     ],
   }
 );
@@ -138,7 +139,7 @@ export default page(
         metric({
           lookup: lookup(
             devices,
-            filterBy("deviceId" as ColumnId, "NOT_IN", []),
+            filterBy("status" as ColumnId, "NOT_IN", ["Offline"]),
             groupBy(null, count("deviceId"))
           ),
           title: "Devices Online",

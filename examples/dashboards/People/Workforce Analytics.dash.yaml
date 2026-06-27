@@ -89,14 +89,15 @@ pages:
                                       functions:
                                           - source: department
 
-          # Row 1: Three panels
+          # Row 1: Three charts
           - columns:
                 - span: 4
                   components:
-                      - html: "<div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Headcount</div><div class='pf-v5-c-card__body'>"
                       - displayer:
                             type: PIECHART
                             subtype: DONUT
+                            general:
+                                title: Headcount
                             filter:
                                 listening: true
                             lookup:
@@ -109,13 +110,13 @@ pages:
                                           - source: department
                                             function: COUNT
                                             column: count
-                      - html: "</div></div>"
                 - span: 4
                   components:
-                      - html: "<div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Level Distribution</div><div class='pf-v5-c-card__body'>"
                       - displayer:
                             type: BARCHART
                             subtype: COLUMN_STACKED
+                            general:
+                                title: Level Distribution
                             filter:
                                 listening: true
                             lookup:
@@ -128,13 +129,13 @@ pages:
                                           - source: level
                                             function: COUNT
                                             column: count
-                      - html: "</div></div>"
                 - span: 4
                   components:
-                      - html: "<div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Avg Salary by Level</div><div class='pf-v5-c-card__body'>"
                       - displayer:
                             type: BARCHART
                             subtype: BAR
+                            general:
+                                title: Avg Salary by Level
                             filter:
                                 listening: true
                             chart:
@@ -153,15 +154,15 @@ pages:
                                           - source: salary
                                             function: AVERAGE
                                             column: Salary
-                      - html: "</div></div>"
 
           # Row 2: Scatter (wide) + Pie
           - columns:
                 - span: 8
                   components:
-                      - html: "<div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Tenure vs Salary</div><div class='pf-v5-c-card__body'>"
                       - displayer:
                             type: SCATTERCHART
+                            general:
+                                title: Tenure vs Salary
                             filter:
                                 listening: true
                             lookup:
@@ -172,12 +173,12 @@ pages:
                                       functions:
                                           - source: tenure
                                           - source: salary
-                      - html: "</div></div>"
                 - span: 4
                   components:
-                      - html: "<div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Rating Distribution</div><div class='pf-v5-c-card__body'>"
                       - displayer:
                             type: PIECHART
+                            general:
+                                title: Rating Distribution
                             filter:
                                 listening: true
                             lookup:
@@ -190,7 +191,6 @@ pages:
                                           - source: rating
                                             function: COUNT
                                             column: count
-                      - html: "</div></div>"
 
           # Row 3: Table (full width)
           - columns:

@@ -5,7 +5,18 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
   await page.locator("#dashboard-count").waitFor();
   await page.locator(`.dashboard-item:has-text("${name}")`).first().click();
   await page.locator("#dashboard-container").waitFor({ state: "visible" });
-  await page.waitForTimeout(2000);
+  await page.waitForFunction(() => {
+    const target = document.getElementById("dashboard-target");
+    if (!target) return false;
+    const skip = new Set(["page", "panel", "tabs", "sidebar", "accordion", "carousel", "stack", "pills", "html", "title", "markdown", "selector"]);
+    for (const c of target.querySelectorAll("[data-component-type]")) {
+      const type = (c as HTMLElement).dataset.componentType!;
+      if (skip.has(type)) continue;
+      const vizEl = c.querySelector(`casehub-${type}`) as HTMLElement & { dataSet?: unknown };
+      if (vizEl?.dataSet) return true;
+    }
+    return false;
+  }, { timeout: 10000 });
 }
 
 async function getComponentStatuses(page: import("@playwright/test").Page) {
@@ -149,7 +160,12 @@ test.describe("Sales Dashboard", () => {
     expect(navCount).toBe(4);
 
     await sidebarButtons.filter({ hasText: "Pipeline" }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(() => {
+      const target = document.getElementById("dashboard-target");
+      if (!target) return false;
+      const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+      return !!table?.dataSet;
+    }, { timeout: 10000 });
 
     const statuses = await getComponentStatuses(page);
     const table = statuses.find((s) => s.type === "table");
@@ -217,7 +233,12 @@ test.describe("IoT Fleet Monitor", () => {
 
     const sidebarButtons = page.locator(".casehub-sidebar button[data-slot]");
     await sidebarButtons.filter({ hasText: "Sensor History" }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(() => {
+      const target = document.getElementById("dashboard-target");
+      if (!target) return false;
+      const chart = target.querySelector("casehub-area-chart") as HTMLElement & { dataSet?: unknown };
+      return !!chart?.dataSet;
+    }, { timeout: 10000 });
 
     const statuses = await getComponentStatuses(page);
     const areaCharts = statuses.filter((s) => s.type === "area-chart");
@@ -344,7 +365,12 @@ test.describe("Patient Tracker", () => {
 
     const tabButtons = page.locator("[data-component-type='tabs'] button");
     await tabButtons.filter({ hasText: "Patient Detail" }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(() => {
+      const target = document.getElementById("dashboard-target");
+      if (!target) return false;
+      const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+      return !!table?.dataSet;
+    }, { timeout: 10000 });
 
     const statuses = await getComponentStatuses(page);
     const table = statuses.find((s) => s.type === "table");

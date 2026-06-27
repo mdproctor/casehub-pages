@@ -21,8 +21,7 @@ const samplesPath = join(__dirname, "../dist/samples.json");
 const samples: SamplesData = JSON.parse(readFileSync(samplesPath, "utf-8"));
 const allDashboards = samples.categories.flatMap((c) => c.dashboards);
 
-// Maps has a known error: registerMap() never called — geo data not available (#35).
-const KNOWN_ERROR_DASHBOARDS = new Set(["Maps"]);
+const KNOWN_ERROR_DASHBOARDS = new Set<string>();
 
 // Dashboards that fail to load due to external data or unsupported formats.
 const EXPECTED_LOAD_FAILURES = new Set(["Prometheus Basic"]);
@@ -32,7 +31,18 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
   await page.locator("#dashboard-count").waitFor();
   await page.locator(`.dashboard-item:has-text("${name}")`).first().click();
   await page.locator("#dashboard-container").waitFor({ state: "visible" });
-  await page.waitForTimeout(2000);
+  await page.waitForFunction(() => {
+    const target = document.getElementById("dashboard-target");
+    if (!target) return false;
+    const skip = new Set(["page", "panel", "tabs", "sidebar", "accordion", "carousel", "stack", "pills", "html", "title", "markdown", "selector"]);
+    for (const c of target.querySelectorAll("[data-component-type]")) {
+      const type = (c as HTMLElement).dataset.componentType!;
+      if (skip.has(type)) continue;
+      const vizEl = c.querySelector(`casehub-${type}`) as HTMLElement & { dataSet?: unknown };
+      if (vizEl?.dataSet) return true;
+    }
+    return false;
+  }, { timeout: 10000 });
 }
 
 async function getComponentStatuses(page: import("@playwright/test").Page) {

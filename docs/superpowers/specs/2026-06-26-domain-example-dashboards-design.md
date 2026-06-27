@@ -39,6 +39,8 @@ The mapping is documented in `displayer-desugar.ts`. Spec descriptions below use
 
 **YAML-only features:** Property substitution (`${name}` → value) runs in `parsePage()` during YAML parsing (`property-substitution.ts`). The TS builder creates components directly — no substitution pass. The `.ts` companion must hardcode the default property values where the YAML uses `${var}` references. The FIFA 2022 Goals `.ts` demonstrates this pattern: it passes `"${GoalsFunction}"` as a literal string because the gallery renders the YAML version, not the TS.
 
+**Layout model divergence:** YAML supports only rows/columns (Bootstrap-style 12-column grid). The TS builder additionally supports `grid(cols, ...at())` for CSS grid positioning and `panel(title, ...children)` for titled card containers. When a dashboard uses `grid()`/`at()`/`panel()` in TS, the YAML companion uses rows/columns with `general.title` on each displayer instead. Both render correctly — the visual output is equivalent but the layout models are not semantically identical. Workforce Analytics is the primary example of this divergence.
+
 ## Design
 
 ### Structure
