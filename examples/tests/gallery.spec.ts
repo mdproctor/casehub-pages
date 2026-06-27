@@ -34,8 +34,18 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
   await page.locator("#dashboard-count").waitFor();
   await page.locator(`.dashboard-item:has-text("${name}")`).first().click();
   await page.locator("#dashboard-container").waitFor({ state: "visible" });
-  // Wait for async data resolution
-  await page.waitForTimeout(2000);
+  await page.waitForFunction(() => {
+    const target = document.getElementById("dashboard-target");
+    if (!target) return false;
+    const skip = new Set(["page", "panel", "tabs", "sidebar", "accordion", "carousel", "stack", "pills", "html", "title", "markdown", "selector"]);
+    for (const c of target.querySelectorAll("[data-component-type]")) {
+      const type = (c as HTMLElement).dataset.componentType!;
+      if (skip.has(type)) continue;
+      const vizEl = c.querySelector(`casehub-${type}`) as HTMLElement & { dataSet?: unknown };
+      if (vizEl?.dataSet) return true;
+    }
+    return false;
+  }, { timeout: 10000 });
 }
 
 /**

@@ -1,4 +1,4 @@
-import { use } from "echarts/core";
+import { use, registerMap, getMap } from "echarts/core";
 import { MapChart, ScatterChart } from "echarts/charts";
 import {
   GeoComponent,
@@ -16,7 +16,50 @@ import { deepMerge } from "../base/deep-merge.js";
 // Register required ECharts components
 use([MapChart, ScatterChart, GeoComponent, VisualMapComponent, TooltipComponent, LegendComponent, DatasetComponent]);
 
+const GEO_CDN = "https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json";
+
+const mapLoadCache = new Map<string, Promise<void>>();
+
+function ensureMapRegistered(mapName: string): Promise<void> {
+  if (getMap(mapName)) return Promise.resolve();
+
+  const existing = mapLoadCache.get(mapName);
+  if (existing) return existing;
+
+  const promise = fetch(GEO_CDN)
+    .then(res => {
+      if (!res.ok) throw new Error(`Failed to load map data: ${String(res.status)}`);
+      return res.json() as Promise<Record<string, unknown>>;
+    })
+    .then(geoJson => {
+      registerMap(mapName, geoJson as unknown as Parameters<typeof registerMap>[1]);
+    })
+    .catch((err: unknown) => {
+      mapLoadCache.delete(mapName);
+      throw err;
+    });
+
+  mapLoadCache.set(mapName, promise);
+  return promise;
+}
+
 export class CasehubMap extends CasehubChartElement<MapProps> {
+  protected override render(
+    container: HTMLDivElement,
+    props: MapProps,
+    dataset: TypedDataSet,
+  ): void {
+    const mapName = props.mapName ?? "world";
+    if (!getMap(mapName)) {
+      this.renderLoading(container);
+      ensureMapRegistered(mapName)
+        .then(() => { super.render(container, props, dataset); })
+        .catch((err: unknown) => { this.error = err instanceof Error ? err.message : String(err); });
+      return;
+    }
+    super.render(container, props, dataset);
+  }
+
   override buildOption(
     props: MapProps,
     dataSet: TypedDataSet,

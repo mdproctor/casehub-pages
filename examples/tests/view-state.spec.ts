@@ -16,8 +16,12 @@ import { test, expect } from "@playwright/test";
 async function loadFixture(page: import("@playwright/test").Page) {
   await page.goto("/tests/fixtures/view-state-test.html");
   await page.waitForSelector("#target [data-component-type]");
-  // Wait for async initialization and data resolution
-  await page.waitForTimeout(1500);
+  await page.waitForFunction(() => {
+    const target = document.getElementById("target");
+    if (!target) return false;
+    const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+    return !!table?.dataSet;
+  }, { timeout: 10000 });
 
   // Verify site loaded
   const siteLoaded = await page.evaluate(() => !!(window as any).__testSite);
@@ -60,7 +64,17 @@ async function sortTableByColumn(
     },
     { selector: tableSelector, col: columnName },
   );
-  await page.waitForTimeout(500); // Wait for sort event → URL update
+  await page.waitForFunction(
+    (sel) => {
+      const table = document.querySelector(sel) as HTMLElement & { shadowRoot: ShadowRoot };
+      if (!table?.shadowRoot) return false;
+      return Array.from(table.shadowRoot.querySelectorAll("th")).some(
+        (h) => (h.textContent ?? "").includes("▲") || (h.textContent ?? "").includes("▼")
+      );
+    },
+    tableSelector,
+    { timeout: 5000 }
+  );
 }
 
 /**
@@ -93,7 +107,10 @@ async function clickNextPage(page: import("@playwright/test").Page, tableSelecto
     if (!nextBtn) throw new Error("Next button not found. Found buttons: " + buttons.map(b => b.title || b.textContent).join(", "));
     nextBtn.click();
   });
-  await page.waitForTimeout(300);
+  await page.waitForFunction(
+    () => window.location.hash.includes("page="),
+    { timeout: 5000 }
+  );
 }
 
 /**
@@ -102,7 +119,9 @@ async function clickNextPage(page: import("@playwright/test").Page, tableSelecto
 async function switchToTab(page: import("@playwright/test").Page, tabName: string) {
   const tabButton = page.locator(`button:has-text("${tabName}")`);
   await tabButton.click();
-  await page.waitForTimeout(300);
+  await page.evaluate(() => new Promise<void>(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  }));
 }
 
 test.describe("View State Persistence", () => {
@@ -128,7 +147,12 @@ test.describe("View State Persistence", () => {
     // Reload page
     await page.reload();
     await page.waitForSelector("#target [data-component-type]");
-    await page.waitForTimeout(500);
+    await page.waitForFunction(() => {
+      const target = document.getElementById("target");
+      if (!target) return false;
+      const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+      return !!table?.dataSet;
+    }, { timeout: 10000 });
 
     // Check that sort indicator is present
     const hasSortArrow = await hasSortIndicator(page, "casehub-table", "age");
@@ -143,11 +167,9 @@ test.describe("View State Persistence", () => {
 
     // Navigate to Page 2
     await switchToTab(page, "Page 2");
-    await page.waitForTimeout(300);
 
     // Navigate back to Page 1
     await switchToTab(page, "Page 1");
-    await page.waitForTimeout(300);
 
     // Check that sort indicator is still present
     const hasSortArrow = await hasSortIndicator(page, "casehub-table", "city");
@@ -169,11 +191,9 @@ test.describe("View State Persistence", () => {
 
     // Sort by name
     await sortTableByColumn(page, "casehub-table", "name");
-    await page.waitForTimeout(200);
 
     // Paginate to page 2
     await clickNextPage(page, "casehub-table");
-    await page.waitForTimeout(200);
 
     // Check URL contains both
     let hash = await getHash(page);
@@ -183,7 +203,12 @@ test.describe("View State Persistence", () => {
     // Reload and verify both are still present
     await page.reload();
     await page.waitForSelector("#target [data-component-type]");
-    await page.waitForTimeout(500);
+    await page.waitForFunction(() => {
+      const target = document.getElementById("target");
+      if (!target) return false;
+      const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+      return !!table?.dataSet;
+    }, { timeout: 10000 });
 
     hash = await getHash(page);
     expect(hash).toContain("sort=test-table:");
@@ -195,7 +220,6 @@ test.describe("View State Persistence", () => {
 
     // Navigate to Page 2 (table without ID)
     await switchToTab(page, "Page 2");
-    await page.waitForTimeout(300);
 
     // Sort by name
     const tables = page.locator("casehub-table");
@@ -209,7 +233,9 @@ test.describe("View State Persistence", () => {
       if (!nameHeader) throw new Error("name column not found");
       (nameHeader as HTMLElement).click();
     });
-    await page.waitForTimeout(300);
+    await page.evaluate(() => new Promise<void>(resolve => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    }));
 
     // Check URL — should NOT contain sort param for this table
     let hash = await getHash(page);
@@ -219,11 +245,15 @@ test.describe("View State Persistence", () => {
     // Reload page
     await page.reload();
     await page.waitForSelector("#target [data-component-type]");
-    await page.waitForTimeout(500);
+    await page.waitForFunction(() => {
+      const target = document.getElementById("target");
+      if (!target) return false;
+      const table = target.querySelector("casehub-table") as HTMLElement & { dataSet?: unknown };
+      return !!table?.dataSet;
+    }, { timeout: 10000 });
 
     // Navigate back to Page 2
     await switchToTab(page, "Page 2");
-    await page.waitForTimeout(300);
 
     // Check that sort indicator is NOT present (sort was not persisted)
     const hasSortArrow = await page2Table.evaluate((table: HTMLElement & { shadowRoot: ShadowRoot }) => {
