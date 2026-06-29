@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createDataSetManager } from "./manager.js";
 import { toTypedDataSet } from "./conversion.js";
 import { createLookup } from "./lookup.js";
@@ -9,6 +9,7 @@ import type { GroupOp } from "./group.js";
 import type { SortOp } from "./sort.js";
 import { parseTimeFrame } from "./timeframe.js";
 import { DataSetError } from "./errors.js";
+import type { DataSetEvent } from "./events.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
   return { id: columnId(id), name, type };
@@ -442,5 +443,225 @@ describe("DataSetManager — accumulate", () => {
     // Existing dataset preserved
     expect(mgr.get(ID_A)!.rows).toHaveLength(1);
     expect(mgr.get(ID_A)!.rows[0]!.text(columnId("name"))).toBe("Alice");
+  });
+});
+
+describe("apply()", () => {
+  it("snapshot replaces entire dataset", () => {
+    const mgr = createDataSetManager();
+    const ds1 = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Sales", "100", "2024-01-01T00:00:00.000Z"]],
+    });
+    const ds2 = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Engineering", "200", "2024-02-01T00:00:00.000Z"]],
+    });
+
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds1 });
+    expect(mgr.get(ID_A)?.rows).toHaveLength(1);
+
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds2 });
+    expect(mgr.get(ID_A)?.rows).toHaveLength(1);
+    expect(mgr.get(ID_A)?.rows[0]!.text(columnId("dept"))).toBe("Engineering");
+  });
+
+  it("append adds rows to END of existing dataset", () => {
+    const mgr = createDataSetManager();
+    const seed = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Sales", "100", "2024-01-01T00:00:00.000Z"]],
+    });
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
+
+    const newRow = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Engineering", "200", "2024-02-01T00:00:00.000Z"]],
+    }).rows[0]!;
+    mgr.apply(ID_A, { type: "append", rows: [newRow] });
+
+    const result = mgr.get(ID_A)!;
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows[0]!.text(columnId("dept"))).toBe("Sales");
+    expect(result.rows[1]!.text(columnId("dept"))).toBe("Engineering");
+  });
+
+  it("append trims from START when maxRows exceeded", () => {
+    const mgr = createDataSetManager();
+    const seed = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [
+        ["Sales", "100", "2024-01-01T00:00:00.000Z"],
+        ["Engineering", "200", "2024-02-01T00:00:00.000Z"],
+      ],
+    });
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
+
+    const newRow = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Marketing", "50", "2024-03-01T00:00:00.000Z"]],
+    }).rows[0]!;
+    mgr.apply(ID_A, { type: "append", rows: [newRow], maxRows: 2 });
+
+    const result = mgr.get(ID_A)!;
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows[0]!.text(columnId("dept"))).toBe("Engineering");
+    expect(result.rows[1]!.text(columnId("dept"))).toBe("Marketing");
+  });
+
+  it("append to non-existent dataset is a no-op", () => {
+    const mgr = createDataSetManager();
+    const row = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Sales", "100", "2024-01-01T00:00:00.000Z"]],
+    }).rows[0]!;
+    mgr.apply(ID_A, { type: "append", rows: [row] });
+    expect(mgr.has(ID_A)).toBe(false);
+  });
+
+  it("replace updates all matching rows by key", () => {
+    const mgr = createDataSetManager();
+    const seed = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [
+        ["Sales", "100", "2024-01-01T00:00:00.000Z"],
+        ["Engineering", "200", "2024-02-01T00:00:00.000Z"],
+      ],
+    });
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
+
+    const replacement = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Sales", "999", "2024-06-01T00:00:00.000Z"]],
+    }).rows[0]!;
+    mgr.apply(ID_A, {
+      type: "replace",
+      keyColumn: columnId("dept"),
+      key: "Sales",
+      row: replacement,
+    });
+
+    const result = mgr.get(ID_A)!;
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows[0]!.number(columnId("revenue"))).toBe(999);
+    expect(result.rows[1]!.text(columnId("dept"))).toBe("Engineering");
+  });
+
+  it("replace is a no-op when no rows match", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const seed = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Sales", "100", "2024-01-01T00:00:00.000Z"]],
+    });
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
+    callback.mockClear();
+
+    const replacement = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Unknown", "0", "2024-01-01T00:00:00.000Z"]],
+    }).rows[0]!;
+    mgr.apply(ID_A, {
+      type: "replace",
+      keyColumn: columnId("dept"),
+      key: "Unknown",
+      row: replacement,
+    });
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("remove filters out all matching rows by key", () => {
+    const mgr = createDataSetManager();
+    const seed = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [
+        ["Sales", "100", "2024-01-01T00:00:00.000Z"],
+        ["Engineering", "200", "2024-02-01T00:00:00.000Z"],
+        ["Sales", "150", "2024-03-01T00:00:00.000Z"],
+      ],
+    });
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
+
+    mgr.apply(ID_A, {
+      type: "remove",
+      keyColumn: columnId("dept"),
+      key: "Sales",
+    });
+
+    const result = mgr.get(ID_A)!;
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]!.text(columnId("dept"))).toBe("Engineering");
+  });
+
+  it("remove is a no-op when no rows match", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const seed = toTypedDataSet({
+      columns: [
+        col("dept", "Department", ColumnType.LABEL),
+        col("revenue", "Revenue", ColumnType.NUMBER),
+        col("date", "Date", ColumnType.DATE),
+      ],
+      data: [["Sales", "100", "2024-01-01T00:00:00.000Z"]],
+    });
+    mgr.apply(ID_A, { type: "snapshot", dataset: seed });
+    callback.mockClear();
+
+    mgr.apply(ID_A, {
+      type: "remove",
+      keyColumn: columnId("dept"),
+      key: "Unknown",
+    });
+
+    expect(callback).not.toHaveBeenCalled();
   });
 });

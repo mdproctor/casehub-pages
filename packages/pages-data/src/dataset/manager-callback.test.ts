@@ -107,4 +107,112 @@ describe("DataSetManager — onChanged callback", () => {
     expect(dataset.rows[0]!.text(columnId("name"))).toBe("Bob");
     expect(dataset.rows[1]!.text(columnId("name"))).toBe("Alice");
   });
+
+  it("apply() snapshot triggers onChanged", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+    expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith(ID_A, ds);
+  });
+
+  it("apply() append triggers onChanged when dataset exists", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const seed = testDataSet([["Alice", "100"]]);
+    mgr.register(ID_A, seed);
+    callback.mockClear();
+
+    const newRow = testDataSet([["Bob", "200"]]).rows[0]!;
+    mgr.apply(ID_A, { type: "append", rows: [newRow] });
+
+    expect(callback).toHaveBeenCalledOnce();
+    const [id, dataset] = callback.mock.calls[0]!;
+    expect(id).toBe(ID_A);
+    expect(dataset.rows).toHaveLength(2);
+  });
+
+  it("apply() append does NOT trigger onChanged when dataset does not exist", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const row = testDataSet([["Alice", "100"]]).rows[0]!;
+    mgr.apply(ID_A, { type: "append", rows: [row] });
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("apply() replace triggers onChanged when rows matched", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const seed = testDataSet([["Alice", "100"]]);
+    mgr.register(ID_A, seed);
+    callback.mockClear();
+
+    const replacement = testDataSet([["Alice", "999"]]).rows[0]!;
+    mgr.apply(ID_A, {
+      type: "replace",
+      keyColumn: columnId("name"),
+      key: "Alice",
+      row: replacement,
+    });
+
+    expect(callback).toHaveBeenCalledOnce();
+    const [id, dataset] = callback.mock.calls[0]!;
+    expect(id).toBe(ID_A);
+    expect(dataset.rows[0]!.number(columnId("amount"))).toBe(999);
+  });
+
+  it("apply() replace does NOT trigger onChanged when no rows match", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const seed = testDataSet([["Alice", "100"]]);
+    mgr.register(ID_A, seed);
+    callback.mockClear();
+
+    const replacement = testDataSet([["Bob", "999"]]).rows[0]!;
+    mgr.apply(ID_A, {
+      type: "replace",
+      keyColumn: columnId("name"),
+      key: "Bob",
+      row: replacement,
+    });
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("apply() remove triggers onChanged when rows matched", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const seed = testDataSet([["Alice", "100"], ["Bob", "200"]]);
+    mgr.register(ID_A, seed);
+    callback.mockClear();
+
+    mgr.apply(ID_A, {
+      type: "remove",
+      keyColumn: columnId("name"),
+      key: "Alice",
+    });
+
+    expect(callback).toHaveBeenCalledOnce();
+    const [id, dataset] = callback.mock.calls[0]!;
+    expect(id).toBe(ID_A);
+    expect(dataset.rows).toHaveLength(1);
+    expect(dataset.rows[0]!.text(columnId("name"))).toBe("Bob");
+  });
+
+  it("apply() remove does NOT trigger onChanged when no rows match", () => {
+    const callback = vi.fn();
+    const mgr = createDataSetManager({ onChanged: callback });
+    const seed = testDataSet([["Alice", "100"]]);
+    mgr.register(ID_A, seed);
+    callback.mockClear();
+
+    mgr.apply(ID_A, {
+      type: "remove",
+      keyColumn: columnId("name"),
+      key: "Bob",
+    });
+
+    expect(callback).not.toHaveBeenCalled();
+  });
 });
