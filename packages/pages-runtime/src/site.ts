@@ -844,6 +844,8 @@ export function loadSite(
       for (const sentinel of sentinels) {
         sentinel.remove();
       }
+      // Close all WebSocket connections
+      pipeline.pool.releaseAll();
       componentViewState.clear();
       registry.clear();
       target.innerHTML = "";

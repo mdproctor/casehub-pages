@@ -7,7 +7,8 @@ import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/externa
 import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { resolveExternalDataSet } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import { evaluateGenerator } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import { evaluateGenerator, createWebSocketPool } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type { WebSocketPool } from "@casehubio/pages-data/dist/dataset/external/index.js";
 import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { DataSetScope } from "./dataset-scope.js";
@@ -41,6 +42,7 @@ export interface DataPipeline {
   setResolverCtx(ctx: ResolverContext): void;
   readonly pendingResolutions: Map<DataSetId, Promise<ResolveResult>>;
   readonly refreshTimers: Map<DataSetId, ReturnType<typeof setInterval>>;
+  readonly pool: WebSocketPool;
 }
 
 function applyTextFilter(ds: TypedDataSet, term: string): TypedDataSet {
@@ -66,6 +68,7 @@ export function createDataPipeline(
   const refreshTimers = new Map<DataSetId, ReturnType<typeof setInterval>>();
   const abortControllers = new Map<DataSetId, AbortController>();
   const parameterisedConsumers = new Set<DataSetId>();
+  const pool = createWebSocketPool();
   let resolverCtx: ResolverContext | undefined;
 
   function pushData(
@@ -190,6 +193,7 @@ export function createDataPipeline(
   return {
     pendingResolutions,
     refreshTimers,
+    pool,
 
     setResolverCtx(ctx: ResolverContext): void {
       resolverCtx = ctx;
@@ -223,6 +227,31 @@ export function createDataPipeline(
 
       if (!resolverCtx) {
         target.error = `No resolver context available`;
+        return;
+      }
+
+      // WebSocket source routing
+      if (def.url?.startsWith("ws://") || def.url?.startsWith("wss://")) {
+        const baseUrl = new URL(def.url);
+        baseUrl.search = "";
+        const source = pool.acquire(baseUrl.toString(), def);
+        source.subscribe(lookup.dataSetId, def, (event: DataSetEvent) => {
+          manager.apply(lookup.dataSetId, event);
+          // Push updated data to all subscribing components
+          for (const [compId, compEntry] of registry) {
+            if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
+              const filterGroup = (compEntry.component.props as Record<string, unknown> | undefined)
+                ?.filter as { group?: string } | undefined;
+              pushData(
+                compEntry.vizElement,
+                compEntry.originalLookup,
+                compEntry.pagePath,
+                filterGroup?.group,
+                compId,
+              );
+            }
+          }
+        });
         return;
       }
 
