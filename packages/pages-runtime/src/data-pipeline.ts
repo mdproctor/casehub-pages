@@ -7,6 +7,8 @@ import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/externa
 import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { resolveExternalDataSet } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
+import { evaluateGenerator } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { DataSetScope } from "./dataset-scope.js";
 import { resolveDataSetDef } from "./dataset-scope.js";
@@ -349,7 +351,50 @@ export function createDataPipeline(
 
   function scheduleRefresh(def: ExternalDataSetDef, dataSetId: DataSetId): void {
     if (!def.refreshTime || refreshTimers.has(dataSetId)) return;
+
+    // Guard: WebSocket datasets use server push, not polling
+    if (def.url?.startsWith("ws://") || def.url?.startsWith("wss://")) return;
+
     const interval = parseRefreshTime(def.refreshTime);
+
+    // Content + expression + accumulate: generator path
+    if (def.content !== undefined && def.expression !== undefined && def.accumulate) {
+      const timerId = setInterval(async () => {
+        if (!resolverCtx) return;
+        try {
+          const generated = await evaluateGenerator(
+            def.expression!,
+            def.columns,
+            resolverCtx.presetRegistry,
+          );
+          const event: DataSetEvent =
+            def.cacheMaxRows !== undefined
+              ? { type: "append", rows: generated.rows, maxRows: def.cacheMaxRows }
+              : { type: "append", rows: generated.rows };
+          manager.apply(dataSetId, event);
+          // Push updated data to all subscribing components
+          for (const [compId, entry] of registry) {
+            if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
+              const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
+                ?.filter as { group?: string } | undefined;
+              pushData(
+                entry.vizElement,
+                entry.originalLookup,
+                entry.pagePath,
+                filterGroup?.group,
+                compId,
+              );
+            }
+          }
+        } catch (e) {
+          console.warn(`Expression generator failed for ${String(dataSetId)}:`, e);
+        }
+      }, interval);
+      refreshTimers.set(dataSetId, timerId);
+      return;
+    }
+
+    // Existing URL refresh path
     const timerId = setInterval(() => {
       if (!resolverCtx) return;
       resolveExternalDataSet(def, resolverCtx)

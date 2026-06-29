@@ -27,13 +27,13 @@ const productsData = JSON.stringify([
 inlineDataset("products", productsData, {
   accumulate: true,
   cacheMaxRows: 20,
+  refreshTime: "1second",
   expression: '[["test", $now() ~> $toMillis(), ($random() * 100)]]'
 });
 
 export default page(
   timeseries({
     resizable: true,
-    refresh: { interval: 1 },
     lookup: createLookup("products", [])
   })
 );

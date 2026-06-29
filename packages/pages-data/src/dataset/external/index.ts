@@ -30,6 +30,9 @@ export { createPresetRegistry } from "./presets/registry.js";
 // Extraction
 export { extractDataSet } from "./extraction.js";
 
+// Expression Generator
+export { evaluateGenerator } from "./expression-generator.js";
+
 // Join
 export { joinDataSets } from "./join.js";
 
