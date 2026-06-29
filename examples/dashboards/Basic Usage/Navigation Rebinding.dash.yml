@@ -75,6 +75,24 @@ pages:
           navGroupId: MainNav
 
   # =============================================
+  # VARIANT 7: Accordion View
+  # =============================================
+  - name: "Accordion View"
+    components:
+      - type: ACCORDION
+        properties:
+          navGroupId: MainNav
+
+  # =============================================
+  # VARIANT 8: App Grid View
+  # =============================================
+  - name: "App Grid View"
+    components:
+      - type: APP_GRID
+        properties:
+          navGroupId: MainNav
+
+  # =============================================
   # SHARED CONTENT PAGES (three-level hierarchy)
   # =============================================
 

@@ -189,6 +189,24 @@ describe("desugarComponent", () => {
       expect(result.props).toEqual({ navGroupId: "main" });
     });
 
+    it("type: ACCORDION", () => {
+      const result = desugarComponent({
+        type: "ACCORDION",
+        properties: { navGroupId: "g1" },
+      });
+      expect(result.type).toBe("accordion");
+      expect(result.props).toEqual({ navGroupId: "g1" });
+    });
+
+    it("type: APP_GRID", () => {
+      const result = desugarComponent({
+        type: "APP_GRID",
+        properties: { navGroupId: "g1" },
+      });
+      expect(result.type).toBe("app-grid");
+      expect(result.props).toEqual({ navGroupId: "g1" });
+    });
+
     it("navigation type without properties", () => {
       const result = desugarComponent({ type: "TABS" });
       expect(result.type).toBe("tabs");

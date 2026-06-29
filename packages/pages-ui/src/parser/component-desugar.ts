@@ -12,6 +12,8 @@ const NAV_TYPE_MAP: Record<string, string> = {
   CAROUSEL: "carousel",
   TILES: "tiles",
   SIDEBAR: "sidebar",
+  ACCORDION: "accordion",
+  APP_GRID: "app-grid",
 };
 
 /**
