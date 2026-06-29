@@ -37,6 +37,7 @@ export interface ExternalDataSetDef {
   readonly cacheMaxRows?: number;
   readonly refreshTime?: string;
   readonly accumulate?: boolean;
+  readonly keyColumn?: string;
 }
 
 export interface DataRequest {

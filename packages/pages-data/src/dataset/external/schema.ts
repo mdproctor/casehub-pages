@@ -35,6 +35,7 @@ const externalDataSetDefSchema = z.object({
     "Must be a number followed by a time unit (e.g. '10minute', '30second')",
   ).optional(),
   accumulate: z.boolean().optional(),
+  keyColumn: z.string().optional(),
 }).refine(
   d => [d.url, d.content, d.join].filter(Boolean).length === 1,
   { message: "Exactly one of url, content, or join is required" },
@@ -50,11 +51,11 @@ const externalDataSetDefSchema = z.object({
     .every(v => v === undefined),
   { message: "dataPath, type, expression are not valid with join (nothing to extract)" },
 ).refine(
-  d => !d.accumulate || d.url !== undefined,
-  { message: "accumulate is only valid when url is set" },
-).refine(
-  d => !d.refreshTime || d.url !== undefined,
-  { message: "refreshTime is only valid when url is set" },
+  d => !d.refreshTime || (
+    (d.url !== undefined && !d.url.startsWith("ws://") && !d.url.startsWith("wss://"))
+    || (d.content !== undefined && d.expression !== undefined && d.accumulate === true)
+  ),
+  { message: "refreshTime requires a non-WebSocket url, or content + expression + accumulate" },
 );
 
 export type ParsedExternalDataSetDef = z.output<typeof externalDataSetDefSchema>;

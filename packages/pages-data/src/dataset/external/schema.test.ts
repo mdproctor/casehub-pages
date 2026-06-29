@@ -70,16 +70,49 @@ describe("ExternalDataSetDef schema", () => {
     })).toThrow(/not valid with join/);
   });
 
-  it("rejects accumulate without url", () => {
-    expect(() => parseExternalDataSetDef({
-      uuid: "x", content: "[]", accumulate: true,
-    })).toThrow(/only valid when url/);
+  it("accepts accumulate on content datasets", () => {
+    const def = parseExternalDataSetDef({
+      uuid: "test",
+      content: '[["a"]]',
+      accumulate: true,
+    });
+    expect(def.accumulate).toBe(true);
   });
 
-  it("rejects refreshTime without url", () => {
+  it("accepts refreshTime on content + expression + accumulate", () => {
+    const def = parseExternalDataSetDef({
+      uuid: "test",
+      content: '[["a"]]',
+      expression: '[["b"]]',
+      accumulate: true,
+      refreshTime: "1second",
+    });
+    expect(def.refreshTime).toBe("1second");
+  });
+
+  it("rejects refreshTime on bare content (no expression)", () => {
     expect(() => parseExternalDataSetDef({
-      uuid: "x", content: "[]", refreshTime: "10minute",
-    })).toThrow(/only valid when url/);
+      uuid: "test",
+      content: '[["a"]]',
+      refreshTime: "1second",
+    })).toThrow();
+  });
+
+  it("rejects refreshTime on WebSocket URLs", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "test",
+      url: "ws://localhost:8080/ws",
+      refreshTime: "1second",
+    })).toThrow();
+  });
+
+  it("accepts keyColumn field", () => {
+    const def = parseExternalDataSetDef({
+      uuid: "test",
+      url: "ws://localhost:8080/ws",
+      keyColumn: "id",
+    });
+    expect(def.keyColumn).toBe("id");
   });
 
   it("validates refreshTime format", () => {
