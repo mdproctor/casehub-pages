@@ -1,8 +1,9 @@
-import type { ExternalDataSetDef } from "../types.js";
+import type { WebSocketSourceConfig } from "./websocket-source.js";
 import { createWebSocketSource, type WebSocketSource } from "./websocket-source.js";
 
 export interface WebSocketPool {
-  acquire(baseUrl: string, def: ExternalDataSetDef): WebSocketSource;
+  configure(config: WebSocketSourceConfig): void;
+  acquire(baseUrl: string): WebSocketSource;
   releaseAll(): void;
 }
 
@@ -10,12 +11,17 @@ export function createWebSocketPool(
   WS: typeof WebSocket = WebSocket,
 ): WebSocketPool {
   const sources = new Map<string, WebSocketSource>();
+  let config: WebSocketSourceConfig | undefined;
 
   return {
-    acquire(baseUrl: string, def: ExternalDataSetDef): WebSocketSource {
+    configure(cfg: WebSocketSourceConfig): void {
+      config = cfg;
+    },
+
+    acquire(baseUrl: string): WebSocketSource {
       let source = sources.get(baseUrl);
       if (source === undefined) {
-        source = createWebSocketSource(baseUrl, undefined, WS);
+        source = createWebSocketSource(baseUrl, config, WS);
         sources.set(baseUrl, source);
       }
       return source;

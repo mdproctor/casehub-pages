@@ -705,4 +705,260 @@ describe("WebSocketSource", () => {
       expect(afterDuplicate).toBe(2); // Still 2, not 3
     });
   });
+
+  describe("WebSocketSource — incremental reconnect (#56)", () => {
+    it("includes since in subscribe message on reconnect when seq was received", async () => {
+      vi.useFakeTimers();
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws1 = MockWebSocket.instances[0]!;
+      ws1.open();
+
+      // Receive a message with seq
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          type: "snapshot",
+          seq: "42",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["hello"]],
+        }),
+      });
+
+      // Simulate abnormal close and reconnect
+      ws1.readyState = MockWebSocket.CLOSED;
+      ws1.onclose?.({ code: 1006, reason: "abnormal" });
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(MockWebSocket.instances).toHaveLength(2);
+      const ws2 = MockWebSocket.instances[1]!;
+      ws2.open();
+
+      // Check that resubscribe includes since
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      expect(resubscribe).toBeDefined();
+      const parsed = JSON.parse(resubscribe!);
+      expect(parsed.since).toBe("42");
+
+      vi.useRealTimers();
+    });
+
+    it("does not include since on first connection (no prior seq)", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      const subscribeMsg = ws.sent.find((m) => JSON.parse(m).type === "subscribe");
+      const parsed = JSON.parse(subscribeMsg!);
+      expect(parsed.since).toBeUndefined();
+    });
+
+    it("tracks seq across multiple events, uses latest", async () => {
+      vi.useFakeTimers();
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws1 = MockWebSocket.instances[0]!;
+      ws1.open();
+
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          type: "snapshot",
+          seq: "10",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["first"]],
+        }),
+      });
+
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          type: "append",
+          seq: "15",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["second"]],
+        }),
+      });
+
+      ws1.readyState = MockWebSocket.CLOSED;
+      ws1.onclose?.({ code: 1006, reason: "abnormal" });
+      await vi.advanceTimersByTimeAsync(1000);
+
+      const ws2 = MockWebSocket.instances[1]!;
+      ws2.open();
+
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      expect(JSON.parse(resubscribe!).since).toBe("15");
+
+      vi.useRealTimers();
+    });
+
+    it("does not advance seq for events without seq field", async () => {
+      vi.useFakeTimers();
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws1 = MockWebSocket.instances[0]!;
+      ws1.open();
+
+      // First event with seq
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          type: "snapshot",
+          seq: "10",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["first"]],
+        }),
+      });
+
+      // Second event without seq — lastSeq should stay at "10"
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          type: "append",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["second"]],
+        }),
+      });
+
+      ws1.readyState = MockWebSocket.CLOSED;
+      ws1.onclose?.({ code: 1006, reason: "abnormal" });
+      await vi.advanceTimersByTimeAsync(1000);
+
+      const ws2 = MockWebSocket.instances[1]!;
+      ws2.open();
+
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      expect(JSON.parse(resubscribe!).since).toBe("10");
+
+      vi.useRealTimers();
+    });
+
+    it("resets seq on explicit close()", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          type: "snapshot",
+          seq: "42",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["hello"]],
+        }),
+      });
+
+      source.close();
+
+      // Re-subscribe after close — should not have since
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(2));
+      const ws2 = MockWebSocket.instances[1]!;
+      ws2.open();
+
+      const subscribeMsg = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      expect(JSON.parse(subscribeMsg!).since).toBeUndefined();
+    });
+
+    it("does not reset seq on abnormal close (reconnect preserves it)", async () => {
+      vi.useFakeTimers();
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws1 = MockWebSocket.instances[0]!;
+      ws1.open();
+
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          type: "snapshot",
+          seq: "100",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["hello"]],
+        }),
+      });
+
+      // Abnormal close — handleClose() is called but should NOT reset lastSeq
+      ws1.readyState = MockWebSocket.CLOSED;
+      ws1.onclose?.({ code: 1006, reason: "abnormal" });
+      await vi.advanceTimersByTimeAsync(1000);
+
+      const ws2 = MockWebSocket.instances[1]!;
+      ws2.open();
+
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      expect(JSON.parse(resubscribe!).since).toBe("100");
+
+      vi.useRealTimers();
+    });
+  });
 });

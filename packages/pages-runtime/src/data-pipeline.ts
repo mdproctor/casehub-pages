@@ -197,6 +197,9 @@ export function createDataPipeline(
 
     setResolverCtx(ctx: ResolverContext): void {
       resolverCtx = ctx;
+      if (ctx.providerConfig.webSocket) {
+        pool.configure(ctx.providerConfig.webSocket);
+      }
     },
 
     handleDataRequest(
@@ -234,7 +237,7 @@ export function createDataPipeline(
       if (def.url?.startsWith("ws://") || def.url?.startsWith("wss://")) {
         const baseUrl = new URL(def.url);
         baseUrl.search = "";
-        const source = pool.acquire(baseUrl.toString(), def);
+        const source = pool.acquire(baseUrl.toString());
         source.subscribe(lookup.dataSetId, def, (event: DataSetEvent) => {
           manager.apply(lookup.dataSetId, event);
           // Push updated data to all subscribing components

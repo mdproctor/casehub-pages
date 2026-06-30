@@ -23,6 +23,7 @@ export interface WebSocketSourceConfig {
 interface WireMessage {
   dataset?: string;
   type?: string;
+  seq?: string;
   columns?: Column[];
   rows?: (string | null)[][];
   row?: (string | null)[];
@@ -41,6 +42,7 @@ export function createWebSocketSource(
   let ws: WebSocket | null = null;
   let reconnectAttempt = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let lastSeq: string | undefined;
 
   function buildConnectionUrl(): string {
     let url = new URL(baseUrl);
@@ -78,10 +80,14 @@ export function createWebSocketSource(
     ws.onopen = () => {
       reconnectAttempt = 0;
       // Resubscribe all existing subscriptions
-      for (const [id, subscription] of subscriptions) {
+      for (const [id] of subscriptions) {
         const wireName = idToWireName.get(id);
         if (wireName) {
-          ws?.send(JSON.stringify({ type: "subscribe", dataset: wireName }));
+          const msg: Record<string, string> = { type: "subscribe", dataset: wireName };
+          if (lastSeq !== undefined) {
+            msg.since = lastSeq;
+          }
+          ws?.send(JSON.stringify(msg));
         }
       }
     };
@@ -125,7 +131,7 @@ export function createWebSocketSource(
 
     if (dataSetId === undefined) {
       if (wireName === undefined && subscriptions.size === 1) {
-        dataSetId = subscriptions.keys().next().value;
+        dataSetId = subscriptions.keys().next().value as DataSetId;
       } else {
         return;
       }
@@ -151,6 +157,7 @@ export function createWebSocketSource(
           }
           const dataset = toTypedDataSet({ columns: msg.columns, data: msg.rows });
           subscription.listener({ type: "snapshot", dataset });
+          if (msg.seq !== undefined) lastSeq = msg.seq;
           break;
         }
 
@@ -166,6 +173,7 @@ export function createWebSocketSource(
             ...(subscription.def.cacheMaxRows !== undefined && { maxRows: subscription.def.cacheMaxRows }),
           };
           subscription.listener(event);
+          if (msg.seq !== undefined) lastSeq = msg.seq;
           break;
         }
 
@@ -191,6 +199,7 @@ export function createWebSocketSource(
             row: dataset.rows[0]!,
           };
           subscription.listener(event);
+          if (msg.seq !== undefined) lastSeq = msg.seq;
           break;
         }
 
@@ -210,6 +219,7 @@ export function createWebSocketSource(
             key: msg.key,
           };
           subscription.listener(event);
+          if (msg.seq !== undefined) lastSeq = msg.seq;
           break;
         }
 
@@ -291,6 +301,7 @@ export function createWebSocketSource(
       subscriptions.clear();
       wireNameToId.clear();
       idToWireName.clear();
+      lastSeq = undefined;
     },
   };
 }
