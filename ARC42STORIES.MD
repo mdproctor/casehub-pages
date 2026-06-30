@@ -3,7 +3,7 @@
 **Spec:** Arc42Stories v0.1
 **Profile:** Standalone open-source project
 **Build position:** Independent — no upstream dependencies beyond npm packages
-**Consumed by:** Any web application embedding interactive dashboards (DraftHouse, Claudony, standalone sites)
+**Consumed by:** Any CaseHub web application (DraftHouse, Claudony, DevTown, standalone sites)
 **Depends on:** Apache ECharts, js-yaml, marked, JSONata (all npm)
 
 ---
@@ -12,25 +12,27 @@
 
 ### Description
 
-`casehub-pages` is a pure TypeScript dashboard rendering runtime — a GWT-to-TypeScript migration of the DashBuilder visualization engine. It parses YAML dashboard definitions, resolves datasets (inline, URL, JSONata), and renders interactive visualizations as Web Components.
+`casehub-pages` is a web application framework for the CaseHub platform — a pure TypeScript runtime for composing applications from layouts, data pipelines, visualization, forms, hosted Web Components, and inter-component communication. The framework separates data from presentation, wires them together through declarative bindings and a reactive event pipeline, and renders the result as Web Components.
 
-Core packages: `@casehubio/pages-data` (DataSet model, operations engine, external data extraction), `@casehubio/pages-ui` (YAML parser, layout model, displayer desugaring), `@casehubio/pages-viz` (Web Component chart/table/metric wrappers around ECharts), `@casehubio/pages-component` (CSS grid layout renderer, slot management, interactive containers), `@casehubio/pages-runtime` (site orchestrator — wires parsing, data, and rendering into `loadSite()`).
+Core packages: `@casehubio/pages-data` (DataSet model, reactive event engine, operations, external data extraction, WebSocket sources, JSONata), `@casehubio/pages-ui` (TypeScript DSL builders, YAML parser, component model), `@casehubio/pages-viz` (Web Component chart/table/metric wrappers around ECharts), `@casehubio/pages-component` (CSS grid layout renderer, interactive containers, split layouts, dock bars), `@casehubio/pages-runtime` (site orchestrator — `loadSite()` API, data pipeline, event delegation, panel hosting).
 
 ### Stakeholders
 
 | Stakeholder | Interest |
 |---|---|
-| Dashboard authors | Author YAML dashboards rendered without Java/GWT |
-| Host applications | Embed dashboards via `loadSite()` API |
+| Application developers | Compose web applications using the TypeScript DSL and `hostPanel()` for custom components |
+| Host applications | Embed casehub-pages via iframe or direct integration using `loadSite()` API |
 | DashBuilder users | Backward-compatible rendering of existing DashBuilder YAML |
 
 ### Quality Goals
 
 | Goal | Scenario |
 |---|---|
-| DashBuilder compatibility | Existing DashBuilder YAML dashboards render correctly without modification |
+| DashBuilder compatibility | Existing DashBuilder YAML renders correctly without modification |
 | Zero-Java runtime | Full rendering pipeline in TypeScript — no GWT compilation, no Java at runtime |
 | Interactive filtering | Cross-component filtering, sorting, and pagination work end-to-end |
+| Recursive composition | Any component nests inside any other — the tree is the API |
+| Data–display separation | Data defined once, bound by reference; same dataset drives multiple components simultaneously |
 
 ---
 
@@ -53,22 +55,25 @@ yarn build:prod                   # production (includes examples gallery)
 ```
 ┌─────────────────────────────────────────────────┐
 │                  Host Application                │
-│  (DraftHouse, Claudony, standalone HTML page)    │
+│  (DraftHouse, Claudony, DevTown, standalone)     │
 │                                                  │
-│   loadSite(yaml) ──► @casehubio/pages-runtime      │
+│   loadSite(tree) ──► @casehubio/pages-runtime      │
 │                      ├── @casehubio/pages-ui       │
 │                      ├── @casehubio/pages-data     │
 │                      ├── @casehubio/pages-component│
 │                      └── @casehubio/pages-viz      │
 │                                                  │
-│   ◄── pages-filter, pages-sort events ──►    │
+│   ◄── pages-filter, pages-event, pages-sort ──►  │
+│                                                  │
+│   hostPanel() ──► custom Web Components          │
 └─────────────────────────────────────────────────┘
          │                              │
-    YAML files                    Data sources
-  (inline/URL)              (REST, Prometheus, CSV)
+  TypeScript DSL                  Data sources
+  (or YAML string)         (REST, Prometheus, CSV,
+                            WebSocket, expression)
 ```
 
-**Boundary:** casehub-pages owns parsing, data resolution, layout, and rendering. Domain logic (what dashboards to show, authentication, data source credentials) belongs to the host application.
+**Boundary:** casehub-pages owns layout, data resolution, event delegation, panel hosting, and rendering. Domain logic (authentication, data source credentials, custom panel internals) belongs to the host application or custom Web Components.
 
 ---
 
@@ -77,22 +82,29 @@ yarn build:prod                   # production (includes examples gallery)
 ### Data Flow
 
 ```
-YAML dashboard definition
-    ↓  (js-yaml)
-parsePage() / parsePages()          — @casehubio/pages-ui
+TypeScript DSL (or YAML string)
+    ↓  (DSL builders / js-yaml)
+Component tree + DataSetDef[]       — layout model
     ↓
-ComponentNode tree + DataSetDef[]   — layout model
+resolveDataSet() / WebSocketSource  — @casehubio/pages-data
     ↓
-resolveDataSet() / extractDataSet() — @casehubio/pages-data
-    ↓
-DataSet (columns + rows)            — wire format
+DataSet (columns + rows)            — reactive: mutations cascade to bound components
     ↓
 renderNode() / renderComponent()    — @casehubio/pages-component
     ↓
-<pages-bar-chart> etc.            — @casehubio/pages-viz Web Components
+<pages-bar-chart> etc.              — @casehubio/pages-viz Web Components
+  + hostPanel()                     — custom Web Components
     ↓
-pages-filter / pages-sort       — DOM custom events back to data layer
+pages-filter / pages-event / pages-sort  — DOM custom events back to data layer
 ```
+
+### Reactive Data Pipeline
+
+The `DataSetManager` uses a unified event model — `apply(id, event)` accepts a discriminated union of four event types (snapshot, append, replace, remove). All sources — HTTP resolver, expression generator, WebSocket — produce `DataSetEvent` objects. The manager applies them uniformly, and changes cascade automatically to all bound components.
+
+### Unified Data + Event Bus
+
+A single WebSocket connection carries both data mutations and inter-panel events. The `op` field routes: `append`/`replace`/`remove` → dataset mutations → bound charts/tables; `event` → `pages-event` dispatch → listening panels. One pipeline, not two separate systems.
 
 ### Lazy Rendering for One-at-a-Time Containers
 
@@ -121,26 +133,27 @@ The filter flow (selector → `pages-filter` → listening component re-query) r
 
 | Package | Responsibility |
 |---|---|
-| `@casehubio/pages-data` | DataSet model, filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), JSONata expressions |
-| `@casehubio/pages-ui` | YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
+| `@casehubio/pages-data` | DataSet model, reactive event engine (snapshot/append/replace/remove), filter/group/sort operations, external data extraction (JSON, CSV, Prometheus), WebSocket sources, JSONata expressions |
+| `@casehubio/pages-ui` | TypeScript DSL builders, YAML parser, DashBuilder backward compatibility (displayer desugaring, layout placement, nav desugaring), component model |
 | `@casehubio/pages-viz` | Web Component wrappers: bar, line, area, pie, donut, bubble, timeseries, meter, map, table, metric, selector |
-| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion), slot management |
-| `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, page navigation, dataset resolution pipeline, event wiring |
-| `@casehubio/pages-examples` | Dashboard gallery: dev server, Playwright tests, DashBuilder sample validation |
+| `@casehubio/pages-component` | CSS grid layout renderer, interactive containers (tabs, pills, sidebar, carousel, stack, accordion, split, dock bar), panel hosting, slot management |
+| `@casehubio/pages-runtime` | Site orchestrator: `loadSite()`, page navigation, data pipeline, event delegation, panel hosting (`registerPanel`, `hostPanel`) |
+| `@casehubio/pages-examples` | Examples gallery: dev server, Playwright tests, sample validation |
 
 ---
 
 ## §6 Runtime View
 
-### Dashboard Loading
+### Application Loading
 
-1. Host calls `loadSite(yaml, container, options)`
-2. Runtime parses YAML via `@casehubio/pages-ui` → `ComponentNode` tree + `DataSetDef[]`
-3. Runtime registers event listeners for `pages-data-request`, `pages-filter`, `pages-sort`, `pages-page`
+1. Host calls `loadSite(container, tree)` with a TypeScript DSL component tree (or YAML string)
+2. Runtime parses input via `@casehubio/pages-ui` → `ComponentNode` tree + `DataSetDef[]`
+3. Runtime registers event listeners for `pages-data-request`, `pages-filter`, `pages-event`, `pages-sort`, `pages-page`
 4. Runtime calls `renderComponent()` → `@casehubio/pages-component` renders CSS grid layout
-5. Web Components fire `pages-data-request` during `connectedCallback`
-6. Runtime resolves each dataset via `@casehubio/pages-data` and posts results back via `casehub-data-response`
-7. Web Components render with ECharts / DOM
+5. For `hostPanel` nodes: runtime looks up registered tag, creates the Web Component, calls `configure(props)` before mounting
+6. Viz Web Components fire `pages-data-request` during `connectedCallback`
+7. Runtime resolves each dataset via `@casehubio/pages-data` (HTTP, WebSocket, expression) and posts results back
+8. Components render with ECharts / DOM
 
 ### Cross-Filtering
 
@@ -170,7 +183,7 @@ The examples gallery serves at `localhost:8080` via webpack-dev-server (monorepo
 | DashBuilder compatibility | `displayer-desugar.ts` maps DashBuilder YAML properties to casehub component model. `backwards-compat.ts` handles legacy field names. |
 | Case-insensitive column matching | `column-lookup.ts` provides `findColumnIndex` with case-insensitive fallback for filter/group/sort operations |
 | JSON resilience | `extraction.ts` handles trailing commas, single-quoted JSON, and flat primitive arrays from hand-authored YAML content |
-| Column expressions | `cell-extract.ts` evaluates per-cell expressions via `new Function("value", expression)` — dashboard author code, same trust model as GWT DashBuilder |
+| Column expressions | `cell-extract.ts` evaluates per-cell expressions via `new Function("value", expression)` — author code, same trust model as GWT DashBuilder |
 
 ---
 
@@ -186,21 +199,21 @@ GWT-to-TypeScript migration of the core data and rendering pipeline. All package
 |---|---|
 | DataSet model + operations (group, sort, filter, aggregate) | ✅ shipped |
 | Expression evaluator (JSONata bridge) | ✅ shipped |
-| YAML parser + dashboard schema | ✅ shipped |
+| YAML parser + component schema | ✅ shipped |
 | External data extraction (JSON, CSV, Prometheus) | ✅ shipped |
 | @casehubio/pages-viz Web Components | ✅ shipped |
 | @casehubio/pages-component CSS grid layout | ✅ shipped |
 | @casehubio/pages-runtime — loadSite() | ✅ shipped |
 
-### Chapter 2: DashBuilder Demo Gallery
+### Chapter 2: Examples Gallery
 
 **Status:** ✅ complete
 
-Interactive gallery with DashBuilder sample dashboards, dev server, and Playwright smoke tests.
+Interactive gallery with sample pages, dev server, and Playwright smoke tests.
 
 | Milestone | Status |
 |---|---|
-| Dashboard demo runner — host page + dev server | ✅ shipped |
+| Examples runner — host page + dev server | ✅ shipped |
 | Axis and grid settings | ✅ shipped |
 | Markdown parser | ✅ shipped |
 | DashBuilder sample migration and validation | ✅ shipped |
@@ -208,14 +221,14 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | Inline content extraction | ✅ shipped |
 | Navigation types: tree, menu, tiles, sidebar | ✅ shipped |
 | Case-insensitive column matching | ✅ shipped |
-| Mock data for Prometheus dashboards | ✅ shipped |
+| Mock data for Prometheus examples | ✅ shipped |
 
 ### Backlog
 
 | Issue | Title | Status |
 |---|---|---|
 | #12 | Lazy on-demand pagination for datasets | 🔲 open |
-| #14 | Domain-specific example dashboards for the gallery | ✅ shipped |
+| #14 | Domain-specific examples for the gallery | ✅ shipped |
 | #15 | Accessibility: ARIA attributes, keyboard navigation, screen reader support | 🔲 open |
 | #16 | CSP compliance: replace new Function() in column expressions | 🔲 open |
 | #17 | Theming system and dark mode support | ✅ shipped |
@@ -231,7 +244,7 @@ Interactive gallery with DashBuilder sample dashboards, dev server, and Playwrig
 | #28 | Remove redundant iframe ECharts component — migrate to inline Web Components | ✅ shipped |
 | #35 | Map geo data loading — `registerMap()` for ECharts map/geo | ✅ done |
 | #36 | Accumulate + expression for inline datasets | ✅ shipped |
-| #44 | Minor polish for domain example dashboards | ✅ done |
+| #44 | Minor polish for domain examples | ✅ done |
 
 ---
 
@@ -242,8 +255,11 @@ Decisions not captured inline in §4:
 | Decision | Rationale |
 |---|---|
 | Web Components over React for viz | Components must work inside any host framework (React, vanilla, GWT iframe). Web Components are framework-agnostic. |
-| Custom events over callback API | `pages-filter`, `pages-sort` etc. decouple components from the runtime. Any host can intercept and handle events. |
-| DashBuilder YAML as primary format | Backward compatibility with existing dashboards. Parser handles both DashBuilder legacy and clean casehub format. |
+| Custom events over callback API | `pages-filter`, `pages-sort`, `pages-event` decouple components from the runtime. Any host can intercept and handle events. |
+| TypeScript DSL as primary API | Type-safe builders with IDE autocompletion. YAML supported for runtime-loaded pages (dynamic content). |
+| DashBuilder YAML backward compat | Existing DashBuilder YAML still parses and renders. Parser handles both DashBuilder legacy and clean casehub format. |
+| Unified event model for data mutations | snapshot/append/replace/remove as a discriminated union. All sources produce the same events. Enables reactive cascading. |
+| Unified data + event bus | Single WebSocket connection carries data mutations AND inter-panel events. One pipeline vs Grafana's split EventBus / Grafana Live. |
 
 ---
 
@@ -251,8 +267,8 @@ Decisions not captured inline in §4:
 
 | Requirement | Metric |
 |---|---|
-| DashBuilder compatibility | 28/31 sample dashboards render correctly (validation matrix: `examples/VALIDATION.md`) |
-| Test coverage | 615 tests (@casehubio/data), 158 tests (@casehubio/component), 183 tests (@casehubio/runtime), 77 Playwright tests (smoke + gallery + domain dashboards) |
+| DashBuilder compatibility | 28/31 sample pages render correctly (validation matrix: `examples/VALIDATION.md`) |
+| Test coverage | 615 tests (@casehubio/data), 158 tests (@casehubio/component), 183 tests (@casehubio/runtime), 77 Playwright tests (smoke + gallery + domain examples) |
 | No Java at runtime | `loadSite()` works without GWT compilation or Java process |
 
 ---
@@ -272,11 +288,13 @@ Decisions not captured inline in §4:
 |---|---|
 | `DataSet` | Column-oriented tabular data — the wire format between data resolution and visualization |
 | `DataSetLookup` | A query against a named dataset: filter → group → sort pipeline |
+| `DataSetEvent` | Discriminated union of mutation types: snapshot, append, replace, remove |
 | `ComponentNode` | A node in the parsed layout tree — carries type, props, slots (children), and optional dataset reference |
-| `DisplayerSettings` | DashBuilder's configuration object for a chart/table — desugared into ComponentNode props by `displayer-desugar.ts` |
-| `loadSite()` | Entry point: accepts YAML string or parsed config, renders into a DOM container, returns a dispose handle |
+| `hostPanel` | Component type that mounts an external Web Component inside the pages layout tree with lifecycle management |
+| `pages-event` | Custom DOM event for inter-panel communication — bubbles through Shadow DOM |
+| `loadSite()` | Entry point: accepts component tree or YAML string, renders into a DOM container, returns a dispose handle |
 | `NavTree` | Navigation structure: groups of named pages rendered as tabs, tree, menu, or tiles |
 
 ---
 
-*Created 2026-06-17. Journal entries from issue-19-dashbuilder-demos merged into §4.*
+*Created 2026-06-17. Updated 2026-06-30 — repositioned from "dashboard rendering runtime" to "web application framework"; added reactive data pipeline, unified event bus, panel hosting, and workbench primitives context.*
