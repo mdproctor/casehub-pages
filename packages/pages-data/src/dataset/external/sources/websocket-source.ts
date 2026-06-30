@@ -1,6 +1,6 @@
 import type { DataSetId, Column, ColumnId } from "../../types.js";
 import type { DataSetEvent, DataSetEventListener, AppendEvent, ReplaceEvent, RemoveEvent } from "../../events.js";
-import type { ExternalDataSetDef } from "../types.js";
+import type { ExternalDataSetDef, WebSocketAuthConfig } from "../types.js";
 import { toTypedDataSet } from "../../conversion.js";
 import { columnId } from "../../types.js";
 
@@ -15,6 +15,11 @@ export interface WebSocketSource {
   close(): void;
 }
 
+export interface WebSocketSourceConfig {
+  readonly relay?: { readonly endpoint: string };
+  readonly auth?: WebSocketAuthConfig;
+}
+
 interface WireMessage {
   dataset?: string;
   type?: string;
@@ -26,6 +31,7 @@ interface WireMessage {
 
 export function createWebSocketSource(
   baseUrl: string,
+  config?: WebSocketSourceConfig,
   WSConstructor: typeof WebSocket = WebSocket,
 ): WebSocketSource {
   const subscriptions = new Map<DataSetId, Subscription>();
@@ -35,6 +41,21 @@ export function createWebSocketSource(
   let ws: WebSocket | null = null;
   let reconnectAttempt = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function buildConnectionUrl(): string {
+    let url = new URL(baseUrl);
+
+    if (config?.relay) {
+      url = new URL(config.relay.endpoint);
+      url.searchParams.set("target", baseUrl);
+    }
+
+    if (config?.auth?.type === "query-param") {
+      url.searchParams.set(config.auth.paramName ?? "token", config.auth.token);
+    }
+
+    return url.toString();
+  }
 
   function extractWireName(url: string | undefined, fallbackId: DataSetId): string {
     if (!url) return fallbackId;
@@ -52,7 +73,7 @@ export function createWebSocketSource(
       return;
     }
 
-    ws = new WSConstructor(baseUrl);
+    ws = new WSConstructor(buildConnectionUrl());
 
     ws.onopen = () => {
       reconnectAttempt = 0;

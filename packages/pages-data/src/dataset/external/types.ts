@@ -76,6 +76,12 @@ export interface DataProvider {
   fetch(request: DataRequest): Promise<FetchResult>;
 }
 
+export interface WebSocketAuthConfig {
+  readonly type: "query-param";
+  readonly paramName?: string;
+  readonly token: string;
+}
+
 export interface DataProviderConfig {
   readonly defaultProvider?: "browser" | "server-relay";
   readonly corsProxy?: {
@@ -84,6 +90,10 @@ export interface DataProviderConfig {
   };
   readonly serverRelay?: {
     readonly endpoint: string;
+  };
+  readonly webSocket?: {
+    readonly relay?: { readonly endpoint: string };
+    readonly auth?: WebSocketAuthConfig;
   };
 }
 

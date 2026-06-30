@@ -15,7 +15,7 @@ export function createWebSocketPool(
     acquire(baseUrl: string, def: ExternalDataSetDef): WebSocketSource {
       let source = sources.get(baseUrl);
       if (source === undefined) {
-        source = createWebSocketSource(baseUrl, WS);
+        source = createWebSocketSource(baseUrl, undefined, WS);
         sources.set(baseUrl, source);
       }
       return source;

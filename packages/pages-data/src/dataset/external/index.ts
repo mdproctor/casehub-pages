@@ -6,6 +6,7 @@ export type {
   FetchResult,
   DataProvider,
   DataProviderConfig,
+  WebSocketAuthConfig,
   ExtractionPreset,
   PresetRegistry,
   ExtractionResult,
@@ -53,6 +54,6 @@ export type { DataProviderFactory } from "./provider-factory.js";
 
 // WebSocket
 export { createWebSocketSource } from "./sources/websocket-source.js";
-export type { WebSocketSource } from "./sources/websocket-source.js";
+export type { WebSocketSource, WebSocketSourceConfig } from "./sources/websocket-source.js";
 export { createWebSocketPool } from "./sources/websocket-pool.js";
 export type { WebSocketPool } from "./sources/websocket-pool.js";

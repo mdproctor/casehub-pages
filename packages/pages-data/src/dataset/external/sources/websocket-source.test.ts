@@ -49,6 +49,7 @@ describe("WebSocketSource", () => {
   it("dispatches snapshot event to subscribed listener", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -79,6 +80,7 @@ describe("WebSocketSource", () => {
   it("sends subscribe message on subscribe", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const def: ExternalDataSetDef = {
@@ -98,6 +100,7 @@ describe("WebSocketSource", () => {
   it("ignores events for unsubscribed datasets", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -127,6 +130,7 @@ describe("WebSocketSource", () => {
   it("closes connection when last subscriber unsubscribes", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const def: ExternalDataSetDef = {
@@ -147,6 +151,7 @@ describe("WebSocketSource", () => {
   it("dispatches append event to subscribed listener", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -177,6 +182,7 @@ describe("WebSocketSource", () => {
   it("handles malformed JSON without crashing", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -200,6 +206,7 @@ describe("WebSocketSource", () => {
   it("handles missing type field without crashing", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -228,6 +235,7 @@ describe("WebSocketSource", () => {
   it("handles batch messages", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -268,6 +276,7 @@ describe("WebSocketSource", () => {
     vi.useFakeTimers();
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const def: ExternalDataSetDef = {
@@ -294,6 +303,7 @@ describe("WebSocketSource", () => {
   it("does not reconnect on normal close (1000)", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const def: ExternalDataSetDef = {
@@ -316,6 +326,7 @@ describe("WebSocketSource", () => {
   it("does not reconnect on application error (4000+)", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const def: ExternalDataSetDef = {
@@ -338,6 +349,7 @@ describe("WebSocketSource", () => {
   it("populates keyColumn for replace event from def", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -375,6 +387,7 @@ describe("WebSocketSource", () => {
   it("populates keyColumn for remove event from def", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const events: DataSetEvent[] = [];
@@ -410,6 +423,7 @@ describe("WebSocketSource", () => {
   it("uses DataSetId as wire name when no ?dataset= in URL", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const def: ExternalDataSetDef = {
@@ -429,6 +443,7 @@ describe("WebSocketSource", () => {
   it("sends unsubscribe message on unsubscribe", async () => {
     const source = createWebSocketSource(
       "ws://localhost/ws",
+      undefined,
       MockWebSocket as unknown as typeof WebSocket,
     );
     const def: ExternalDataSetDef = {
@@ -446,5 +461,108 @@ describe("WebSocketSource", () => {
     source.unsubscribe(dataSetId("chat"));
 
     expect(ws.sent).toContainEqual(JSON.stringify({ type: "unsubscribe", dataset: "messages" }));
+  });
+
+  describe("WebSocketSource — connection URL", () => {
+    it("appends auth token as query parameter", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        { auth: { type: "query-param", token: "secret123" } },
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      const url = new URL(ws.url);
+      expect(url.searchParams.get("token")).toBe("secret123");
+    });
+
+    it("uses custom auth param name", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        { auth: { type: "query-param", paramName: "api_key", token: "key456" } },
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      const url = new URL(ws.url);
+      expect(url.searchParams.get("api_key")).toBe("key456");
+      expect(url.searchParams.has("token")).toBe(false);
+    });
+
+    it("rewrites URL through relay endpoint", async () => {
+      const source = createWebSocketSource(
+        "ws://upstream:8080/ws",
+        { relay: { endpoint: "wss://relay.example.com/ws-relay" } },
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://upstream:8080/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      const url = new URL(ws.url);
+      expect(url.hostname).toBe("relay.example.com");
+      expect(url.pathname).toBe("/ws-relay");
+      expect(url.searchParams.get("target")).toBe("ws://upstream:8080/ws");
+    });
+
+    it("applies auth to relay URL when both configured", async () => {
+      const source = createWebSocketSource(
+        "ws://upstream:8080/ws",
+        {
+          relay: { endpoint: "wss://relay.example.com/ws-relay" },
+          auth: { type: "query-param", token: "relay-token" },
+        },
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://upstream:8080/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      const url = new URL(ws.url);
+      expect(url.hostname).toBe("relay.example.com");
+      expect(url.searchParams.get("target")).toBe("ws://upstream:8080/ws");
+      expect(url.searchParams.get("token")).toBe("relay-token");
+    });
+
+    it("connects to baseUrl directly when no config", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      expect(MockWebSocket.instances[0]!.url).toBe("ws://localhost/ws");
+    });
   });
 });
