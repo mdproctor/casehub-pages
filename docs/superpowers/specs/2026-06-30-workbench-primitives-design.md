@@ -340,7 +340,7 @@ const site = await loadSite(document.getElementById("app")!, workbench);
 - **Panels are custom Web Components:** `hostPanel` hosts them, doesn't replace them
 - **Docking is preconfigured:** declared in component tree, not user-draggable (drag-and-drop is a separate future epic)
 - **Cross-app reusable:** DraftHouse, Claudony, DevTown, and future apps can use the same primitives
-- **Platform coherence:** casehub-pages capability ownership entry in PLATFORM.md unchanged — still "YAML dashboard rendering (pages framework)"
+- **Platform coherence:** casehub-pages capability ownership entry in PLATFORM.md to be updated per #78 — from "YAML dashboard rendering" to reflect full framework scope
 
 ## Out of Scope
 
