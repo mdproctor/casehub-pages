@@ -140,17 +140,11 @@ export function loadSite(
     options?.baseUrl ?? ""
   );
 
-  const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry, componentViewState, contextManager);
+  const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry, componentViewState, contextManager, target);
   pipeline.setResolverCtx({
     manager,
     providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch.bind(globalThis), options?.baseUrl),
-    providerConfig: {
-      ...options?.providerConfig,
-      webSocket: {
-        ...options?.providerConfig?.webSocket,
-        eventTarget: target,
-      },
-    },
+    providerConfig: options?.providerConfig ?? {},
     presetRegistry: createPresetRegistry(),
   });
 
@@ -917,21 +911,15 @@ export function loadSite(
       if (typeof window !== "undefined") {
         window.removeEventListener("beforeunload", onBeforeUnload);
       }
-      for (const timer of pipeline.refreshTimers.values()) {
-        clearInterval(timer);
-      }
-      pipeline.refreshTimers.clear();
+      pipeline.dispose();
       for (const timer of saveTimers.values()) {
         clearTimeout(timer);
       }
       saveTimers.clear();
-      // Clean up parameterised URL sentinel elements
       const sentinels = document.querySelectorAll("[data-param-dataset]");
       for (const sentinel of sentinels) {
         sentinel.remove();
       }
-      // Close all WebSocket connections
-      pipeline.pool.releaseAll();
       componentViewState.clear();
       registry.clear();
       target.innerHTML = "";

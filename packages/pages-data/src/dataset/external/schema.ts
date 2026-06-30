@@ -52,10 +52,12 @@ const externalDataSetDefSchema = z.object({
   { message: "dataPath, type, expression are not valid with join (nothing to extract)" },
 ).refine(
   d => !d.refreshTime || (
-    (d.url !== undefined && !d.url.startsWith("ws://") && !d.url.startsWith("wss://"))
+    (d.url !== undefined
+      && !d.url.startsWith("ws://") && !d.url.startsWith("wss://")
+      && !d.url.startsWith("sse://") && !d.url.startsWith("sses://"))
     || (d.content !== undefined && d.expression !== undefined && d.accumulate === true)
   ),
-  { message: "refreshTime requires a non-WebSocket url, or content + expression + accumulate" },
+  { message: "refreshTime requires a non-push-source url, or content + expression + accumulate" },
 );
 
 export type ParsedExternalDataSetDef = z.output<typeof externalDataSetDefSchema>;

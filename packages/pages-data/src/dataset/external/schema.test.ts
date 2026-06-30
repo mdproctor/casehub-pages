@@ -106,6 +106,22 @@ describe("ExternalDataSetDef schema", () => {
     })).toThrow();
   });
 
+  it("rejects refreshTime on SSE URLs", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "test",
+      url: "sse://localhost:8080/events",
+      refreshTime: "1second",
+    })).toThrow();
+  });
+
+  it("rejects refreshTime on secure SSE URLs", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "test",
+      url: "sses://localhost:8080/events",
+      refreshTime: "1second",
+    })).toThrow();
+  });
+
   it("accepts keyColumn field", () => {
     const def = parseExternalDataSetDef({
       uuid: "test",

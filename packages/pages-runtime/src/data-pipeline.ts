@@ -8,7 +8,7 @@ import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/di
 import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { resolveExternalDataSet } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
 import { evaluateGenerator, createPushPool, createWebSocketSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
-import type { PushPool } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type { PushPool, PushSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
 import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { DataSetScope } from "./dataset-scope.js";
@@ -40,9 +40,7 @@ export interface DataPipeline {
   ): void;
 
   setResolverCtx(ctx: ResolverContext): void;
-  readonly pendingResolutions: Map<DataSetId, Promise<ResolveResult>>;
-  readonly refreshTimers: Map<DataSetId, ReturnType<typeof setInterval>>;
-  readonly pool: PushPool;
+  dispose(): void;
 }
 
 function applyTextFilter(ds: TypedDataSet, term: string): TypedDataSet {
@@ -63,13 +61,123 @@ export function createDataPipeline(
   dataScopeRegistry: DataScopeRegistry,
   componentViewState: ComponentViewState,
   contextManager?: ContextManager,
+  target?: HTMLElement,
 ): DataPipeline {
   const pendingResolutions = new Map<DataSetId, Promise<ResolveResult>>();
   const refreshTimers = new Map<DataSetId, ReturnType<typeof setInterval>>();
   const abortControllers = new Map<DataSetId, AbortController>();
   const parameterisedConsumers = new Set<DataSetId>();
-  const pool = createPushPool((url, cfg) => createWebSocketSource(url, cfg));
+  const wsPool = createPushPool((url, cfg) => createWebSocketSource(url, cfg));
+  const pushSubscriptions = new Map<DataSetId, PushSource>();
+  const pushSubscribers = new Map<DataSetId, Set<string>>();
+  let observer: MutationObserver | undefined;
   let resolverCtx: ResolverContext | undefined;
+
+  if (target) {
+    observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.removedNodes) {
+          if (!(node instanceof HTMLElement)) continue;
+          handleSubtreeRemoved(node);
+        }
+      }
+    });
+    observer.observe(target, { childList: true, subtree: true });
+  }
+
+  function handleSubtreeRemoved(removed: HTMLElement): void {
+    const affected: Array<[string, HTMLElement]> = [];
+    for (const [componentId, entry] of registry) {
+      const el = entry.vizElement as unknown as HTMLElement | undefined;
+      if (!el || !(el instanceof HTMLElement)) continue;
+      if (removed !== el && !removed.contains(el)) continue;
+      affected.push([componentId, el]);
+    }
+
+    if (affected.length === 0) return;
+
+    queueMicrotask(() => {
+      for (const [componentId, el] of affected) {
+        if (el.isConnected) continue;
+        cleanupComponentSubscriptions(componentId);
+      }
+    });
+  }
+
+  function cleanupComponentSubscriptions(componentId: string): void {
+    for (const [dsId, subscribers] of pushSubscribers) {
+      if (!subscribers.has(componentId)) continue;
+      subscribers.delete(componentId);
+      if (subscribers.size === 0) {
+        const source = pushSubscriptions.get(dsId);
+        if (source) {
+          source.unsubscribe(dsId);
+          pushSubscriptions.delete(dsId);
+        }
+        pushSubscribers.delete(dsId);
+      }
+    }
+  }
+
+  function acquirePushSource(def: ExternalDataSetDef): PushSource | undefined {
+    const url = def.url;
+    if (!url) return undefined;
+    if (url.startsWith("ws://") || url.startsWith("wss://")) {
+      const baseUrl = new URL(url);
+      baseUrl.search = "";
+      return wsPool.acquire(baseUrl.toString());
+    }
+    // SSE routing added in Task 8
+    return undefined;
+  }
+
+  function subscribePushSource(
+    lookup: DataSetLookup,
+    def: ExternalDataSetDef,
+    componentId: string,
+  ): void {
+    const source = acquirePushSource(def);
+    if (!source) return;
+
+    // Track this component as a subscriber
+    let subscribers = pushSubscribers.get(lookup.dataSetId);
+    if (!subscribers) {
+      subscribers = new Set();
+      pushSubscribers.set(lookup.dataSetId, subscribers);
+    }
+    subscribers.add(componentId);
+
+    // Only subscribe to the source once per dataset
+    if (pushSubscriptions.has(lookup.dataSetId)) return;
+    pushSubscriptions.set(lookup.dataSetId, source);
+
+    source.subscribe(
+      lookup.dataSetId,
+      def,
+      (event: DataSetEvent) => {
+        manager.apply(lookup.dataSetId, event);
+        // Push updated data to all subscribing components
+        for (const [compId, compEntry] of registry) {
+          if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
+            const fg = (compEntry.component.props as Record<string, unknown> | undefined)
+              ?.filter as { group?: string } | undefined;
+            pushData(compEntry.vizElement, compEntry.originalLookup, compEntry.pagePath, fg?.group, compId);
+          }
+        }
+      },
+      (error) => {
+        if (!error.permanent) {
+          console.warn(`[DataPipeline] Transient push error for ${String(lookup.dataSetId)}: ${error.message}`);
+          return;
+        }
+        for (const [, compEntry] of registry) {
+          if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
+            compEntry.vizElement.error = error.message;
+          }
+        }
+      },
+    );
+  }
 
   function pushData(
     target: VizTarget,
@@ -191,15 +299,35 @@ export function createDataPipeline(
   }
 
   return {
-    pendingResolutions,
-    refreshTimers,
-    pool,
-
     setResolverCtx(ctx: ResolverContext): void {
       resolverCtx = ctx;
-      if (ctx.providerConfig.webSocket) {
-        pool.configure(ctx.providerConfig.webSocket);
+      if (target) {
+        wsPool.configure({ ...ctx.providerConfig.webSocket, eventTarget: target });
+      } else if (ctx.providerConfig.webSocket) {
+        wsPool.configure(ctx.providerConfig.webSocket);
       }
+    },
+
+    dispose(): void {
+      if (observer) {
+        observer.disconnect();
+        observer = undefined;
+      }
+      for (const timer of refreshTimers.values()) {
+        clearInterval(timer);
+      }
+      refreshTimers.clear();
+      for (const [dsId, source] of pushSubscriptions) {
+        source.unsubscribe(dsId);
+      }
+      pushSubscriptions.clear();
+      pushSubscribers.clear();
+      wsPool.releaseAll();
+      for (const controller of abortControllers.values()) {
+        controller.abort();
+      }
+      abortControllers.clear();
+      pendingResolutions.clear();
     },
 
     handleDataRequest(
@@ -218,7 +346,21 @@ export function createDataPipeline(
 
         // Schedule refresh for datasets already in the manager (from a prior request)
         const def = resolveDataSetDef(lookup.dataSetId, entry.pagePath, scope);
-        if (def) scheduleRefresh(def, lookup.dataSetId);
+        if (def) {
+          if (pushSubscriptions.has(lookup.dataSetId)) {
+            // Existing push subscription — just track this component
+            let subscribers = pushSubscribers.get(lookup.dataSetId);
+            if (!subscribers) {
+              subscribers = new Set();
+              pushSubscribers.set(lookup.dataSetId, subscribers);
+            }
+            subscribers.add(componentId);
+          } else if (acquirePushSource(def)) {
+            // Push dataset whose subscription was cleaned up by MutationObserver — re-subscribe
+            subscribePushSource(lookup, def, componentId);
+          }
+          scheduleRefresh(def, lookup.dataSetId);
+        }
         return;
       }
 
@@ -233,35 +375,10 @@ export function createDataPipeline(
         return;
       }
 
-      // WebSocket source routing
-      if (def.url?.startsWith("ws://") || def.url?.startsWith("wss://")) {
-        const baseUrl = new URL(def.url);
-        baseUrl.search = "";
-        const source = pool.acquire(baseUrl.toString());
-        source.subscribe(
-          lookup.dataSetId,
-          def,
-          (event: DataSetEvent) => {
-            manager.apply(lookup.dataSetId, event);
-            // Push updated data to all subscribing components
-            for (const [compId, compEntry] of registry) {
-              if (compEntry.originalLookup?.dataSetId === lookup.dataSetId && compEntry.vizElement) {
-                const filterGroup = (compEntry.component.props as Record<string, unknown> | undefined)
-                  ?.filter as { group?: string } | undefined;
-                pushData(
-                  compEntry.vizElement,
-                  compEntry.originalLookup,
-                  compEntry.pagePath,
-                  filterGroup?.group,
-                  compId,
-                );
-              }
-            }
-          },
-          (error) => {
-            target.error = error.message;
-          },
-        );
+      // Push source routing (WebSocket, SSE)
+      const pushSource = acquirePushSource(def);
+      if (pushSource) {
+        subscribePushSource(lookup, def, componentId);
         return;
       }
 
@@ -391,8 +508,9 @@ export function createDataPipeline(
   function scheduleRefresh(def: ExternalDataSetDef, dataSetId: DataSetId): void {
     if (!def.refreshTime || refreshTimers.has(dataSetId)) return;
 
-    // Guard: WebSocket datasets use server push, not polling
-    if (def.url?.startsWith("ws://") || def.url?.startsWith("wss://")) return;
+    // Guard: Push source datasets use server push, not polling
+    if (def.url?.startsWith("ws://") || def.url?.startsWith("wss://")
+        || def.url?.startsWith("sse://") || def.url?.startsWith("sses://")) return;
 
     const interval = parseRefreshTime(def.refreshTime);
 

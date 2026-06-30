@@ -254,7 +254,7 @@ describe("parameterised dataset URLs", () => {
     expect(mockFetchFn).toHaveBeenCalledTimes(1);
   });
 
-  it("non-parameterised URLs work normally", () => {
+  it("non-parameterised URLs work normally", async () => {
     const def = createDef("/api/static/patients");
     scope.set("", new Map([[dsId, def]]));
 
@@ -267,7 +267,10 @@ describe("parameterised dataset URLs", () => {
     // Non-parameterised URL → normal fetch path (immediate)
     pipeline.handleDataRequest(target, { dataSetId: dsId, operations: [] }, "comp1");
 
-    // Should have started resolution (the fetch happens via resolveExternalDataSet)
-    expect(pipeline.pendingResolutions.has(dsId)).toBe(true);
+    // Wait for resolution to complete
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Should have received data
+    expect(target.dataSet).toBeDefined();
   });
 });
