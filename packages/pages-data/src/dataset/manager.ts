@@ -86,6 +86,13 @@ class DataSetManagerImpl implements DataSetManager {
         if (existing === undefined) {
           return;
         }
+        const colCount = existing.columns.length;
+        if (event.rows.some(row => row.cells.length !== colCount)) {
+          console.warn(
+            `[DataSetManager] append rejected: row cell count mismatch (expected ${String(colCount)})`,
+          );
+          return;
+        }
         const combined = [...existing.rows, ...event.rows];
         const trimmed = event.maxRows !== undefined && event.maxRows >= 0
           ? combined.slice(-event.maxRows)

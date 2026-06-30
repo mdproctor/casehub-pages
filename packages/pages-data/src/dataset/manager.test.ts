@@ -666,3 +666,81 @@ describe("apply()", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 });
+
+describe("DataSetManager — append validation", () => {
+  it("rejects append when row cell count does not match column count", () => {
+    const mgr = createDataSetManager();
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+
+    // Create a row with 3 cells instead of 2
+    const badRow = toTypedDataSet({
+      columns: [
+        col("name", "Name", ColumnType.LABEL),
+        col("amount", "Amount", ColumnType.NUMBER),
+        col("extra", "Extra", ColumnType.TEXT),
+      ],
+      data: [["Bob", "200", "surplus"]],
+    });
+
+    mgr.apply(ID_A, { type: "append", rows: badRow.rows });
+
+    // Dataset should still have only the original row
+    const result = mgr.get(ID_A);
+    expect(result?.rows).toHaveLength(1);
+  });
+
+  it("accepts append when row cell count matches column count", () => {
+    const mgr = createDataSetManager();
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+
+    const goodRow = testDataSet([["Bob", "200"]]);
+    mgr.apply(ID_A, { type: "append", rows: goodRow.rows });
+
+    const result = mgr.get(ID_A);
+    expect(result?.rows).toHaveLength(2);
+  });
+
+  it("rejects entire append if any row has wrong cell count", () => {
+    const mgr = createDataSetManager();
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+
+    const goodRow = testDataSet([["Bob", "200"]]).rows[0]!;
+    const badRow = toTypedDataSet({
+      columns: [
+        col("name", "Name", ColumnType.LABEL),
+        col("amount", "Amount", ColumnType.NUMBER),
+        col("extra", "Extra", ColumnType.TEXT),
+      ],
+      data: [["Carol", "300", "surplus"]],
+    }).rows[0]!;
+
+    mgr.apply(ID_A, { type: "append", rows: [goodRow, badRow] });
+
+    // Neither row should be appended — reject-all semantics
+    const result = mgr.get(ID_A);
+    expect(result?.rows).toHaveLength(1);
+  });
+
+  it("does not fire onChanged when append is rejected", () => {
+    const onChange = vi.fn();
+    const mgr = createDataSetManager({ onChanged: onChange });
+    const ds = testDataSet([["Alice", "100"]]);
+    mgr.apply(ID_A, { type: "snapshot", dataset: ds });
+    onChange.mockClear();
+
+    const badRow = toTypedDataSet({
+      columns: [
+        col("name", "Name", ColumnType.LABEL),
+        col("amount", "Amount", ColumnType.NUMBER),
+        col("extra", "Extra", ColumnType.TEXT),
+      ],
+      data: [["Bob", "200", "surplus"]],
+    });
+
+    mgr.apply(ID_A, { type: "append", rows: badRow.rows });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
