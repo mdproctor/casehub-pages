@@ -144,7 +144,13 @@ export function loadSite(
   pipeline.setResolverCtx({
     manager,
     providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch.bind(globalThis), options?.baseUrl),
-    providerConfig: options?.providerConfig ?? {},
+    providerConfig: {
+      ...options?.providerConfig,
+      webSocket: {
+        ...options?.providerConfig?.webSocket,
+        eventTarget: target,
+      },
+    },
     presetRegistry: createPresetRegistry(),
   });
 
@@ -822,6 +828,11 @@ export function loadSite(
     }
 
     syncUrl("replaceState");
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-event", ((e: Event) => {
+    const { topic, payload } = (e as CustomEvent<{ topic: string; payload: unknown }>).detail;
+    console.debug("[pages-event]", topic, payload);
   }), { signal: abortController.signal });
 
   // --- Render (AFTER event listeners — connectedCallback fires during render) ---
