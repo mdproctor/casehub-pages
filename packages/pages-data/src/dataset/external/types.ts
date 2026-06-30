@@ -94,7 +94,9 @@ export interface DataProviderConfig {
   readonly webSocket?: {
     readonly relay?: { readonly endpoint: string };
     readonly auth?: WebSocketAuthConfig;
-    readonly eventTarget?: HTMLElement;
+  };
+  readonly sse?: {
+    readonly auth?: { readonly type: "query-param"; readonly paramName?: string; readonly token: string };
   };
 }
 

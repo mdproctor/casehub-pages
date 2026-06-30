@@ -7,7 +7,7 @@ import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/externa
 import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { resolveExternalDataSet } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import { evaluateGenerator, createPushPool, createWebSocketSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import { evaluateGenerator, createPushPool, createWebSocketSource, createSseSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
 import type { PushPool, PushSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
 import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
 import type { ComponentRegistry } from "./registry.js";
@@ -68,6 +68,7 @@ export function createDataPipeline(
   const abortControllers = new Map<DataSetId, AbortController>();
   const parameterisedConsumers = new Set<DataSetId>();
   const wsPool = createPushPool((url, cfg) => createWebSocketSource(url, cfg));
+  const ssePool = createPushPool((url, cfg) => createSseSource(url, cfg));
   const pushSubscriptions = new Map<DataSetId, PushSource>();
   const pushSubscribers = new Map<DataSetId, Set<string>>();
   let observer: MutationObserver | undefined;
@@ -127,7 +128,13 @@ export function createDataPipeline(
       baseUrl.search = "";
       return wsPool.acquire(baseUrl.toString());
     }
-    // SSE routing added in Task 8
+    if (url.startsWith("sse://") || url.startsWith("sses://")) {
+      const isSecure = url.startsWith("sses://");
+      const httpUrl = new URL((isSecure ? "https://" : "http://") + url.slice(isSecure ? 8 : 6));
+      httpUrl.search = "";
+      const baseKey = (isSecure ? "sses://" : "sse://") + httpUrl.host + httpUrl.pathname;
+      return ssePool.acquire(baseKey);
+    }
     return undefined;
   }
 
@@ -303,8 +310,14 @@ export function createDataPipeline(
       resolverCtx = ctx;
       if (target) {
         wsPool.configure({ ...ctx.providerConfig.webSocket, eventTarget: target });
-      } else if (ctx.providerConfig.webSocket) {
-        wsPool.configure(ctx.providerConfig.webSocket);
+        ssePool.configure({ ...ctx.providerConfig.sse, eventTarget: target });
+      } else {
+        if (ctx.providerConfig.webSocket) {
+          wsPool.configure(ctx.providerConfig.webSocket);
+        }
+        if (ctx.providerConfig.sse) {
+          ssePool.configure(ctx.providerConfig.sse);
+        }
       }
     },
 
@@ -323,6 +336,7 @@ export function createDataPipeline(
       pushSubscriptions.clear();
       pushSubscribers.clear();
       wsPool.releaseAll();
+      ssePool.releaseAll();
       for (const controller of abortControllers.values()) {
         controller.abort();
       }
