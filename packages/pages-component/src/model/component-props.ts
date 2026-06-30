@@ -16,7 +16,29 @@ export type TreeProps = Record<string, never>;
 export type MenuProps = Record<string, never>;
 export type AccordionProps = Record<string, never>;
 export type CarouselProps = Record<string, never>;
-export type AppGridProps = Record<string, never>;
+
+export interface SplitProps {
+  readonly direction: "horizontal" | "vertical";
+  readonly ratio?: readonly number[];
+  readonly minSizes?: readonly number[];
+}
+
+export interface DockItem {
+  readonly icon: string;
+  readonly label: string;
+  readonly panelId: string;
+  readonly defaultOpen?: boolean;
+}
+
+export interface DockBarProps {
+  readonly orientation: "vertical" | "horizontal";
+  readonly items: readonly DockItem[];
+}
+
+export interface HostPanelProps {
+  readonly typeName: string;
+  readonly panelProps?: Readonly<Record<string, unknown>>;
+}
 
 export interface PanelProps {
   readonly title: string;

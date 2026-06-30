@@ -60,6 +60,16 @@ export function serializeToUrl(link: DeepLink): string {
     }
   }
 
+  if (link.dock) {
+    const entries = Object.entries(link.dock);
+    if (entries.length > 0) {
+      const dockStr = entries
+        .map(([id, state]) => `${encodeURIComponent(id)}:${state}`)
+        .join(",");
+      params.push(`dock=${dockStr}`);
+    }
+  }
+
   if (params.length > 0) {
     url += `?${params.join("&")}`;
   }
@@ -80,6 +90,7 @@ export function parseFromUrl(hash: string): DeepLink {
   let sort: Record<string, { readonly columnId: string; readonly order: "ASCENDING" | "DESCENDING" }> | undefined;
   let pagination: Record<string, number> | undefined;
   let textFilter: Record<string, string> | undefined;
+  let dock: Record<string, "open" | "closed"> | undefined;
 
   if (qIndex !== -1) {
     const queryStr = withoutPrefix.substring(qIndex + 1);
@@ -138,6 +149,20 @@ export function parseFromUrl(hash: string): DeepLink {
         }
       }
     }
+
+    const dockStr = params.get("dock");
+    if (dockStr) {
+      dock = {};
+      for (const entry of dockStr.split(",")) {
+        const colonIdx = entry.indexOf(":");
+        if (colonIdx === -1) continue;
+        const id = decodeURIComponent(entry.substring(0, colonIdx));
+        const state = entry.substring(colonIdx + 1);
+        if (state === "open" || state === "closed") {
+          dock[id] = state;
+        }
+      }
+    }
   }
 
   return {
@@ -146,5 +171,6 @@ export function parseFromUrl(hash: string): DeepLink {
     ...(sort ? { sort } : {}),
     ...(pagination ? { pagination } : {}),
     ...(textFilter ? { textFilter } : {}),
+    ...(dock ? { dock } : {}),
   };
 }

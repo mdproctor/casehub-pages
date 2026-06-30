@@ -198,19 +198,95 @@ describe("desugarComponent", () => {
       expect(result.props).toEqual({ navGroupId: "g1" });
     });
 
-    it("type: APP_GRID", () => {
-      const result = desugarComponent({
-        type: "APP_GRID",
-        properties: { navGroupId: "g1" },
-      });
-      expect(result.type).toBe("app-grid");
-      expect(result.props).toEqual({ navGroupId: "g1" });
-    });
-
     it("navigation type without properties", () => {
       const result = desugarComponent({ type: "TABS" });
       expect(result.type).toBe("tabs");
       expect(result.props).toBeUndefined();
+    });
+  });
+
+  describe("workbench primitives", () => {
+    it("split shorthand with direction and children", () => {
+      const result = desugarComponent({
+        split: {
+          direction: "horizontal",
+          children: [
+            { html: "A" },
+            { html: "B" },
+          ],
+          ratio: [60, 40],
+        },
+      });
+      expect(result.type).toBe("split");
+      expect(result.props).toEqual({ direction: "horizontal", ratio: [60, 40] });
+      expect(result.slots?.["0"]).toHaveLength(1);
+      expect(result.slots?.["0"]?.[0]?.type).toBe("html");
+      expect(result.slots?.["1"]).toHaveLength(1);
+      expect(result.slots?.["1"]?.[0]?.type).toBe("html");
+    });
+
+    it("split defaults direction to horizontal", () => {
+      const result = desugarComponent({
+        split: {
+          children: [{ html: "A" }],
+        },
+      });
+      expect(result.type).toBe("split");
+      expect(result.props).toEqual({ direction: "horizontal" });
+    });
+
+    it("dock-bar shorthand", () => {
+      const result = desugarComponent({
+        "dock-bar": {
+          orientation: "vertical",
+          items: [
+            { icon: "📁", label: "Explorer", panelId: "explorer" },
+          ],
+        },
+      });
+      expect(result.type).toBe("dock-bar");
+      expect(result.props).toEqual({
+        orientation: "vertical",
+        items: [{ icon: "📁", label: "Explorer", panelId: "explorer" }],
+      });
+    });
+
+    it("dock-bar defaults orientation to vertical", () => {
+      const result = desugarComponent({
+        "dock-bar": { items: [] },
+      });
+      expect(result.type).toBe("dock-bar");
+      expect(result.props).toEqual({ orientation: "vertical", items: [] });
+    });
+
+    it("host-panel shorthand with props", () => {
+      const result = desugarComponent({
+        "host-panel": {
+          type: "diff-viewer",
+          props: { pathA: "a.md", pathB: "b.md" },
+        },
+      });
+      expect(result.type).toBe("host-panel");
+      expect(result.props).toEqual({
+        typeName: "diff-viewer",
+        panelProps: { pathA: "a.md", pathB: "b.md" },
+      });
+    });
+
+    it("host-panel without props", () => {
+      const result = desugarComponent({
+        "host-panel": { type: "gauge" },
+      });
+      expect(result.type).toBe("host-panel");
+      expect(result.props).toEqual({ typeName: "gauge" });
+    });
+
+    it("host-panel defaults typeName to empty string", () => {
+      const result = desugarComponent({
+        "host-panel": {},
+      });
+      expect(result.type).toBe("host-panel");
+      expect(result.props).toEqual({ typeName: "" });
     });
   });
 

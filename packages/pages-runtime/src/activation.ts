@@ -24,6 +24,7 @@ import type { ContextManager } from "./context-wiring.js";
 import { evaluateExpression, hasTemplateVars, resolveTemplate } from "@casehubio/pages-component/dist/context/index.js";
 import type { EscapeMode } from "@casehubio/pages-component/dist/context/index.js";
 import type { PagesContentElement } from "@casehubio/pages-viz/dist/base/PagesContentElement.js";
+import { lookupPanel } from "./panel-registry.js";
 
 const FORM_INPUT_TYPES = new Set([
   "text-input",
@@ -239,6 +240,73 @@ export function createActivationCallback(
         if (component.visibleWhen && contextManager) {
           registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
         }
+      }
+      return;
+    }
+
+    if (component.type === "host-panel" && component.props) {
+      const { typeName, panelProps } = component.props as { typeName?: string; panelProps?: Record<string, unknown> };
+      if (!typeName) return;
+
+      const tagName = lookupPanel(typeName);
+      if (!tagName) {
+        el.textContent = `Unknown panel type: ${typeName}`;
+        console.warn(`hostPanel: unregistered type "${typeName}"`);
+        return;
+      }
+
+      const panel = document.createElement(tagName);
+      const panelAny = panel as unknown as { configure?: (p: Record<string, unknown>) => void };
+      if (typeof panelAny.configure === "function") {
+        panelAny.configure(panelProps ?? {});
+      }
+      el.appendChild(panel);
+      return;
+    }
+
+    if (component.type === "dock-bar" && component.props) {
+      const { orientation, items } = component.props as {
+        orientation?: string;
+        items?: Array<{ icon: string; label: string; panelId: string; defaultOpen?: boolean }>;
+      };
+      if (!items) return;
+
+      el.style.display = "flex";
+      el.style.flexDirection = orientation === "horizontal" ? "row" : "column";
+      el.style.gap = "2px";
+      el.style.padding = "4px";
+
+      for (const item of items) {
+        const button = document.createElement("button");
+        button.dataset.dockPanelId = item.panelId;
+        button.title = item.label;
+        button.textContent = item.icon;
+        button.style.border = "none";
+        button.style.background = "transparent";
+        button.style.cursor = "pointer";
+        button.style.padding = "6px";
+        button.style.borderRadius = "var(--pages-radius, 4px)";
+        button.style.fontSize = "16px";
+
+        if (item.defaultOpen) {
+          button.dataset.active = "";
+        }
+
+        button.addEventListener("click", () => {
+          const isActive = button.dataset.active !== undefined;
+          if (isActive) {
+            delete button.dataset.active;
+          } else {
+            button.dataset.active = "";
+          }
+          el.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+            bubbles: true,
+            composed: true,
+            detail: { panelId: item.panelId, visible: !isActive },
+          }));
+        });
+
+        el.appendChild(button);
       }
       return;
     }

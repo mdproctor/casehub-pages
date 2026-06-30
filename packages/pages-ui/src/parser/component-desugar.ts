@@ -13,7 +13,6 @@ const NAV_TYPE_MAP: Record<string, string> = {
   TILES: "tiles",
   SIDEBAR: "sidebar",
   ACCORDION: "accordion",
-  APP_GRID: "app-grid",
 };
 
 /**
@@ -80,6 +79,46 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
         ...(visibleWhen ? { visibleWhen } : {}),
       };
     }
+  }
+
+  // Workbench primitives
+  // Split
+  if ("split" in raw) {
+    const splitConfig = raw.split as { direction?: string; children?: unknown[]; ratio?: number[]; minSizes?: number[] };
+    const children = (splitConfig.children ?? []).map((c: unknown) => desugarComponent(c as Record<string, unknown>, displayerDefaults));
+    return {
+      type: "split",
+      props: {
+        direction: splitConfig.direction ?? "horizontal",
+        ...(splitConfig.ratio ? { ratio: splitConfig.ratio } : {}),
+        ...(splitConfig.minSizes ? { minSizes: splitConfig.minSizes } : {}),
+      },
+      slots: Object.fromEntries(children.map((c, i) => [String(i), [c]])),
+    };
+  }
+
+  // Dock bar
+  if ("dock-bar" in raw) {
+    const config = raw["dock-bar"] as { orientation?: string; items?: unknown[] };
+    return {
+      type: "dock-bar",
+      props: {
+        orientation: config.orientation ?? "vertical",
+        items: config.items ?? [],
+      },
+    };
+  }
+
+  // Host panel
+  if ("host-panel" in raw) {
+    const config = raw["host-panel"] as { type?: string; props?: Record<string, unknown> };
+    return {
+      type: "host-panel",
+      props: {
+        typeName: config.type ?? "",
+        ...(config.props ? { panelProps: config.props } : {}),
+      },
+    };
   }
 
   // Alert shorthand

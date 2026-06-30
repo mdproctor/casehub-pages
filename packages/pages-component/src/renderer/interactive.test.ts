@@ -680,3 +680,69 @@ describe("wireInteractivity — tree", () => {
     expect(groupLabels[1]!.textContent).toContain("Advanced");
   });
 });
+
+describe("wireSplit", () => {
+  function makeSplitSlots(count: number): {
+    container: HTMLDivElement;
+    panels: Map<string, HTMLDivElement>;
+    slotNames: string[];
+  } {
+    const container = document.createElement("div");
+    container.dataset.componentType = "split";
+    container.dataset.componentProps = JSON.stringify({ direction: "horizontal", ratio: [60, 40] });
+    const panels = new Map<string, HTMLDivElement>();
+    const slotNames: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const key = String(i);
+      const panel = document.createElement("div");
+      panel.dataset.slot = key;
+      // Add a child component inside each slot
+      const child = document.createElement("div");
+      child.dataset.componentType = "host-panel";
+      child.dataset.componentId = `panel-${key}`;
+      panel.appendChild(child);
+      container.appendChild(panel);
+      panels.set(key, panel);
+      slotNames.push(key);
+    }
+    return { container, panels, slotNames };
+  }
+
+  it("applies flex ratios to slot containers", () => {
+    const { container, panels, slotNames } = makeSplitSlots(2);
+    wireInteractivity(container, "split", slotNames, panels);
+    expect(panels.get("0")!.style.flex).toContain("60");
+    expect(panels.get("1")!.style.flex).toContain("40");
+  });
+
+  it("defaults to equal ratios when no ratio prop", () => {
+    const { container, panels, slotNames } = makeSplitSlots(3);
+    container.dataset.componentProps = JSON.stringify({ direction: "horizontal" });
+    wireInteractivity(container, "split", slotNames, panels);
+    expect(panels.get("0")!.style.flex).toContain("1");
+    expect(panels.get("1")!.style.flex).toContain("1");
+    expect(panels.get("2")!.style.flex).toContain("1");
+  });
+
+  it("inserts drag handles between slot containers", () => {
+    const { container, panels, slotNames } = makeSplitSlots(3);
+    wireInteractivity(container, "split", slotNames, panels);
+    const handles = container.querySelectorAll("[data-split-handle]");
+    expect(handles).toHaveLength(2);
+  });
+
+  it("drag handle has correct cursor for horizontal split", () => {
+    const { container, panels, slotNames } = makeSplitSlots(2);
+    wireInteractivity(container, "split", slotNames, panels);
+    const handle = container.querySelector("[data-split-handle]") as HTMLElement;
+    expect(handle.style.cursor).toBe("col-resize");
+  });
+
+  it("drag handle has correct cursor for vertical split", () => {
+    const { container, panels, slotNames } = makeSplitSlots(2);
+    container.dataset.componentProps = JSON.stringify({ direction: "vertical", ratio: [50, 50] });
+    wireInteractivity(container, "split", slotNames, panels);
+    const handle = container.querySelector("[data-split-handle]") as HTMLElement;
+    expect(handle.style.cursor).toBe("row-resize");
+  });
+});

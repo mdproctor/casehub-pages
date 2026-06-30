@@ -19,3 +19,4 @@ export { createComponentViewState, updateSort, updatePage, getComponentState } f
 export type { ComponentState, ComponentViewState } from "./component-view-state.js";
 export { createDataPipeline } from "./data-pipeline.js";
 export type { DataPipeline, VizTarget } from "./data-pipeline.js";
+export { registerPanel } from "./panel-registry.js";

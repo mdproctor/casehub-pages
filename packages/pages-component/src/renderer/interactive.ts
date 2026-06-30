@@ -191,6 +191,9 @@ export function wireInteractivity(
     case "stack":
       wireStack(container, slotNames, panels, lazy);
       break;
+    case "split":
+      wireSplit(container, slotNames, panels, doc);
+      break;
   }
 }
 
@@ -634,4 +637,103 @@ function wireTree(
 
   // Mark initial active leaf
   updateActiveLeaf(currentSlot);
+}
+
+function wireSplit(
+  container: HTMLElement,
+  slotNames: readonly string[],
+  panels: Map<string, HTMLElement>,
+  doc: Document,
+): void {
+  const propsStr = container.dataset.componentProps;
+  const props = propsStr ? JSON.parse(propsStr) as { direction?: string; ratio?: number[]; minSizes?: number[] } : {};
+  const direction = props.direction ?? "horizontal";
+  const ratio = props.ratio;
+  const minSizes = props.minSizes;
+
+  // Apply flex ratios to slot containers
+  for (let i = 0; i < slotNames.length; i++) {
+    const name = slotNames[i]!;
+    const panel = panels.get(name);
+    if (panel) {
+      panel.style.flex = String(ratio?.[i] ?? 1);
+      panel.style.overflow = "hidden";
+      if (minSizes?.[i] !== undefined) {
+        const prop = direction === "horizontal" ? "minWidth" : "minHeight";
+        panel.style[prop] = `${String(minSizes[i])}px`;
+      }
+    }
+  }
+
+  // Insert drag handles between slot containers
+  for (let i = 0; i < slotNames.length - 1; i++) {
+    const currentName = slotNames[i]!;
+    const currentPanel = panels.get(currentName);
+    if (!currentPanel) continue;
+
+    const handle = doc.createElement("div");
+    handle.dataset.splitHandle = String(i);
+    handle.style.flexShrink = "0";
+    handle.style.cursor = direction === "horizontal" ? "col-resize" : "row-resize";
+    if (direction === "horizontal") {
+      handle.style.width = "6px";
+    } else {
+      handle.style.height = "6px";
+    }
+    handle.style.background = "var(--pages-border, #e0e0e0)";
+    handle.style.userSelect = "none";
+
+    currentPanel.insertAdjacentElement("afterend", handle);
+
+    attachDragHandler(handle, i, direction, slotNames, panels, minSizes);
+  }
+}
+
+function attachDragHandler(
+  handle: HTMLElement,
+  index: number,
+  direction: string,
+  slotNames: readonly string[],
+  panels: Map<string, HTMLElement>,
+  minSizes: readonly number[] | undefined,
+): void {
+  handle.addEventListener("mousedown", (startEvent: MouseEvent) => {
+    startEvent.preventDefault();
+    const beforeName = slotNames[index]!;
+    const afterName = slotNames[index + 1]!;
+    const beforeMaybe = panels.get(beforeName);
+    const afterMaybe = panels.get(afterName);
+    if (!beforeMaybe || !afterMaybe) return;
+
+    const before: HTMLElement = beforeMaybe;
+    const after: HTMLElement = afterMaybe;
+
+    const startPos = direction === "horizontal" ? startEvent.clientX : startEvent.clientY;
+    const beforeSize = direction === "horizontal" ? before.offsetWidth : before.offsetHeight;
+    const afterSize = direction === "horizontal" ? after.offsetWidth : after.offsetHeight;
+    const totalSize = beforeSize + afterSize;
+    const minBefore = minSizes?.[index] ?? 50;
+    const minAfter = minSizes?.[index + 1] ?? 50;
+
+    function onMouseMove(moveEvent: MouseEvent): void {
+      const currentPos = direction === "horizontal" ? moveEvent.clientX : moveEvent.clientY;
+      const delta = currentPos - startPos;
+      let newBeforeSize = Math.max(minBefore, Math.min(totalSize - minAfter, beforeSize + delta));
+      let newAfterSize = totalSize - newBeforeSize;
+      if (newAfterSize < minAfter) {
+        newAfterSize = minAfter;
+        newBeforeSize = totalSize - newAfterSize;
+      }
+      before.style.flex = `0 0 ${String(newBeforeSize)}px`;
+      after.style.flex = `0 0 ${String(newAfterSize)}px`;
+    }
+
+    function onMouseUp(): void {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
 }

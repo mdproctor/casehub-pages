@@ -132,6 +132,33 @@ describe("round-trip", () => {
   });
 });
 
+describe("dock state serialization", () => {
+  it("serializes dock state to URL", () => {
+    const url = serializeToUrl({
+      page: "Home",
+      dock: { explorer: "open", search: "closed" },
+    });
+    expect(url).toContain("dock=");
+    expect(url).toContain("explorer:open");
+    expect(url).toContain("search:closed");
+  });
+
+  it("parses dock state from URL", () => {
+    const link = parseFromUrl("#/page/Home?dock=explorer:open,search:closed");
+    expect(link.dock).toEqual({ explorer: "open", search: "closed" });
+  });
+
+  it("roundtrips dock state", () => {
+    const original: DeepLink = {
+      page: "Home",
+      dock: { debate: "open", review: "closed" },
+    };
+    const url = serializeToUrl(original);
+    const parsed = parseFromUrl(url);
+    expect(parsed.dock).toEqual(original.dock);
+  });
+});
+
 describe("serializeToUrl — sort", () => {
   it("single component sort", () => {
     const link: DeepLink = {

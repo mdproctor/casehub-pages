@@ -21,7 +21,6 @@ export {
   isMenu,
   isAccordion,
   isCarousel,
-  isAppGrid,
   isPanel,
   isHtml,
   isMarkdown,
@@ -46,6 +45,9 @@ export {
   isCheckbox,
   isDatePicker,
   isTextarea,
+  isSplit,
+  isDockBar,
+  isHostPanel,
 } from "@casehubio/pages-component";
 
 // isPage is a pages-ui utility (moved from pages-component)

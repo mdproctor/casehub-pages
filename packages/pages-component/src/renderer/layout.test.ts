@@ -15,7 +15,7 @@ describe("isLayoutType", () => {
     expect(isLayoutType("sidebar")).toBe(true);
     expect(isLayoutType("tree")).toBe(true);
     expect(isLayoutType("panel")).toBe(true);
-    expect(isLayoutType("app-grid")).toBe(true);
+    expect(isLayoutType("split")).toBe(true);
   });
 
   it("rejects non-layout types", () => {
@@ -74,15 +74,6 @@ describe("applyLayoutCSS", () => {
     expect(el.style.gridTemplateColumns).toBe("auto 1fr");
   });
 
-  it("applies app-grid CSS with template areas", () => {
-    const el = document.createElement("div");
-    const component: Component = { type: "app-grid" };
-    applyLayoutCSS(el, component);
-    expect(el.style.display).toBe("grid");
-    expect(el.style.gridTemplateColumns).toBe("auto 1fr");
-    expect(el.style.gridTemplateRows).toBe("auto 1fr auto");
-  });
-
   it("accordion applies flex column", () => {
     const el = document.createElement("div");
     const component: Component = { type: "accordion" };
@@ -112,5 +103,31 @@ describe("applyLayoutCSS", () => {
     const component: Component = { type: "grid" };
     applyLayoutCSS(el, component);
     expect(el.style.gridTemplateColumns).toBe("repeat(12, 1fr)");
+  });
+});
+
+describe("split layout", () => {
+  it("split is a layout type", () => {
+    expect(isLayoutType("split")).toBe(true);
+  });
+
+  it("app-grid is no longer a layout type", () => {
+    expect(isLayoutType("app-grid")).toBe(false);
+  });
+
+  it("applies horizontal split CSS — flex row", () => {
+    const el = document.createElement("div");
+    const component: Component = { type: "split", props: { direction: "horizontal" } };
+    applyLayoutCSS(el, component);
+    expect(el.style.display).toBe("flex");
+    expect(el.style.flexDirection).toBe("row");
+  });
+
+  it("applies vertical split CSS — flex column", () => {
+    const el = document.createElement("div");
+    const component: Component = { type: "split", props: { direction: "vertical" } };
+    applyLayoutCSS(el, component);
+    expect(el.style.display).toBe("flex");
+    expect(el.style.flexDirection).toBe("column");
   });
 });

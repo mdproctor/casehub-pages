@@ -115,6 +115,55 @@ describe("createActivationCallback", () => {
   });
 });
 
+describe("dock-bar activation", () => {
+  function activate(component: Component): HTMLElement {
+    const el = document.createElement("div");
+    el.dataset.componentId = "dock-1";
+    el.dataset.componentType = "dock-bar";
+    const registry = new Map();
+    const pagePathMap = new Map();
+    const callback = createActivationCallback(registry, pagePathMap);
+    callback(el, component);
+    return el;
+  }
+
+  it("renders icon buttons from items", () => {
+    const el = activate({
+      type: "dock-bar",
+      props: {
+        orientation: "vertical",
+        items: [
+          { icon: "\u{1F4C1}", label: "Explorer", panelId: "explorer", defaultOpen: true },
+          { icon: "\u{1F50D}", label: "Search", panelId: "search" },
+        ],
+      },
+    });
+    const buttons = el.querySelectorAll("button[data-dock-panel-id]");
+    expect(buttons).toHaveLength(2);
+    expect((buttons[0] as HTMLElement).dataset.dockPanelId).toBe("explorer");
+    expect((buttons[0] as HTMLElement).dataset.active).toBeDefined();
+    expect((buttons[1] as HTMLElement).dataset.active).toBeUndefined();
+  });
+
+  it("dispatches pages-dock-toggle on click", () => {
+    const el = activate({
+      type: "dock-bar",
+      props: {
+        orientation: "vertical",
+        items: [{ icon: "\u{1F4C1}", label: "Explorer", panelId: "explorer", defaultOpen: true }],
+      },
+    });
+    const events: Array<{ panelId: string; visible: boolean }> = [];
+    el.addEventListener("pages-dock-toggle", ((e: CustomEvent) => {
+      events.push(e.detail);
+    }) as EventListener);
+    const button = el.querySelector("button[data-dock-panel-id]") as HTMLElement;
+    button.click();
+    expect(events).toHaveLength(1);
+    expect(events[0]).toEqual({ panelId: "explorer", visible: false });
+  });
+});
+
 function lazySetup() {
   const registry: ComponentRegistry = new Map();
   const pagePathMap: PagePathMap = new Map();

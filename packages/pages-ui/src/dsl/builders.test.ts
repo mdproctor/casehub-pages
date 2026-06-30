@@ -17,7 +17,6 @@ import {
   menu,
   accordion,
   carousel,
-  appGrid,
   panel,
   html,
   markdown,
@@ -33,6 +32,9 @@ import {
   checkbox,
   datePicker,
   textarea,
+  split,
+  dockBar,
+  hostPanel,
   type PageOptions,
 } from "./builders.js";
 
@@ -239,7 +241,6 @@ describe("builders", () => {
       { name: "menu", builder: menu, expectedType: "menu" },
       { name: "accordion", builder: accordion, expectedType: "accordion" },
       { name: "carousel", builder: carousel, expectedType: "carousel" },
-      { name: "appGrid", builder: appGrid, expectedType: "app-grid" },
     ];
 
     testCases.forEach(({ name, builder, expectedType }) => {
@@ -637,6 +638,57 @@ describe("builders", () => {
       // This should compile without 'as any' — c.props is ColumnsProps
       expect(c.props?.distribution).toEqual([60, 40]);
       expect(c.type).toBe("columns");
+    });
+  });
+
+  describe("split builder", () => {
+    it("creates a split component with numbered slots", () => {
+      const child1: Component = { type: "html", props: { content: "A" } };
+      const child2: Component = { type: "html", props: { content: "B" } };
+      const result = split("horizontal", [child1, child2], { ratio: [60, 40] });
+      expect(result.type).toBe("split");
+      expect(result.props).toEqual({ direction: "horizontal", ratio: [60, 40] });
+      expect(result.slots?.["0"]).toEqual([child1]);
+      expect(result.slots?.["1"]).toEqual([child2]);
+    });
+
+    it("defaults minSizes to undefined", () => {
+      const result = split("vertical", [{ type: "html", props: { content: "A" } }]);
+      expect(result.props).toEqual({ direction: "vertical" });
+    });
+  });
+
+  describe("dockBar builder", () => {
+    it("creates a dock-bar component", () => {
+      const result = dockBar("vertical", [
+        { icon: "📁", label: "Explorer", panelId: "explorer" },
+      ]);
+      expect(result.type).toBe("dock-bar");
+      expect(result.props).toEqual({
+        orientation: "vertical",
+        items: [{ icon: "📁", label: "Explorer", panelId: "explorer" }],
+      });
+    });
+  });
+
+  describe("hostPanel builder", () => {
+    it("creates a host-panel component", () => {
+      const result = hostPanel("diff-viewer", { pathA: "a.md" });
+      expect(result.type).toBe("host-panel");
+      expect(result.props).toEqual({ typeName: "diff-viewer", panelProps: { pathA: "a.md" } });
+    });
+
+    it("works without props", () => {
+      const result = hostPanel("gauge");
+      expect(result.props).toEqual({ typeName: "gauge" });
+    });
+  });
+
+  describe("appGrid removed", () => {
+    it("appGrid is no longer exported", async () => {
+      // Use dynamic import to check export surface
+      const module = await import("./index.js");
+      expect("appGrid" in module).toBe(false);
     });
   });
 });

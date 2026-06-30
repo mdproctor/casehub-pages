@@ -12,7 +12,6 @@ import {
   isMenu,
   isAccordion,
   isCarousel,
-  isAppGrid,
   isPanel,
   isHtml,
   isMarkdown,
@@ -20,6 +19,9 @@ import {
   isLazyPage,
   getProps,
   isComponentType,
+  isSplit,
+  isDockBar,
+  isHostPanel,
 } from "./type-guards.js";
 import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 
@@ -142,15 +144,36 @@ describe("type guards - layout components", () => {
     const c: Component = { type: "accordion", props: {} };
     expect(isCarousel(c)).toBe(false);
   });
+});
 
-  it("isAppGrid narrows correctly", () => {
-    const c: Component = { type: "app-grid", props: {} };
-    expect(isAppGrid(c)).toBe(true);
+describe("isSplit", () => {
+  it("returns true for split component", () => {
+    const c: Component = { type: "split", props: { direction: "horizontal" } };
+    expect(isSplit(c)).toBe(true);
   });
+  it("returns false for non-split", () => {
+    expect(isSplit({ type: "rows" })).toBe(false);
+  });
+});
 
-  it("isAppGrid rejects wrong type", () => {
-    const c: Component = { type: "grid", props: {} };
-    expect(isAppGrid(c)).toBe(false);
+describe("isDockBar", () => {
+  it("returns true for dock-bar component", () => {
+    const c: Component = { type: "dock-bar", props: { orientation: "vertical", items: [] } };
+    expect(isDockBar(c)).toBe(true);
+  });
+});
+
+describe("isHostPanel", () => {
+  it("returns true for host-panel component", () => {
+    const c: Component = { type: "host-panel", props: { typeName: "diff-viewer" } };
+    expect(isHostPanel(c)).toBe(true);
+  });
+});
+
+describe("isAppGrid — removed", () => {
+  it("isAppGrid is no longer exported", async () => {
+    const module = await import("./type-guards.js");
+    expect("isAppGrid" in module).toBe(false);
   });
 });
 

@@ -1,6 +1,6 @@
 # casehub-pages — LLM Integration Guide
 
-This document is designed for LLMs building applications that use casehub-pages. casehub-pages is a structured data rendering runtime — it separates data (datasets, lookups, operations) from presentation (pages, layouts, components) and wires them together through declarative bindings. The same runtime powers dashboards, data-bound forms, CRUD interfaces, and any page that renders structured data through charts, tables, metrics, or custom components.
+This document is designed for LLMs building applications that use casehub-pages. casehub-pages is a web application framework — it separates data (datasets, lookups, operations) from presentation (pages, layouts, components) and wires them together through declarative bindings and a reactive event pipeline. The same runtime powers workbench shells, data-bound forms, CRUD interfaces, dashboards, and custom component compositions — any application built from a recursive tree of layouts, data, and hosted Web Components.
 
 ## Quick Start
 
@@ -437,7 +437,7 @@ interface ViewState {
 
 ### URL State Persistence
 
-Dashboard state is persisted in the URL hash so dashboards are bookmarkable and shareable:
+Application state is persisted in the URL hash so pages are bookmarkable and shareable:
 
 ```
 #/page/Sales/Revenue?filter=region:North|South&sort=sales-table:Revenue:DESCENDING&page=sales-table:2
@@ -629,7 +629,7 @@ Always call `site.dispose()` when unmounting:
 
 ```typescript
 // In a Quarkus/Quinoa host:
-const site = await loadSite(el, dashboard);
+const site = await loadSite(el, app);
 // On unmount:
 site.dispose();
 ```

@@ -21,7 +21,6 @@ export type {
   MenuProps,
   AccordionProps,
   CarouselProps,
-  AppGridProps,
   PanelProps,
   HtmlProps,
   MarkdownProps,
@@ -30,6 +29,10 @@ export type {
   FilterSettings,
   DrillDown,
   RefreshSettings,
+  SplitProps,
+  DockBarProps,
+  DockItem,
+  HostPanelProps,
 } from "./component-props.js";
 
 // Page types (runtime types defined here, component-level types re-exported from pages-component)
@@ -95,7 +98,6 @@ export {
   isMenu,
   isAccordion,
   isCarousel,
-  isAppGrid,
   isPanel,
   isHtml,
   isMarkdown,
@@ -121,5 +123,8 @@ export {
   isCheckbox,
   isDatePicker,
   isTextarea,
+  isSplit,
+  isDockBar,
+  isHostPanel,
   isFormInput,
 } from "./type-guards.js";

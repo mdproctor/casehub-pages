@@ -10,7 +10,6 @@ export type {
   MenuProps,
   AccordionProps,
   CarouselProps,
-  AppGridProps,
   PanelProps,
   HtmlProps,
   MarkdownProps,
@@ -19,4 +18,8 @@ export type {
   FilterSettings,
   DrillDown,
   RefreshSettings,
+  SplitProps,
+  DockBarProps,
+  DockItem,
+  HostPanelProps,
 } from "@casehubio/pages-component";

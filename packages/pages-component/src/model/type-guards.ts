@@ -11,7 +11,9 @@ import type {
   MenuProps,
   AccordionProps,
   CarouselProps,
-  AppGridProps,
+  SplitProps,
+  DockBarProps,
+  HostPanelProps,
   PanelProps,
   HtmlProps,
   MarkdownProps,
@@ -56,7 +58,10 @@ export interface ComponentTypeRegistry {
   menu: MenuProps;
   accordion: AccordionProps;
   carousel: CarouselProps;
-  "app-grid": AppGridProps;
+  // Workbench components
+  split: SplitProps;
+  "dock-bar": DockBarProps;
+  "host-panel": HostPanelProps;
   // Wrapper components
   panel: PanelProps;
   // Content components
@@ -156,8 +161,17 @@ export function isCarousel(c: Component): c is TypedComponent<"carousel"> {
   return c.type === "carousel";
 }
 
-export function isAppGrid(c: Component): c is TypedComponent<"app-grid"> {
-  return c.type === "app-grid";
+// Workbench components
+export function isSplit(c: Component): c is TypedComponent<"split"> {
+  return c.type === "split";
+}
+
+export function isDockBar(c: Component): c is TypedComponent<"dock-bar"> {
+  return c.type === "dock-bar";
+}
+
+export function isHostPanel(c: Component): c is TypedComponent<"host-panel"> {
+  return c.type === "host-panel";
 }
 
 // Wrapper components

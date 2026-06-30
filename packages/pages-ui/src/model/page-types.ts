@@ -30,6 +30,7 @@ export interface DeepLink {
   readonly sort?: Readonly<Record<string, { readonly columnId: string; readonly order: SortOrder }>>;
   readonly pagination?: Readonly<Record<string, number>>;
   readonly textFilter?: Readonly<Record<string, string>>;
+  readonly dock?: Readonly<Record<string, "open" | "closed">>;
 }
 
 export interface Site {

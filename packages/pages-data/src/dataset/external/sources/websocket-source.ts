@@ -18,16 +18,19 @@ export interface WebSocketSource {
 export interface WebSocketSourceConfig {
   readonly relay?: { readonly endpoint: string };
   readonly auth?: WebSocketAuthConfig;
+  readonly eventTarget?: HTMLElement;
 }
 
 interface WireMessage {
   dataset?: string;
-  type?: string;
+  op?: string;
   seq?: string;
   columns?: Column[];
   rows?: (string | null)[][];
   row?: (string | null)[];
   key?: string;
+  topic?: string;
+  payload?: unknown;
 }
 
 export function createWebSocketSource(
@@ -83,7 +86,7 @@ export function createWebSocketSource(
       for (const [id] of subscriptions) {
         const wireName = idToWireName.get(id);
         if (wireName) {
-          const msg: Record<string, string> = { type: "subscribe", dataset: wireName };
+          const msg: Record<string, string> = { op: "subscribe", dataset: wireName };
           if (lastSeq !== undefined) {
             msg.since = lastSeq;
           }
@@ -126,6 +129,18 @@ export function createWebSocketSource(
   }
 
   function processMessage(msg: WireMessage): void {
+    // Event op: dispatch as DOM event, bypass dataset routing
+    if (msg.op === "event" && msg.topic) {
+      if (config?.eventTarget) {
+        config.eventTarget.dispatchEvent(new CustomEvent("pages-event", {
+          bubbles: true,
+          composed: true,
+          detail: { topic: msg.topic, payload: msg.payload },
+        }));
+      }
+      return;
+    }
+
     const wireName = msg.dataset;
     let dataSetId = wireName !== undefined ? wireNameToId.get(wireName) : undefined;
 
@@ -142,9 +157,9 @@ export function createWebSocketSource(
       return;
     }
 
-    const eventType = msg.type;
+    const eventType = msg.op;
     if (!eventType) {
-      console.warn("[WebSocketSource] Message missing type field:", msg);
+      console.warn("[WebSocketSource] Message missing op field:", msg);
       return;
     }
 
@@ -261,14 +276,14 @@ export function createWebSocketSource(
       if (subscriptions.size === 1) {
         connect();
       } else if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "subscribe", dataset: wireName }));
+        ws.send(JSON.stringify({ op: "subscribe", dataset: wireName }));
       }
     },
 
     unsubscribe(dataSetId: DataSetId): void {
       const wireName = idToWireName.get(dataSetId);
       if (wireName && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "unsubscribe", dataset: wireName }));
+        ws.send(JSON.stringify({ op: "unsubscribe", dataset: wireName }));
       }
 
       subscriptions.delete(dataSetId);

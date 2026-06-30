@@ -17,7 +17,6 @@ export {
   menu,
   accordion,
   carousel,
-  appGrid,
   // Wrapper builders
   panel,
   // Content builders
@@ -53,6 +52,10 @@ export {
   checkbox,
   datePicker,
   textarea,
+  // Workbench primitive builders
+  split,
+  dockBar,
+  hostPanel,
 } from "./builders.js";
 
 // Re-export all lookup helpers

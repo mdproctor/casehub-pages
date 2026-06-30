@@ -134,6 +134,7 @@ export function loadSite(
   const editState = createEditState();
   const saveTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   const componentViewState = createComponentViewState();
+  const dockState = new Map<string, boolean>();
   const actionExecutor = new ActionExecutor(
     options?.fetch ?? globalThis.fetch.bind(globalThis),
     options?.baseUrl ?? ""
@@ -246,6 +247,17 @@ export function loadSite(
         updateTextFilter(cvs, id, text);
       }
     }
+    if (link.dock) {
+      for (const [id, state] of Object.entries(link.dock)) {
+        dockState.set(id, state === "open");
+        if (state === "closed") {
+          const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(id) : id;
+          const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
+          const slotContainer = panelEl?.closest<HTMLElement>("[data-slot]");
+          if (slotContainer) slotContainer.style.display = "none";
+        }
+      }
+    }
     return link;
   }
 
@@ -271,6 +283,15 @@ export function loadSite(
     return result;
   }
 
+  function deriveDockState(): Readonly<Record<string, "open" | "closed">> | undefined {
+    if (dockState.size === 0) return undefined;
+    const result: Record<string, "open" | "closed"> = {};
+    for (const [id, visible] of dockState) {
+      result[id] = visible ? "open" : "closed";
+    }
+    return result;
+  }
+
   function syncUrl(method: "pushState" | "replaceState"): void {
     if (typeof history === "undefined") return;
 
@@ -279,12 +300,14 @@ export function loadSite(
     const pagination = deriveUrlPagination(componentViewState, registry);
     const textFilter = deriveUrlTextFilter(componentViewState, registry);
 
+    const dock = deriveDockState();
     const link: DeepLink = {
       page: currentPage,
       ...(Object.keys(filters).length > 0 ? { filters } : {}),
       ...(Object.keys(sort).length > 0 ? { sort } : {}),
       ...(Object.keys(pagination).length > 0 ? { pagination } : {}),
       ...(Object.keys(textFilter).length > 0 ? { textFilter } : {}),
+      ...(dock ? { dock } : {}),
     };
     history[method](null, "", serializeToUrl(link));
   }
@@ -747,6 +770,58 @@ export function loadSite(
         }
       }
     }
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-dock-toggle", ((e: Event) => {
+    const { panelId, visible } = (e as CustomEvent<{ panelId: string; visible: boolean }>).detail;
+    dockState.set(panelId, visible);
+
+    const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(panelId) : panelId;
+    const panelEl = target.querySelector<HTMLElement>(`[data-component-id="${escapedId}"]`);
+    if (!panelEl) return;
+
+    const slotContainer = panelEl.closest<HTMLElement>("[data-slot]");
+    if (!slotContainer) return;
+
+    if (visible) {
+      slotContainer.style.display = "";
+      // Show adjacent drag handle
+      const adjacentHandle = slotContainer.nextElementSibling as HTMLElement | null;
+      if (adjacentHandle?.dataset.splitHandle !== undefined) {
+        adjacentHandle.style.display = "";
+      }
+      const prevHandle = slotContainer.previousElementSibling as HTMLElement | null;
+      if (prevHandle?.dataset.splitHandle !== undefined) {
+        prevHandle.style.display = "";
+      }
+      // Restore parent split if it was collapsed
+      const parentSplit = slotContainer.closest<HTMLElement>('[data-component-type="split"]');
+      if (parentSplit && parentSplit.style.display === "none") {
+        parentSplit.style.display = "";
+      }
+    } else {
+      slotContainer.style.display = "none";
+      // Hide adjacent drag handle
+      const adjacentHandle = slotContainer.nextElementSibling as HTMLElement | null;
+      if (adjacentHandle?.dataset.splitHandle !== undefined) {
+        adjacentHandle.style.display = "none";
+      }
+      const prevHandle = slotContainer.previousElementSibling as HTMLElement | null;
+      if (prevHandle?.dataset.splitHandle !== undefined && prevHandle.nextElementSibling === slotContainer) {
+        prevHandle.style.display = "none";
+      }
+      // Collapse parent split if all children hidden
+      const parentSplit = slotContainer.closest<HTMLElement>('[data-component-type="split"]');
+      if (parentSplit) {
+        const slotChildren = parentSplit.querySelectorAll<HTMLElement>(":scope > [data-slot]");
+        const allHidden = Array.from(slotChildren).every(s => s.style.display === "none");
+        if (allHidden) {
+          parentSplit.style.display = "none";
+        }
+      }
+    }
+
+    syncUrl("replaceState");
   }), { signal: abortController.signal });
 
   // --- Render (AFTER event listeners — connectedCallback fires during render) ---

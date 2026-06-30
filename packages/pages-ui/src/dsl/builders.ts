@@ -12,6 +12,12 @@ import type {
   GridProps,
   ColumnsProps,
 } from "../model/component-props.js";
+import type {
+  SplitProps,
+  DockBarProps,
+  DockItem,
+  HostPanelProps,
+} from "@casehubio/pages-component/dist/model/component-props.js";
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
@@ -227,10 +233,6 @@ export function carousel(...entries: [string, ...Component[]][]): Component {
   return navComponent("carousel", entries);
 }
 
-export function appGrid(...entries: [string, ...Component[]][]): Component {
-  return navComponent("app-grid", entries);
-}
-
 export function panel(title: string, ...children: Component[]): TypedComponent<"panel"> {
   const props: PanelProps = { title };
 
@@ -439,4 +441,44 @@ export function inlineDataset(
     content,
     ...overrides,
   });
+}
+
+// Workbench primitive builders
+
+export function split(
+  direction: "horizontal" | "vertical",
+  children: Component[],
+  options?: { ratio?: number[]; minSizes?: number[] },
+): TypedComponent<"split"> {
+  const slots: Record<string, readonly Component[]> = {};
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    if (!child) continue;
+    slots[String(i)] = [child];
+  }
+  const props: SplitProps = {
+    direction,
+    ...(options?.ratio ? { ratio: options.ratio } : {}),
+    ...(options?.minSizes ? { minSizes: options.minSizes } : {}),
+  };
+  return freeze({ type: "split" as const, props, slots: freeze(slots) });
+}
+
+export function dockBar(
+  orientation: "vertical" | "horizontal",
+  items: DockItem[],
+): TypedComponent<"dock-bar"> {
+  const props: DockBarProps = { orientation, items };
+  return freeze({ type: "dock-bar" as const, props });
+}
+
+export function hostPanel(
+  typeName: string,
+  panelProps?: Record<string, unknown>,
+): TypedComponent<"host-panel"> {
+  const props: HostPanelProps = {
+    typeName,
+    ...(panelProps ? { panelProps } : {}),
+  };
+  return freeze({ type: "host-panel" as const, props });
 }

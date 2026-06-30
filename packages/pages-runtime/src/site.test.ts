@@ -2396,6 +2396,82 @@ describe("view state — stale sort column enhanced", () => {
   });
 });
 
+// ── Dock Toggle Integration ────────────────────────────────────────
+
+describe("dock toggle integration", () => {
+  it("pages-dock-toggle hides targeted panel", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const tree: Component = {
+      type: "rows",
+      slots: {
+        default: [
+          {
+            type: "split",
+            props: { direction: "horizontal", ratio: [50, 50] },
+            slots: {
+              "0": [{ type: "html", props: { content: "Center" } }],
+              "1": [{ type: "html", id: "side", props: { content: "Side" } }],
+            },
+          },
+        ],
+      },
+    };
+
+    const site = await loadSite(target, tree);
+
+    const sideEl = target.querySelector('[data-component-id="side"]')!;
+    expect(sideEl).toBeTruthy();
+    const slotContainer = sideEl.closest("[data-slot]") as HTMLElement;
+    expect(slotContainer.style.display).not.toBe("none");
+
+    target.dispatchEvent(new CustomEvent("pages-dock-toggle", {
+      bubbles: true,
+      composed: true,
+      detail: { panelId: "side", visible: false },
+    }));
+
+    expect(slotContainer.style.display).toBe("none");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
+// ── pages-event inter-panel communication ───────────────────────────
+
+describe("pages-event inter-panel communication", () => {
+  it("pages-event bubbles to document from within loadSite target", async () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+
+    const tree: Component = {
+      type: "rows",
+      slots: { default: [{ type: "html", props: { content: "Panel" } }] },
+    };
+    const site = await loadSite(target, tree);
+
+    const received: Array<{ topic: string; payload: unknown }> = [];
+    document.addEventListener("pages-event", ((e: Event) => {
+      received.push((e as CustomEvent).detail);
+    }) as EventListener);
+
+    const inner = target.querySelector("[data-component-type='html']")!;
+    inner.dispatchEvent(new CustomEvent("pages-event", {
+      bubbles: true,
+      composed: true,
+      detail: { topic: "test-topic", payload: { value: 42 } },
+    }));
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.topic).toBe("test-topic");
+
+    site.dispose();
+    document.body.removeChild(target);
+  });
+});
+
 // ── Filter Group Isolation Test ─────────────────────────────────────
 
 describe("view state — filter group isolation", () => {

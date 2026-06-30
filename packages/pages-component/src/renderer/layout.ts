@@ -4,7 +4,7 @@ import { isGrid, isColumns } from "../model/type-guards.js";
 const LAYOUT_TYPES = new Set([
   "grid", "columns", "rows", "stack",
   "tabs", "pills", "accordion", "carousel",
-  "sidebar", "tree", "panel", "app-grid",
+  "sidebar", "tree", "panel", "split",
 ]);
 
 export function isLayoutType(type: string): boolean {
@@ -53,11 +53,11 @@ export function applyLayoutCSS(
       break;
     case "panel":
       break;
-    case "app-grid":
-      element.style.display = "grid";
-      element.style.gridTemplateAreas = '"header header" "nav main" "footer footer"';
-      element.style.gridTemplateColumns = "auto 1fr";
-      element.style.gridTemplateRows = "auto 1fr auto";
+    case "split": {
+      element.style.display = "flex";
+      const direction = (component.props as { direction?: string } | undefined)?.direction;
+      element.style.flexDirection = direction === "vertical" ? "column" : "row";
       break;
+    }
   }
 }

@@ -67,7 +67,7 @@ describe("WebSocketSource", () => {
     ws.onmessage?.({
       data: JSON.stringify({
         dataset: "messages",
-        type: "snapshot",
+        op: "snapshot",
         columns: [{ id: "text", type: "TEXT" }],
         rows: [["hello"]],
       }),
@@ -94,7 +94,7 @@ describe("WebSocketSource", () => {
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
-    expect(ws.sent).toContainEqual(JSON.stringify({ type: "subscribe", dataset: "messages" }));
+    expect(ws.sent).toContainEqual(JSON.stringify({ op: "subscribe", dataset: "messages" }));
   });
 
   it("ignores events for unsubscribed datasets", async () => {
@@ -118,7 +118,7 @@ describe("WebSocketSource", () => {
     ws.onmessage?.({
       data: JSON.stringify({
         dataset: "other",
-        type: "snapshot",
+        op: "snapshot",
         columns: [{ id: "x", type: "TEXT" }],
         rows: [["ignored"]],
       }),
@@ -169,7 +169,7 @@ describe("WebSocketSource", () => {
     ws.onmessage?.({
       data: JSON.stringify({
         dataset: "messages",
-        type: "append",
+        op: "append",
         columns: [{ id: "text", type: "TEXT" }],
         rows: [["world"]],
       }),
@@ -254,13 +254,13 @@ describe("WebSocketSource", () => {
       data: JSON.stringify([
         {
           dataset: "messages",
-          type: "snapshot",
+          op: "snapshot",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["first"]],
         },
         {
           dataset: "messages",
-          type: "append",
+          op: "append",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["second"]],
         },
@@ -368,7 +368,7 @@ describe("WebSocketSource", () => {
     ws.onmessage?.({
       data: JSON.stringify({
         dataset: "messages",
-        type: "replace",
+        op: "replace",
         key: "123",
         row: ["hello"],
         columns: [{ id: "text", type: "TEXT" }],
@@ -406,7 +406,7 @@ describe("WebSocketSource", () => {
     ws.onmessage?.({
       data: JSON.stringify({
         dataset: "messages",
-        type: "remove",
+        op: "remove",
         key: "123",
       }),
     });
@@ -437,7 +437,7 @@ describe("WebSocketSource", () => {
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
-    expect(ws.sent).toContainEqual(JSON.stringify({ type: "subscribe", dataset: "chat" }));
+    expect(ws.sent).toContainEqual(JSON.stringify({ op: "subscribe", dataset: "chat" }));
   });
 
   it("sends unsubscribe message on unsubscribe", async () => {
@@ -460,7 +460,7 @@ describe("WebSocketSource", () => {
     ws.sent = [];
     source.unsubscribe(dataSetId("chat"));
 
-    expect(ws.sent).toContainEqual(JSON.stringify({ type: "unsubscribe", dataset: "messages" }));
+    expect(ws.sent).toContainEqual(JSON.stringify({ op: "unsubscribe", dataset: "messages" }));
   });
 
   describe("WebSocketSource — connection URL", () => {
@@ -587,7 +587,7 @@ describe("WebSocketSource", () => {
 
       ws.onmessage?.({
         data: JSON.stringify({
-          type: "snapshot",
+          op: "snapshot",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["hello"]],
         }),
@@ -622,7 +622,7 @@ describe("WebSocketSource", () => {
 
       ws.onmessage?.({
         data: JSON.stringify({
-          type: "snapshot",
+          op: "snapshot",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["hello"]],
         }),
@@ -652,7 +652,7 @@ describe("WebSocketSource", () => {
       ws.onmessage?.({
         data: JSON.stringify({
           dataset: "unknown",
-          type: "snapshot",
+          op: "snapshot",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["hello"]],
         }),
@@ -686,23 +686,94 @@ describe("WebSocketSource", () => {
 
       // First subscriber sends subscribe
       const subscribeCount = ws.sent.filter(
-        (m) => JSON.parse(m).type === "subscribe",
+        (m) => JSON.parse(m).op === "subscribe",
       ).length;
       expect(subscribeCount).toBe(1);
 
       // Second subscriber with different ID sends another subscribe
       source.subscribe(dataSetId("d2"), def2, vi.fn());
       const afterTwoSubs = ws.sent.filter(
-        (m) => JSON.parse(m).type === "subscribe",
+        (m) => JSON.parse(m).op === "subscribe",
       ).length;
       expect(afterTwoSubs).toBe(2);
 
       // Third subscribe for same ID as first — should NOT send another
       source.subscribe(dataSetId("d1"), def1, vi.fn());
       const afterDuplicate = ws.sent.filter(
-        (m) => JSON.parse(m).type === "subscribe",
+        (m) => JSON.parse(m).op === "subscribe",
       ).length;
       expect(afterDuplicate).toBe(2); // Still 2, not 3
+    });
+  });
+
+  describe("WebSocketSource — event op routing", () => {
+    it("dispatches pages-event for event op messages", async () => {
+      // Create a mock event target (using EventTarget instead of DOM element for node compat)
+      const eventTarget = new EventTarget() as EventTarget & { dispatchEvent: (event: Event) => boolean };
+      const events: Array<{ topic: string; payload: unknown }> = [];
+      eventTarget.addEventListener("pages-event", ((e: Event) => {
+        events.push((e as CustomEvent).detail);
+      }) as EventListener);
+
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        { eventTarget: eventTarget as unknown as HTMLElement },
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      // Send event op message
+      ws.onmessage?.({
+        data: JSON.stringify({
+          op: "event",
+          topic: "selection-changed",
+          payload: { line: 42 },
+        }),
+      });
+
+      // Verify pages-event was dispatched
+      expect(events).toHaveLength(1);
+      expect(events[0]!.topic).toBe("selection-changed");
+      expect((events[0]!.payload as { line: number }).line).toBe(42);
+    });
+
+    it("silently drops event op when no eventTarget configured", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn());
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      // Send event op message — should not throw
+      ws.onmessage?.({
+        data: JSON.stringify({
+          op: "event",
+          topic: "test",
+          payload: { data: 123 },
+        }),
+      });
+
+      // No error, just silent drop
+      expect(true).toBe(true);
     });
   });
 
@@ -729,7 +800,7 @@ describe("WebSocketSource", () => {
       ws1.onmessage?.({
         data: JSON.stringify({
           dataset: "messages",
-          type: "snapshot",
+          op: "snapshot",
           seq: "42",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["hello"]],
@@ -746,7 +817,7 @@ describe("WebSocketSource", () => {
       ws2.open();
 
       // Check that resubscribe includes since
-      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).op === "subscribe");
       expect(resubscribe).toBeDefined();
       const parsed = JSON.parse(resubscribe!);
       expect(parsed.since).toBe("42");
@@ -771,7 +842,7 @@ describe("WebSocketSource", () => {
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
-      const subscribeMsg = ws.sent.find((m) => JSON.parse(m).type === "subscribe");
+      const subscribeMsg = ws.sent.find((m) => JSON.parse(m).op === "subscribe");
       const parsed = JSON.parse(subscribeMsg!);
       expect(parsed.since).toBeUndefined();
     });
@@ -797,7 +868,7 @@ describe("WebSocketSource", () => {
       ws1.onmessage?.({
         data: JSON.stringify({
           dataset: "messages",
-          type: "snapshot",
+          op: "snapshot",
           seq: "10",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["first"]],
@@ -807,7 +878,7 @@ describe("WebSocketSource", () => {
       ws1.onmessage?.({
         data: JSON.stringify({
           dataset: "messages",
-          type: "append",
+          op: "append",
           seq: "15",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["second"]],
@@ -821,7 +892,7 @@ describe("WebSocketSource", () => {
       const ws2 = MockWebSocket.instances[1]!;
       ws2.open();
 
-      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).op === "subscribe");
       expect(JSON.parse(resubscribe!).since).toBe("15");
 
       vi.useRealTimers();
@@ -849,7 +920,7 @@ describe("WebSocketSource", () => {
       ws1.onmessage?.({
         data: JSON.stringify({
           dataset: "messages",
-          type: "snapshot",
+          op: "snapshot",
           seq: "10",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["first"]],
@@ -860,7 +931,7 @@ describe("WebSocketSource", () => {
       ws1.onmessage?.({
         data: JSON.stringify({
           dataset: "messages",
-          type: "append",
+          op: "append",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["second"]],
         }),
@@ -873,7 +944,7 @@ describe("WebSocketSource", () => {
       const ws2 = MockWebSocket.instances[1]!;
       ws2.open();
 
-      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).op === "subscribe");
       expect(JSON.parse(resubscribe!).since).toBe("10");
 
       vi.useRealTimers();
@@ -899,7 +970,7 @@ describe("WebSocketSource", () => {
       ws.onmessage?.({
         data: JSON.stringify({
           dataset: "messages",
-          type: "snapshot",
+          op: "snapshot",
           seq: "42",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["hello"]],
@@ -915,7 +986,7 @@ describe("WebSocketSource", () => {
       const ws2 = MockWebSocket.instances[1]!;
       ws2.open();
 
-      const subscribeMsg = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      const subscribeMsg = ws2.sent.find((m) => JSON.parse(m).op === "subscribe");
       expect(JSON.parse(subscribeMsg!).since).toBeUndefined();
     });
 
@@ -940,7 +1011,7 @@ describe("WebSocketSource", () => {
       ws1.onmessage?.({
         data: JSON.stringify({
           dataset: "messages",
-          type: "snapshot",
+          op: "snapshot",
           seq: "100",
           columns: [{ id: "text", type: "TEXT" }],
           rows: [["hello"]],
@@ -955,7 +1026,7 @@ describe("WebSocketSource", () => {
       const ws2 = MockWebSocket.instances[1]!;
       ws2.open();
 
-      const resubscribe = ws2.sent.find((m) => JSON.parse(m).type === "subscribe");
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).op === "subscribe");
       expect(JSON.parse(resubscribe!).since).toBe("100");
 
       vi.useRealTimers();
