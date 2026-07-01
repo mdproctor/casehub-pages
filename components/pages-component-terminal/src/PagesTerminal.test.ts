@@ -9,6 +9,7 @@ const mockTerminal = {
   loadAddon: vi.fn(),
   onData: vi.fn(() => ({ dispose: vi.fn() })),
   onResize: vi.fn(() => ({ dispose: vi.fn() })),
+  paste: vi.fn(),
   rows: 24,
   cols: 80,
 };
@@ -363,6 +364,42 @@ describe("PagesTerminal", () => {
       container.appendChild(el);
 
       expect(MockWebSocket.instances[0]!.url).toBe("ws://host/ws/fixed-session");
+    });
+
+    it("paste delegates to terminal.paste for bracketed paste mode", () => {
+      mockTerminal.paste = vi.fn();
+      const el = createElement({ wsUrl: "ws://host/ws/{cols}/{rows}" });
+      container.appendChild(el);
+
+      (el as unknown as { paste: (t: string) => void }).paste("multi\nline\ntext");
+      expect(mockTerminal.paste).toHaveBeenCalledWith("multi\nline\ntext");
+    });
+
+    it("paste is no-op when terminal not initialised", () => {
+      const el = createElement();
+      container.appendChild(el);
+      // No configure() called — _terminal is undefined
+      expect(() => {
+        (el as unknown as { paste: (t: string) => void }).paste("text");
+      }).not.toThrow();
+    });
+  });
+
+  describe("public accessors", () => {
+    it("terminal getter returns xterm Terminal after configure", () => {
+      const el = createElement({ wsUrl: "ws://host/ws/{cols}/{rows}" });
+      container.appendChild(el);
+
+      const terminal = (el as unknown as { terminal: unknown }).terminal;
+      expect(terminal).toBe(mockTerminal);
+    });
+
+    it("terminal getter returns undefined before configure", () => {
+      const el = createElement();
+      container.appendChild(el);
+
+      const terminal = (el as unknown as { terminal: unknown }).terminal;
+      expect(terminal).toBeUndefined();
     });
   });
 });

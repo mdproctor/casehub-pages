@@ -50,6 +50,14 @@ export class PagesTerminal extends HTMLElement {
     }
   }
 
+  paste(text: string): void {
+    this._terminal?.paste(text);
+  }
+
+  get terminal(): Terminal | undefined {
+    return this._terminal;
+  }
+
   private _init(): void {
     const props = this._props;
     if (!props) return;
