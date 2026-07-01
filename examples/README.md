@@ -36,7 +36,7 @@ yarn  build
 This will:
 1. Generate `samples.json` with metadata about all examples
 2. Copy the built casehub-pages webapp from `../webapp/dist/`
-3. Copy all example files and supporting data
+3. Copy all sample files and supporting data
 4. Copy the HTML/CSS/JS files for the gallery interface
 
 The final output will be in the `dist/` directory.
@@ -53,7 +53,7 @@ yarn dev
 
 This will:
 - Start a development server at http://localhost:8080
-- Watch all example YAML files in `dashboards/`
+- Watch all sample YAML files in `samples/`
 - Automatically rebuild `samples.json` when examples change
 - Live reload the browser when changes are detected
 - Open the gallery in your default browser
@@ -82,13 +82,13 @@ The gallery consists of:
 - **`scripts/`** - Build scripts
   - `generate-samples.js` - Scans examples and creates samples.json
   - `copy-melviz.js` - Copies the built casehub-pages webapp
-  - `copy-dashboards.js` - Copies examples and supporting files
+  - `copy-samples.js` - Copies samples and supporting files
 
 ## Project Structure
 
 ```
 examples/
-├── dashboards/          # Example YAML files organized by category
+├── samples/             # Example YAML files organized by category
 ├── src/                 # Source files for the gallery
 │   ├── index.html
 │   ├── styles.css
@@ -102,9 +102,9 @@ examples/
 
 ## Adding New Examples
 
-Simply add new `.dash.yaml` or `.yml` files to the `dashboards/` directory. They will be automatically discovered when you run `npm run build`.
+Simply add new `.dash.yaml` or `.yml` files to the `samples/` directory. They will be automatically discovered when you run `npm run build`.
 
-The file structure in `dashboards/` will determine the category organization in the gallery.
+The file structure in `samples/` will determine the category organization in the gallery.
 
 ## License
 

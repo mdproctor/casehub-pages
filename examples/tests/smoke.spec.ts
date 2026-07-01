@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-interface Dashboard {
+interface Sample {
   name: string;
   path: string;
   category: string;
@@ -10,29 +10,29 @@ interface Dashboard {
 }
 
 interface SamplesData {
-  totalDashboards: number;
+  totalSamples: number;
   categories: Array<{
     category: string;
-    dashboards: Dashboard[];
+    samples: Sample[];
   }>;
 }
 
 const samplesPath = join(__dirname, "../dist/samples.json");
 const samples: SamplesData = JSON.parse(readFileSync(samplesPath, "utf-8"));
-const allDashboards = samples.categories.flatMap((c) => c.dashboards);
+const allSamples = samples.categories.flatMap((c) => c.samples);
 
-const KNOWN_ERROR_DASHBOARDS = new Set<string>();
+const KNOWN_ERROR_SAMPLES = new Set<string>();
 
-// Dashboards that fail to load due to external data or unsupported formats.
+// Samples that fail to load due to external data or unsupported formats.
 const EXPECTED_LOAD_FAILURES = new Set(["Prometheus Basic"]);
 
-async function openDashboard(page: import("@playwright/test").Page, name: string) {
+async function openSample(page: import("@playwright/test").Page, name: string) {
   await page.goto("/");
-  await page.locator("#dashboard-count").waitFor();
-  await page.locator(`.dashboard-item:has-text("${name}")`).first().click();
-  await page.locator("#dashboard-container").waitFor({ state: "visible" });
+  await page.locator("#sample-count").waitFor();
+  await page.locator(`.sample-item:has-text("${name}")`).first().click();
+  await page.locator("#sample-container").waitFor({ state: "visible" });
   await page.waitForFunction(() => {
-    const target = document.getElementById("dashboard-target");
+    const target = document.getElementById("sample-target");
     if (!target) return false;
     const skip = new Set(["page", "panel", "tabs", "sidebar", "accordion", "carousel", "stack", "pills", "html", "title", "markdown", "selector"]);
     for (const c of target.querySelectorAll("[data-component-type]")) {
@@ -47,7 +47,7 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
 
 async function getComponentStatuses(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
-    const target = document.getElementById("dashboard-target")!;
+    const target = document.getElementById("sample-target")!;
     const results: Array<{ type: string; id: string; status: string; detail: string }> = [];
 
     const containers = target.querySelectorAll("[data-component-type]");
@@ -110,49 +110,49 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
   });
 }
 
-test.describe("Smoke — all dashboards load without errors", () => {
-  test(`gallery has ${allDashboards.length} dashboards in samples.json`, () => {
-    expect(allDashboards.length).toBeGreaterThanOrEqual(30);
+test.describe("Smoke — all samples load without errors", () => {
+  test(`gallery has ${allSamples.length} samples in samples.json`, () => {
+    expect(allSamples.length).toBeGreaterThanOrEqual(30);
   });
 
-  for (const dashboard of allDashboards) {
-    if (EXPECTED_LOAD_FAILURES.has(dashboard.name)) {
-      test(`[known-fail] ${dashboard.name} — loads but may show errors (#35)`, async ({
+  for (const sample of allSamples) {
+    if (EXPECTED_LOAD_FAILURES.has(sample.name)) {
+      test(`[known-fail] ${sample.name} — loads but may show errors (#35)`, async ({
         page,
       }) => {
         const consoleErrors: string[] = [];
         page.on("pageerror", (err) => consoleErrors.push(err.message));
 
-        await openDashboard(page, dashboard.name);
-        const container = page.locator("#dashboard-container");
+        await openSample(page, sample.name);
+        const container = page.locator("#sample-container");
         await expect(container).toBeVisible();
-        expect(consoleErrors, `Console errors in "${dashboard.name}"`).toHaveLength(0);
+        expect(consoleErrors, `Console errors in "${sample.name}"`).toHaveLength(0);
       });
       continue;
     }
 
-    test(`${dashboard.name} — loads and renders without errors`, async ({ page }) => {
+    test(`${sample.name} — loads and renders without errors`, async ({ page }) => {
       const consoleErrors: string[] = [];
       page.on("pageerror", (err) => consoleErrors.push(err.message));
 
-      await openDashboard(page, dashboard.name);
+      await openSample(page, sample.name);
 
       const errorDiv = page.locator(
-        '#dashboard-target div:has-text("Error loading dashboard")',
+        '#sample-target div:has-text("Error loading sample")',
       );
       await expect(errorDiv).toHaveCount(0);
 
       const statuses = await getComponentStatuses(page);
 
-      if (KNOWN_ERROR_DASHBOARDS.has(dashboard.name)) {
-        // Known partial: just verify the dashboard loaded and has some components
+      if (KNOWN_ERROR_SAMPLES.has(sample.name)) {
+        // Known partial: just verify the sample loaded and has some components
         expect(statuses.length).toBeGreaterThan(0);
       } else {
         const errors = statuses.filter((s) => s.status === "ERROR");
         expect(errors).toHaveLength(0);
       }
 
-      expect(consoleErrors, `Console errors in "${dashboard.name}"`).toHaveLength(0);
+      expect(consoleErrors, `Console errors in "${sample.name}"`).toHaveLength(0);
     });
   }
 });

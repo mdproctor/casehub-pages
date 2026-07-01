@@ -1,19 +1,19 @@
 // Melviz Examples Gallery Application
 let samplesData = null;
-let currentDashboard = null;
+let currentSample = null;
 let currentSite = null;
 
 // DOM Elements
 const categoriesNav = document.getElementById('categories-nav');
 const searchInput = document.getElementById('search');
 const welcomeScreen = document.getElementById('welcome-screen');
-const dashboardContainer = document.getElementById('dashboard-container');
-const dashboardTarget = document.getElementById('dashboard-target');
-const currentDashboardName = document.getElementById('current-dashboard-name');
-const dashboardCount = document.getElementById('dashboard-count');
+const sampleContainer = document.getElementById('sample-container');
+const sampleTarget = document.getElementById('sample-target');
+const currentSampleName = document.getElementById('current-sample-name');
+const sampleCount = document.getElementById('sample-count');
 const statsContainer = document.getElementById('stats');
 const openNewWindowBtn = document.getElementById('open-new-window');
-const reloadDashboardBtn = document.getElementById('reload-dashboard');
+const reloadSampleBtn = document.getElementById('reload-sample');
 const sidebar = document.getElementById('sidebar');
 const sidebarToggleBtn = document.getElementById('sidebar-toggle');
 const codeSidebar = document.getElementById('code-sidebar');
@@ -34,20 +34,20 @@ async function loadSamples() {
 
 // Initialize the application
 function initializeApp() {
-    dashboardCount.textContent = `${samplesData.totalDashboards} dashboards`;
+    sampleCount.textContent = `${samplesData.totalSamples} samples`;
     renderCategories();
     renderStats();
     setupEventListeners();
 
-    // Check if there's a dashboard in the URL hash
+    // Check if there's a sample in the URL hash
     const hash = window.location.hash.slice(1);
     if (hash) {
-        const [category, dashboardPath] = hash.split('/');
-        loadDashboardFromHash(category, dashboardPath);
+        const [category, samplePath] = hash.split('/');
+        loadSampleFromHash(category, samplePath);
     }
 }
 
-// Render categories and dashboards
+// Render categories and samples
 function renderCategories() {
     categoriesNav.innerHTML = '';
 
@@ -65,19 +65,19 @@ function renderCategories() {
         const categoryItems = document.createElement('div');
         categoryItems.className = 'category-items';
 
-        category.dashboards.forEach(dashboard => {
-            const dashboardItem = document.createElement('div');
-            dashboardItem.className = 'dashboard-item';
-            dashboardItem.textContent = dashboard.name;
-            dashboardItem.dataset.path = dashboard.path;
-            dashboardItem.dataset.name = dashboard.name;
-            dashboardItem.dataset.category = category.category;
+        category.samples.forEach(sample => {
+            const sampleItem = document.createElement('div');
+            sampleItem.className = 'sample-item';
+            sampleItem.textContent = sample.name;
+            sampleItem.dataset.path = sample.path;
+            sampleItem.dataset.name = sample.name;
+            sampleItem.dataset.category = category.category;
 
-            dashboardItem.addEventListener('click', () => {
-                loadDashboard(dashboard);
+            sampleItem.addEventListener('click', () => {
+                loadSample(sample);
             });
 
-            categoryItems.appendChild(dashboardItem);
+            categoryItems.appendChild(sampleItem);
         });
 
         categoryHeader.addEventListener('click', () => {
@@ -93,12 +93,12 @@ function renderCategories() {
 // Render statistics
 function renderStats() {
     const categoryCount = samplesData.categories.length;
-    const totalDashboards = samplesData.totalDashboards;
+    const totalSamples = samplesData.totalSamples;
 
     statsContainer.innerHTML = `
         <div class="stat-card">
-            <h3>Total Dashboards</h3>
-            <div class="value">${totalDashboards}</div>
+            <h3>Total Samples</h3>
+            <div class="value">${totalSamples}</div>
         </div>
         <div class="stat-card">
             <h3>Categories</h3>
@@ -107,43 +107,43 @@ function renderStats() {
     `;
 }
 
-// Load a dashboard
-function loadDashboard(dashboard) {
-    currentDashboard = dashboard;
+// Load a sample
+function loadSample(sample) {
+    currentSample = sample;
     propertyOverrides = {};
 
     // Update active state
-    document.querySelectorAll('.dashboard-item').forEach(item => {
+    document.querySelectorAll('.sample-item').forEach(item => {
         item.classList.remove('active');
     });
-    const activeItem = document.querySelector(`[data-path="${dashboard.path}"]`);
+    const activeItem = document.querySelector(`[data-path="${sample.path}"]`);
     if (activeItem) {
         activeItem.classList.add('active');
     }
 
     // Update URL hash
-    window.location.hash = `${dashboard.category}/${encodeURIComponent(dashboard.path)}`;
+    window.location.hash = `${sample.category}/${encodeURIComponent(sample.path)}`;
 
-    // Show dashboard container
+    // Show sample container
     welcomeScreen.style.display = 'none';
-    dashboardContainer.style.display = 'flex';
-    currentDashboardName.textContent = dashboard.name;
+    sampleContainer.style.display = 'flex';
+    currentSampleName.textContent = sample.name;
 
-    // Load dashboard in target div
-    loadDashboardInTarget(dashboard.path);
+    // Load sample in target div
+    loadSampleInTarget(sample.path);
 
-    // Load dashboard source code
-    loadDashboardSourceCode(dashboard.path);
+    // Load sample source code
+    loadSampleSourceCode(sample.path);
 }
 
-// Load dashboard from URL hash
-function loadDashboardFromHash(category, dashboardPath) {
-    const decodedPath = decodeURIComponent(dashboardPath);
+// Load sample from URL hash
+function loadSampleFromHash(category, samplePath) {
+    const decodedPath = decodeURIComponent(samplePath);
 
     for (const cat of samplesData.categories) {
-        for (const dashboard of cat.dashboards) {
-            if (dashboard.path === decodedPath) {
-                loadDashboard(dashboard);
+        for (const sample of cat.samples) {
+            if (sample.path === decodedPath) {
+                loadSample(sample);
                 return;
             }
         }
@@ -166,7 +166,7 @@ function extractUrlProperties(yamlText) {
     return props;
 }
 
-function renderConfigBar(urlProps, dashboardPath) {
+function renderConfigBar(urlProps, samplePath) {
     const configBar = document.getElementById('config-bar');
     const keys = Object.keys(urlProps);
     if (keys.length === 0) {
@@ -192,7 +192,7 @@ function renderConfigBar(urlProps, dashboardPath) {
             if (val) propertyOverrides[input.dataset.prop] = val;
             else delete propertyOverrides[input.dataset.prop];
         }
-        loadDashboardInTarget(dashboardPath);
+        loadSampleInTarget(samplePath);
     });
     configBar.appendChild(applyBtn);
     if (Object.keys(propertyOverrides).length > 0) {
@@ -212,14 +212,14 @@ function applyPropertyOverrides(yamlText) {
     return result;
 }
 
-// Load dashboard in target div using pages loadSite
-async function loadDashboardInTarget(dashboardPath) {
+// Load sample in target div using pages loadSite
+async function loadSampleInTarget(samplePath) {
     try {
-        const response = await fetch(`dashboards/${dashboardPath}`);
+        const response = await fetch(`samples/${samplePath}`);
         let yamlText = await response.text();
 
         const urlProps = extractUrlProperties(yamlText);
-        renderConfigBar(urlProps, dashboardPath);
+        renderConfigBar(urlProps, samplePath);
         yamlText = applyPropertyOverrides(yamlText);
 
         if (currentSite) {
@@ -227,12 +227,12 @@ async function loadDashboardInTarget(dashboardPath) {
             currentSite = null;
         }
 
-        dashboardTarget.innerHTML = "";
-        dashboardTarget.className = "";
+        sampleTarget.innerHTML = "";
+        sampleTarget.className = "";
 
         // Resolve base URL for relative dataset paths (e.g. url: metrics)
-        const dashboardDir = dashboardPath.substring(0, dashboardPath.lastIndexOf('/') + 1);
-        const baseUrl = `${window.location.origin}/dashboards/${dashboardDir}`;
+        const sampleDir = samplePath.substring(0, samplePath.lastIndexOf('/') + 1);
+        const baseUrl = `${window.location.origin}/samples/${sampleDir}`;
 
         // Fallback fetch: when the real fetch fails (CORS, missing infra, unresolved
         // ${property} vars), serve mock Prometheus metrics so the gallery always shows
@@ -269,12 +269,12 @@ async function loadDashboardInTarget(dashboardPath) {
             }
         };
 
-        currentSite = await window.casehubPages.loadSite(dashboardTarget, yamlText, { baseUrl, fetch: galleryFetch });
+        currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, { baseUrl, fetch: galleryFetch });
     } catch (error) {
-        console.error('Error loading dashboard:', error);
-        dashboardTarget.innerHTML = `
+        console.error('Error loading sample:', error);
+        sampleTarget.innerHTML = `
             <div style="padding: 24px; color: #d32f2f; background: #fce4ec; border-radius: 8px; margin: 16px;">
-                <strong>Error loading dashboard</strong>
+                <strong>Error loading sample</strong>
                 <p style="margin-top: 8px; font-family: monospace; font-size: 13px;">${error.message || error}</p>
             </div>
         `;
@@ -286,17 +286,17 @@ let currentYamlSource = '';
 let currentTsSource = '';
 let showingTs = true; // default to TS
 
-// Load and display dashboard source code
-async function loadDashboardSourceCode(dashboardPath) {
+// Load and display sample source code
+async function loadSampleSourceCode(samplePath) {
     try {
-        const response = await fetch(`dashboards/${dashboardPath}`);
+        const response = await fetch(`samples/${samplePath}`);
         currentYamlSource = await response.text();
 
         // Try to load TS companion file
-        const tsPath = dashboardPath.replace(/\.(dash\.ya?ml|ya?ml|yaml)$/i, '.ts');
+        const tsPath = samplePath.replace(/\.(dash\.ya?ml|ya?ml|yaml)$/i, '.ts');
         currentTsSource = '';
         try {
-            const tsResponse = await fetch(`dashboards/${tsPath}`);
+            const tsResponse = await fetch(`samples/${tsPath}`);
             if (tsResponse.ok) {
                 currentTsSource = await tsResponse.text();
             }
@@ -315,7 +315,7 @@ async function loadDashboardSourceCode(dashboardPath) {
         updateSourceToggle();
         codeToggleBtn.style.display = 'flex';
     } catch (error) {
-        console.error('Error loading dashboard source:', error);
+        console.error('Error loading sample source:', error);
         sourceCodeElement.textContent = 'Error loading source code';
     }
 }
@@ -372,7 +372,7 @@ function setupEventListeners() {
     searchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
 
-        document.querySelectorAll('.dashboard-item').forEach(item => {
+        document.querySelectorAll('.sample-item').forEach(item => {
             const name = item.dataset.name.toLowerCase();
             const category = item.dataset.category.toLowerCase();
 
@@ -385,7 +385,7 @@ function setupEventListeners() {
 
         // Hide empty categories
         document.querySelectorAll('.category').forEach(category => {
-            const visibleItems = category.querySelectorAll('.dashboard-item:not(.hidden)');
+            const visibleItems = category.querySelectorAll('.sample-item:not(.hidden)');
             if (visibleItems.length === 0 && searchTerm !== '') {
                 category.style.display = 'none';
             } else {
@@ -396,16 +396,16 @@ function setupEventListeners() {
 
     // Open in new window
     openNewWindowBtn.addEventListener('click', () => {
-        if (currentDashboard) {
-            const url = `${window.location.origin}${window.location.pathname}#${currentDashboard.category}/${encodeURIComponent(currentDashboard.path)}`;
+        if (currentSample) {
+            const url = `${window.location.origin}${window.location.pathname}#${currentSample.category}/${encodeURIComponent(currentSample.path)}`;
             window.open(url, '_blank');
         }
     });
 
-    // Reload dashboard
-    reloadDashboardBtn.addEventListener('click', () => {
-        if (currentDashboard) {
-            loadDashboard(currentDashboard);
+    // Reload sample
+    reloadSampleBtn.addEventListener('click', () => {
+        if (currentSample) {
+            loadSample(currentSample);
         }
     });
 
@@ -413,14 +413,14 @@ function setupEventListeners() {
     window.addEventListener('hashchange', () => {
         const hash = window.location.hash.slice(1);
         if (hash) {
-            const [category, dashboardPath] = hash.split('/');
-            loadDashboardFromHash(category, dashboardPath);
+            const [category, samplePath] = hash.split('/');
+            loadSampleFromHash(category, samplePath);
         } else {
             welcomeScreen.style.display = 'flex';
-            dashboardContainer.style.display = 'none';
+            sampleContainer.style.display = 'none';
             codeToggleBtn.style.display = 'none';
-            sourceCodeElement.textContent = 'Select a dashboard to view its source code';
-            document.querySelectorAll('.dashboard-item').forEach(item => {
+            sourceCodeElement.textContent = 'Select a sample to view its source code';
+            document.querySelectorAll('.sample-item').forEach(item => {
                 item.classList.remove('active');
             });
         }

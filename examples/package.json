@@ -1,15 +1,15 @@
 {
   "name": "@casehubio/pages-examples",
   "version": "0.0.0",
-  "description": "CaseHub Pages Dashboard Examples Gallery",
+  "description": "CaseHub Pages Examples Gallery",
   "private": true,
   "scripts": {
     "clean": "rimraf dist",
     "generate-samples": "node scripts/generate-samples.js",
-    "copy-dashboards": "node scripts/copy-dashboards.js",
+    "copy-samples": "node scripts/copy-samples.js",
     "build:bundle": "webpack --env prod",
     "build:bundle:dev": "webpack --env dev",
-    "build": "yarn clean && yarn generate-samples && yarn build:bundle && yarn copy-dashboards",
+    "build": "yarn clean && yarn generate-samples && yarn build:bundle && yarn copy-samples",
     "typecheck": "tsc --noEmit",
     "serve": "npx http-server dist -c-1 -p 8080 -o",
     "dev": "node scripts/dev-server.js",
@@ -36,7 +36,7 @@
   },
   "keywords": [
     "casehub-pages",
-    "dashboard",
+    "samples",
     "examples"
   ],
   "license": "Apache-2.0"

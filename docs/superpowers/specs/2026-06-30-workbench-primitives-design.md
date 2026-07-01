@@ -397,7 +397,7 @@ Update ARC42STORIES.MD — all sections below were reverted to describe only imp
 - **§6 Runtime View** — re-add `pages-event` to event listener list (step 3); re-add `hostPanel` mount step (step 5)
 - **§10 Decisions** — re-add `pages-event` to custom events decision; re-add "Unified data + event bus" decision row
 - **§13 Glossary** — re-add `hostPanel` and `pages-event` entries
-- **Update PLATFORM.md** — casehub-pages capability ownership entry per #78
+- **Update PLATFORM.md** — casehub-pages capability ownership entry updated per #78 to reflect full web application framework scope
 
 ## Design Constraints Verified
 
@@ -406,7 +406,7 @@ Update ARC42STORIES.MD — all sections below were reverted to describe only imp
 - **Panels are custom Web Components:** `hostPanel` hosts them, doesn't replace them
 - **Docking is preconfigured:** declared in component tree, not user-draggable (drag-and-drop is a separate future epic)
 - **Cross-app reusable:** DraftHouse, Claudony, DevTown, and future apps can use the same primitives
-- **Platform coherence:** casehub-pages capability ownership entry in PLATFORM.md to be updated per #78 — from "YAML dashboard rendering" to reflect full framework scope
+- **Platform coherence:** casehub-pages capability ownership entry in PLATFORM.md updated per #78 — reflects full web application framework scope (layouts, data pipelines, component hosting, forms, event bus, workbench shells)
 
 ## Out of Scope
 

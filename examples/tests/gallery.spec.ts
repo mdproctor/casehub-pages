@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Gallery infrastructure", () => {
-  test("loads sidebar with dashboard count", async ({ page }) => {
+  test("loads sidebar with sample count", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("#dashboard-count")).toHaveText(/\d+ dashboards/);
+    await expect(page.locator("#sample-count")).toHaveText(/\d+ samples/);
   });
 
   test("shows categories in sidebar", async ({ page }) => {
@@ -15,27 +15,27 @@ test.describe("Gallery infrastructure", () => {
   test("shows welcome screen initially", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("#welcome-screen")).toBeVisible();
-    await expect(page.locator("#dashboard-container")).not.toBeVisible();
+    await expect(page.locator("#sample-container")).not.toBeVisible();
   });
 
-  test("search filters dashboards", async ({ page }) => {
+  test("search filters samples", async ({ page }) => {
     await page.goto("/");
     await page.fill("#search", "Charts");
-    const visible = page.locator(".dashboard-item:not(.hidden)");
+    const visible = page.locator(".sample-item:not(.hidden)");
     await expect(visible.first()).toBeVisible();
   });
 });
 
 /**
- * Helper: click a dashboard by name and wait for loadSite to complete.
+ * Helper: click a sample by name and wait for loadSite to complete.
  */
-async function openDashboard(page: import("@playwright/test").Page, name: string) {
+async function openSample(page: import("@playwright/test").Page, name: string) {
   await page.goto("/");
-  await page.locator("#dashboard-count").waitFor();
-  await page.locator(`.dashboard-item:has-text("${name}")`).first().click();
-  await page.locator("#dashboard-container").waitFor({ state: "visible" });
+  await page.locator("#sample-count").waitFor();
+  await page.locator(`.sample-item:has-text("${name}")`).first().click();
+  await page.locator("#sample-container").waitFor({ state: "visible" });
   await page.waitForFunction(() => {
-    const target = document.getElementById("dashboard-target");
+    const target = document.getElementById("sample-target");
     if (!target) return false;
     const skip = new Set(["page", "panel", "tabs", "sidebar", "accordion", "carousel", "stack", "pills", "html", "title", "markdown", "selector"]);
     for (const c of target.querySelectorAll("[data-component-type]")) {
@@ -53,7 +53,7 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
  */
 async function countRenderedCharts(page: import("@playwright/test").Page): Promise<number> {
   return page.evaluate(() => {
-    const target = document.getElementById("dashboard-target")!;
+    const target = document.getElementById("sample-target")!;
     let count = 0;
     const charts = target.querySelectorAll(
       "pages-bar-chart, pages-line-chart, pages-area-chart, pages-pie-chart, " +
@@ -71,7 +71,7 @@ async function countRenderedCharts(page: import("@playwright/test").Page): Promi
  */
 async function getComponentStatuses(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
-    const target = document.getElementById("dashboard-target")!;
+    const target = document.getElementById("sample-target")!;
     const results: Array<{ type: string; id: string; status: string; detail: string }> = [];
 
     const containers = target.querySelectorAll("[data-component-type]");
@@ -116,7 +116,7 @@ async function getComponentStatuses(page: import("@playwright/test").Page) {
 
 test.describe("Charts", () => {
   test("renders bar charts on default tab", async ({ page }) => {
-    await openDashboard(page, "Charts");
+    await openSample(page, "Charts");
 
     const charts = await countRenderedCharts(page);
     expect(charts).toBeGreaterThanOrEqual(4);
@@ -125,7 +125,7 @@ test.describe("Charts", () => {
 
 test.describe("Filter", () => {
   test("renders selector and bar chart", async ({ page }) => {
-    await openDashboard(page, "Filter");
+    await openSample(page, "Filter");
     const statuses = await getComponentStatuses(page);
 
     const selector = statuses.find(s => s.type === "selector");
@@ -138,7 +138,7 @@ test.describe("Filter", () => {
 
 test.describe("Selectors and Filters", () => {
   test("renders selector and chart on default tab", async ({ page }) => {
-    await openDashboard(page, "Selectors and Filters");
+    await openSample(page, "Selectors and Filters");
     const statuses = await getComponentStatuses(page);
 
     const selector = statuses.find(s => s.type === "selector");
@@ -151,7 +151,7 @@ test.describe("Selectors and Filters", () => {
 
 test.describe("DarkMode", () => {
   test("renders bar chart with data", async ({ page }) => {
-    await openDashboard(page, "DarkMode");
+    await openSample(page, "DarkMode");
     const charts = await countRenderedCharts(page);
     expect(charts).toBe(1);
   });
@@ -159,7 +159,7 @@ test.describe("DarkMode", () => {
 
 test.describe("Decal Pattern", () => {
   test("renders bar chart", async ({ page }) => {
-    await openDashboard(page, "Decal Pattern");
+    await openSample(page, "Decal Pattern");
     const charts = await countRenderedCharts(page);
     expect(charts).toBe(1);
   });
@@ -167,7 +167,7 @@ test.describe("Decal Pattern", () => {
 
 test.describe("Accumulate Flag", () => {
   test("renders timeseries chart", async ({ page }) => {
-    await openDashboard(page, "Accumulate Flag");
+    await openSample(page, "Accumulate Flag");
     const charts = await countRenderedCharts(page);
     expect(charts).toBe(1);
   });
@@ -175,7 +175,7 @@ test.describe("Accumulate Flag", () => {
 
 test.describe("Histogram", () => {
   test("renders bar chart with histogram data", async ({ page }) => {
-    await openDashboard(page, "Histogram");
+    await openSample(page, "Histogram");
     const statuses = await getComponentStatuses(page);
 
     const chart = statuses.find(s => s.type === "bar-chart");
@@ -185,7 +185,7 @@ test.describe("Histogram", () => {
 
 test.describe("Most Spoken Languages", () => {
   test("renders HTML title, bar chart, and table", async ({ page }) => {
-    await openDashboard(page, "Most Spoken Languages");
+    await openSample(page, "Most Spoken Languages");
     const statuses = await getComponentStatuses(page);
 
     const html = statuses.find(s => s.type === "html");
@@ -201,7 +201,7 @@ test.describe("Most Spoken Languages", () => {
 
 test.describe("Global Lookup Operation", () => {
   test("renders charts with global default lookup", async ({ page }) => {
-    await openDashboard(page, "Global Lookup Operation");
+    await openSample(page, "Global Lookup Operation");
     const charts = await countRenderedCharts(page);
     expect(charts).toBeGreaterThanOrEqual(1);
 
@@ -214,7 +214,7 @@ test.describe("Global Lookup Operation", () => {
 
 test.describe("Column with rows", () => {
   test("renders all three chart types from nested layout", async ({ page }) => {
-    await openDashboard(page, "Column with rows");
+    await openSample(page, "Column with rows");
     const charts = await countRenderedCharts(page);
     expect(charts).toBe(3); // bar-chart, pie-chart, meter
   });
@@ -222,7 +222,7 @@ test.describe("Column with rows", () => {
 
 test.describe("Global Column settings", () => {
   test("renders charts with global defaults and inline content", async ({ page }) => {
-    await openDashboard(page, "Global Column settings");
+    await openSample(page, "Global Column settings");
     const statuses = await getComponentStatuses(page);
 
     const unknowns = statuses.filter(s => s.status === "NO_ELEMENT" && s.type === "unknown");
@@ -238,7 +238,7 @@ test.describe("Global Column settings", () => {
 
 test.describe("Github Repositories (external API + JSONata)", () => {
   test("renders bar chart and table with live GitHub data", async ({ page }) => {
-    await openDashboard(page, "Github Repositories");
+    await openSample(page, "Github Repositories");
     const statuses = await getComponentStatuses(page);
 
     const chart = statuses.find(s => s.type === "bar-chart");
@@ -251,7 +251,7 @@ test.describe("Github Repositories (external API + JSONata)", () => {
 
 test.describe("FIFA 2022 Goals (external API + metrics)", () => {
   test("renders metrics with substituted titles", async ({ page }) => {
-    await openDashboard(page, "FIFA 2022 Goals");
+    await openSample(page, "FIFA 2022 Goals");
     const statuses = await getComponentStatuses(page);
 
     const metrics = statuses.filter(s => s.type === "metric");
@@ -269,15 +269,15 @@ test.describe("FIFA 2022 Goals (external API + metrics)", () => {
 
 test.describe("Google Spreadsheet (external API)", () => {
   test("renders chart and table", async ({ page }) => {
-    await openDashboard(page, "Google Spreadsheet");
+    await openSample(page, "Google Spreadsheet");
     const charts = await countRenderedCharts(page);
     expect(charts).toBeGreaterThanOrEqual(1);
   });
 });
 
-test.describe("Table dashboard (external API)", () => {
+test.describe("Table sample (external API)", () => {
   test("renders bar chart and table from GitHub Gists", async ({ page }) => {
-    await openDashboard(page, "Table");
+    await openSample(page, "Table");
     const statuses = await getComponentStatuses(page);
 
     const dataComponents = statuses.filter(s =>

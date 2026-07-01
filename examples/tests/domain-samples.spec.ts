@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
 
-async function openDashboard(page: import("@playwright/test").Page, name: string) {
+async function openSample(page: import("@playwright/test").Page, name: string) {
   await page.goto("/");
-  await page.locator("#dashboard-count").waitFor();
-  await page.locator(`.dashboard-item:has-text("${name}")`).first().click();
-  await page.locator("#dashboard-container").waitFor({ state: "visible" });
+  await page.locator("#sample-count").waitFor();
+  await page.locator(`.sample-item:has-text("${name}")`).first().click();
+  await page.locator("#sample-container").waitFor({ state: "visible" });
   await page.waitForFunction(() => {
-    const target = document.getElementById("dashboard-target");
+    const target = document.getElementById("sample-target");
     if (!target) return false;
     const skip = new Set(["page", "panel", "tabs", "sidebar", "accordion", "carousel", "stack", "pills", "html", "title", "markdown", "selector"]);
     for (const c of target.querySelectorAll("[data-component-type]")) {
@@ -21,7 +21,7 @@ async function openDashboard(page: import("@playwright/test").Page, name: string
 
 async function getComponentStatuses(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
-    const target = document.getElementById("dashboard-target")!;
+    const target = document.getElementById("sample-target")!;
     const results: Array<{ type: string; id: string; status: string; detail: string }> = [];
 
     const containers = target.querySelectorAll("[data-component-type]");
@@ -108,7 +108,7 @@ async function getChartDataInfo(
   selector: string,
 ): Promise<ChartDataInfo[]> {
   return page.evaluate((sel) => {
-    const target = document.getElementById("dashboard-target")!;
+    const target = document.getElementById("sample-target")!;
     const elements = target.querySelectorAll(sel);
     const results: ChartDataInfo[] = [];
 
@@ -147,7 +147,7 @@ async function getChartDataInfo(
 
 test.describe("Sales Dashboard", () => {
   test("default page renders metrics, charts, and selector", async ({ page }) => {
-    await openDashboard(page, "Sales Dashboard");
+    await openSample(page, "Sales Dashboard");
     const statuses = await getComponentStatuses(page);
 
     const metrics = statuses.filter((s) => s.type === "metric");
@@ -165,7 +165,7 @@ test.describe("Sales Dashboard", () => {
   });
 
   test("sidebar navigation has 4 entries and Pipeline page works", async ({ page }) => {
-    await openDashboard(page, "Sales Dashboard");
+    await openSample(page, "Sales Dashboard");
 
     const sidebarButtons = page.locator(".pages-sidebar button[data-slot]");
     const navCount = await sidebarButtons.count();
@@ -173,7 +173,7 @@ test.describe("Sales Dashboard", () => {
 
     await sidebarButtons.filter({ hasText: "Pipeline" }).click();
     await page.waitForFunction(() => {
-      const target = document.getElementById("dashboard-target");
+      const target = document.getElementById("sample-target");
       if (!target) return false;
       const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
@@ -185,7 +185,7 @@ test.describe("Sales Dashboard", () => {
   });
 
   test("no errors on any component", async ({ page }) => {
-    await openDashboard(page, "Sales Dashboard");
+    await openSample(page, "Sales Dashboard");
     const statuses = await getComponentStatuses(page);
     const errors = statuses.filter((s) => s.status === "ERROR");
     expect(errors).toHaveLength(0);
@@ -198,7 +198,7 @@ test.describe("Sales Dashboard", () => {
 
 test.describe("IoT Fleet Monitor", () => {
   test("default page renders metrics, device table, and meters", async ({ page }) => {
-    await openDashboard(page, "Fleet Monitor");
+    await openSample(page, "Fleet Monitor");
     const statuses = await getComponentStatuses(page);
 
     const metrics = statuses.filter((s) => s.type === "metric");
@@ -214,7 +214,7 @@ test.describe("IoT Fleet Monitor", () => {
   });
 
   test("meter gauges have numeric data and non-zero canvas", async ({ page }) => {
-    await openDashboard(page, "Fleet Monitor");
+    await openSample(page, "Fleet Monitor");
     const meterInfo = await getChartDataInfo(page, "pages-meter");
 
     expect(meterInfo.length).toBe(3);
@@ -226,10 +226,10 @@ test.describe("IoT Fleet Monitor", () => {
   });
 
   test("dark mode is applied", async ({ page }) => {
-    await openDashboard(page, "Fleet Monitor");
+    await openSample(page, "Fleet Monitor");
 
     const isDark = await page.evaluate(() => {
-      const target = document.getElementById("dashboard-target");
+      const target = document.getElementById("sample-target");
       if (!target) return false;
       const bg = getComputedStyle(target).backgroundColor;
       const match = bg.match(/\d+/g);
@@ -241,12 +241,12 @@ test.describe("IoT Fleet Monitor", () => {
   });
 
   test("sidebar nav switches to Sensor History with area chart", async ({ page }) => {
-    await openDashboard(page, "Fleet Monitor");
+    await openSample(page, "Fleet Monitor");
 
     const sidebarButtons = page.locator(".pages-sidebar button[data-slot]");
     await sidebarButtons.filter({ hasText: "Sensor History" }).click();
     await page.waitForFunction(() => {
-      const target = document.getElementById("dashboard-target");
+      const target = document.getElementById("sample-target");
       if (!target) return false;
       const chart = target.querySelector("pages-area-chart") as HTMLElement & { dataSet?: unknown };
       return !!chart?.dataSet;
@@ -259,7 +259,7 @@ test.describe("IoT Fleet Monitor", () => {
   });
 
   test("no errors on any component", async ({ page }) => {
-    await openDashboard(page, "Fleet Monitor");
+    await openSample(page, "Fleet Monitor");
     const statuses = await getComponentStatuses(page);
     const errors = statuses.filter((s) => s.status === "ERROR");
     expect(errors).toHaveLength(0);
@@ -272,7 +272,7 @@ test.describe("IoT Fleet Monitor", () => {
 
 test.describe("Workforce Analytics", () => {
   test("single page renders selector, panels with charts, and table", async ({ page }) => {
-    await openDashboard(page, "Workforce Analytics");
+    await openSample(page, "Workforce Analytics");
     const statuses = await getComponentStatuses(page);
 
     const selector = statuses.find((s) => s.type === "selector");
@@ -292,7 +292,7 @@ test.describe("Workforce Analytics", () => {
   });
 
   test("pie charts have numeric value columns, not duplicate labels", async ({ page }) => {
-    await openDashboard(page, "Workforce Analytics");
+    await openSample(page, "Workforce Analytics");
     const pies = await getChartDataInfo(page, "pages-pie-chart");
 
     expect(pies.length).toBe(2);
@@ -305,7 +305,7 @@ test.describe("Workforce Analytics", () => {
   });
 
   test("bar charts have numeric value columns", async ({ page }) => {
-    await openDashboard(page, "Workforce Analytics");
+    await openSample(page, "Workforce Analytics");
     const bars = await getChartDataInfo(page, "pages-bar-chart");
 
     expect(bars.length).toBeGreaterThanOrEqual(2);
@@ -316,7 +316,7 @@ test.describe("Workforce Analytics", () => {
   });
 
   test("scatter chart has numeric x and y columns", async ({ page }) => {
-    await openDashboard(page, "Workforce Analytics");
+    await openSample(page, "Workforce Analytics");
     const scatters = await getChartDataInfo(page, "pages-scatter-chart");
 
     expect(scatters.length).toBe(1);
@@ -328,7 +328,7 @@ test.describe("Workforce Analytics", () => {
   });
 
   test("no errors on any component", async ({ page }) => {
-    await openDashboard(page, "Workforce Analytics");
+    await openSample(page, "Workforce Analytics");
     const statuses = await getComponentStatuses(page);
     const errors = statuses.filter((s) => s.status === "ERROR");
     expect(errors).toHaveLength(0);
@@ -341,7 +341,7 @@ test.describe("Workforce Analytics", () => {
 
 test.describe("Patient Tracker", () => {
   test("default tab renders metrics, selector, charts, and markdown", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
     const statuses = await getComponentStatuses(page);
 
     const metrics = statuses.filter((s) => s.type === "metric");
@@ -360,7 +360,7 @@ test.describe("Patient Tracker", () => {
   });
 
   test("markdown has clinical content, not DevOps", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
 
     const markdownText = await page.evaluate(() => {
       const containers = document.querySelectorAll("[data-component-type='markdown']");
@@ -373,12 +373,12 @@ test.describe("Patient Tracker", () => {
   });
 
   test("tab nav switches to Patient Detail with table and form", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
 
     const tabButtons = page.locator("[data-component-type='tabs'] button");
     await tabButtons.filter({ hasText: "Patient Detail" }).click();
     await page.waitForFunction(() => {
-      const target = document.getElementById("dashboard-target");
+      const target = document.getElementById("sample-target");
       if (!target) return false;
       const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
@@ -390,14 +390,14 @@ test.describe("Patient Tracker", () => {
   });
 
   test("no errors on any component", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
     const statuses = await getComponentStatuses(page);
     const errors = statuses.filter((s) => s.status === "ERROR");
     expect(errors).toHaveLength(0);
   });
 
   test("new components render: badge, alert, action-button", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
     let statuses = await getComponentStatuses(page);
 
     // Badge should render on Ward Overview
@@ -423,7 +423,7 @@ test.describe("Patient Tracker", () => {
   });
 
   test("content interpolation in markdown panel updates with filter", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
 
     // Initially, markdown should show total patient count
     const initialMarkdown = await page.evaluate(() => {
@@ -451,7 +451,7 @@ test.describe("Patient Tracker", () => {
   });
 
   test("alert component renders", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
 
     // Alert component should be present
     const alertExists = await page.evaluate(() => {
@@ -462,7 +462,7 @@ test.describe("Patient Tracker", () => {
   });
 
   test("row styling configuration is present on vitals table", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
 
     // Navigate to Vitals Monitor tab
     const tabButtons = page.locator("[data-component-type='tabs'] button");
@@ -482,7 +482,7 @@ test.describe("Patient Tracker", () => {
   });
 
   test("visibleWhen on Patient Detail table evaluates filter expression", async ({ page }) => {
-    await openDashboard(page, "Patient Tracker");
+    await openSample(page, "Patient Tracker");
 
     // Navigate to Patient Detail tab
     const tabButtons = page.locator("[data-component-type='tabs'] button");

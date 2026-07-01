@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Development server with hot reload for dashboard YAML files
+ * Development server with hot reload for sample YAML files
  *
  * This script:
- * 1. Watches dashboard YAML files for changes
- * 2. Rebuilds samples.json and copies dashboards on change
+ * 1. Watches sample YAML files for changes
+ * 2. Rebuilds samples.json and copies samples on change
  * 3. Auto-reloads the browser using BrowserSync
  */
 
@@ -15,16 +15,16 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-const DASHBOARDS_DIR = path.join(__dirname, '../dashboards');
+const SAMPLES_DIR = path.join(__dirname, '../samples');
 const DIST_DIR = path.join(__dirname, '../dist');
 const WATCH_PATTERNS = [
-  path.join(DASHBOARDS_DIR, '**/*.dash.yaml'),
-  path.join(DASHBOARDS_DIR, '**/*.dash.yml'),
-  path.join(DASHBOARDS_DIR, '**/*.yml'),
-  path.join(DASHBOARDS_DIR, '**/*.yaml')
+  path.join(SAMPLES_DIR, '**/*.dash.yaml'),
+  path.join(SAMPLES_DIR, '**/*.dash.yml'),
+  path.join(SAMPLES_DIR, '**/*.yml'),
+  path.join(SAMPLES_DIR, '**/*.yaml')
 ];
 
-console.log('🚀 Starting Melviz Dashboard Development Server...\n');
+console.log('🚀 Starting Melviz Development Server...\n');
 
 // Ensure dist directory exists
 if (!fs.existsSync(DIST_DIR)) {
@@ -32,15 +32,15 @@ if (!fs.existsSync(DIST_DIR)) {
   execSync('npm run build', { stdio: 'inherit' });
 }
 
-// Function to rebuild dashboards
+// Function to rebuild samples
 function rebuild() {
-  console.log('🔄 Dashboard changed, rebuilding...');
+  console.log('🔄 Sample changed, rebuilding...');
   const startTime = Date.now();
 
   try {
-    // Regenerate samples.json and copy dashboards
+    // Regenerate samples.json and copy samples
     execSync('npm run generate-samples', { stdio: 'pipe' });
-    execSync('npm run copy-dashboards', { stdio: 'pipe' });
+    execSync('npm run copy-samples', { stdio: 'pipe' });
 
     const duration = Date.now() - startTime;
     console.log(`✅ Rebuild complete (${duration}ms)`);
@@ -76,11 +76,11 @@ browserSync.init({
   console.log('\n✨ Development server ready!');
   console.log(`   Local: http://localhost:8080`);
   console.log(`   UI: http://localhost:8081`);
-  console.log(`\n👀 Watching dashboard files in: ${DASHBOARDS_DIR}`);
+  console.log(`\n👀 Watching sample files in: ${SAMPLES_DIR}`);
   console.log('   Edit any .dash.yaml file to see changes instantly!\n');
 });
 
-// Watch dashboard files
+// Watch sample files
 const watcher = chokidar.watch(WATCH_PATTERNS, {
   ignored: /(^|[\/\\])\../,
   persistent: true,
@@ -89,15 +89,15 @@ const watcher = chokidar.watch(WATCH_PATTERNS, {
 
 watcher
   .on('add', (filePath) => {
-    console.log(`📄 Dashboard added: ${path.relative(DASHBOARDS_DIR, filePath)}`);
+    console.log(`📄 Sample added: ${path.relative(SAMPLES_DIR, filePath)}`);
     rebuild();
   })
   .on('change', (filePath) => {
-    console.log(`📝 Dashboard modified: ${path.relative(DASHBOARDS_DIR, filePath)}`);
+    console.log(`📝 Sample modified: ${path.relative(SAMPLES_DIR, filePath)}`);
     rebuild();
   })
   .on('unlink', (filePath) => {
-    console.log(`🗑️  Dashboard deleted: ${path.relative(DASHBOARDS_DIR, filePath)}`);
+    console.log(`🗑️  Sample deleted: ${path.relative(SAMPLES_DIR, filePath)}`);
     rebuild();
   })
   .on('error', (error) => {

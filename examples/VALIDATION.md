@@ -1,10 +1,10 @@
-# Dashboard Validation Matrix
+# Sample Validation Matrix
 
 Generated: 2026-06-17
 
 ## Results
 
-| Dashboard | Status | Data Components | Content | Issues | Notes |
+| Sample | Status | Data Components | Content | Issues | Notes |
 |-----------|--------|----------------|---------|--------|-------|
 | Accumulate Flag | Full | 1 | 0 | 0 | |
 | Ansible Metrics | Full | 16 | 4 | 0 | |
@@ -40,7 +40,7 @@ Generated: 2026-06-17
 
 ## Summary
 
-- **Total:** 31 dashboards
+- **Total:** 31 samples
 - **Full:** 28 (90%)
 - **Partial:** 2 (Kitchensink, Prometheus HTTP Requests)
 - **Fails:** 1 (Prometheus Basic)

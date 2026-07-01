@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const dashboardsSourceDir = path.join(__dirname, '../dashboards');
+const samplesSourceDir = path.join(__dirname, '../samples');
 const samplesFile = path.join(__dirname, '../samples.json');
 const targetDir = path.join(__dirname, '../dist');
-const dashboardsTargetDir = path.join(targetDir, 'dashboards');
+const samplesTargetDir = path.join(targetDir, 'samples');
 const srcDir = path.join(__dirname, '../src');
 
 // Helper function to recursively copy directory
@@ -25,9 +25,9 @@ function copyRecursive(src, dest) {
   }
 }
 
-// Copy dashboards directory
-console.log('Copying dashboards...');
-copyRecursive(dashboardsSourceDir, dashboardsTargetDir);
+// Copy samples directory
+console.log('Copying samples...');
+copyRecursive(samplesSourceDir, samplesTargetDir);
 
 // Copy samples.json
 console.log('Copying samples.json...');
@@ -58,16 +58,16 @@ if (fs.existsSync(fixturesDir)) {
   copyRecursive(fixturesDir, path.join(targetDir, 'tests/fixtures'));
 }
 
-// Copy mock data to expected endpoint paths for dashboards that reference local APIs
+// Copy mock data to expected endpoint paths for samples that reference local APIs
 const mockEndpoints = {
   'mock-data/quarkus-metrics.txt': 'data/quarkus/metrics',
   'mock-data/jvm-history.json': 'data/quarkus/history.json',
-  'mock-data/jupyterhub-metrics.txt': 'dashboards/jupyterhub/metrics/metrics',
+  'mock-data/jupyterhub-metrics.txt': 'samples/jupyterhub/metrics/metrics',
   'mock-data/ansible-metrics.txt': 'data/metrics',
   'mock-data/triton-metrics.txt': 'data/triton/metrics',
   'mock-data/podman-images.json': 'data/podman/images/json',
   'mock-data/podman-containers.json': 'data/podman/containers/json',
-  'dashboards/kepler/data/kepler/metrics': 'data/kepler/metrics',
+  'samples/kepler/data/kepler/metrics': 'data/kepler/metrics',
 };
 
 for (const [src, dest] of Object.entries(mockEndpoints)) {

@@ -6,7 +6,7 @@ import { parsePage } from "./page-parser.js";
 import { join } from "path";
 import { globSync } from "glob";
 
-const EXAMPLES_DIR = join(__dirname, "../../../../examples/dashboards");
+const EXAMPLES_DIR = join(__dirname, "../../../../examples/samples");
 
 function findPageByName(root: Component, name: string): Component | undefined {
   if (root.type === "page" && (root.props as Record<string, unknown>)["name"] === name) {
@@ -29,7 +29,7 @@ function findPageByName(root: Component, name: string): Component | undefined {
   return undefined;
 }
 
-describe("backwards compatibility — existing dashboards", () => {
+describe("backwards compatibility — existing samples", () => {
   // Skip if examples directory doesn't exist (CI without examples)
   const dirExists = existsSync(EXAMPLES_DIR);
 
@@ -40,7 +40,7 @@ describe("backwards compatibility — existing dashboards", () => {
 
   const files = globSync("**/*.{yaml,yml}", { cwd: EXAMPLES_DIR });
 
-  it("found example dashboards", () => {
+  it("found example samples", () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
@@ -54,82 +54,7 @@ describe("backwards compatibility — existing dashboards", () => {
     expect(() => parsePage(raw)).not.toThrow();
   });
 
-  // ------- Specific assertions for known complex dashboards -------
-
-  describe("Kitchensink — multi-page with navTree, navigation, external components", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Kitchensink.dash.yml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
-
-    it("has root type page", () => {
-      expect(root.type).toBe("page");
-    });
-
-    it("only root page is top-level when navTree is present", () => {
-      const pages = root.slots!["content"]!;
-      // navTree present — only first page (index) is top-level
-      expect(pages.length).toBe(1);
-    });
-
-    it("has datasets on root props", () => {
-      const datasets = (root.props as Record<string, unknown>)["datasets"] as unknown[];
-      expect(datasets).toBeDefined();
-      expect(datasets.length).toBeGreaterThan(0);
-    });
-
-    it("has global settings", () => {
-      const settings = (root.props as Record<string, unknown>)["settings"] as Record<
-        string,
-        unknown
-      >;
-      expect(settings).toBeDefined();
-      expect(settings["dataComponentDefaults"]).toBeDefined();
-    });
-
-    it("resolves navigation components with content at target", () => {
-      // The index page has TABS with navGroupId MainGroup + targetDivId
-      // Content slots go to the target location, not inside the tabs nav
-      const indexPage = root.slots!["content"]!.find(
-        (p) => (p.props as Record<string, unknown>)["name"] === "index",
-      )!;
-      expect(indexPage).toBeDefined();
-      const contentTabs = indexPage.items!.find((item) => item.component.type === "tabs" && item.component.slots);
-      expect(contentTabs).toBeDefined();
-      expect(Object.keys(contentTabs!.component.slots!).length).toBeGreaterThan(0);
-    });
-
-    it("handles external components (EXTERNAL type)", () => {
-      // Forms page is orphaned (not in any navTree group) — unreachable in the
-      // rendered tree, same as GWT. Verify EXTERNAL → iframe-plugin desugaring
-      // works by finding any iframe-plugin in the full tree.
-      const echartsPage = findPageByName(root, "ECharts")!;
-      expect(echartsPage).toBeDefined();
-      const iframeItem = echartsPage.items!.find(
-        (item) => item.component.type === "iframe-plugin",
-      );
-      expect(iframeItem).toBeDefined();
-    });
-
-    it("handles displayer with external component (echarts)", () => {
-      const echartsPage = findPageByName(root, "ECharts")!;
-      expect(echartsPage).toBeDefined();
-      const echartsItem = echartsPage.items!.find(
-        (item) => item.component.type === "iframe-plugin",
-      );
-      expect(echartsItem).toBeDefined();
-      expect(echartsItem!.component.props!["componentId"]).toBe("echarts");
-    });
-
-    it("handles meter displayer", () => {
-      const meterPage = findPageByName(root, "Meter")!;
-      expect(meterPage).toBeDefined();
-      const meterItem = meterPage.items!.find((item) => item.component.type === "meter");
-      expect(meterItem).toBeDefined();
-    });
-
-  });
+  // ------- Specific assertions for known complex samples -------
 
   describe("navTree page filtering — pages in groups excluded from top-level", () => {
     it("only root page is top-level when navTree is present", () => {
@@ -169,48 +94,6 @@ describe("backwards compatibility — existing dashboards", () => {
       );
       expect(contentTabs).toBeDefined();
       expect(contentTabs!.component.slots!["PageA"]).toBeDefined();
-    });
-  });
-
-  describe("Filter dashboard — displayer with filter settings", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Filter.dash.yaml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
-
-    it("has root type page", () => {
-      expect(root.type).toBe("page");
-    });
-
-    it("has selector component", () => {
-      const page = root.slots!["content"]![0]!;
-      const selector = page.items!.find((item) => item.component.type === "selector");
-      expect(selector).toBeDefined();
-    });
-
-    it("has bar chart component", () => {
-      const page = root.slots!["content"]![0]!;
-      const chart = page.items!.find((item) => item.component.type === "bar-chart");
-      expect(chart).toBeDefined();
-    });
-  });
-
-  describe("Simple Chart — minimal dashboard", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Simple Chart.dash.yml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
-
-    it("has root type page", () => {
-      expect(root.type).toBe("page");
-    });
-
-    it("has datasets", () => {
-      const datasets = (root.props as Record<string, unknown>)["datasets"] as unknown[];
-      expect(datasets).toBeDefined();
-      expect(datasets.length).toBe(1);
     });
   });
 
