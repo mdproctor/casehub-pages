@@ -40,6 +40,7 @@ import { ContextManager } from "./context-wiring.js";
 import { ActionExecutor } from "./action.js";
 import type { PagesActionCompleteDetail } from "./action.js";
 import type { PagesActionRequestDetail } from "@casehubio/pages-component/dist/model/action-types.js";
+import type { DevAuthConfig } from "./dev-auth.js";
 // --- Event detail interfaces for typed CustomEvent access ---
 
 interface DataRequestDetail {
@@ -101,6 +102,8 @@ export interface SiteOptions {
   readonly layout?: LayoutState;
   readonly layoutStore?: LayoutStore;
   readonly layoutKey?: string;
+  readonly layoutSaveDelayMs?: number;
+  readonly devAuth?: DevAuthConfig;
 }
 
 export async function loadSite(
@@ -877,7 +880,7 @@ export async function loadSite(
     layoutSaveTimer = setTimeout(() => {
       layoutSaveTimer = undefined;
       options!.layoutStore!.save(options!.layoutKey!, captureLayout()).catch(() => {});
-    }, 500);
+    }, options?.layoutSaveDelayMs ?? 500);
   }
 
   function captureHostPanels(): Readonly<Record<string, PanelEntry>> {

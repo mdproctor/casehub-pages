@@ -1798,6 +1798,7 @@ __metadata:
     "@casehubio/pages-data": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
     glob: "npm:^11.0.0"
+    happy-dom: "npm:^20.10.6"
     js-yaml: "npm:^4.1.0"
     rimraf: "npm:^6.1.0"
     typescript: "npm:^5.6.0"
