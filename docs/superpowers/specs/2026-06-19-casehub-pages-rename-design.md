@@ -229,7 +229,7 @@ pages (no casehub deps — independent foundation)
 ### casehub-all
 
 - `.gitmodules`: `[submodule "pages"]` → `https://github.com/casehubio/casehub-pages.git`
-- `CLAUDE.md` table: `| pages/ | casehubio/casehub-pages | YAML dashboard rendering, component API, forms |`
+- `CLAUDE.md` table: `| pages/ | casehubio/casehub-pages | web application framework, component API, forms |`
 - `update-pointers.yml`: Add `SHA_PAGES` env var and `'pages': 'SHA_PAGES'` entry in POINTERS dict
 
 ## Claude Memory and IntelliJ

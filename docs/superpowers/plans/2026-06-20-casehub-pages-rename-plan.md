@@ -495,7 +495,7 @@ Rewrite README, update ARC42STORIES, update both CLAUDE.md files.
 - [ ] **Step 1: Rewrite README.md**
 
 Full rewrite reflecting the TypeScript-only architecture. Must cover:
-- Project name and description (casehub-pages, foundational dashboard rendering runtime)
+- Project name and description (casehub-pages, web application framework)
 - Lineage paragraph (dashbuilder → melviz → casehub-pages)
 - Prerequisites: Node 18+, Yarn 4.10 (no Java, no Maven)
 - Build commands: `yarn install && yarn build`, `yarn build:prod`
@@ -554,7 +554,7 @@ Create the GitHub repos, push history, move local directories, and set up remote
 - [ ] **Step 1: Create blessed GitHub repo**
 
 ```bash
-gh repo create casehubio/casehub-pages --public --description "CaseHub Pages — foundational dashboard rendering runtime"
+gh repo create casehubio/casehub-pages --public --description "CaseHub Pages — web application framework"
 ```
 
 Configure rebase-merge-only via GitHub settings (manual or API).
@@ -668,7 +668,7 @@ Add badge row, module table entry, dependency matrix entry (annotated as runtime
 
 - [ ] **Step 7: Update PLATFORM.md**
 
-Add foundation tier entry for casehub-pages. Document capabilities (YAML dashboard rendering, component API, data binding, forms). Document `casehub-pages-dataset` as a wire contract. Note this is the first non-Maven foundation module. Add runtime consumption pattern to Cross-Repo Dependency Map.
+Add foundation tier entry for casehub-pages. Document capabilities (web application framework — layouts, data pipelines, component hosting, forms, event bus). Document `casehub-pages-dataset` as a wire contract. Note this is the first non-Maven foundation module. Add runtime consumption pattern to Cross-Repo Dependency Map.
 
 - [ ] **Step 8: Update parent CLAUDE.md**
 
@@ -689,7 +689,7 @@ Add:
 
 - [ ] **Step 11: Update casehub-all CLAUDE.md**
 
-Add table row: `| pages/ | casehubio/casehub-pages | YAML dashboard rendering, component API, forms |`
+Add table row: `| pages/ | casehubio/casehub-pages | web application framework, component API, forms |`
 
 - [ ] **Step 12: Update casehub-all update-pointers.yml**
 
