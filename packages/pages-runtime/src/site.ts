@@ -41,6 +41,7 @@ import { ActionExecutor } from "./action.js";
 import type { PagesActionCompleteDetail } from "./action.js";
 import type { PagesActionRequestDetail } from "@casehubio/pages-component/dist/model/action-types.js";
 import type { DevAuthConfig } from "./dev-auth.js";
+import { createDevAuthTokenFn } from "./dev-auth.js";
 // --- Event detail interfaces for typed CustomEvent access ---
 
 interface DataRequestDetail {
@@ -155,7 +156,15 @@ export async function loadSite(
   pipeline.setResolverCtx({
     manager,
     providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch.bind(globalThis), options?.baseUrl),
-    providerConfig: options?.providerConfig ?? {},
+    providerConfig: {
+      ...options?.providerConfig,
+      ...(options?.providerConfig?.serverQuery ? {
+        serverQuery: {
+          ...options.providerConfig.serverQuery,
+          tokenFn: options.providerConfig.serverQuery.tokenFn ?? createDevAuthTokenFn(),
+        },
+      } : {}),
+    },
     presetRegistry: createPresetRegistry(),
   });
 

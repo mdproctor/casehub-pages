@@ -12,6 +12,8 @@ import { HttpMethod } from "./types.js";
 import { DataSetError } from "../errors.js";
 import { extractDataSet } from "./extraction.js";
 import { joinDataSets } from "./join.js";
+import type { DataSetLookup } from "../lookup.js";
+import { ServerQueryClient } from "./providers/server-query.js";
 
 export interface ResolverContext {
   readonly manager: DataSetManager;
@@ -89,7 +91,30 @@ function determineSource(
 export async function resolveExternalDataSet(
   def: ExternalDataSetDef,
   ctx: ResolverContext,
+  lookup?: DataSetLookup,
+  fetchFn?: typeof globalThis.fetch,
 ): Promise<ResolveResult> {
+  // ---- Server-query route (early return — bypasses validate/determineSource) ----
+  if (def.serverQuery) {
+    if (!ctx.providerConfig.serverQuery) {
+      throw new DataSetError(
+        "CONFIG_MISSING",
+        `Dataset "${String(def.uuid)}" uses serverQuery but no serverQuery config is provided`,
+      );
+    }
+    const config = ctx.providerConfig.serverQuery;
+    const client = new ServerQueryClient(
+      config.endpoint,
+      fetchFn ?? globalThis.fetch.bind(globalThis),
+      config.tokenFn,
+    );
+    const effectiveLookup = lookup ?? { dataSetId: def.uuid, operations: [] };
+    const dataset = await client.query(effectiveLookup);
+    ctx.manager.apply(def.uuid, { type: "snapshot", dataset });
+    return { dataset, inferredColumns: false, source: "serverQuery" };
+  }
+
+  // ---- Existing code (unchanged) ----
   validate(def);
 
   const source = determineSource(def);

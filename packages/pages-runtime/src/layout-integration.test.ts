@@ -235,6 +235,73 @@ describe("layout serialization", () => {
       vi.useRealTimers();
     });
 
+    it("custom layoutSaveDelayMs overrides default 500ms", async () => {
+      vi.useFakeTimers();
+      const store = createTestStore();
+      const site = await loadSite(container, buildWorkbench(), {
+        layoutStore: store,
+        layoutKey: "ws",
+        layoutSaveDelayMs: 2000,
+      });
+
+      container.dispatchEvent(new CustomEvent("pages-split-resize", {
+        bubbles: true,
+        detail: { componentId: "main-split", ratios: [55, 45] },
+      }));
+
+      // Not saved at default 500ms
+      vi.advanceTimersByTime(500);
+      expect(await store.load("ws")).toBeNull();
+
+      // Not saved at 1000ms
+      vi.advanceTimersByTime(500);
+      expect(await store.load("ws")).toBeNull();
+
+      // Saved at 2000ms
+      vi.advanceTimersByTime(1000);
+      const saved = await store.load("ws");
+      expect(saved?.splits["main-split"]).toEqual([55, 45]);
+
+      site.dispose();
+      vi.useRealTimers();
+    });
+
+    it("debounce resets on repeated events within delay window", async () => {
+      vi.useFakeTimers();
+      const store = createTestStore();
+      const site = await loadSite(container, buildWorkbench(), {
+        layoutStore: store,
+        layoutKey: "ws",
+        layoutSaveDelayMs: 1000,
+      });
+
+      container.dispatchEvent(new CustomEvent("pages-split-resize", {
+        bubbles: true,
+        detail: { componentId: "main-split", ratios: [55, 45] },
+      }));
+
+      vi.advanceTimersByTime(800);
+      expect(await store.load("ws")).toBeNull();
+
+      // Second event resets the timer
+      container.dispatchEvent(new CustomEvent("pages-split-resize", {
+        bubbles: true,
+        detail: { componentId: "main-split", ratios: [60, 40] },
+      }));
+
+      // 200ms after second event — only 200ms into new 1000ms window
+      vi.advanceTimersByTime(200);
+      expect(await store.load("ws")).toBeNull();
+
+      // Complete the second debounce window
+      vi.advanceTimersByTime(800);
+      const saved = await store.load("ws");
+      expect(saved?.splits["main-split"]).toEqual([60, 40]);
+
+      site.dispose();
+      vi.useRealTimers();
+    });
+
     it("no save when store not configured", async () => {
       vi.useFakeTimers();
       const site = await loadSite(container, buildWorkbench());

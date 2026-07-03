@@ -272,6 +272,11 @@ Decisions not captured inline in §4:
 | PushSource interface for push sources | Encapsulates subscription lifecycle, reconnection, error propagation. WebSocket and SSE share the same wire protocol (`op` field routing), eliminating duplication. Generic `PushPool` factory reduces boilerplate. |
 | Error propagation via `onError` callback | Separates data events (mutate datasets) from source health (component error state). Permanent errors set `target.error`, transient errors log and continue. |
 | Unified data + event bus | WebSocket and SSE route both dataset mutations and inter-panel events through one connection. `op: "event"` dispatches `pages-event` DOM events; other ops apply to `DataSetManager`. Grafana separates EventBus and Live — we unify. |
+| Backend data module: two-module split | `data` (SPI + REST relay/query, no JDBC) / `data-sql` (SQL provider via Agroal). Mirrors `layout`/`layout-sqlite`. Deployers who only need relay include one module; SQL push-down requires the second. |
+| Base queries configured server-side | Frontend sends `dataSetId`, backend resolves to a registered SQL query. User-supplied SQL is never accepted — injection surface is zero for the base query path. |
+| Three-layer SQL injection prevention | Filter values → bind parameters. Column IDs → validated against allowlist from base query metadata. Column names → ANSI-quoted in generated SQL. |
+| serverQuery as fourth source type | `ExternalDataSetDef.serverQuery` is a distinct source alongside url/content/join. YAML operations are pushed to SQL; runtime interactive ops (cross-filters, user sort) apply client-side on the aggregated result. |
+| SSRF relay: no redirect following | `HttpClient.Redirect.NEVER` prevents redirect-based SSRF bypassing validateTarget(). Redirects inside the HTTP client layer would skip application-level validation. |
 
 ---
 

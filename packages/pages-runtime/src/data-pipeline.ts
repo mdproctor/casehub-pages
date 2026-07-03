@@ -71,6 +71,8 @@ export function createDataPipeline(
   const ssePool = createPushPool((url, cfg) => createSseSource(url, cfg));
   const pushSubscriptions = new Map<DataSetId, PushSource>();
   const pushSubscribers = new Map<DataSetId, Set<string>>();
+  const serverQueryDatasets = new Set<DataSetId>();
+  const serverQueryLookups = new Map<DataSetId, DataSetLookup>();
   let observer: MutationObserver | undefined;
   let resolverCtx: ResolverContext | undefined;
 
@@ -201,7 +203,10 @@ export function createDataPipeline(
         const expandableEntry = registry.get(componentId);
         const expandable = (expandableEntry?.component.props as { expandable?: unknown } | undefined)?.expandable;
         if (expandable) {
-          const result = manager.lookup(lookup, options);
+          const effectiveLookup = serverQueryDatasets.has(lookup.dataSetId)
+            ? { ...lookup, operations: [] as readonly DataSetOp[] }
+            : lookup;
+          const result = manager.lookup(effectiveLookup, options);
           target.activePage = undefined;
           target.totalRows = result.totalRows;
           target.dataSet = result.dataset;
@@ -229,14 +234,18 @@ export function createDataPipeline(
 
       // Apply centralized sort from ComponentViewState
       const compState = getComponentState(componentViewState, componentId);
-      let sortOps: readonly DataSetOp[] = lookup.operations.filter((op) => op.type !== "sort");
+      const isServerQuery = serverQueryDatasets.has(lookup.dataSetId);
+      let sortOps: readonly DataSetOp[] = isServerQuery
+        ? []
+        : lookup.operations.filter((op) => op.type !== "sort");
 
       if (compState?.sort) {
         sortOps = [...sortOps, { type: "sort" as const, columns: [compState.sort] }];
         target.activeSort = compState.sort;
-      } else {
-        // Preserve original lookup sort
+      } else if (!isServerQuery) {
         sortOps = lookup.operations;
+        target.activeSort = undefined;
+      } else {
         target.activeSort = undefined;
       }
 
@@ -342,6 +351,8 @@ export function createDataPipeline(
       }
       abortControllers.clear();
       pendingResolutions.clear();
+      serverQueryDatasets.clear();
+      serverQueryLookups.clear();
     },
 
     handleDataRequest(
@@ -502,7 +513,11 @@ export function createDataPipeline(
 
       let pending = pendingResolutions.get(lookup.dataSetId);
       if (!pending) {
-        pending = resolveExternalDataSet(def, resolverCtx);
+        if (def.serverQuery) {
+          serverQueryDatasets.add(lookup.dataSetId);
+          serverQueryLookups.set(lookup.dataSetId, lookup);
+        }
+        pending = resolveExternalDataSet(def, resolverCtx, def.serverQuery ? lookup : undefined);
         pendingResolutions.set(lookup.dataSetId, pending);
       }
 
@@ -521,6 +536,31 @@ export function createDataPipeline(
 
   function scheduleRefresh(def: ExternalDataSetDef, dataSetId: DataSetId): void {
     if (!def.refreshTime || refreshTimers.has(dataSetId)) return;
+
+    // Server-query refresh: re-send the stored lookup to the backend
+    if (def.serverQuery) {
+      const interval = parseRefreshTime(def.refreshTime);
+      const timerId = setInterval(() => {
+        if (!resolverCtx) return;
+        const storedLookup = serverQueryLookups.get(dataSetId);
+        if (!storedLookup) return;
+        resolveExternalDataSet(def, resolverCtx, storedLookup)
+          .then(() => {
+            for (const [compId, entry] of registry) {
+              if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
+                const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
+                  ?.filter as { group?: string } | undefined;
+                pushData(entry.vizElement, entry.originalLookup, entry.pagePath, filterGroup?.group, compId);
+              }
+            }
+          })
+          .catch((err: unknown) => {
+            console.warn(`[DataPipeline] Server-query refresh failed for ${String(dataSetId)}:`, err);
+          });
+      }, interval);
+      refreshTimers.set(dataSetId, timerId);
+      return;
+    }
 
     // Guard: Push source datasets use server push, not polling
     if (def.url?.startsWith("ws://") || def.url?.startsWith("wss://")

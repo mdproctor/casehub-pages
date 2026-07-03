@@ -20,6 +20,7 @@ export interface ExternalDataSetDef {
   readonly url?: string;
   readonly content?: string;
   readonly join?: readonly DataSetId[];
+  readonly serverQuery?: boolean;
 
   readonly method?: HttpMethod;
   readonly headers?: Readonly<Record<string, string>>;
@@ -98,6 +99,10 @@ export interface DataProviderConfig {
   readonly sse?: {
     readonly auth?: { readonly type: "query-param"; readonly paramName?: string; readonly token: string };
   };
+  readonly serverQuery?: {
+    readonly endpoint: string;
+    readonly tokenFn?: () => string | null;
+  };
 }
 
 export interface ExtractionResult {
@@ -108,7 +113,7 @@ export interface ExtractionResult {
 export interface ResolveResult {
   readonly dataset: TypedDataSet;
   readonly inferredColumns: boolean;
-  readonly source: "url" | "content" | "join";
+  readonly source: "url" | "content" | "join" | "serverQuery";
 }
 
 const TIME_UNITS: Record<string, number> = {

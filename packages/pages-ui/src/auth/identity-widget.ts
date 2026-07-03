@@ -171,6 +171,10 @@ export class PagesIdentity extends HTMLElement {
       if (resp.ok) {
         const data = (await resp.json()) as { token: string };
         sessionStorage.setItem(SESSION_KEY, data.token);
+        document.dispatchEvent(new CustomEvent("pages-auth-success", {
+          bubbles: true,
+          detail: { name },
+        }));
         this.pickerVisible = false;
         this.render();
       }

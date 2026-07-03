@@ -14,7 +14,8 @@ export type DataSetErrorCode =
   | "EXTRACTION_ERROR"
   | "INVALID_DEFINITION"
   | "EMPTY_RESULT"
-  | "INVALID_ARGUMENT";
+  | "INVALID_ARGUMENT"
+  | "CONFIG_MISSING";
 
 export class DataSetError extends Error {
   override readonly cause?: unknown;

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { resolveExternalDataSet } from "./resolver.js";
 import type { ResolverContext } from "./resolver.js";
 import { createDataSetManager } from "../manager.js";
@@ -367,5 +367,84 @@ describe("resolveExternalDataSet", () => {
     expect(capturedRequest!.query).toEqual({});
     expect(capturedRequest!.form).toBeUndefined();
     expect(capturedRequest!.body).toBeUndefined();
+  });
+
+  // ---- Server-query route ----
+
+  describe("serverQuery route", () => {
+    it("routes serverQuery to ServerQueryClient and stores snapshot", async () => {
+      const manager = createDataSetManager();
+      const lookup = { dataSetId: dataSetId("sq-ds"), operations: [] };
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          columns: [{ id: "name", name: "Name", type: "LABEL" }],
+          rows: [["Alice"]],
+        }),
+      }) as unknown as typeof globalThis.fetch;
+
+      const ctx = makeCtx({
+        manager,
+        providerConfig: {
+          serverQuery: { endpoint: "/api/dataset/query" },
+        },
+      });
+
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("sq-ds"),
+        serverQuery: true,
+      };
+
+      const result = await resolveExternalDataSet(def, ctx, lookup, mockFetch);
+
+      expect(result.source).toBe("serverQuery");
+      expect(result.inferredColumns).toBe(false);
+      expect(manager.has(dataSetId("sq-ds"))).toBe(true);
+    });
+
+    it("throws CONFIG_MISSING when serverQuery is true but config is absent", async () => {
+      const ctx = makeCtx({ providerConfig: {} });
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("sq-ds"),
+        serverQuery: true,
+      };
+
+      await expect(resolveExternalDataSet(def, ctx)).rejects.toThrow("CONFIG_MISSING");
+    });
+
+    it("passes lookup operations to ServerQueryClient", async () => {
+      const capturedBodies: string[] = [];
+      const mockFetch = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+        capturedBodies.push(init.body as string);
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ columns: [], rows: [] }),
+        });
+      }) as unknown as typeof globalThis.fetch;
+
+      const ctx = makeCtx({
+        providerConfig: {
+          serverQuery: { endpoint: "/api/dataset/query" },
+        },
+      });
+
+      const lookup = {
+        dataSetId: dataSetId("sq-ds"),
+        operations: [{ type: "sort" as const, columns: [{ columnId: columnId("name"), order: "ASCENDING" as const }] }],
+      };
+
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("sq-ds"),
+        serverQuery: true,
+      };
+
+      await resolveExternalDataSet(def, ctx, lookup, mockFetch);
+
+      const parsed = JSON.parse(capturedBodies[0]!);
+      expect(parsed.operations).toHaveLength(1);
+      expect(parsed.operations[0].type).toBe("sort");
+    });
   });
 });

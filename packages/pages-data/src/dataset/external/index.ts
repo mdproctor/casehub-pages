@@ -46,6 +46,7 @@ export { InlineProvider } from "./providers/inline.js";
 export { CorsProxyProvider } from "./providers/cors-proxy.js";
 export { BrowserFetchProvider } from "./providers/browser-fetch.js";
 export { ServerRelayProvider } from "./providers/server-relay.js";
+export { ServerQueryClient } from "./providers/server-query.js";
 export { PostMessageProvider } from "./providers/post-message.js";
 
 // Factory

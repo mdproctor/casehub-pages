@@ -131,6 +131,36 @@ describe("ExternalDataSetDef schema", () => {
     expect(def.keyColumn).toBe("id");
   });
 
+  it("accepts serverQuery-based definition", () => {
+    const result = parseExternalDataSetDef({ uuid: "sq-1", serverQuery: true });
+    expect(result.serverQuery).toBe(true);
+  });
+
+  it("rejects serverQuery combined with url", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "sq-1", serverQuery: true, url: "https://x.com",
+    })).toThrow(/Exactly one/);
+  });
+
+  it("rejects extraction fields with serverQuery", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "sq-1", serverQuery: true, dataPath: "results",
+    })).toThrow(/not valid with serverQuery/);
+  });
+
+  it("accepts refreshTime with serverQuery", () => {
+    const result = parseExternalDataSetDef({
+      uuid: "sq-1", serverQuery: true, refreshTime: "30second",
+    });
+    expect(result.refreshTime).toBe("30second");
+  });
+
+  it("rejects http options with serverQuery", () => {
+    expect(() => parseExternalDataSetDef({
+      uuid: "sq-1", serverQuery: true, method: "POST",
+    })).toThrow(/only valid when url is set/);
+  });
+
   it("validates refreshTime format", () => {
     expect(() => valid({ refreshTime: "10min" })).toThrow();
     expect(() => valid({ refreshTime: "abc" })).toThrow();

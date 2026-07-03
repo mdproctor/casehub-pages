@@ -173,6 +173,38 @@ describe("PagesDevAuth custom element", () => {
     expect(el.shadowRoot?.querySelector(".overlay")).toBeNull();
   });
 
+  it("dispatches pages-auth-success event with identity name on successful login", async () => {
+    const newToken = createFutureToken();
+    const mockFetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ token: newToken }),
+      } as Response)
+    );
+    global.fetch = mockFetch;
+
+    const el = document.createElement("pages-dev-auth");
+    el.setAttribute("backend-url", "http://localhost:8080");
+    document.body.appendChild(el);
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const successPromise = new Promise<CustomEvent>((resolve) => {
+      document.addEventListener("pages-auth-success", (e) => resolve(e as CustomEvent), { once: true });
+    });
+
+    const input = el.shadowRoot?.querySelector(
+      'input[type="text"]'
+    ) as HTMLInputElement;
+    input.value = "alice";
+
+    const button = el.shadowRoot?.querySelector("button");
+    button?.click();
+
+    const event = await successPromise;
+    expect(event.detail.name).toBe("alice");
+  });
+
   it("pages-auth-expired event triggers re-render", async () => {
     const token = createFutureToken();
     sessionStorage.setItem(SESSION_KEY, token);
