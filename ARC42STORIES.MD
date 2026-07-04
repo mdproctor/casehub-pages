@@ -240,12 +240,12 @@ Interactive gallery with sample pages, dev server, and Playwright smoke tests.
 | #12 | Lazy on-demand pagination for datasets | 🔲 open |
 | #14 | Domain-specific examples for the gallery | ✅ shipped |
 | #15 | Accessibility: ARIA attributes, keyboard navigation, screen reader support | 🔲 open |
-| #16 | CSP compliance: replace new Function() in column expressions | 🔲 open |
+| #16 | CSP compliance: replace new Function() in column expressions | ✅ shipped |
 | #17 | Theming system and dark mode support | ✅ shipped |
 | #18 | Table data export (CSV, clipboard) | ✅ shipped |
 | #19 | Loading and error states for components | ✅ shipped |
 | #20 | Chart click → cross-filter event protocol | ✅ shipped |
-| #21 | Optional Quarkus backend MVP | 🔲 open |
+| #21 | Optional Quarkus backend MVP | ✅ shipped |
 | #22 | Server-side data provider: Prometheus | 🔲 open |
 | #23 | Server-side data provider: Elasticsearch | 🔲 open |
 | #24 | View state persistence (URL-based) | ✅ shipped |
