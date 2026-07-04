@@ -22,6 +22,7 @@
         <module>layout-sqlite</module>
         <module>data</module>
         <module>data-sql</module>
+        <module>push</module>
     </modules>
 
     <properties>
