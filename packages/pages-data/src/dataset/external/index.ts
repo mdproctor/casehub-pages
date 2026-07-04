@@ -12,9 +12,10 @@ export type {
   ExtractionResult,
   ResolveResult,
   PagesDataMessage,
+  ServiceCapabilities,
 } from "./types.js";
 
-export { HttpMethod } from "./types.js";
+export { HttpMethod, LOCAL_CAPABILITIES, isServiceCapabilities } from "./types.js";
 
 // Schema
 export { parseExternalDataSetDef } from "./schema.js";

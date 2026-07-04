@@ -18,6 +18,7 @@ import type {
   DataSetId,
 } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import { LOCAL_CAPABILITIES } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
 import { createDataScopeRegistry } from "./data-scope-registry.js";
 
@@ -51,6 +52,7 @@ describe("parameterised dataset URLs", () => {
       },
       providerConfig: {},
       presetRegistry: { get: () => undefined, has: () => false },
+      capabilities: LOCAL_CAPABILITIES,
     };
   }
 

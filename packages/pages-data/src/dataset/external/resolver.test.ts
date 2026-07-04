@@ -14,7 +14,7 @@ import type {
   DataRequest,
   FetchResult,
 } from "./types.js";
-import { HttpMethod } from "./types.js";
+import { HttpMethod, LOCAL_CAPABILITIES } from "./types.js";
 
 function makeCtx(overrides?: Partial<ResolverContext>): ResolverContext {
   return {
@@ -22,6 +22,7 @@ function makeCtx(overrides?: Partial<ResolverContext>): ResolverContext {
     providerFactory: createDataProviderFactory(),
     providerConfig: {},
     presetRegistry: createPresetRegistry(),
+    capabilities: LOCAL_CAPABILITIES,
     ...overrides,
   };
 }

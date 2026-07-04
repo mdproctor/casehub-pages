@@ -1,12 +1,14 @@
 package io.casehub.pages.data;
 
 import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -16,6 +18,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.util.List;
 import java.util.Map;
 
 @Path("/api/dataset")
@@ -84,6 +87,21 @@ public class DataResource {
         }
         cacheService.invalidate(tenantId, dataSetId);
         return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/capabilities")
+    @PermitAll
+    public ServiceCapabilities capabilities() {
+        List<String> providerTypes = new java.util.ArrayList<>();
+        for (DataProvider p : providers) {
+            providerTypes.add(p.type());
+        }
+        return new ServiceCapabilities(
+                !providerTypes.isEmpty(),
+                List.copyOf(providerTypes),
+                true,
+                true);
     }
 
     private DataProvider resolveProvider(String dataSetId) {

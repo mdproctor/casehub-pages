@@ -13,6 +13,7 @@ import java.util.Set;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 
 @QuarkusTest
@@ -116,5 +117,27 @@ class DataResourceQueryTest {
                 .body("rows", hasSize(2))
                 .body("rows[0][0]", equalTo("alpha"))
                 .body("rows[0][1]", equalTo("10"));
+    }
+
+    @Test
+    void capabilities_returns_provider_info_without_auth() {
+        given()
+                .when()
+                .get("/api/dataset/capabilities")
+                .then()
+                .statusCode(200)
+                .body("serverSideQuery", equalTo(true))
+                .body("dataProviders", hasItem("test"))
+                .body("dataProxy", equalTo(true))
+                .body("serverSideCache", equalTo(true));
+    }
+
+    @Test
+    void capabilities_does_not_require_jwt() {
+        given()
+                .when()
+                .get("/api/dataset/capabilities")
+                .then()
+                .statusCode(200);
     }
 }

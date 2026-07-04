@@ -7,6 +7,7 @@ import type {
   PresetRegistry,
   ResolveResult,
   DataRequest,
+  ServiceCapabilities,
 } from "./types.js";
 import { HttpMethod } from "./types.js";
 import { DataSetError } from "../errors.js";
@@ -25,6 +26,7 @@ export interface ResolverContext {
   };
   readonly providerConfig: DataProviderConfig;
   readonly presetRegistry: PresetRegistry;
+  readonly capabilities: ServiceCapabilities;
 }
 
 // ---------------------------------------------------------------------------

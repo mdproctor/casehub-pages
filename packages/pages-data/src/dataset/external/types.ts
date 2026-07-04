@@ -84,6 +84,29 @@ export interface WebSocketAuthConfig {
   readonly token: string;
 }
 
+export interface ServiceCapabilities {
+  readonly serverSideQuery: boolean;
+  readonly dataProviders: readonly string[];
+  readonly dataProxy: boolean;
+  readonly serverSideCache: boolean;
+}
+
+export const LOCAL_CAPABILITIES: ServiceCapabilities = {
+  serverSideQuery: false,
+  dataProviders: [],
+  dataProxy: false,
+  serverSideCache: false,
+};
+
+export function isServiceCapabilities(obj: unknown): obj is ServiceCapabilities {
+  if (typeof obj !== "object" || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return typeof o.serverSideQuery === "boolean"
+    && Array.isArray(o.dataProviders) && o.dataProviders.every(v => typeof v === "string")
+    && typeof o.dataProxy === "boolean"
+    && typeof o.serverSideCache === "boolean";
+}
+
 export interface DataProviderConfig {
   readonly defaultProvider?: "browser" | "server-relay";
   readonly corsProxy?: {
@@ -104,6 +127,9 @@ export interface DataProviderConfig {
   readonly serverQuery?: {
     readonly endpoint: string;
     readonly tokenFn?: () => string | null;
+  };
+  readonly capabilities?: {
+    readonly endpoint: string;
   };
 }
 

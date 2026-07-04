@@ -9,7 +9,8 @@ import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js
 import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
 import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
-import { createDataProviderFactory, createPresetRegistry } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import { createDataProviderFactory, createPresetRegistry, LOCAL_CAPABILITIES, isServiceCapabilities } from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type { ServiceCapabilities } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { Site, ViewState, DeepLink } from "@casehubio/pages-ui/dist/model/page-types.js";
 import { parsePage } from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import { load as yamlLoad } from "js-yaml";
@@ -154,6 +155,21 @@ export async function loadSite(
   );
 
   const pipeline = createDataPipeline(manager, dataSetScope, registry, filterState, dataScopeRegistry, componentViewState, contextManager, target);
+
+  let capabilities: ServiceCapabilities = LOCAL_CAPABILITIES;
+  if (options?.providerConfig?.capabilities && options?.baseUrl) {
+    try {
+      const capUrl = `${options.baseUrl}${options.providerConfig.capabilities.endpoint}`;
+      const resp = await (options?.fetch ?? globalThis.fetch)(capUrl);
+      if (resp.ok) {
+        const json: unknown = await resp.json();
+        capabilities = isServiceCapabilities(json) ? json : LOCAL_CAPABILITIES;
+      }
+    } catch {
+      // Backend unreachable — local-only mode
+    }
+  }
+
   pipeline.setResolverCtx({
     manager,
     providerFactory: createDataProviderFactory(options?.fetch ?? globalThis.fetch.bind(globalThis), options?.baseUrl),
@@ -173,6 +189,7 @@ export async function loadSite(
       } : {}),
     },
     presetRegistry: createPresetRegistry(),
+    capabilities,
   });
 
   let _navigating = false;
