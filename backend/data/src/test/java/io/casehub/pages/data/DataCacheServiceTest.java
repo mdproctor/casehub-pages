@@ -126,4 +126,19 @@ class DataCacheServiceTest {
         assertThat(fetched).isSameAs(result2);
         assertThat(queryCount).isEqualTo(0);
     }
+
+    @Test
+    void differentFormDataGetsSeparateCacheEntries() {
+        var request1 = new DataRequest("https://api.example.com/data", "POST",
+            Map.of(), Map.of(), Map.of("field", "value1"), null, null);
+        var request2 = new DataRequest("https://api.example.com/data", "POST",
+            Map.of(), Map.of(), Map.of("field", "value2"), null, null);
+
+        var result1 = cache.fetchCached("tenant-1", request1, () -> { fetchCount++; return new FetchResult("form1", null); });
+        var result2 = cache.fetchCached("tenant-1", request2, () -> { fetchCount++; return new FetchResult("form2", null); });
+
+        assertThat(result1.data()).isEqualTo("form1");
+        assertThat(result2.data()).isEqualTo("form2");
+        assertThat(fetchCount).isEqualTo(2);
+    }
 }

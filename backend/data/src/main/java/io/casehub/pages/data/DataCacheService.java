@@ -111,6 +111,7 @@ public class DataCacheService {
             (r.method() != null ? r.method() : "GET") + "|" +
             sorted(r.headers()) + "|" +
             sorted(r.query()) + "|" +
+            sorted(r.form()) + "|" +
             (r.body() != null ? r.body() : "")
         );
     }

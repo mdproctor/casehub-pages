@@ -1,6 +1,6 @@
 {
   "name": "@casehubio/pages-component",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CaseHub Component — layout primitives, type guards, and renderer",
   "repository": {
     "type": "git",

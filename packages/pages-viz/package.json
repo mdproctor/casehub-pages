@@ -1,6 +1,6 @@
 {
   "name": "@casehubio/pages-viz",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CaseHub Pages Viz — Web Component visualization wrappers",
   "repository": {
     "type": "git",
