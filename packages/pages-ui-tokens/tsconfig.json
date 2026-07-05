@@ -1,0 +1,12 @@
+{
+  "extends": "@casehubio/pages-tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": ".typecheck",
+    "emitDeclarationOnly": true
+  },
+  "include": [
+    "src"
+  ],
+  "references": []
+}

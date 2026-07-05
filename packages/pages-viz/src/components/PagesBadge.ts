@@ -7,9 +7,9 @@ import { cellToRaw } from "../base/cell-extract.js";
 const BADGE_CSS = `
 :host {
   display: block;
-  font-family: var(--pages-font, system-ui, sans-serif);
-  font-size: var(--pages-font-size, 14px);
-  color: var(--pages-text, #333);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
+  font-size: var(--pages-font-size-base, 14px);
+  color: var(--pages-neutral-12, #333);
 }
 .pages-badge-container {
   display: flex;
@@ -24,7 +24,7 @@ const BADGE_CSS = `
   font-size: var(--pages-badge-font-size, 13px);
   font-weight: var(--pages-badge-font-weight, 500);
   color: var(--pages-badge-text, #fff);
-  background: var(--pages-badge-bg, var(--pages-accent, #5470c6));
+  background: var(--pages-badge-bg, var(--pages-accent-9, #5470c6));
   border: var(--pages-badge-border, none);
   white-space: nowrap;
   text-align: center;

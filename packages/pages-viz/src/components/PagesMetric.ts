@@ -4,25 +4,25 @@ import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 
 const METRIC_CSS = `
-:host { display: block; font-family: var(--pages-font, system-ui, sans-serif); color: var(--pages-text, #333); }
-.card { background: var(--pages-bg, #fff); border: 1px solid var(--pages-border, #e0e0e0); border-radius: var(--pages-radius, 4px); padding: 20px 16px; text-align: center; min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
-.card .title { font-size: 0.85em; color: var(--pages-text-muted, #888); margin-bottom: 8px; }
+:host { display: block; font-family: var(--pages-font-family, system-ui, sans-serif); color: var(--pages-neutral-12, #333); }
+.card { background: var(--pages-neutral-1, #fff); border: 1px solid var(--pages-neutral-6, #e0e0e0); border-radius: var(--pages-radius-sm, 4px); padding: 20px 16px; text-align: center; min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
+.card .title { font-size: 0.85em; color: var(--pages-neutral-11, #888); margin-bottom: 8px; }
 .card .value { font-size: 2em; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card2 { display: flex; align-items: center; gap: 12px; background: var(--pages-bg, #fff); border: 1px solid var(--pages-border, #e0e0e0); border-radius: var(--pages-radius, 4px); padding: 12px 16px; }
+.card2 { display: flex; align-items: center; gap: 12px; background: var(--pages-neutral-1, #fff); border: 1px solid var(--pages-neutral-6, #e0e0e0); border-radius: var(--pages-radius-sm, 4px); padding: 12px 16px; }
 .card2 .value { font-size: 1.5em; font-weight: 600; }
-.card2 .title { font-size: 0.85em; color: var(--pages-text-muted, #888); }
-.plain-text .title { font-size: 0.75em; color: var(--pages-text-muted, #888); }
+.card2 .title { font-size: 0.85em; color: var(--pages-neutral-11, #888); }
+.plain-text .title { font-size: 0.75em; color: var(--pages-neutral-11, #888); }
 .plain-text .value { font-size: 1.2em; }
-.quota { background: var(--pages-bg, #fff); border: 1px solid var(--pages-border, #e0e0e0); border-radius: var(--pages-radius, 4px); padding: 12px 16px; }
+.quota { background: var(--pages-neutral-1, #fff); border: 1px solid var(--pages-neutral-6, #e0e0e0); border-radius: var(--pages-radius-sm, 4px); padding: 12px 16px; }
 .quota .value { font-size: 1.5em; font-weight: 600; }
-.quota .bar { height: 6px; background: var(--pages-border, #e0e0e0); border-radius: 3px; margin-top: 8px; }
-.quota .bar-fill { height: 100%; background: var(--pages-accent, #5470c6); border-radius: 3px; }
-.pf-v5-c-card, .pf-c-card, [class*="card-pf"] { background: var(--pages-bg, #fff); border: 1px solid var(--pages-border, #e0e0e0); border-radius: var(--pages-radius, 4px); padding: 16px; text-align: center; }
+.quota .bar { height: 6px; background: var(--pages-neutral-6, #e0e0e0); border-radius: 3px; margin-top: 8px; }
+.quota .bar-fill { height: 100%; background: var(--pages-accent-9, #5470c6); border-radius: 3px; }
+.pf-v5-c-card, .pf-c-card, [class*="card-pf"] { background: var(--pages-neutral-1, #fff); border: 1px solid var(--pages-neutral-6, #e0e0e0); border-radius: var(--pages-radius-sm, 4px); padding: 16px; text-align: center; }
 .pf-v5-c-card__title, .pf-c-card__title { margin-bottom: 4px; }
 .pf-v5-c-title, .pf-c-title { font-weight: 600; }
 .pf-m-2xl { font-size: 1.8em; }
 .pf-m-xl { font-size: 1.4em; }
-.pf-v5-c-card__footer, .pf-c-card__footer { font-size: 0.85em; color: var(--pages-text-muted, #888); }
+.pf-v5-c-card__footer, .pf-c-card__footer { font-size: 0.85em; color: var(--pages-neutral-11, #888); }
 `;
 
 export class PagesMetric extends PagesElement<MetricProps> {

@@ -198,7 +198,7 @@ pages:
     document.body.removeChild(target);
   });
 
-  it("applies dark mode CSS variables when global.mode is dark", async () => {
+  it("applies dark mode CSS class when global.mode is dark", async () => {
     const yaml = `
 global:
   mode: dark
@@ -209,9 +209,8 @@ pages:
     const target = document.createElement("div");
     document.body.appendChild(target);
     const site = await loadSite(target, yaml);
-    expect(target.dataset.pagesTheme).toBe("dark");
-    expect(target.style.getPropertyValue("--pages-bg")).toBe("#1a1a2e");
-    expect(target.style.getPropertyValue("--pages-text")).toBe("#e0e0e0");
+    expect(target.classList.contains("pages-theme-dark")).toBe(true);
+    expect(target.classList.contains("pages-theme-light")).toBe(false);
     site.dispose();
     document.body.removeChild(target);
   });
@@ -233,12 +232,12 @@ pages:
     document.body.appendChild(target);
 
     const darkSite = await loadSite(target, darkYaml);
-    expect(target.dataset.pagesTheme).toBe("dark");
+    expect(target.classList.contains("pages-theme-dark")).toBe(true);
     darkSite.dispose();
 
     const lightSite = await loadSite(target, lightYaml);
-    expect(target.dataset.pagesTheme).toBe("light");
-    expect(target.style.getPropertyValue("--pages-bg")).toBe("#fff");
+    expect(target.classList.contains("pages-theme-light")).toBe(true);
+    expect(target.classList.contains("pages-theme-dark")).toBe(false);
     lightSite.dispose();
     document.body.removeChild(target);
   });

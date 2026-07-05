@@ -17,7 +17,7 @@ public final class PushMessage {
         return event(topic, payloadJson, null);
     }
 
-    public static String event(String topic, String payloadJson, String seq) {
+    public static String event(String topic, String payloadJson, Long seq) {
         Objects.requireNonNull(topic, "topic");
         Objects.requireNonNull(payloadJson, "payloadJson");
         return generate(g -> {
@@ -25,7 +25,65 @@ public final class PushMessage {
             g.writeStringField("topic", topic);
             g.writeFieldName("payload");
             g.writeRawValue(payloadJson);
-            if (seq != null) g.writeStringField("seq", seq);
+            if (seq != null) g.writeNumberField("seq", seq);
+        });
+    }
+
+    public static String ack(String id) {
+        Objects.requireNonNull(id, "id");
+        return generate(g -> {
+            g.writeStringField("op", "ack");
+            g.writeStringField("id", id);
+        });
+    }
+
+    public static String ack(String id, List<String> topics) {
+        Objects.requireNonNull(id, "id");
+        return generate(g -> {
+            g.writeStringField("op", "ack");
+            g.writeStringField("id", id);
+            if (topics != null && !topics.isEmpty()) {
+                g.writeFieldName("topics");
+                g.writeStartArray();
+                for (String topic : topics) {
+                    g.writeString(topic);
+                }
+                g.writeEndArray();
+            }
+        });
+    }
+
+    public static String ack(String id, List<String> topics, List<String> gaps) {
+        Objects.requireNonNull(id, "id");
+        return generate(g -> {
+            g.writeStringField("op", "ack");
+            g.writeStringField("id", id);
+            if (topics != null && !topics.isEmpty()) {
+                g.writeFieldName("topics");
+                g.writeStartArray();
+                for (String topic : topics) {
+                    g.writeString(topic);
+                }
+                g.writeEndArray();
+            }
+            if (gaps != null && !gaps.isEmpty()) {
+                g.writeFieldName("gaps");
+                g.writeStartArray();
+                for (String gap : gaps) {
+                    g.writeString(gap);
+                }
+                g.writeEndArray();
+            }
+        });
+    }
+
+    public static String error(String id, String message) {
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(message, "message");
+        return generate(g -> {
+            g.writeStringField("op", "error");
+            g.writeStringField("id", id);
+            g.writeStringField("message", message);
         });
     }
 
@@ -33,7 +91,7 @@ public final class PushMessage {
         return snapshot(dataset, columns, rows, null);
     }
 
-    public static String snapshot(String dataset, List<PushColumn> columns, List<List<String>> rows, String seq) {
+    public static String snapshot(String dataset, List<PushColumn> columns, List<List<String>> rows, Long seq) {
         return datasetOp("snapshot", dataset, columns, rows, seq);
     }
 
@@ -41,7 +99,7 @@ public final class PushMessage {
         return append(dataset, columns, rows, null);
     }
 
-    public static String append(String dataset, List<PushColumn> columns, List<List<String>> rows, String seq) {
+    public static String append(String dataset, List<PushColumn> columns, List<List<String>> rows, Long seq) {
         return datasetOp("append", dataset, columns, rows, seq);
     }
 
@@ -49,7 +107,7 @@ public final class PushMessage {
         return replace(dataset, columns, key, row, null);
     }
 
-    public static String replace(String dataset, List<PushColumn> columns, String key, List<String> row, String seq) {
+    public static String replace(String dataset, List<PushColumn> columns, String key, List<String> row, Long seq) {
         Objects.requireNonNull(dataset, "dataset");
         Objects.requireNonNull(columns, "columns");
         Objects.requireNonNull(key, "key");
@@ -61,7 +119,7 @@ public final class PushMessage {
             g.writeStringField("key", key);
             g.writeFieldName("row");
             writeRow(g, row);
-            if (seq != null) g.writeStringField("seq", seq);
+            if (seq != null) g.writeNumberField("seq", seq);
         });
     }
 
@@ -69,19 +127,19 @@ public final class PushMessage {
         return remove(dataset, key, null);
     }
 
-    public static String remove(String dataset, String key, String seq) {
+    public static String remove(String dataset, String key, Long seq) {
         Objects.requireNonNull(dataset, "dataset");
         Objects.requireNonNull(key, "key");
         return generate(g -> {
             g.writeStringField("op", "remove");
             g.writeStringField("dataset", dataset);
             g.writeStringField("key", key);
-            if (seq != null) g.writeStringField("seq", seq);
+            if (seq != null) g.writeNumberField("seq", seq);
         });
     }
 
     private static String datasetOp(String op, String dataset, List<PushColumn> columns,
-                                     List<List<String>> rows, String seq) {
+                                     List<List<String>> rows, Long seq) {
         Objects.requireNonNull(dataset, "dataset");
         Objects.requireNonNull(columns, "columns");
         Objects.requireNonNull(rows, "rows");
@@ -95,7 +153,7 @@ public final class PushMessage {
                 writeRow(g, row);
             }
             g.writeEndArray();
-            if (seq != null) g.writeStringField("seq", seq);
+            if (seq != null) g.writeNumberField("seq", seq);
         });
     }
 

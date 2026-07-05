@@ -6,7 +6,7 @@ import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js
 const CHECKBOX_CSS = `
 :host {
   display: block;
-  font-family: var(--pages-font, system-ui, sans-serif);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
 }
 .pages-form-field {
   display: flex;
@@ -14,9 +14,9 @@ const CHECKBOX_CSS = `
   gap: 8px;
 }
 label {
-  font-size: var(--pages-font-size, 14px);
+  font-size: var(--pages-font-size-base, 14px);
   font-weight: 500;
-  color: var(--pages-text, #333);
+  color: var(--pages-neutral-12, #333);
   cursor: pointer;
 }
 input[type="checkbox"] {

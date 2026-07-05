@@ -293,7 +293,7 @@ export function createActivationCallback(
         button.style.background = "transparent";
         button.style.cursor = "pointer";
         button.style.padding = "6px";
-        button.style.borderRadius = "var(--pages-radius, 4px)";
+        button.style.borderRadius = "var(--pages-radius-sm, 4px)";
         button.style.fontSize = "16px";
 
         if (item.defaultOpen) {

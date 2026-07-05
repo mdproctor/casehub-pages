@@ -1,7 +1,7 @@
 {
-  "name": "@casehubio/pages-runtime",
+  "name": "@casehubio/pages-ui-tokens",
   "version": "0.3.0",
-  "description": "CaseHub Pages Runtime — site loading, data pipeline, navigation, cross-filtering",
+  "description": "CaseHub Pages design tokens — OKLCH 12-step colour scales, spacing, typography, elevation, motion",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -19,21 +19,12 @@
     "test:watch": "vitest",
     "clean": "rimraf dist"
   },
-  "dependencies": {
-    "@casehubio/pages-component": "workspace:*",
-    "@casehubio/pages-data": "workspace:*",
-    "@casehubio/pages-ui": "workspace:*",
-    "@casehubio/pages-ui-tokens": "workspace:*",
-    "@casehubio/pages-viz": "workspace:*",
-    "js-yaml": "^4.1.0",
-    "marked": "^15.0.0"
-  },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
-    "happy-dom": "^20.10.6",
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "jsdom": "^26.0.0",
     "rimraf": "^6.1.0",
     "typescript": "^5.6.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.2.1"
   },
   "license": "Apache-2.0"
 }

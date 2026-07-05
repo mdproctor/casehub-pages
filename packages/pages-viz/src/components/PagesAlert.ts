@@ -29,23 +29,23 @@ export class PagesAlert extends PagesContentElement<AlertProps> {
       }
 
       .pages-alert-info {
-        background-color: var(--pages-alert-info-bg, #e3f2fd);
-        color: var(--pages-alert-info-color, #01579b);
+        background-color: var(--pages-info-3, #e3f2fd);
+        color: var(--pages-info-11, #01579b);
       }
 
       .pages-alert-warning {
-        background-color: var(--pages-alert-warning-bg, #fff3e0);
-        color: var(--pages-alert-warning-color, #e65100);
+        background-color: var(--pages-warning-3, #fff3e0);
+        color: var(--pages-warning-11, #e65100);
       }
 
       .pages-alert-error {
-        background-color: var(--pages-alert-error-bg, #ffebee);
-        color: var(--pages-alert-error-color, #b71c1c);
+        background-color: var(--pages-danger-3, #ffebee);
+        color: var(--pages-danger-11, #b71c1c);
       }
 
       .pages-alert-success {
-        background-color: var(--pages-alert-success-bg, #e8f5e9);
-        color: var(--pages-alert-success-color, #1b5e20);
+        background-color: var(--pages-success-3, #e8f5e9);
+        color: var(--pages-success-11, #1b5e20);
       }
 
       .pages-alert-content {

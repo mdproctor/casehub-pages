@@ -3,7 +3,7 @@ import type { DataSetEventListener } from "../../events.js";
 import type { ExternalDataSetDef } from "../types.js";
 import type { PushSource, PushSourceConfig, PushSourceError, Subscription, WireMessage } from "./push-source.js";
 import { processWireMessage } from "./push-source.js";
-import { buildConnectionUrl } from "./push-wire.js";
+import { buildConnectionUrl, nextRequestId, sendSubscribe, sendUnsubscribe } from "./push-wire.js";
 
 export function createWebSocketSource(
   baseUrl: string,
@@ -42,12 +42,9 @@ export function createWebSocketSource(
       // Resubscribe all existing subscriptions
       for (const [id] of subscriptions) {
         const wireName = idToWireName.get(id);
-        if (wireName) {
-          const msg: Record<string, string> = { op: "subscribe", dataset: wireName };
-          if (lastSeq !== undefined) {
-            msg.since = lastSeq;
-          }
-          ws?.send(JSON.stringify(msg));
+        if (wireName && ws) {
+          const requestId = nextRequestId();
+          sendSubscribe(ws, requestId, wireName, lastSeq);
         }
       }
     };
@@ -81,6 +78,18 @@ export function createWebSocketSource(
         console.warn("[WebSocketSource] Message is not an object:", msg);
         continue;
       }
+
+      // Handle ack/error messages
+      const wireMsg = msg as { op?: string; id?: string; message?: string };
+      if (wireMsg.op === "ack") {
+        console.debug("[WebSocketSource] Received ack:", wireMsg.id);
+        continue;
+      }
+      if (wireMsg.op === "error") {
+        console.warn("[WebSocketSource] Received error:", wireMsg.message ?? "unknown error");
+        continue;
+      }
+
       processWireMessage(
         msg as WireMessage,
         subscriptions,
@@ -131,14 +140,16 @@ export function createWebSocketSource(
       if (subscriptions.size === 1) {
         connect();
       } else if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ op: "subscribe", dataset: wireName }));
+        const requestId = nextRequestId();
+        sendSubscribe(ws, requestId, wireName);
       }
     },
 
     unsubscribe(dataSetId: DataSetId): void {
       const wireName = idToWireName.get(dataSetId);
       if (wireName && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ op: "unsubscribe", dataset: wireName }));
+        const requestId = nextRequestId();
+        sendUnsubscribe(ws, requestId, wireName);
       }
 
       subscriptions.delete(dataSetId);

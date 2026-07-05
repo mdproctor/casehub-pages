@@ -71,5 +71,5 @@ export { createPushPool } from "./sources/push-pool.js";
 export type { PushPool } from "./sources/push-pool.js";
 
 // Event connection
-export type { EventConnection } from "./sources/event-connection.js";
+export type { EventConnection, ListenAck } from "./sources/event-connection.js";
 export { createEventConnection } from "./sources/event-connection.js";

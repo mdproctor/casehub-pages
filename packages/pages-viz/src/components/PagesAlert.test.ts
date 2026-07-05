@@ -250,10 +250,10 @@ describe("PagesAlert", () => {
       element.props = props;
 
       const style = element.shadowRoot?.querySelector("style");
-      expect(style?.textContent).toContain("--pages-alert-info-bg");
-      expect(style?.textContent).toContain("--pages-alert-warning-bg");
-      expect(style?.textContent).toContain("--pages-alert-error-bg");
-      expect(style?.textContent).toContain("--pages-alert-success-bg");
+      expect(style?.textContent).toContain("--pages-info-3");
+      expect(style?.textContent).toContain("--pages-warning-3");
+      expect(style?.textContent).toContain("--pages-danger-3");
+      expect(style?.textContent).toContain("--pages-success-3");
     });
   });
 });

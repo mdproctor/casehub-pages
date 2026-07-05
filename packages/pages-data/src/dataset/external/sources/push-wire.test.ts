@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-import { buildConnectionUrl, sendListen, sendUnlisten, dispatchWireEvent } from "./push-wire.js";
+import {
+  buildConnectionUrl,
+  sendListen,
+  sendUnlisten,
+  dispatchWireEvent,
+  nextRequestId,
+  sendSubscribe,
+  sendUnsubscribe,
+} from "./push-wire.js";
 
 describe("buildConnectionUrl", () => {
   it("returns URL unchanged when no config", () => {
@@ -43,24 +51,82 @@ describe("buildConnectionUrl", () => {
   });
 });
 
+describe("nextRequestId", () => {
+  it("returns monotonic sequential strings", () => {
+    const id1 = nextRequestId();
+    const id2 = nextRequestId();
+    const id3 = nextRequestId();
+    expect(id1).toMatch(/^\d+$/);
+    expect(id2).toMatch(/^\d+$/);
+    expect(id3).toMatch(/^\d+$/);
+    expect(Number(id2)).toBe(Number(id1) + 1);
+    expect(Number(id3)).toBe(Number(id2) + 1);
+  });
+});
+
 describe("sendListen", () => {
-  it("sends listen op with topics", () => {
+  it("sends listen op with id and topics", () => {
     const send = vi.fn();
     const ws = { send, readyState: 1 } as unknown as WebSocket;
-    sendListen(ws, ["debate:abc", "file:/x"]);
+    sendListen(ws, "r1", ["debate:abc", "file:/x"]);
     expect(send).toHaveBeenCalledWith(
-      JSON.stringify({ op: "listen", topics: ["debate:abc", "file:/x"] }),
+      JSON.stringify({ op: "listen", id: "r1", topics: ["debate:abc", "file:/x"] }),
+    );
+  });
+
+  it("sends listen op with id, topics, and since map", () => {
+    const send = vi.fn();
+    const ws = { send, readyState: 1 } as unknown as WebSocket;
+    sendListen(ws, "r2", ["debate:abc"], { "debate:abc": 42, "debate:xyz": 100 });
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({
+        op: "listen",
+        id: "r2",
+        topics: ["debate:abc"],
+        since: { "debate:abc": 42, "debate:xyz": 100 },
+      }),
     );
   });
 });
 
 describe("sendUnlisten", () => {
-  it("sends unlisten op with topics", () => {
+  it("sends unlisten op with id and topics", () => {
     const send = vi.fn();
     const ws = { send, readyState: 1 } as unknown as WebSocket;
-    sendUnlisten(ws, ["debate:abc"]);
+    sendUnlisten(ws, "r3", ["debate:abc"]);
     expect(send).toHaveBeenCalledWith(
-      JSON.stringify({ op: "unlisten", topics: ["debate:abc"] }),
+      JSON.stringify({ op: "unlisten", id: "r3", topics: ["debate:abc"] }),
+    );
+  });
+});
+
+describe("sendSubscribe", () => {
+  it("sends subscribe op with id and dataset", () => {
+    const send = vi.fn();
+    const ws = { send, readyState: 1 } as unknown as WebSocket;
+    sendSubscribe(ws, "r4", "orders");
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({ op: "subscribe", id: "r4", dataset: "orders" }),
+    );
+  });
+
+  it("sends subscribe op with id, dataset, and since cursor", () => {
+    const send = vi.fn();
+    const ws = { send, readyState: 1 } as unknown as WebSocket;
+    sendSubscribe(ws, "r5", "orders", "cursor-abc");
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({ op: "subscribe", id: "r5", dataset: "orders", since: "cursor-abc" }),
+    );
+  });
+});
+
+describe("sendUnsubscribe", () => {
+  it("sends unsubscribe op with id and dataset", () => {
+    const send = vi.fn();
+    const ws = { send, readyState: 1 } as unknown as WebSocket;
+    sendUnsubscribe(ws, "r6", "orders");
+    expect(send).toHaveBeenCalledWith(
+      JSON.stringify({ op: "unsubscribe", id: "r6", dataset: "orders" }),
     );
   });
 });

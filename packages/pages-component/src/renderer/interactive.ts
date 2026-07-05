@@ -15,37 +15,37 @@ function injectNavStyles(doc: Document): void {
   padding: 4px 0 12px;
 }
 [data-tab-bar] button[data-slot] {
-  font-family: var(--pages-font, system-ui, sans-serif);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
   font-size: 13px;
   font-weight: 500;
   padding: 6px 16px;
-  border: 1px solid var(--pages-border, #e0e0e0);
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
   border-radius: 20px;
-  background: var(--pages-bg, #fff);
-  color: var(--pages-text-muted, #888);
+  background: var(--pages-neutral-1, #fff);
+  color: var(--pages-neutral-11, #888);
   cursor: pointer;
   transition: all 0.15s ease;
   line-height: 1.4;
 }
 [data-tab-bar] button[data-slot]:hover {
-  background: var(--pages-bg-hover, #e8f0fe);
-  border-color: var(--pages-border, #e0e0e0);
-  color: var(--pages-text, #333);
+  background: var(--pages-accent-4, #e8f0fe);
+  border-color: var(--pages-neutral-6, #e0e0e0);
+  color: var(--pages-neutral-12, #333);
 }
 [data-tab-bar] button[data-slot][data-active] {
-  background: var(--pages-accent, #5470c6);
-  border-color: var(--pages-accent, #5470c6);
+  background: var(--pages-accent-9, #5470c6);
+  border-color: var(--pages-accent-9, #5470c6);
   color: #fff;
 }
 [data-tab-bar] button[data-slot][data-active]:hover {
-  background: var(--pages-accent-hover, #4361b0);
-  border-color: var(--pages-accent-hover, #4361b0);
+  background: var(--pages-accent-10, #4361b0);
+  border-color: var(--pages-accent-10, #4361b0);
 }
 .pages-sidebar {
   flex-direction: column;
   gap: 2px;
   padding: 0 12px 0 0;
-  border-right: 1px solid var(--pages-border, #e0e0e0);
+  border-right: 1px solid var(--pages-neutral-6, #e0e0e0);
   min-width: 140px;
 }
 .pages-sidebar button[data-slot] {
@@ -56,7 +56,7 @@ function injectNavStyles(doc: Document): void {
 }
 .pages-tabs {
   gap: 0;
-  border-bottom: 1px solid var(--pages-border, #e0e0e0);
+  border-bottom: 1px solid var(--pages-neutral-6, #e0e0e0);
   padding-bottom: 0;
 }
 .pages-tabs button[data-slot] {
@@ -67,21 +67,21 @@ function injectNavStyles(doc: Document): void {
   border-bottom: 2px solid transparent;
 }
 .pages-tabs button[data-slot]:hover {
-  background: var(--pages-bg-alt, #f0f0f0);
+  background: var(--pages-neutral-2, #f0f0f0);
   border-color: transparent;
-  border-bottom-color: var(--pages-border, #e0e0e0);
+  border-bottom-color: var(--pages-neutral-6, #e0e0e0);
 }
 .pages-tabs button[data-slot][data-active] {
   background: transparent;
-  color: var(--pages-accent, #5470c6);
-  border-bottom-color: var(--pages-accent, #5470c6);
+  color: var(--pages-accent-9, #5470c6);
+  border-bottom-color: var(--pages-accent-9, #5470c6);
 }
 .pages-tabs button[data-slot][data-active]:hover {
-  background: var(--pages-accent-subtle, #e8eaf6);
+  background: var(--pages-accent-3, #e8eaf6);
 }
 .pages-menu {
-  background: var(--pages-bg-alt, #f0f0f0);
-  border-bottom: 1px solid var(--pages-border, #e0e0e0);
+  background: var(--pages-neutral-2, #f0f0f0);
+  border-bottom: 1px solid var(--pages-neutral-6, #e0e0e0);
   gap: 0;
   padding: 0;
 }
@@ -93,21 +93,21 @@ function injectNavStyles(doc: Document): void {
   font-size: 13px;
 }
 .pages-menu button[data-slot]:hover {
-  background: var(--pages-bg-hover, #e8f0fe);
+  background: var(--pages-accent-4, #e8f0fe);
   border-color: transparent;
 }
 .pages-menu button[data-slot][data-active] {
   background: transparent;
   font-weight: 600;
-  color: var(--pages-text, #333);
-  border-bottom: 2px solid var(--pages-accent, #5470c6);
+  color: var(--pages-neutral-12, #333);
+  border-bottom: 2px solid var(--pages-accent-9, #5470c6);
 }
 .pages-tree-nav {
   flex-direction: column;
   padding: 0 12px 0 0;
-  border-right: 1px solid var(--pages-border, #e0e0e0);
+  border-right: 1px solid var(--pages-neutral-6, #e0e0e0);
   min-width: 160px;
-  font-family: var(--pages-font, system-ui, sans-serif);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
   font-size: 13px;
 }
 .pages-tree-nav ul { list-style: none; margin: 0; padding: 0; }
@@ -115,16 +115,16 @@ function injectNavStyles(doc: Document): void {
 .pages-tree-nav .tree-group-label {
   display: flex; align-items: center; gap: 4px;
   padding: 4px 8px; cursor: pointer; user-select: none;
-  color: var(--pages-text-muted, #888); font-weight: 500;
+  color: var(--pages-neutral-11, #888); font-weight: 500;
 }
-.pages-tree-nav .tree-group-label:hover { background: var(--pages-bg-hover, #e8f0fe); border-radius: var(--pages-radius, 4px); }
+.pages-tree-nav .tree-group-label:hover { background: var(--pages-accent-4, #e8f0fe); border-radius: var(--pages-radius-sm, 4px); }
 .pages-tree-nav .tree-leaf {
   display: block; padding: 4px 8px 4px 24px;
-  cursor: pointer; color: var(--pages-text-muted, #888); text-decoration: none;
-  border-radius: var(--pages-radius, 4px);
+  cursor: pointer; color: var(--pages-neutral-11, #888); text-decoration: none;
+  border-radius: var(--pages-radius-sm, 4px);
 }
-.pages-tree-nav .tree-leaf:hover { background: var(--pages-bg-hover, #e8f0fe); }
-.pages-tree-nav .tree-leaf[data-active] { background: var(--pages-accent-subtle, #e8eaf6); color: var(--pages-accent, #5470c6); font-weight: 500; }
+.pages-tree-nav .tree-leaf:hover { background: var(--pages-accent-4, #e8f0fe); }
+.pages-tree-nav .tree-leaf[data-active] { background: var(--pages-accent-3, #e8eaf6); color: var(--pages-accent-9, #5470c6); font-weight: 500; }
 .pages-tree-nav .tree-children { padding-left: 16px; }
 .pages-tiles-grid {
   display: grid;
@@ -133,19 +133,19 @@ function injectNavStyles(doc: Document): void {
   padding: 0 0 16px;
 }
 .pages-tiles-grid .tile-card {
-  border: 1px solid var(--pages-border, #e0e0e0);
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
   text-align: center;
-  font-family: var(--pages-font, system-ui, sans-serif);
-  font-size: var(--pages-font-size, 14px);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
+  font-size: var(--pages-font-size-base, 14px);
   font-weight: 500;
-  color: var(--pages-text-muted, #888);
+  color: var(--pages-neutral-11, #888);
   transition: all 0.15s ease;
 }
-.pages-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--pages-border, #e0e0e0); }
-.pages-tiles-grid .tile-card[data-active] { border-color: var(--pages-accent, #5470c6); color: var(--pages-accent, #5470c6); box-shadow: 0 0 0 1px var(--pages-accent, #5470c6); }
+.pages-tiles-grid .tile-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--pages-neutral-6, #e0e0e0); }
+.pages-tiles-grid .tile-card[data-active] { border-color: var(--pages-accent-9, #5470c6); color: var(--pages-accent-9, #5470c6); box-shadow: 0 0 0 1px var(--pages-accent-9, #5470c6); }
 `;
   doc.head.appendChild(style);
 }
@@ -680,7 +680,7 @@ function wireSplit(
     } else {
       handle.style.height = "6px";
     }
-    handle.style.background = "var(--pages-border, #e0e0e0)";
+    handle.style.background = "var(--pages-neutral-6, #e0e0e0)";
     handle.style.userSelect = "none";
 
     currentPanel.insertAdjacentElement("afterend", handle);

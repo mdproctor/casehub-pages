@@ -223,7 +223,7 @@ export abstract class PagesElement<
     style.textContent = `
 @keyframes pages-pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
 [data-pages-loading] { padding: 12px; }
-.pages-skeleton { height: 14px; border-radius: var(--pages-radius, 4px); background: var(--pages-bg-alt, #f0f0f0); margin-bottom: 10px; animation: pages-pulse 1.5s ease-in-out infinite; }
+.pages-skeleton { height: 14px; border-radius: var(--pages-radius-sm, 4px); background: var(--pages-neutral-2, #f0f0f0); margin-bottom: 10px; animation: pages-pulse 1.5s ease-in-out infinite; }
 .pages-skeleton:nth-child(2) { width: 80%; }
 .pages-skeleton:nth-child(3) { width: 60%; }
 `;
@@ -243,11 +243,11 @@ export abstract class PagesElement<
     container.textContent = "";
     const style = document.createElement("style");
     style.textContent = `
-[data-pages-error] { padding: 12px; border: 1px solid var(--pages-border, #e0e0e0); border-radius: var(--pages-radius, 4px); background: var(--pages-bg, #fff); }
+[data-pages-error] { padding: 12px; border: 1px solid var(--pages-neutral-6, #e0e0e0); border-radius: var(--pages-radius-sm, 4px); background: var(--pages-neutral-1, #fff); }
 .pages-error-icon { display: inline; margin-right: 6px; }
-.pages-error-msg { color: var(--pages-text, #333); font-size: var(--pages-font-size, 14px); }
-[data-pages-retry] { margin-top: 8px; padding: 4px 12px; border: 1px solid var(--pages-accent, #5470c6); background: transparent; color: var(--pages-accent, #5470c6); border-radius: var(--pages-radius, 4px); cursor: pointer; font-size: 13px; }
-[data-pages-retry]:hover { background: var(--pages-accent-subtle, #e8eaf6); }
+.pages-error-msg { color: var(--pages-neutral-12, #333); font-size: var(--pages-font-size-base, 14px); }
+[data-pages-retry] { margin-top: 8px; padding: 4px 12px; border: 1px solid var(--pages-accent-9, #5470c6); background: transparent; color: var(--pages-accent-9, #5470c6); border-radius: var(--pages-radius-sm, 4px); cursor: pointer; font-size: 13px; }
+[data-pages-retry]:hover { background: var(--pages-accent-3, #e8eaf6); }
 `;
     container.appendChild(style);
 

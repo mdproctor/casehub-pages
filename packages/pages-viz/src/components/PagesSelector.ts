@@ -7,16 +7,16 @@ import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../b
 const SELECTOR_CSS = `
 :host {
   display: block;
-  font-family: var(--pages-font, system-ui, sans-serif);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
 }
 select {
   width: 100%;
   padding: 8px;
-  border: 1px solid var(--pages-border, #e0e0e0);
-  border-radius: var(--pages-radius, 4px);
-  font-size: var(--pages-font-size, 14px);
-  background: var(--pages-bg, #fff);
-  color: var(--pages-text, #333);
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
+  border-radius: var(--pages-radius-sm, 4px);
+  font-size: var(--pages-font-size-base, 14px);
+  background: var(--pages-neutral-1, #fff);
+  color: var(--pages-neutral-12, #333);
 }
 input[type="range"] {
   width: 100%;
@@ -28,17 +28,17 @@ input[type="range"] {
 }
 .label-chip {
   padding: 4px 12px;
-  border: 1px solid var(--pages-border, #e0e0e0);
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
   border-radius: 16px;
   cursor: pointer;
   font-size: 0.9em;
-  background: var(--pages-bg, #fff);
-  color: var(--pages-text, #333);
+  background: var(--pages-neutral-1, #fff);
+  color: var(--pages-neutral-12, #333);
 }
 .label-chip.selected {
-  background: var(--pages-accent, #5470c6);
+  background: var(--pages-accent-9, #5470c6);
   color: #fff;
-  border-color: var(--pages-accent, #5470c6);
+  border-color: var(--pages-accent-9, #5470c6);
 }
 `;
 

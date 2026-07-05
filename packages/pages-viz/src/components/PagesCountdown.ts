@@ -7,14 +7,14 @@ import { cellToRaw } from "../base/cell-extract.js";
 const COUNTDOWN_CSS = `
 :host {
   display: block;
-  font-family: var(--pages-font, system-ui, sans-serif);
-  color: var(--pages-text, #333);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
+  color: var(--pages-neutral-12, #333);
 }
 
 .countdown-container {
-  background: var(--pages-bg, #fff);
-  border: 1px solid var(--pages-border, #e0e0e0);
-  border-radius: var(--pages-radius, 4px);
+  background: var(--pages-neutral-1, #fff);
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
+  border-radius: var(--pages-radius-sm, 4px);
   padding: 20px 16px;
   text-align: center;
   min-height: 80px;
@@ -26,7 +26,7 @@ const COUNTDOWN_CSS = `
 .countdown-display {
   font-size: var(--pages-countdown-font-size, 2em);
   font-weight: var(--pages-countdown-font-weight, 600);
-  color: var(--pages-countdown-color, var(--pages-text, #333));
+  color: var(--pages-countdown-color, var(--pages-neutral-12, #333));
 }
 
 .countdown-display.countdown-warning {

@@ -21,15 +21,15 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
       .pages-action-container {
         display: flex;
         flex-direction: column;
-        gap: var(--pages-spacing-sm, 0.5rem);
+        gap: var(--pages-space-2, 0.5rem);
       }
 
       button {
         padding: var(--pages-btn-padding, 0.5rem 1rem);
         border: none;
-        border-radius: var(--pages-border-radius, 4px);
+        border-radius: var(--pages-radius-sm, 4px);
         font-family: var(--pages-font-family, system-ui, -apple-system, sans-serif);
-        font-size: var(--pages-font-size, 14px);
+        font-size: var(--pages-font-size-base, 14px);
         font-weight: 500;
         cursor: pointer;
         transition: background-color 0.2s, opacity 0.2s;
@@ -41,47 +41,47 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
       }
 
       .pages-btn-primary {
-        background-color: var(--pages-btn-primary-bg, #0066cc);
+        background-color: var(--pages-accent-9, #0066cc);
         color: var(--pages-btn-primary-color, white);
       }
 
       .pages-btn-primary:hover:not(:disabled) {
-        background-color: var(--pages-btn-primary-hover-bg, #0052a3);
+        background-color: var(--pages-accent-10, #0052a3);
       }
 
       .pages-btn-danger {
-        background-color: var(--pages-btn-danger-bg, #dc3545);
+        background-color: var(--pages-danger-9, #dc3545);
         color: var(--pages-btn-danger-color, white);
       }
 
       .pages-btn-danger:hover:not(:disabled) {
-        background-color: var(--pages-btn-danger-hover-bg, #bd2130);
+        background-color: var(--pages-danger-10, #bd2130);
       }
 
       .pages-btn-secondary {
-        background-color: var(--pages-btn-secondary-bg, #6c757d);
+        background-color: var(--pages-neutral-8, #6c757d);
         color: var(--pages-btn-secondary-color, white);
       }
 
       .pages-btn-secondary:hover:not(:disabled) {
-        background-color: var(--pages-btn-secondary-hover-bg, #5a6268);
+        background-color: var(--pages-neutral-9, #5a6268);
       }
 
       .pages-action-success {
-        padding: var(--pages-spacing-sm, 0.5rem);
-        background-color: var(--pages-success-bg, #d4edda);
-        color: var(--pages-success-color, #155724);
-        border: 1px solid var(--pages-success-border, #c3e6cb);
-        border-radius: var(--pages-border-radius, 4px);
+        padding: var(--pages-space-2, 0.5rem);
+        background-color: var(--pages-success-3, #d4edda);
+        color: var(--pages-success-11, #155724);
+        border: 1px solid var(--pages-success-6, #c3e6cb);
+        border-radius: var(--pages-radius-sm, 4px);
         font-size: var(--pages-font-size-sm, 13px);
       }
 
       .pages-action-error {
-        padding: var(--pages-spacing-sm, 0.5rem);
-        background-color: var(--pages-error-bg, #f8d7da);
-        color: var(--pages-error-color, #721c24);
-        border: 1px solid var(--pages-error-border, #f5c6cb);
-        border-radius: var(--pages-border-radius, 4px);
+        padding: var(--pages-space-2, 0.5rem);
+        background-color: var(--pages-danger-3, #f8d7da);
+        color: var(--pages-danger-11, #721c24);
+        border: 1px solid var(--pages-danger-6, #f5c6cb);
+        border-radius: var(--pages-radius-sm, 4px);
         font-size: var(--pages-font-size-sm, 13px);
       }
     `;

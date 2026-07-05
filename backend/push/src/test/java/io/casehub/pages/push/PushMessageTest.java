@@ -25,6 +25,7 @@ class PushMessageTest {
                 p.nextToken();
                 switch (p.currentToken()) {
                     case VALUE_STRING -> result.put(field, p.getText());
+                    case VALUE_NUMBER_INT -> result.put(field, String.valueOf(p.getLongValue()));
                     case START_OBJECT -> {
                         // For embedded JSON objects like payload
                         StringBuilder sb = new StringBuilder();
@@ -88,10 +89,10 @@ class PushMessageTest {
 
     @Test
     void event_with_seq_includes_seq_field() throws IOException {
-        String json = PushMessage.event("debate:abc123", "{}", "seq-42");
+        String json = PushMessage.event("debate:abc123", "{}", 42L);
         Map<String, Object> msg = parse(json);
         assertEquals("event", msg.get("op"));
-        assertEquals("seq-42", msg.get("seq"));
+        assertEquals("42", msg.get("seq"));
     }
 
     @Test
@@ -122,9 +123,9 @@ class PushMessageTest {
 
     @Test
     void snapshot_with_seq() throws IOException {
-        String json = PushMessage.snapshot("ds", List.of(), List.of(), "seq-1");
+        String json = PushMessage.snapshot("ds", List.of(), List.of(), 1L);
         Map<String, Object> msg = parse(json);
-        assertEquals("seq-1", msg.get("seq"));
+        assertEquals("1", msg.get("seq"));
     }
 
     @Test
@@ -162,9 +163,9 @@ class PushMessageTest {
 
     @Test
     void remove_with_seq() throws IOException {
-        String json = PushMessage.remove("ds", "k", "seq-9");
+        String json = PushMessage.remove("ds", "k", 9L);
         Map<String, Object> msg = parse(json);
-        assertEquals("seq-9", msg.get("seq"));
+        assertEquals("9", msg.get("seq"));
     }
 
     @Test
@@ -183,5 +184,88 @@ class PushMessageTest {
     void replace_null_columns_throws() {
         assertThrows(NullPointerException.class,
                 () -> PushMessage.replace("ds", null, "k", List.of("v")));
+    }
+
+    // Task 3: Wire protocol correlation layer tests
+
+    @Test
+    void ack_with_id_only() throws IOException {
+        String json = PushMessage.ack("r1");
+        Map<String, Object> msg = parse(json);
+        assertEquals("ack", msg.get("op"));
+        assertEquals("r1", msg.get("id"));
+        assertNull(msg.get("topics"));
+        assertNull(msg.get("gaps"));
+    }
+
+    @Test
+    void ack_with_id_and_topics() throws IOException {
+        String json = PushMessage.ack("r2", List.of("debate:abc", "file:/x"));
+        Map<String, Object> msg = parse(json);
+        assertEquals("ack", msg.get("op"));
+        assertEquals("r2", msg.get("id"));
+        @SuppressWarnings("unchecked")
+        List<String> topics = (List<String>) msg.get("topics");
+        assertEquals(List.of("debate:abc", "file:/x"), topics);
+        assertNull(msg.get("gaps"));
+    }
+
+    @Test
+    void ack_with_id_topics_and_gaps() throws IOException {
+        String json = PushMessage.ack("r3", List.of("debate:*"), List.of("debate:old"));
+        Map<String, Object> msg = parse(json);
+        assertEquals("ack", msg.get("op"));
+        assertEquals("r3", msg.get("id"));
+        @SuppressWarnings("unchecked")
+        List<String> topics = (List<String>) msg.get("topics");
+        assertEquals(List.of("debate:*"), topics);
+        @SuppressWarnings("unchecked")
+        List<String> gaps = (List<String>) msg.get("gaps");
+        assertEquals(List.of("debate:old"), gaps);
+    }
+
+    @Test
+    void ack_with_null_gaps_omits_gaps_field() throws IOException {
+        String json = PushMessage.ack("r4", List.of("debate:abc"), null);
+        Map<String, Object> msg = parse(json);
+        assertEquals("r4", msg.get("id"));
+        assertNull(msg.get("gaps"));
+    }
+
+    @Test
+    void ack_with_empty_gaps_omits_gaps_field() throws IOException {
+        String json = PushMessage.ack("r5", List.of("debate:abc"), List.of());
+        Map<String, Object> msg = parse(json);
+        assertEquals("r5", msg.get("id"));
+        assertNull(msg.get("gaps"));
+    }
+
+    @Test
+    void error_with_id_and_message() throws IOException {
+        String json = PushMessage.error("r6", "unknown topic: xyz");
+        Map<String, Object> msg = parse(json);
+        assertEquals("error", msg.get("op"));
+        assertEquals("r6", msg.get("id"));
+        assertEquals("unknown topic: xyz", msg.get("message"));
+    }
+
+    @Test
+    void event_with_long_seq_encodes_as_number() throws IOException {
+        String json = PushMessage.event("debate:abc", "{\"text\":\"hello\"}", 42L);
+        Map<String, Object> msg = parse(json);
+        assertEquals("event", msg.get("op"));
+        assertEquals("debate:abc", msg.get("topic"));
+        assertEquals("{\"text\":\"hello\"}", msg.get("payload"));
+        // The parse() helper stores numbers as strings, so we check it's not null and parseable
+        assertNotNull(msg.get("seq"));
+        assertEquals("42", msg.get("seq"));
+    }
+
+    @Test
+    void event_without_seq_omits_seq_field() throws IOException {
+        String json = PushMessage.event("debate:abc", "{}");
+        Map<String, Object> msg = parse(json);
+        assertEquals("event", msg.get("op"));
+        assertNull(msg.get("seq"));
     }
 }

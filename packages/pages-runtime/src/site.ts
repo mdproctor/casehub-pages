@@ -15,8 +15,8 @@ import type { Site, ViewState, DeepLink } from "@casehubio/pages-ui/dist/model/p
 import { parsePage } from "@casehubio/pages-ui/dist/parser/page-parser.js";
 import { load as yamlLoad } from "js-yaml";
 import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
-import { applyTheme, LIGHT_THEME, DARK_THEME } from "@casehubio/pages-viz/dist/base/theme.js";
-import type { PagesTheme } from "@casehubio/pages-viz/dist/base/theme.js";
+import { injectTheme, applyThemeMode, DEFAULT_THEME } from "@casehubio/pages-ui-tokens";
+import type { ThemeConfig } from "@casehubio/pages-ui-tokens";
 import type { PagesFilterDetail } from "@casehubio/pages-viz/dist/base/filter-types.js";
 import { buildPagePathMap } from "./page-paths.js";
 import { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
@@ -90,7 +90,7 @@ interface RecordDeleteDetail {
 
 export interface LiveSite extends Site {
   navigate(path: string): void;
-  setTheme(theme: "light" | "dark" | PagesTheme): void;
+  setTheme(mode: "light" | "dark"): void;
   dispose(): void;
   readonly layout: LayoutState;
 }
@@ -106,6 +106,7 @@ export interface SiteOptions {
   readonly layoutKey?: string;
   readonly layoutSaveDelayMs?: number;
   readonly devAuth?: DevAuthConfig;
+  readonly themeConfig?: ThemeConfig;
 }
 
 export async function loadSite(
@@ -123,7 +124,8 @@ export async function loadSite(
 
   const settings = root.props?.["settings"] as Record<string, unknown> | undefined;
   const isDark = settings?.["mode"] === "dark";
-  applyTheme(target, isDark ? DARK_THEME : LIGHT_THEME);
+  injectTheme(options?.themeConfig ?? DEFAULT_THEME, target);
+  applyThemeMode(target, isDark ? "dark" : "light");
 
   const pagePathMap = buildPagePathMap(root);
   const dataSetScope = buildDataSetScope(root, pagePathMap);
@@ -813,7 +815,8 @@ export async function loadSite(
     if (!slotContainer) return;
 
     if (visible) {
-      slotContainer.style.display = "";
+      slotContainer.style.display = slotContainer.dataset.pagesDisplay ?? "";
+      delete slotContainer.dataset.pagesDisplay;
       // Show adjacent drag handle
       const adjacentHandle = slotContainer.nextElementSibling as HTMLElement | null;
       if (adjacentHandle?.dataset.splitHandle !== undefined) {
@@ -826,9 +829,11 @@ export async function loadSite(
       // Restore parent split if it was collapsed
       const parentSplit = slotContainer.closest<HTMLElement>('[data-component-type="split"]');
       if (parentSplit && parentSplit.style.display === "none") {
-        parentSplit.style.display = "";
+        parentSplit.style.display = parentSplit.dataset.pagesDisplay ?? "";
+        delete parentSplit.dataset.pagesDisplay;
       }
     } else {
+      slotContainer.dataset.pagesDisplay = slotContainer.style.display;
       slotContainer.style.display = "none";
       // Hide adjacent drag handle
       const adjacentHandle = slotContainer.nextElementSibling as HTMLElement | null;
@@ -845,6 +850,7 @@ export async function loadSite(
         const slotChildren = parentSplit.querySelectorAll<HTMLElement>(":scope > [data-slot]");
         const allHidden = Array.from(slotChildren).every(s => s.style.display === "none");
         if (allHidden) {
+          parentSplit.dataset.pagesDisplay = parentSplit.style.display;
           parentSplit.style.display = "none";
         }
       }
@@ -1001,9 +1007,9 @@ export async function loadSite(
 
     state,
 
-    setTheme(theme: "light" | "dark" | PagesTheme): void {
-      applyTheme(target, theme);
-      const echartsThemeName = theme === "dark" ? "dark" : "";
+    setTheme(mode: "light" | "dark"): void {
+      applyThemeMode(target, mode);
+      const echartsThemeName = mode === "dark" ? "dark" : "";
       for (const [, entry] of registry) {
         const vizEl = entry.vizElement;
         if (vizEl && "buildOption" in vizEl) {

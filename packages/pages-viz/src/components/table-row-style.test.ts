@@ -222,7 +222,7 @@ describe("PagesTable row styling", () => {
       const style = el.shadowRoot.querySelector("style");
       expect(style).not.toBeNull();
       expect(style!.textContent).toContain("pages-row-danger");
-      expect(style!.textContent).toContain("--pages-row-danger-bg");
+      expect(style!.textContent).toContain("--pages-danger-3");
     });
 
     it("stylesheet includes pages-row-warning CSS class", () => {
@@ -235,7 +235,7 @@ describe("PagesTable row styling", () => {
 
       const style = el.shadowRoot.querySelector("style");
       expect(style!.textContent).toContain("pages-row-warning");
-      expect(style!.textContent).toContain("--pages-row-warning-bg");
+      expect(style!.textContent).toContain("--pages-warning-3");
     });
 
     it("stylesheet includes pages-row-success CSS class", () => {
@@ -248,7 +248,7 @@ describe("PagesTable row styling", () => {
 
       const style = el.shadowRoot.querySelector("style");
       expect(style!.textContent).toContain("pages-row-success");
-      expect(style!.textContent).toContain("--pages-row-success-bg");
+      expect(style!.textContent).toContain("--pages-success-3");
     });
 
     it("stylesheet includes pages-row-muted CSS class", () => {
@@ -261,7 +261,7 @@ describe("PagesTable row styling", () => {
 
       const style = el.shadowRoot.querySelector("style");
       expect(style!.textContent).toContain("pages-row-muted");
-      expect(style!.textContent).toContain("--pages-row-muted-bg");
+      expect(style!.textContent).toContain("--pages-neutral-3");
     });
   });
 

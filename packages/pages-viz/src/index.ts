@@ -13,10 +13,6 @@ export type { VizComponentProps } from "./base/types.js";
 export { cellToRaw, resolveColumnName } from "./base/cell-extract.js";
 export { deepMerge } from "./base/deep-merge.js";
 
-// Theme
-export type { PagesTheme } from "./base/theme.js";
-export { LIGHT_THEME, DARK_THEME, applyTheme, clearTheme } from "./base/theme.js";
-
 // Charts
 export { PagesBarChart } from "./charts/PagesBarChart.js";
 export { PagesLineChart } from "./charts/PagesLineChart.js";

@@ -94,7 +94,11 @@ describe("WebSocketSource", () => {
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
-    expect(ws.sent).toContainEqual(JSON.stringify({ op: "subscribe", dataset: "messages" }));
+    const subscribeMsg = ws.sent.find((m) => JSON.parse(m).op === "subscribe");
+    expect(subscribeMsg).toBeDefined();
+    const parsed = JSON.parse(subscribeMsg!);
+    expect(parsed.dataset).toBe("messages");
+    expect(parsed.id).toBeDefined();
   });
 
   it("ignores events for unsubscribed datasets", async () => {
@@ -437,7 +441,11 @@ describe("WebSocketSource", () => {
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
-    expect(ws.sent).toContainEqual(JSON.stringify({ op: "subscribe", dataset: "chat" }));
+    const subscribeMsg = ws.sent.find((m) => JSON.parse(m).op === "subscribe");
+    expect(subscribeMsg).toBeDefined();
+    const parsed = JSON.parse(subscribeMsg!);
+    expect(parsed.dataset).toBe("chat");
+    expect(parsed.id).toBeDefined();
   });
 
   it("sends unsubscribe message on unsubscribe", async () => {
@@ -460,7 +468,11 @@ describe("WebSocketSource", () => {
     ws.sent = [];
     source.unsubscribe(dataSetId("chat"));
 
-    expect(ws.sent).toContainEqual(JSON.stringify({ op: "unsubscribe", dataset: "messages" }));
+    const unsubscribeMsg = ws.sent.find((m) => JSON.parse(m).op === "unsubscribe");
+    expect(unsubscribeMsg).toBeDefined();
+    const parsed = JSON.parse(unsubscribeMsg!);
+    expect(parsed.dataset).toBe("messages");
+    expect(parsed.id).toBeDefined();
   });
 
   describe("WebSocketSource — connection URL", () => {
@@ -1028,6 +1040,166 @@ describe("WebSocketSource", () => {
 
       const resubscribe = ws2.sent.find((m) => JSON.parse(m).op === "subscribe");
       expect(JSON.parse(resubscribe!).since).toBe("100");
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe("subscribe/unsubscribe wire protocol with id (#107)", () => {
+    it("sends subscribe message with id field", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      const subscribeMsg = ws.sent.find((m) => JSON.parse(m).op === "subscribe");
+      expect(subscribeMsg).toBeDefined();
+      const parsed = JSON.parse(subscribeMsg!);
+      expect(parsed.id).toBeDefined();
+      expect(typeof parsed.id).toBe("string");
+      expect(parsed.dataset).toBe("messages");
+    });
+
+    it("sends unsubscribe message with id field", async () => {
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.sent = [];
+      source.unsubscribe(dataSetId("chat"));
+
+      const unsubscribeMsg = ws.sent.find((m) => JSON.parse(m).op === "unsubscribe");
+      expect(unsubscribeMsg).toBeDefined();
+      const parsed = JSON.parse(unsubscribeMsg!);
+      expect(parsed.id).toBeDefined();
+      expect(typeof parsed.id).toBe("string");
+      expect(parsed.dataset).toBe("messages");
+    });
+
+    it("handles ack message without crashing", async () => {
+      const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.onmessage?.({
+        data: JSON.stringify({ op: "ack", id: "r1" }),
+      });
+
+      // Should log debug message
+      expect(debugSpy).toHaveBeenCalled();
+      debugSpy.mockRestore();
+    });
+
+    it("handles error message with warning log", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws = MockWebSocket.instances[0]!;
+      ws.open();
+
+      ws.onmessage?.({
+        data: JSON.stringify({ op: "error", id: "r1", message: "unknown dataset" }),
+      });
+
+      // Should log warning - check both arguments separately
+      expect(warnSpy).toHaveBeenCalled();
+      const call = warnSpy.mock.calls[0];
+      expect(call?.[0]).toContain("error");
+      expect(call?.[1]).toBe("unknown dataset");
+      warnSpy.mockRestore();
+    });
+
+    it("includes since in resubscribe with id field", async () => {
+      vi.useFakeTimers();
+      const source = createWebSocketSource(
+        "ws://localhost/ws",
+        undefined,
+        MockWebSocket as unknown as typeof WebSocket,
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("chat"),
+        url: "ws://localhost/ws?dataset=messages",
+      };
+
+      source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
+
+      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      const ws1 = MockWebSocket.instances[0]!;
+      ws1.open();
+
+      // Receive a message with seq
+      ws1.onmessage?.({
+        data: JSON.stringify({
+          dataset: "messages",
+          op: "snapshot",
+          seq: "42",
+          columns: [{ id: "text", type: "TEXT" }],
+          rows: [["hello"]],
+        }),
+      });
+
+      // Simulate abnormal close and reconnect
+      ws1.readyState = MockWebSocket.CLOSED;
+      ws1.onclose?.({ code: 1006, reason: "abnormal" });
+      await vi.advanceTimersByTimeAsync(1000);
+
+      expect(MockWebSocket.instances).toHaveLength(2);
+      const ws2 = MockWebSocket.instances[1]!;
+      ws2.open();
+
+      // Check that resubscribe includes both id and since
+      const resubscribe = ws2.sent.find((m) => JSON.parse(m).op === "subscribe");
+      expect(resubscribe).toBeDefined();
+      const parsed = JSON.parse(resubscribe!);
+      expect(parsed.id).toBeDefined();
+      expect(parsed.since).toBe("42");
 
       vi.useRealTimers();
     });

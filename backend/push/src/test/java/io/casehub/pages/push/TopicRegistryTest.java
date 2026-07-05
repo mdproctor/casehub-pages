@@ -110,4 +110,152 @@ class TopicRegistryTest {
         assertEquals(Set.of("conn-1"), reg.connections("topic-c"));
         assertTrue(reg.connections("topic-a").isEmpty());
     }
+
+    // Wildcard pattern validation tests (§2.2)
+    @Test
+    void isValidTopicOrPattern_exact_topic() {
+        assertTrue(TopicRegistry.isValidTopicOrPattern("debate:abc"));
+    }
+
+    @Test
+    void isValidTopicOrPattern_trailing_wildcard() {
+        assertTrue(TopicRegistry.isValidTopicOrPattern("debate:*"));
+    }
+
+    @Test
+    void isValidTopicOrPattern_match_all() {
+        assertTrue(TopicRegistry.isValidTopicOrPattern("*"));
+    }
+
+    @Test
+    void isValidTopicOrPattern_mid_wildcard() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern("debate:*:sub"));
+    }
+
+    @Test
+    void isValidTopicOrPattern_null() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern(null));
+    }
+
+    @Test
+    void isValidTopicOrPattern_empty() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern(""));
+    }
+
+    // Wildcard matching tests (§2.3)
+    @Test
+    void connections_wildcard_match() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:*"));
+        assertEquals(Set.of("conn-1"), reg.connections("debate:abc"));
+        assertEquals(Set.of("conn-1"), reg.connections("debate:xyz"));
+        assertEquals(Set.of("conn-1"), reg.connections("debate:room:123"));
+    }
+
+    @Test
+    void connections_wildcard_plus_exact_union() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:*"));
+        reg.listen("conn-2", List.of("debate:abc"));
+        assertEquals(Set.of("conn-1", "conn-2"), reg.connections("debate:abc"));
+        assertEquals(Set.of("conn-1"), reg.connections("debate:xyz"));
+    }
+
+    @Test
+    void connections_match_all_wildcard() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("*"));
+        assertEquals(Set.of("conn-1"), reg.connections("debate:abc"));
+        assertEquals(Set.of("conn-1"), reg.connections("file:/x"));
+        assertEquals(Set.of("conn-1"), reg.connections("anything"));
+    }
+
+    @Test
+    void unlisten_wildcard() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:*"));
+        assertEquals(Set.of("conn-1"), reg.connections("debate:abc"));
+        reg.unlisten("conn-1", List.of("debate:*"));
+        assertTrue(reg.connections("debate:abc").isEmpty());
+    }
+
+    @Test
+    void removeConnection_cleans_wildcards() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:*", "file:*"));
+        reg.removeConnection("conn-1");
+        assertTrue(reg.connections("debate:abc").isEmpty());
+        assertTrue(reg.connections("file:/x").isEmpty());
+    }
+
+    // matchedTopics tests (§2.4)
+    @Test
+    void matchedTopics_returns_matching_concrete_topics() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:abc"));
+        reg.listen("conn-2", List.of("debate:xyz"));
+        reg.listen("conn-3", List.of("file:/x"));
+
+        Set<String> matched = reg.matchedTopics("debate:*");
+        assertEquals(Set.of("debate:abc", "debate:xyz"), matched);
+    }
+
+    @Test
+    void matchedTopics_match_all() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:abc"));
+        reg.listen("conn-2", List.of("file:/x"));
+
+        Set<String> matched = reg.matchedTopics("*");
+        assertEquals(Set.of("debate:abc", "file:/x"), matched);
+    }
+
+    @Test
+    void matchedTopics_exact_pattern() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("debate:abc"));
+        reg.listen("conn-2", List.of("debate:xyz"));
+
+        Set<String> matched = reg.matchedTopics("debate:abc");
+        assertEquals(Set.of("debate:abc"), matched);
+    }
+
+    @Test
+    void matchedTopics_no_matches() {
+        TopicRegistry reg = new TopicRegistry();
+        reg.listen("conn-1", List.of("file:/x"));
+
+        Set<String> matched = reg.matchedTopics("debate:*");
+        assertTrue(matched.isEmpty());
+    }
+
+    // Thread safety with wildcards
+    @Test
+    void concurrent_listen_unlisten_wildcards_does_not_corrupt() throws Exception {
+        TopicRegistry reg = new TopicRegistry();
+        int threads = 8;
+        int opsPerThread = 1000;
+        CountDownLatch latch = new CountDownLatch(threads);
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+
+        for (int t = 0; t < threads; t++) {
+            final String connId = "conn-" + t;
+            executor.submit(() -> {
+                try {
+                    for (int i = 0; i < opsPerThread; i++) {
+                        reg.listen(connId, List.of("debate:*", "topic-" + connId));
+                        reg.connections("debate:abc");
+                        reg.connections("topic-" + connId);
+                        reg.unlisten(connId, List.of("topic-" + connId));
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        executor.shutdown();
+        assertEquals(threads, reg.connections("debate:anything").size());
+    }
 }

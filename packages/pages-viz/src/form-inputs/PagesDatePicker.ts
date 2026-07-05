@@ -6,7 +6,7 @@ import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js
 const DATE_PICKER_CSS = `
 :host {
   display: block;
-  font-family: var(--pages-font, system-ui, sans-serif);
+  font-family: var(--pages-font-family, system-ui, sans-serif);
 }
 .pages-form-field {
   display: flex;
@@ -14,24 +14,24 @@ const DATE_PICKER_CSS = `
   gap: 6px;
 }
 label {
-  font-size: var(--pages-font-size, 14px);
+  font-size: var(--pages-font-size-base, 14px);
   font-weight: 500;
-  color: var(--pages-text, #333);
+  color: var(--pages-neutral-12, #333);
 }
 input {
   padding: 8px 12px;
-  border: 1px solid var(--pages-border, #e0e0e0);
-  border-radius: var(--pages-radius, 4px);
-  font-size: var(--pages-font-size, 14px);
-  background: var(--pages-bg, #fff);
-  color: var(--pages-text, #333);
+  border: 1px solid var(--pages-neutral-6, #e0e0e0);
+  border-radius: var(--pages-radius-sm, 4px);
+  font-size: var(--pages-font-size-base, 14px);
+  background: var(--pages-neutral-1, #fff);
+  color: var(--pages-neutral-12, #333);
 }
 input:focus {
   outline: none;
-  border-color: var(--pages-accent, #5470c6);
+  border-color: var(--pages-accent-9, #5470c6);
 }
 input:read-only {
-  background: var(--pages-bg-disabled, #f5f5f5);
+  background: var(--pages-neutral-3, #f5f5f5);
   cursor: not-allowed;
 }
 `;
