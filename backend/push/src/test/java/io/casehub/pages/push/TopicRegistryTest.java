@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TopicRegistryTest {
@@ -129,7 +130,8 @@ class TopicRegistryTest {
 
     @Test
     void isValidTopicOrPattern_mid_wildcard() {
-        assertFalse(TopicRegistry.isValidTopicOrPattern("debate:*:sub"));
+        // BREAKING CHANGE: mid-position * is now valid (segment wildcard)
+        assertTrue(TopicRegistry.isValidTopicOrPattern("debate:*:sub"));
     }
 
     @Test
@@ -142,11 +144,93 @@ class TopicRegistryTest {
         assertFalse(TopicRegistry.isValidTopicOrPattern(""));
     }
 
-    // Wildcard matching tests (§2.3)
+    @Test void isValidTopicOrPattern_segment_wildcard() {
+        assertTrue(TopicRegistry.isValidTopicOrPattern("debate:*:summary"));
+    }
+
+    @Test void isValidTopicOrPattern_multi_segment_wildcard() {
+        assertTrue(TopicRegistry.isValidTopicOrPattern("debate:*:*:summary"));
+    }
+
+    @Test void isValidTopicOrPattern_double_star_trailing() {
+        assertTrue(TopicRegistry.isValidTopicOrPattern("debate:**"));
+    }
+
+    @Test void isValidTopicOrPattern_double_star_alone() {
+        assertTrue(TopicRegistry.isValidTopicOrPattern("**"));
+    }
+
+    @Test void isValidTopicOrPattern_double_star_mid_position() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern("debate:**:summary"));
+    }
+
+    @Test void isValidTopicOrPattern_partial_wildcard() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern("de*bate"));
+    }
+
+    @Test void isValidTopicOrPattern_empty_segment() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern("debate::summary"));
+    }
+
+    @Test void isValidTopicOrPattern_leading_colon() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern(":debate"));
+    }
+
+    @Test void isValidTopicOrPattern_trailing_colon() {
+        assertFalse(TopicRegistry.isValidTopicOrPattern("debate:"));
+    }
+
+    // === matches() tests ===
+
+    @Test void matches_exact() {
+        assertTrue(TopicRegistry.matches("debate:abc", "debate:abc"));
+        assertFalse(TopicRegistry.matches("debate:abc", "debate:xyz"));
+    }
+
+    @Test void matches_single_star_one_segment() {
+        assertTrue(TopicRegistry.matches("debate:*", "debate:abc"));
+        assertFalse(TopicRegistry.matches("debate:*", "debate:abc:def"));
+    }
+
+    @Test void matches_single_star_mid_position() {
+        assertTrue(TopicRegistry.matches("debate:*:summary", "debate:abc:summary"));
+        assertFalse(TopicRegistry.matches("debate:*:summary", "debate:abc:def:summary"));
+    }
+
+    @Test void matches_multiple_single_stars() {
+        assertTrue(TopicRegistry.matches("a:*:b:*:c", "a:x:b:y:c"));
+        assertFalse(TopicRegistry.matches("a:*:b:*:c", "a:x:b:y:z"));
+    }
+
+    @Test void matches_double_star_any_depth() {
+        assertTrue(TopicRegistry.matches("debate:**", "debate:abc"));
+        assertTrue(TopicRegistry.matches("debate:**", "debate:abc:def:ghi"));
+    }
+
+    @Test void matches_double_star_zero_segments() {
+        assertTrue(TopicRegistry.matches("debate:**", "debate"));
+    }
+
+    @Test void matches_double_star_prefix_too_short() {
+        assertFalse(TopicRegistry.matches("a:b:**", "a"));
+    }
+
+    @Test void matches_bare_star_one_segment() {
+        assertTrue(TopicRegistry.matches("*", "hello"));
+        assertFalse(TopicRegistry.matches("*", "hello:world"));
+    }
+
+    @Test void matches_bare_double_star() {
+        assertTrue(TopicRegistry.matches("**", "anything"));
+        assertTrue(TopicRegistry.matches("**", "a:b:c:d"));
+    }
+
+    // Wildcard matching tests (§2.3) — updated for new semantics
     @Test
     void connections_wildcard_match() {
+        // BREAKING CHANGE: "debate:**" for multi-depth, "debate:*" for single segment
         TopicRegistry reg = new TopicRegistry();
-        reg.listen("conn-1", List.of("debate:*"));
+        reg.listen("conn-1", List.of("debate:**"));
         assertEquals(Set.of("conn-1"), reg.connections("debate:abc"));
         assertEquals(Set.of("conn-1"), reg.connections("debate:xyz"));
         assertEquals(Set.of("conn-1"), reg.connections("debate:room:123"));
@@ -163,8 +247,9 @@ class TopicRegistryTest {
 
     @Test
     void connections_match_all_wildcard() {
+        // BREAKING CHANGE: "**" for match-all across depths
         TopicRegistry reg = new TopicRegistry();
-        reg.listen("conn-1", List.of("*"));
+        reg.listen("conn-1", List.of("**"));
         assertEquals(Set.of("conn-1"), reg.connections("debate:abc"));
         assertEquals(Set.of("conn-1"), reg.connections("file:/x"));
         assertEquals(Set.of("conn-1"), reg.connections("anything"));
@@ -188,6 +273,36 @@ class TopicRegistryTest {
         assertTrue(reg.connections("file:/x").isEmpty());
     }
 
+    // === connections() with new wildcards ===
+
+    @Test
+    void connections_segment_wildcard() {
+        var registry = new TopicRegistry();
+        registry.listen("c1", List.of("debate:*:summary"));
+        assertThat(registry.connections("debate:abc:summary")).containsExactly("c1");
+        assertThat(registry.connections("debate:abc:details")).isEmpty();
+        assertThat(registry.connections("debate:abc:def:summary")).isEmpty();
+    }
+
+    @Test
+    void connections_double_star_wildcard() {
+        var registry = new TopicRegistry();
+        registry.listen("c1", List.of("debate:**"));
+        assertThat(registry.connections("debate:abc")).containsExactly("c1");
+        assertThat(registry.connections("debate:abc:def")).containsExactly("c1");
+        assertThat(registry.connections("debate")).containsExactly("c1");
+        assertThat(registry.connections("other:topic")).isEmpty();
+    }
+
+    @Test
+    void connections_single_star_no_longer_matches_depth() {
+        // BREAKING CHANGE: * now matches one segment only
+        var registry = new TopicRegistry();
+        registry.listen("c1", List.of("debate:*"));
+        assertThat(registry.connections("debate:abc")).containsExactly("c1");
+        assertThat(registry.connections("debate:abc:def")).isEmpty(); // was matching before
+    }
+
     // matchedTopics tests (§2.4)
     @Test
     void matchedTopics_returns_matching_concrete_topics() {
@@ -202,11 +317,12 @@ class TopicRegistryTest {
 
     @Test
     void matchedTopics_match_all() {
+        // BREAKING CHANGE: "**" for match-all across depths
         TopicRegistry reg = new TopicRegistry();
         reg.listen("conn-1", List.of("debate:abc"));
         reg.listen("conn-2", List.of("file:/x"));
 
-        Set<String> matched = reg.matchedTopics("*");
+        Set<String> matched = reg.matchedTopics("**");
         assertEquals(Set.of("debate:abc", "file:/x"), matched);
     }
 
@@ -229,9 +345,31 @@ class TopicRegistryTest {
         assertTrue(matched.isEmpty());
     }
 
+    // === matchedTopics() with new wildcards ===
+
+    @Test
+    void matchedTopics_segment_wildcard() {
+        var registry = new TopicRegistry();
+        registry.listen("c1", List.of("debate:abc:summary"));
+        registry.listen("c2", List.of("debate:xyz:details"));
+        assertThat(registry.matchedTopics("debate:*:summary"))
+            .containsExactly("debate:abc:summary");
+    }
+
+    @Test
+    void matchedTopics_double_star() {
+        var registry = new TopicRegistry();
+        registry.listen("c1", List.of("debate:abc"));
+        registry.listen("c2", List.of("debate:xyz:deep"));
+        registry.listen("c3", List.of("other:topic"));
+        assertThat(registry.matchedTopics("debate:**"))
+            .containsExactlyInAnyOrder("debate:abc", "debate:xyz:deep");
+    }
+
     // Thread safety with wildcards
     @Test
     void concurrent_listen_unlisten_wildcards_does_not_corrupt() throws Exception {
+        // BREAKING CHANGE: "debate:**" for multi-depth matching
         TopicRegistry reg = new TopicRegistry();
         int threads = 8;
         int opsPerThread = 1000;
@@ -243,7 +381,7 @@ class TopicRegistryTest {
             executor.submit(() -> {
                 try {
                     for (int i = 0; i < opsPerThread; i++) {
-                        reg.listen(connId, List.of("debate:*", "topic-" + connId));
+                        reg.listen(connId, List.of("debate:**", "topic-" + connId));
                         reg.connections("debate:abc");
                         reg.connections("topic-" + connId);
                         reg.unlisten(connId, List.of("topic-" + connId));

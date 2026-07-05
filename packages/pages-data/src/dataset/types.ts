@@ -49,3 +49,4 @@ export interface DataSet {
 }
 
 export { dataSetId, columnId } from "./constructors.js";
+export type { DatasetContract } from "./contract.js";

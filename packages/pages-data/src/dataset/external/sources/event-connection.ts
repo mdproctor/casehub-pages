@@ -1,5 +1,14 @@
 import type { PushSourceConfig } from "./push-source.js";
 import { buildConnectionUrl, nextRequestId, sendListen, sendUnlisten, dispatchWireEvent } from "./push-wire.js";
+import { isMatchedByRegistrations } from './topic-matching.js';
+
+export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
+
+export interface EventConnectionOptions {
+  readonly config?: PushSourceConfig;
+  readonly batchEvents?: boolean;
+  readonly onStatusChange?: (status: ConnectionStatus) => void;
+}
 
 export interface ListenAck {
   readonly topics: string[];
@@ -12,6 +21,7 @@ export interface EventConnection {
   unlisten(topics: string[]): Promise<void>;
   close(): void;
   readonly connected: boolean;
+  readonly status: ConnectionStatus;
 }
 
 interface PendingEntry {
@@ -22,30 +32,34 @@ interface PendingEntry {
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
-/**
- * Check if a concrete topic is matched by any registration (exact or wildcard prefix).
- */
-export function isMatchedByRegistrations(topic: string, registrations: Set<string>): boolean {
-  for (const reg of registrations) {
-    if (reg === topic) return true;
-    if (reg.endsWith("*") && topic.startsWith(reg.slice(0, -1))) return true;
-  }
-  return false;
-}
-
 export function createEventConnection(
   url: string,
-  config?: PushSourceConfig,
+  options?: EventConnectionOptions,
 ): EventConnection {
+  const config = options?.config;
+  const batchEvents = options?.batchEvents ?? false;
+  const onStatusChange = options?.onStatusChange;
+
   let ws: WebSocket | null = null;
   let reconnectAttempt = 0;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
+  let currentStatus: ConnectionStatus = 'disconnected';
   const listenRegistrations = new Set<string>();
   const pending = new Map<string, PendingEntry>();
   const topicSeqs = new Map<string, number>();
 
+  let eventQueue: Array<{ topic?: string; payload?: unknown }> = [];
+  let rafScheduled = false;
+
   const connectionUrl = buildConnectionUrl(url, config);
+
+  function setStatus(newStatus: ConnectionStatus): void {
+    if (currentStatus !== newStatus) {
+      currentStatus = newStatus;
+      onStatusChange?.(newStatus);
+    }
+  }
 
   function rejectAllPending(reason: string): void {
     for (const [, entry] of pending) {
@@ -60,6 +74,7 @@ export function createEventConnection(
     ws = new WebSocket(connectionUrl);
 
     ws.onopen = () => {
+      setStatus('connected');
       reconnectAttempt = 0;
       if (listenRegistrations.size > 0 && ws) {
         // Two-phase reconnect since construction
@@ -67,7 +82,7 @@ export function createEventConnection(
 
         // Phase 1: seed exact topics from registrations
         for (const reg of listenRegistrations) {
-          if (!reg.endsWith("*")) {
+          if (!reg.includes("*")) {
             since[reg] = topicSeqs.get(reg) ?? 0;
           }
         }
@@ -97,7 +112,11 @@ export function createEventConnection(
     ws.onclose = (e: CloseEvent) => {
       rejectAllPending("connection closed");
       if (closed) return;
-      if (e.code >= 4000) return;
+      if (e.code >= 4000) {
+        setStatus('disconnected');
+        return;
+      }
+      setStatus('reconnecting');
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), 30000);
       reconnectAttempt++;
       reconnectTimer = setTimeout(connect, delay);
@@ -162,10 +181,26 @@ export function createEventConnection(
           topicSeqs.set(topic, seq);
         }
 
-        dispatchWireEvent(
-          msg as { topic?: string; payload?: unknown },
-          config.eventTarget,
-        );
+        if (batchEvents) {
+          eventQueue.push(msg as { topic?: string; payload?: unknown });
+          if (!rafScheduled) {
+            rafScheduled = true;
+            requestAnimationFrame(() => {
+              rafScheduled = false;
+              if (closed) return;
+              const events = eventQueue;
+              eventQueue = [];
+              for (const evt of events) {
+                dispatchWireEvent(evt, config.eventTarget!);
+              }
+            });
+          }
+        } else {
+          dispatchWireEvent(
+            msg as { topic?: string; payload?: unknown },
+            config.eventTarget,
+          );
+        }
       }
     }
   }
@@ -174,6 +209,7 @@ export function createEventConnection(
 
   return {
     get connected() { return !closed && ws?.readyState === 1; },
+    get status() { return currentStatus; },
 
     send(message: object): void {
       if (ws && ws.readyState === 1) {
@@ -244,9 +280,12 @@ export function createEventConnection(
 
     close(): void {
       closed = true;
+      setStatus('disconnected');
       rejectAllPending("connection closed");
       listenRegistrations.clear();
       if (reconnectTimer) clearTimeout(reconnectTimer);
+      eventQueue.length = 0;
+      rafScheduled = false;
       ws?.close(1000, "client closed");
       ws = null;
     },

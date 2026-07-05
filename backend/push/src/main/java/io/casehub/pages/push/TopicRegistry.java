@@ -14,22 +14,60 @@ public final class TopicRegistry {
 
     /**
      * Validates a topic name or pattern.
-     * Valid patterns: exact topics (no wildcard) or trailing wildcard only.
-     * Invalid: null, empty, mid-wildcard (e.g., "debate:*:sub").
+     * <p>Valid patterns:
+     * <ul>
+     *   <li>Exact topics with no wildcards</li>
+     *   <li>{@code *} as a whole segment — matches exactly one segment</li>
+     *   <li>{@code **} as the last segment — matches zero or more segments</li>
+     * </ul>
+     * Invalid: null, empty, partial wildcards (e.g. "de*bate"), empty segments,
+     * {@code **} in non-trailing position.
      */
     public static boolean isValidTopicOrPattern(String topic) {
-        if (topic == null || topic.isEmpty()) {
-            return false;
+        if (topic == null || topic.isEmpty()) return false;
+        String[] segments = topic.split(":", -1);
+        for (int i = 0; i < segments.length; i++) {
+            String s = segments[i];
+            if (s.isEmpty()) return false;
+            if ("**".equals(s)) return i == segments.length - 1;
+            if (s.contains("*") && !"*".equals(s)) return false;
         }
-        int starIdx = topic.indexOf('*');
-        return starIdx == -1 || starIdx == topic.length() - 1;
+        return true;
+    }
+
+    /**
+     * Tests whether a concrete topic matches a pattern.
+     * <ul>
+     *   <li>{@code *} in a pattern segment matches exactly one topic segment</li>
+     *   <li>{@code **} as the last pattern segment matches zero or more trailing segments</li>
+     *   <li>All other segments must match exactly</li>
+     * </ul>
+     */
+    public static boolean matches(String pattern, String topic) {
+        String[] ps = pattern.split(":", -1);
+        String[] ts = topic.split(":", -1);
+
+        if (ps[ps.length - 1].equals("**")) {
+            if (ts.length < ps.length - 1) return false;
+            for (int i = 0; i < ps.length - 1; i++) {
+                if (!"*".equals(ps[i]) && !ps[i].equals(ts[i])) return false;
+            }
+            return true;
+        }
+
+        if (ps.length != ts.length) return false;
+        for (int i = 0; i < ps.length; i++) {
+            if ("*".equals(ps[i])) continue;
+            if (!ps[i].equals(ts[i])) return false;
+        }
+        return true;
     }
 
     public void listen(String connectionId, List<String> topics) {
         Set<String> connTopics = connectionToTopics.computeIfAbsent(connectionId,
                 k -> ConcurrentHashMap.newKeySet());
         for (String topic : topics) {
-            if (topic.endsWith("*")) {
+            if (topic.contains("*")) {
                 wildcardPatterns.computeIfAbsent(topic, k -> new CopyOnWriteArraySet<>()).add(connectionId);
             } else {
                 exactTopics.computeIfAbsent(topic, k -> new CopyOnWriteArraySet<>()).add(connectionId);
@@ -40,7 +78,7 @@ public final class TopicRegistry {
 
     public void unlisten(String connectionId, List<String> topics) {
         for (String topic : topics) {
-            CopyOnWriteArraySet<String> conns = topic.endsWith("*")
+            CopyOnWriteArraySet<String> conns = topic.contains("*")
                     ? wildcardPatterns.get(topic)
                     : exactTopics.get(topic);
             if (conns != null) {
@@ -60,7 +98,7 @@ public final class TopicRegistry {
         Set<String> topics = connectionToTopics.remove(connectionId);
         if (topics != null) {
             for (String topic : topics) {
-                CopyOnWriteArraySet<String> conns = topic.endsWith("*")
+                CopyOnWriteArraySet<String> conns = topic.contains("*")
                         ? wildcardPatterns.get(topic)
                         : exactTopics.get(topic);
                 if (conns != null) {
@@ -83,11 +121,9 @@ public final class TopicRegistry {
             result.addAll(exactConns);
         }
 
-        // Wildcard prefix match
+        // Wildcard pattern match
         for (var entry : wildcardPatterns.entrySet()) {
-            String pattern = entry.getKey();
-            String prefix = pattern.substring(0, pattern.length() - 1); // Remove trailing *
-            if (topic.startsWith(prefix)) {
+            if (matches(entry.getKey(), topic)) {
                 result.addAll(entry.getValue());
             }
         }
@@ -100,15 +136,14 @@ public final class TopicRegistry {
      * Useful for introspection — what topics would a wildcard pattern match?
      */
     public Set<String> matchedTopics(String pattern) {
-        if (!pattern.endsWith("*")) {
+        if (!pattern.contains("*")) {
             // Exact pattern — return it if it exists
             return exactTopics.containsKey(pattern) ? Set.of(pattern) : Set.of();
         }
 
-        String prefix = pattern.substring(0, pattern.length() - 1); // Remove trailing *
         Set<String> matched = new HashSet<>();
         for (String topic : exactTopics.keySet()) {
-            if (topic.startsWith(prefix)) {
+            if (matches(pattern, topic)) {
                 matched.add(topic);
             }
         }

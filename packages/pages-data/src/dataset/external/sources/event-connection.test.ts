@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createEventConnection, isMatchedByRegistrations } from "./event-connection.js";
+import { createEventConnection, type ConnectionStatus } from "./event-connection.js";
+import { isMatchedByRegistrations } from "./topic-matching.js";
 import type { PushSourceConfig } from "./push-source.js";
 
 class MockWebSocket {
@@ -75,11 +76,11 @@ describe("isMatchedByRegistrations", () => {
     expect(isMatchedByRegistrations("debate:xyz", regs)).toBe(false);
   });
 
-  it("matches wildcard prefix", () => {
+  it("matches single segment wildcard", () => {
     const regs = new Set(["debate:*"]);
     expect(isMatchedByRegistrations("debate:abc", regs)).toBe(true);
     expect(isMatchedByRegistrations("debate:xyz", regs)).toBe(true);
-    expect(isMatchedByRegistrations("debate:room:123", regs)).toBe(true);
+    expect(isMatchedByRegistrations("debate:room:123", regs)).toBe(false);
   });
 
   it("does not match non-matching wildcard", () => {
@@ -87,10 +88,17 @@ describe("isMatchedByRegistrations", () => {
     expect(isMatchedByRegistrations("file:abc", regs)).toBe(false);
   });
 
-  it("global wildcard matches everything", () => {
-    const regs = new Set(["*"]);
+  it("multi-segment wildcard matches zero or more", () => {
+    const regs = new Set(["debate:**"]);
     expect(isMatchedByRegistrations("debate:abc", regs)).toBe(true);
+    expect(isMatchedByRegistrations("debate:abc:def", regs)).toBe(true);
+    expect(isMatchedByRegistrations("debate", regs)).toBe(true);
+  });
+
+  it("bare * matches single segment only", () => {
+    const regs = new Set(["*"]);
     expect(isMatchedByRegistrations("anything", regs)).toBe(true);
+    expect(isMatchedByRegistrations("debate:abc", regs)).toBe(false);
   });
 
   it("empty registrations match nothing", () => {
@@ -158,7 +166,7 @@ describe("createEventConnection", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
     lastWs().simulateMessage(JSON.stringify({
@@ -180,7 +188,7 @@ describe("createEventConnection", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
     lastWs().simulateMessage(JSON.stringify([
@@ -196,7 +204,7 @@ describe("createEventConnection", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
     lastWs().simulateMessage(JSON.stringify({
@@ -223,7 +231,7 @@ describe("createEventConnection", () => {
 
   it("applies relay config to connection URL", () => {
     const conn = createEventConnection("wss://example.com/ws", {
-      relay: { endpoint: "wss://relay.example.com/proxy" },
+      config: { relay: { endpoint: "wss://relay.example.com/proxy" } },
     });
     expect(lastWs().url).toContain("relay.example.com");
     expect(lastWs().url).toContain("target=");
@@ -232,7 +240,7 @@ describe("createEventConnection", () => {
 
   it("applies auth config to connection URL", () => {
     const conn = createEventConnection("wss://example.com/ws", {
-      auth: { type: "query-param", token: "abc123" },
+      config: { auth: { type: "query-param", token: "abc123" } },
     });
     expect(lastWs().url).toContain("token=abc123");
     conn.close();
@@ -393,7 +401,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -410,7 +418,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -446,7 +454,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -465,7 +473,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -498,7 +506,7 @@ describe("EventConnection seq tracking + dedup", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -535,7 +543,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -594,7 +602,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -631,7 +639,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -665,7 +673,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      eventTarget: target as unknown as HTMLElement,
+      config: { eventTarget: target as unknown as HTMLElement },
     });
     lastWs().simulateOpen();
 
@@ -749,5 +757,218 @@ describe("EventConnection reconnect since", () => {
 
     conn.close();
     vi.useRealTimers();
+  });
+});
+
+describe('EventConnection status tracking', () => {
+  it('starts as disconnected', () => {
+    const conn = createEventConnection('ws://localhost:8080', {
+      onStatusChange: vi.fn(),
+    });
+    expect(conn.status).toBe('disconnected');
+    conn.close();
+  });
+
+  it('transitions to connected on WebSocket open', () => {
+    const onChange = vi.fn();
+    const conn = createEventConnection('ws://localhost:8080', {
+      onStatusChange: onChange,
+    });
+    expect(conn.status).toBe('disconnected');
+
+    lastWs().simulateOpen();
+
+    expect(conn.status).toBe('connected');
+    expect(onChange).toHaveBeenCalledWith('connected');
+    conn.close();
+  });
+
+  it('transitions to reconnecting on WebSocket close (non-permanent)', () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    const conn = createEventConnection('ws://localhost:8080', {
+      onStatusChange: onChange,
+    });
+    lastWs().simulateOpen();
+    onChange.mockClear();
+
+    lastWs().simulateClose(1006); // Network error
+
+    expect(conn.status).toBe('reconnecting');
+    expect(onChange).toHaveBeenCalledWith('reconnecting');
+
+    conn.close();
+    vi.useRealTimers();
+  });
+
+  it('transitions to disconnected on permanent close (code >= 4000)', () => {
+    const onChange = vi.fn();
+    const conn = createEventConnection('ws://localhost:8080', {
+      onStatusChange: onChange,
+    });
+    lastWs().simulateOpen();
+    onChange.mockClear();
+
+    lastWs().simulateClose(4000); // Permanent error
+
+    expect(conn.status).toBe('disconnected');
+    expect(onChange).toHaveBeenCalledWith('disconnected');
+
+    conn.close();
+  });
+
+  it('transitions to disconnected on close()', () => {
+    const onChange = vi.fn();
+    const conn = createEventConnection('ws://localhost:8080', {
+      onStatusChange: onChange,
+    });
+    lastWs().simulateOpen();
+    onChange.mockClear();
+
+    conn.close();
+
+    expect(conn.status).toBe('disconnected');
+    expect(onChange).toHaveBeenCalledWith('disconnected');
+  });
+
+  it('transitions from reconnecting to connected on successful reconnect', () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
+    const conn = createEventConnection('ws://localhost:8080', {
+      onStatusChange: onChange,
+    });
+    lastWs().simulateOpen();
+    lastWs().simulateClose(1006);
+    onChange.mockClear();
+
+    vi.advanceTimersByTime(1500);
+    lastWs().simulateOpen();
+
+    expect(conn.status).toBe('connected');
+    expect(onChange).toHaveBeenCalledWith('connected');
+
+    conn.close();
+    vi.useRealTimers();
+  });
+
+  it('onStatusChange is optional', () => {
+    const conn = createEventConnection('ws://localhost:8080');
+    lastWs().simulateOpen();
+    expect(conn.status).toBe('connected');
+    conn.close();
+  });
+});
+
+describe('EventConnection rAF batching', () => {
+  it('dispatches events immediately when batchEvents is false (default)', () => {
+    const target = new EventTarget();
+    const handler = vi.fn();
+    target.addEventListener('pages-event', handler);
+    const conn = createEventConnection('ws://localhost:8080', {
+      config: { eventTarget: target as unknown as HTMLElement },
+      // batchEvents not set — defaults to false
+    });
+    lastWs().simulateOpen();
+
+    lastWs().simulateMessage(JSON.stringify({
+      op: 'event',
+      topic: 'debate:abc',
+      payload: { text: 'hello' },
+    }));
+
+    expect(handler).toHaveBeenCalledTimes(1);
+    conn.close();
+  });
+
+  it('batches events when batchEvents is true', () => {
+    const target = new EventTarget();
+    const handler = vi.fn();
+    target.addEventListener('pages-event', handler);
+
+    // Mock requestAnimationFrame
+    const rafCallbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+
+    const conn = createEventConnection('ws://localhost:8080', {
+      config: { eventTarget: target as unknown as HTMLElement },
+      batchEvents: true,
+    });
+    lastWs().simulateOpen();
+
+    // Receive multiple events
+    lastWs().simulateMessage(JSON.stringify({
+      op: 'event',
+      topic: 'debate:abc',
+      payload: { text: 'hello' },
+    }));
+    lastWs().simulateMessage(JSON.stringify({
+      op: 'event',
+      topic: 'debate:xyz',
+      payload: { text: 'world' },
+    }));
+
+    // Events not dispatched yet
+    expect(handler).not.toHaveBeenCalled();
+
+    // Flush rAF
+    expect(rafCallbacks.length).toBe(1);
+    rafCallbacks[0]?.(0);
+
+    // Now events are dispatched
+    expect(handler).toHaveBeenCalledTimes(2);
+
+    conn.close();
+    vi.unstubAllGlobals();
+  });
+
+  it('batching consolidates multiple messages into one rAF flush', () => {
+    const target = new EventTarget();
+    const handler = vi.fn();
+    target.addEventListener('pages-event', handler);
+
+    const rafCallbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+
+    const conn = createEventConnection('ws://localhost:8080', {
+      config: { eventTarget: target as unknown as HTMLElement },
+      batchEvents: true,
+    });
+    lastWs().simulateOpen();
+
+    // Receive 3 events before any rAF flush
+    lastWs().simulateMessage(JSON.stringify({
+      op: 'event',
+      topic: 'a',
+      payload: 1,
+    }));
+    lastWs().simulateMessage(JSON.stringify({
+      op: 'event',
+      topic: 'b',
+      payload: 2,
+    }));
+    lastWs().simulateMessage(JSON.stringify({
+      op: 'event',
+      topic: 'c',
+      payload: 3,
+    }));
+
+    // Only one rAF scheduled
+    expect(rafCallbacks.length).toBe(1);
+    expect(handler).not.toHaveBeenCalled();
+
+    // Flush
+    rafCallbacks[0]?.(0);
+
+    // All 3 events dispatched
+    expect(handler).toHaveBeenCalledTimes(3);
+
+    conn.close();
+    vi.unstubAllGlobals();
   });
 });

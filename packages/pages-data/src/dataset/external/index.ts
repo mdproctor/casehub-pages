@@ -17,6 +17,9 @@ export type {
 
 export { HttpMethod, LOCAL_CAPABILITIES, isServiceCapabilities } from "./types.js";
 
+// Contract
+export type { DatasetContract } from "../contract.js";
+
 // Schema
 export { parseExternalDataSetDef } from "./schema.js";
 export type { ParsedExternalDataSetDef } from "./schema.js";
@@ -71,5 +74,6 @@ export { createPushPool } from "./sources/push-pool.js";
 export type { PushPool } from "./sources/push-pool.js";
 
 // Event connection
-export type { EventConnection, ListenAck } from "./sources/event-connection.js";
+export type { EventConnection, ListenAck, ConnectionStatus, EventConnectionOptions } from "./sources/event-connection.js";
 export { createEventConnection } from "./sources/event-connection.js";
+export { matchesTopic, isMatchedByRegistrations } from "./sources/topic-matching.js";
