@@ -69,6 +69,9 @@ export { createWebSocketSource } from "./sources/websocket-source.js";
 // SSE
 export { createSseSource } from "./sources/sse-source.js";
 
+// SSE connection manager (general-purpose)
+export { SSEManager, type SSEEvent, type SSEHandler, type SSESubscribeOptions } from "../../sse/sse-manager.js";
+
 // Push pool (generic)
 export { createPushPool } from "./sources/push-pool.js";
 export type { PushPool } from "./sources/push-pool.js";
