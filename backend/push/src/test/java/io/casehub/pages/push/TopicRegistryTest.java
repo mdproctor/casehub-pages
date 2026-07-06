@@ -366,6 +366,15 @@ class TopicRegistryTest {
             .containsExactlyInAnyOrder("debate:abc", "debate:xyz:deep");
     }
 
+    @Test
+    void matchedTopics_double_star_zero_match() {
+        var registry = new TopicRegistry();
+        registry.listen("c1", List.of("debate"));
+        registry.listen("c2", List.of("debate:abc"));
+        assertThat(registry.matchedTopics("debate:**"))
+            .containsExactlyInAnyOrder("debate", "debate:abc");
+    }
+
     // Thread safety with wildcards
     @Test
     void concurrent_listen_unlisten_wildcards_does_not_corrupt() throws Exception {

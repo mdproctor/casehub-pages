@@ -1,5 +1,6 @@
 package io.casehub.pages.push;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -8,8 +9,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 public final class TopicRegistry {
 
-    private final ConcurrentHashMap<String, CopyOnWriteArraySet<String>> exactTopics = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, CopyOnWriteArraySet<String>> wildcardPatterns = new ConcurrentHashMap<>();
+    private static final class TrieNode {
+        final ConcurrentHashMap<String, TrieNode> children = new ConcurrentHashMap<>();
+        final CopyOnWriteArraySet<String> connections = new CopyOnWriteArraySet<>();
+        final CopyOnWriteArraySet<String> doubleStarConnections = new CopyOnWriteArraySet<>();
+    }
+
+    private final TrieNode root = new TrieNode();
     private final ConcurrentHashMap<String, Set<String>> connectionToTopics = new ConcurrentHashMap<>();
 
     /**
@@ -67,23 +73,14 @@ public final class TopicRegistry {
         Set<String> connTopics = connectionToTopics.computeIfAbsent(connectionId,
                 k -> ConcurrentHashMap.newKeySet());
         for (String topic : topics) {
-            if (topic.contains("*")) {
-                wildcardPatterns.computeIfAbsent(topic, k -> new CopyOnWriteArraySet<>()).add(connectionId);
-            } else {
-                exactTopics.computeIfAbsent(topic, k -> new CopyOnWriteArraySet<>()).add(connectionId);
-            }
+            insertIntoTrie(connectionId, topic);
             connTopics.add(topic);
         }
     }
 
     public void unlisten(String connectionId, List<String> topics) {
         for (String topic : topics) {
-            CopyOnWriteArraySet<String> conns = topic.contains("*")
-                    ? wildcardPatterns.get(topic)
-                    : exactTopics.get(topic);
-            if (conns != null) {
-                conns.remove(connectionId);
-            }
+            removeFromTrie(connectionId, topic);
         }
         Set<String> connTopics = connectionToTopics.get(connectionId);
         if (connTopics != null) {
@@ -98,55 +95,144 @@ public final class TopicRegistry {
         Set<String> topics = connectionToTopics.remove(connectionId);
         if (topics != null) {
             for (String topic : topics) {
-                CopyOnWriteArraySet<String> conns = topic.contains("*")
-                        ? wildcardPatterns.get(topic)
-                        : exactTopics.get(topic);
-                if (conns != null) {
-                    conns.remove(connectionId);
-                }
+                removeFromTrie(connectionId, topic);
             }
         }
     }
 
     /**
      * Returns all connection IDs listening to a concrete topic.
-     * Checks both exact matches and wildcard patterns.
+     * Walks the trie, collecting connections from exact matches,
+     * single-segment wildcards ({@code *}), and multi-segment
+     * wildcards ({@code **}) at each level.
      */
     public Set<String> connections(String topic) {
         Set<String> result = new HashSet<>();
-
-        // Exact match
-        CopyOnWriteArraySet<String> exactConns = exactTopics.get(topic);
-        if (exactConns != null) {
-            result.addAll(exactConns);
-        }
-
-        // Wildcard pattern match
-        for (var entry : wildcardPatterns.entrySet()) {
-            if (matches(entry.getKey(), topic)) {
-                result.addAll(entry.getValue());
-            }
-        }
-
+        String[] segments = topic.split(":", -1);
+        walkConnections(root, segments, 0, result);
         return Set.copyOf(result);
     }
 
     /**
-     * Returns all concrete topics (from exactTopics) that match the given pattern.
+     * Returns all concrete topics (from the trie) that match the given pattern.
      * Useful for introspection — what topics would a wildcard pattern match?
      */
     public Set<String> matchedTopics(String pattern) {
         if (!pattern.contains("*")) {
-            // Exact pattern — return it if it exists
-            return exactTopics.containsKey(pattern) ? Set.of(pattern) : Set.of();
+            return hasExactTopic(pattern) ? Set.of(pattern) : Set.of();
         }
 
-        Set<String> matched = new HashSet<>();
-        for (String topic : exactTopics.keySet()) {
-            if (matches(pattern, topic)) {
-                matched.add(topic);
+        Set<String> result = new HashSet<>();
+        String[] segments = pattern.split(":", -1);
+        walkMatchedTopics(root, segments, 0, new ArrayList<>(), result);
+        return Set.copyOf(result);
+    }
+
+    private void insertIntoTrie(String connectionId, String pattern) {
+        String[] segments = pattern.split(":", -1);
+        TrieNode current = root;
+        for (String segment : segments) {
+            if ("**".equals(segment)) {
+                current.doubleStarConnections.add(connectionId);
+                return;
+            }
+            current = current.children.computeIfAbsent(segment, k -> new TrieNode());
+        }
+        current.connections.add(connectionId);
+    }
+
+    private void removeFromTrie(String connectionId, String pattern) {
+        String[] segments = pattern.split(":", -1);
+        TrieNode current = root;
+        for (String segment : segments) {
+            if ("**".equals(segment)) {
+                current.doubleStarConnections.remove(connectionId);
+                return;
+            }
+            TrieNode child = current.children.get(segment);
+            if (child == null) return;
+            current = child;
+        }
+        current.connections.remove(connectionId);
+    }
+
+    private void walkConnections(TrieNode node, String[] segments, int depth, Set<String> result) {
+        result.addAll(node.doubleStarConnections);
+
+        if (depth == segments.length) {
+            result.addAll(node.connections);
+            return;
+        }
+
+        String segment = segments[depth];
+
+        TrieNode exactChild = node.children.get(segment);
+        if (exactChild != null) {
+            walkConnections(exactChild, segments, depth + 1, result);
+        }
+
+        TrieNode starChild = node.children.get("*");
+        if (starChild != null) {
+            walkConnections(starChild, segments, depth + 1, result);
+        }
+    }
+
+    private boolean hasExactTopic(String topic) {
+        String[] segments = topic.split(":", -1);
+        TrieNode current = root;
+        for (String segment : segments) {
+            TrieNode child = current.children.get(segment);
+            if (child == null) return false;
+            current = child;
+        }
+        return !current.connections.isEmpty();
+    }
+
+    private void walkMatchedTopics(TrieNode node, String[] segments, int depth,
+                                    List<String> path, Set<String> result) {
+        if (depth == segments.length) {
+            if (!node.connections.isEmpty()) {
+                result.add(String.join(":", path));
+            }
+            return;
+        }
+
+        String segment = segments[depth];
+
+        if ("**".equals(segment)) {
+            collectAllDescendantTopics(node, path, result);
+            return;
+        }
+
+        if ("*".equals(segment)) {
+            for (var entry : node.children.entrySet()) {
+                if (!"*".equals(entry.getKey())) {
+                    List<String> childPath = new ArrayList<>(path);
+                    childPath.add(entry.getKey());
+                    walkMatchedTopics(entry.getValue(), segments, depth + 1, childPath, result);
+                }
+            }
+            return;
+        }
+
+        TrieNode exactChild = node.children.get(segment);
+        if (exactChild != null) {
+            List<String> childPath = new ArrayList<>(path);
+            childPath.add(segment);
+            walkMatchedTopics(exactChild, segments, depth + 1, childPath, result);
+        }
+    }
+
+    private void collectAllDescendantTopics(TrieNode node, List<String> path, Set<String> result) {
+        if (!node.connections.isEmpty()) {
+            result.add(String.join(":", path));
+        }
+        for (var entry : node.children.entrySet()) {
+            if (!"*".equals(entry.getKey())) {
+                List<String> childPath = new ArrayList<>(path);
+                childPath.add(entry.getKey());
+                collectAllDescendantTopics(entry.getValue(), childPath, result);
             }
         }
-        return Set.copyOf(matched);
     }
 }
