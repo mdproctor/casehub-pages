@@ -1,10 +1,4 @@
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
-import type {
-  ExternalDataSetDef,
-  ExternalColumnDef,
-  HttpMethod,
-} from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { DataSetId, DataSetOp, ExternalDataSetDef, ExternalColumnDef, HttpMethod } from "@casehubio/pages-data";
 import type { ChartSettings } from "./displayer-types.js";
 
 export interface DataScopeRef {

@@ -1,4 +1,4 @@
-import { matchesTopic } from '@casehubio/pages-data/dist/dataset/external/index.js';
+import { matchesTopic } from '@casehubio/pages-data';
 
 export interface PagesEventDetail<T = unknown> {
   readonly topic: string;

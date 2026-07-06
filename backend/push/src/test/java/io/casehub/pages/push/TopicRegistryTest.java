@@ -225,6 +225,21 @@ class TopicRegistryTest {
         assertTrue(TopicRegistry.matches("**", "a:b:c:d"));
     }
 
+    @Test void matches_null_pattern_throws() {
+        assertThrows(NullPointerException.class,
+            () -> TopicRegistry.matches(null, "debate:abc"));
+    }
+
+    @Test void matches_null_topic_throws() {
+        assertThrows(NullPointerException.class,
+            () -> TopicRegistry.matches("debate:*", null));
+    }
+
+    @Test void matches_both_null_throws() {
+        assertThrows(NullPointerException.class,
+            () -> TopicRegistry.matches(null, null));
+    }
+
     // Wildcard matching tests (§2.3) — updated for new semantics
     @Test
     void connections_wildcard_match() {

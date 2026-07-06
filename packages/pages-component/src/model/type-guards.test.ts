@@ -23,7 +23,7 @@ import {
   isDockBar,
   isHostPanel,
 } from "./type-guards.js";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehubio/pages-data";
 
 describe("type guards - layout components", () => {
   it("isGrid narrows grid components", () => {

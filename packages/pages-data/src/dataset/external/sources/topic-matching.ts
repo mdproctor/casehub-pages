@@ -1,3 +1,15 @@
+export function isValidTopicOrPattern(topic: string | null | undefined): boolean {
+  if (topic == null || topic === '') return false;
+  const segments = topic.split(':');
+  for (let i = 0; i < segments.length; i++) {
+    const s = segments[i]!;
+    if (s === '') return false;
+    if (s === '**') return i === segments.length - 1;
+    if (s.includes('*') && s !== '*') return false;
+  }
+  return true;
+}
+
 export function matchesTopic(pattern: string, topic: string): boolean {
   const ps = pattern.split(':');
   const ts = topic.split(':');

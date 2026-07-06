@@ -79,4 +79,4 @@ export type { PushPool } from "./sources/push-pool.js";
 // Event connection
 export type { EventConnection, ListenAck, ConnectionStatus, EventConnectionOptions } from "./sources/event-connection.js";
 export { createEventConnection } from "./sources/event-connection.js";
-export { matchesTopic, isMatchedByRegistrations } from "./sources/topic-matching.js";
+export { isValidTopicOrPattern, matchesTopic, isMatchedByRegistrations } from "./sources/topic-matching.js";

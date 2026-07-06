@@ -56,9 +56,9 @@ export class PagesSchemaForm extends LitElement {
           if (fieldSchema.format && hasFieldRenderer(fieldSchema.format)) {
             const Renderer = getFieldRenderer(fieldSchema.format)!;
             const el = new Renderer();
-            (el as any).value = dataSource[key];
-            (el as any).schema = fieldSchema;
-            (el as any).mode = this.mode;
+            el.value = dataSource[key];
+            el.schema = fieldSchema;
+            el.mode = this.mode;
             return html`${el}`;
           }
           return this.mode === 'display'

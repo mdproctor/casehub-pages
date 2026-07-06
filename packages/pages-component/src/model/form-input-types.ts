@@ -1,4 +1,4 @@
-import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetId } from "@casehubio/pages-data";
 import type { SubmitConfig } from "./action-types.js";
 
 export interface FormInputCommon {

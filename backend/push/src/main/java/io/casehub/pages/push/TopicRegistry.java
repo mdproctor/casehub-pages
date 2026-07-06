@@ -48,8 +48,13 @@ public final class TopicRegistry {
      *   <li>{@code **} as the last pattern segment matches zero or more trailing segments</li>
      *   <li>All other segments must match exactly</li>
      * </ul>
+     *
+     * @throws NullPointerException if {@code pattern} or {@code topic} is null
      */
     public static boolean matches(String pattern, String topic) {
+        if (pattern == null || topic == null) {
+            throw new NullPointerException("pattern and topic must not be null");
+        }
         String[] ps = pattern.split(":", -1);
         String[] ts = topic.split(":", -1);
 

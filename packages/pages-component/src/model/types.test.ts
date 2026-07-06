@@ -3,7 +3,7 @@ import type { Component, GridItem, LayoutState, PanelEntry } from "./types.js";
 import { ALLOW_ALL } from "./types.js";
 import type { TypedComponent } from "./index.js";
 import type { BarChartProps } from "./displayer-types.js";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { dataSetId } from "@casehubio/pages-data";
 
 describe("Component", () => {
   it("represents a leaf component", () => {

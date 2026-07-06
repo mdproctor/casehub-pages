@@ -452,6 +452,7 @@ All new code follows version alignment protocol (PP-20260705-8fcb31): packages s
 | `createEventConnection` | `(url, config?)` | `(url, options?: EventConnectionOptions)` | All `createEventConnection()` call sites |
 | Wildcard migration | `debate:*` = any depth | `debate:**` = any depth, `debate:*` = one segment | All existing wildcard patterns |
 | Server-side integration | `endsWith("*")` + `startsWith(prefix)` | `TopicRegistry.matches(pattern, topic)` | Consumer WebSocket endpoints with replay |
+| Spacing token names | `--pages-space-0.5`, `--pages-space-1.5` | `--pages-space-0-5`, `--pages-space-1-5` | CSS custom property references using fractional spacing tokens |
 
 All changes are in-place — no compatibility aliases, no shims, no gradual migration path.
 
