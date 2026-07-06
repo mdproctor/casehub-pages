@@ -35,29 +35,29 @@ export class PagesComponentController implements ComponentController {
     // no op
   }
 
-  public onInit: (params: Map<string, unknown>) => void = (p) => {
+  public onInit: (params: Record<string, unknown>) => void = (p) => {
     console.debug("Received INIT.");
     console.debug(p);
   };
 
-  public onDataSet: (dataSet: DataSet, params?: Map<string, unknown>) => void = (ds) => {
+  public onDataSet: (dataSet: DataSet, params?: Record<string, unknown>) => void = (ds) => {
     console.debug("Received DataSet.");
     console.debug(ds);
   };
 
-  public init(params: Map<string, unknown>) {
-    const id = params.get(MessageProperty.COMPONENT_ID);
+  public init(params: Record<string, unknown>) {
+    const id = params[MessageProperty.COMPONENT_ID];
     if (typeof id === "string") {
       this.componentId = id;
     }
     this.onInit(params);
   }
 
-  public setOnDataSet(onDataSet: (dataSet: DataSet, params?: Map<string, unknown>) => void) {
+  public setOnDataSet(onDataSet: (dataSet: DataSet, params?: Record<string, unknown>) => void) {
     this.onDataSet = onDataSet;
   }
 
-  public setOnInit(onInit: (params: Map<string, unknown>) => void) {
+  public setOnInit(onInit: (params: Record<string, unknown>) => void) {
     this.onInit = onInit;
   }
 
@@ -66,34 +66,28 @@ export class PagesComponentController implements ComponentController {
   }
 
   public requireConfigurationFix(message: string): void {
-    const props = new Map<MessageProperty, unknown>();
-    props.set(MessageProperty.CONFIGURATION_ISSUE, message);
     this.bus.send(this.getComponentId(), {
       type: MessageType.FIX_CONFIGURATION,
-      properties: props,
+      properties: { [MessageProperty.CONFIGURATION_ISSUE]: message },
     });
   }
   public configurationOk(): void {
     this.bus.send(this.getComponentId(), {
       type: MessageType.CONFIGURATION_OK,
-      properties: new Map(),
+      properties: {},
     });
   }
 
   public filter(filterRequest: FilterRequest): void {
-    const props = new Map<MessageProperty, unknown>();
-    props.set(MessageProperty.FILTER, filterRequest);
     this.bus.send(this.getComponentId(), {
       type: MessageType.FILTER,
-      properties: props,
+      properties: { [MessageProperty.FILTER]: filterRequest },
     });
   }
   public callFunction(functionCallRequest: FunctionCallRequest): Promise<unknown> {
-    const props = new Map<MessageProperty, unknown>();
-    props.set(MessageProperty.FUNCTION_CALL, functionCallRequest);
     this.bus.send(this.getComponentId(), {
       type: MessageType.FUNCTION_CALL,
-      properties: props,
+      properties: { [MessageProperty.FUNCTION_CALL]: functionCallRequest },
     });
     return new Promise((resolve, error) => {
       const key = this.buildFunctionKey(functionCallRequest);

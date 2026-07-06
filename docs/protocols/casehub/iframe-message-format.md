@@ -24,11 +24,6 @@ interface ComponentMessage {
 `properties` is a plain object, not a `Map`. All values must be
 structured-clone-safe: no `Map`, no class instances, no functions.
 
-> **Current code divergence:** the implementation uses
-> `Map<MessageProperty | string, unknown>` for `properties`, which does
-> not survive `postMessage` structured clone across iframe boundaries.
-> See #130. This protocol documents the correct target format.
-
 ## Message types — host → component
 
 | Type | Key properties | Purpose |

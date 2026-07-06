@@ -17,5 +17,5 @@
 export interface FunctionCallRequest {
   functionName: string;
 
-  parameters: Map<string, unknown>;
+  parameters: Record<string, unknown>;
 }

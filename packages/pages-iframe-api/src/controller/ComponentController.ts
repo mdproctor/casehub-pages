@@ -24,13 +24,13 @@ export interface ComponentController {
   /*
    * Set on init callback
    */
-  setOnInit(onInit: (params: Map<string, unknown>) => void): void;
+  setOnInit(onInit: (params: Record<string, unknown>) => void): void;
 
   /*
    * Sets the method to be called when CaseHub Pages sends a dataset update after a filter or when using pooling.
    * Params is optional and is basically the same params sent after onInit
    */
-  setOnDataSet(onDataSet: (dataSet: DataSet, params?: Map<string, unknown>) => void): void;
+  setOnDataSet(onDataSet: (dataSet: DataSet, params?: Record<string, unknown>) => void): void;
 
   /*
    * Components must send ready their finish their setup (unless it is sent automatically by the controller implementation)

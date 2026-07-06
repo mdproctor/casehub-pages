@@ -87,7 +87,7 @@ function handleDevConf(text: string) {
 }
 
 function respondFunctionCall(message: ComponentMessage) {
-  const functionCall = message.properties.get(MessageProperty.FUNCTION_CALL) as FunctionCallRequest;
+  const functionCall = message.properties[MessageProperty.FUNCTION_CALL] as FunctionCallRequest;
   const functionName = functionCall.functionName;
 
   const confResponse = functions.filter((f) => f.name === functionName).filter((f) => paramsMatch(functionCall.parameters, f.params))[0];
@@ -117,17 +117,15 @@ function respondFunctionCall(message: ComponentMessage) {
     };
   }
 
-  const props = new Map<string, unknown>();
-  props.set(MessageProperty.FUNCTION_RESPONSE, functionResponse);
   sendMessage({
     type: MessageType.FUNCTION_RESPONSE,
-    properties: props,
+    properties: { [MessageProperty.FUNCTION_RESPONSE]: functionResponse },
   });
 }
 
 function createInit(devConf: ComponentDevConfiguration) {
-  const props = new Map<string, unknown>();
-  devConf.init.forEach((prop) => props.set(prop.key, prop.value));
+  const props: Record<string, unknown> = {};
+  devConf.init.forEach((prop) => { props[prop.key] = prop.value; });
   initMessage = {
     type: MessageType.INIT,
     properties: props,
@@ -135,26 +133,26 @@ function createInit(devConf: ComponentDevConfiguration) {
 }
 
 function createDataSet(devConf: ComponentDevConfiguration) {
-  const props = new Map<string, unknown>();
-  devConf.init.forEach((prop) => props.set(prop.key, prop.value));
-  props.set(MessageProperty.DATASET, devConf.dataSet);
+  const props: Record<string, unknown> = {};
+  devConf.init.forEach((prop) => { props[prop.key] = prop.value; });
+  props[MessageProperty.DATASET] = devConf.dataSet;
   dataSetMessage = {
     type: MessageType.DATASET,
     properties: props,
   };
 }
 
-function paramsMatch(requestParams: Map<string, unknown>, devParams: Prop[]): boolean {
+function paramsMatch(requestParams: Record<string, unknown>, devParams: Prop[]): boolean {
   const devParamsEmpty = devParams.length === 0;
-  const requestParamsEmpty = requestParams.size === 0;
-  const allMatch = !devParamsEmpty && devParams.every((p) => requestParams.get(p.key) === p.value);
+  const requestParamsEmpty = Object.keys(requestParams).length === 0;
+  const allMatch = !devParamsEmpty && devParams.every((p) => requestParams[p.key] === p.value);
   return (devParamsEmpty && requestParamsEmpty) || allMatch;
 }
 
 function sendMessage(message: ComponentMessage) {
   console.debug("[COMPONENT DEV] Sending Message");
   console.debug(message);
-  message.properties.set(MessageProperty.COMPONENT_ID, COMP_ID);
+  message.properties[MessageProperty.COMPONENT_ID] = COMP_ID;
   window.postMessage(message, window.location.href);
 }
 

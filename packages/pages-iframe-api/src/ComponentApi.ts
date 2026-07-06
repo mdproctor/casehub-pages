@@ -31,8 +31,8 @@ export class ComponentApi {
     this.listener.init();
   }
   public getComponentController(
-    onInit?: (params: Map<string, unknown>) => void,
-    onDataSet?: (dataSet: DataSet, params?: Map<string, unknown>) => void
+    onInit?: (params: Record<string, unknown>) => void,
+    onDataSet?: (dataSet: DataSet, params?: Record<string, unknown>) => void
   ): ComponentController {
     if (onInit) {
       this.controller.setOnInit(onInit);

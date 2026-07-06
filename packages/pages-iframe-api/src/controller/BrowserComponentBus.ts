@@ -31,7 +31,7 @@ export class BrowserComponentBus implements ComponentBus {
   public send(componentId: string, message: ComponentMessage): void {
     console.debug("[BrowserComponentBus] Sending Message");
     console.debug(message);
-    message.properties.set(MessageProperty.COMPONENT_ID, componentId);
+    message.properties[MessageProperty.COMPONENT_ID] = componentId;
     window.parent.postMessage(message, window.location.href);
   }
 

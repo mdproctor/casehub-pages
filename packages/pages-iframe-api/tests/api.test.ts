@@ -64,14 +64,13 @@ describe("[Controller API] Callbacks", () => {
   it("INIT Callback without params", async () => {
     const handleInit = jest.fn();
     controller.setOnInit(handleInit);
-    await postInitMessage(new Map());
+    await postInitMessage({});
     expect(handleInit).toHaveBeenCalledTimes(1);
   });
 
   it("INIT Callback with params", async () => {
     const handleInit = jest.fn();
-    const params = new Map<string, unknown>();
-    params.set("hello", "world");
+    const params: Record<string, unknown> = { hello: "world" };
     controller.setOnInit(handleInit);
     await postInitMessage(params);
     expect(handleInit).toHaveBeenCalledWith(params);
@@ -81,7 +80,7 @@ describe("[Controller API] Callbacks", () => {
     const handleDataSet = jest.fn();
     controller.setOnDataSet(handleDataSet);
     await postDataSetMessage();
-    expect(handleDataSet).toHaveBeenCalledWith(sampleDataSet, expect.any(Map));
+    expect(handleDataSet).toHaveBeenCalledWith(sampleDataSet, expect.objectContaining({}));
   });
 });
 
@@ -90,20 +89,16 @@ describe("[Controller API] Sending Requests", () => {
   const sendSpy = bus.send;
   const componentId = "42";
   beforeAll(() => {
-    const params = new Map<string, unknown>();
-    params.set(MessageProperty.COMPONENT_ID, componentId);
-    controller.init(params);
+    controller.init({ [MessageProperty.COMPONENT_ID]: componentId });
     controller.setComponentBus(bus);
   });
 
   it("Configuration Issues", async () => {
     const configIssue = "some configuration issue.";
-    const params = new Map<string, unknown>();
     const expected: ComponentMessage = {
       type: MessageType.FIX_CONFIGURATION,
-      properties: params,
+      properties: { [MessageProperty.CONFIGURATION_ISSUE]: configIssue },
     };
-    params.set(MessageProperty.CONFIGURATION_ISSUE, configIssue);
 
     controller.requireConfigurationFix(configIssue);
     await delay(0);
@@ -114,7 +109,7 @@ describe("[Controller API] Sending Requests", () => {
   it("Configuration Fixed", async () => {
     const message: ComponentMessage = {
       type: MessageType.CONFIGURATION_OK,
-      properties: new Map(),
+      properties: {},
     };
     controller.configurationOk();
     await delay(0);
@@ -128,11 +123,9 @@ describe("[Controller API] Sending Requests", () => {
       reset: false,
       row: 1,
     };
-    const props = new Map<string, unknown>();
-    props.set(MessageProperty.FILTER, filterRequest);
     const message: ComponentMessage = {
       type: MessageType.FILTER,
-      properties: props,
+      properties: { [MessageProperty.FILTER]: filterRequest },
     };
     controller.filter(filterRequest);
     expect(sendSpy).toHaveBeenCalledWith(componentId, message);
@@ -193,11 +186,9 @@ describe("[Controller API] Function Calls", () => {
 });
 
 function buildFunctionCallRequest(): FunctionCallRequest {
-  const functionParams = new Map();
-  functionParams.set("test", "test");
   return {
     functionName: "test function name",
-    parameters: functionParams,
+    parameters: { test: "test" },
   };
 }
 
@@ -206,16 +197,14 @@ const delay = (ms: number) => {
 };
 
 async function postDataSetMessage() {
-  const params = new Map<string, unknown>();
-  params.set("dataSet", sampleDataSet);
   const datasetMsg: ComponentMessage = {
     type: MessageType.DATASET,
-    properties: params,
+    properties: { dataSet: sampleDataSet },
   };
   await postMessage(datasetMsg);
 }
 
-async function postInitMessage(params: Map<string, unknown>) {
+async function postInitMessage(params: Record<string, unknown>) {
   const init: ComponentMessage = {
     type: MessageType.INIT,
     properties: params,
@@ -250,12 +239,10 @@ function buildFunctionResponse(
     result: _result,
     request: _request,
   };
-  const params = new Map<string, unknown>();
   const functionResponseMessage: ComponentMessage = {
     type: MessageType.FUNCTION_RESPONSE,
-    properties: params,
+    properties: { [MessageProperty.FUNCTION_RESPONSE]: functionResponse },
   };
-  params.set(MessageProperty.FUNCTION_RESPONSE, functionResponse);
 
   return functionResponseMessage;
 }

@@ -33,7 +33,7 @@ export class PagesComponentDispatcher implements InternalComponentDispatcher {
 
   private readonly messageDispatcher = (message: ComponentMessage) => {
     if (message.type === MessageType.INIT) {
-      const id = message.properties.get(MessageProperty.COMPONENT_ID);
+      const id = message.properties[MessageProperty.COMPONENT_ID];
       if (typeof id === "string") {
         this.componentId = id;
       }
@@ -41,12 +41,12 @@ export class PagesComponentDispatcher implements InternalComponentDispatcher {
     }
 
     if (message.type === MessageType.DATASET) {
-      const dataSet = message.properties.get(MessageProperty.DATASET) as DataSet;
+      const dataSet = message.properties[MessageProperty.DATASET] as DataSet;
       this.componentController.onDataSet(dataSet, message.properties);
     }
 
     if (message.type === MessageType.FUNCTION_RESPONSE) {
-      const functionResponse = message.properties.get(MessageProperty.FUNCTION_RESPONSE) as FunctionResponse;
+      const functionResponse = message.properties[MessageProperty.FUNCTION_RESPONSE] as FunctionResponse;
       this.componentController.receiveFunctionResponse(functionResponse);
     }
   };
@@ -62,7 +62,7 @@ export class PagesComponentDispatcher implements InternalComponentDispatcher {
   }
 
   public sendMessage(componentMessage: ComponentMessage): void {
-    componentMessage.properties.set(MessageProperty.COMPONENT_ID, this.componentId);
+    componentMessage.properties[MessageProperty.COMPONENT_ID] = this.componentId;
     window.parent.postMessage(componentMessage, window.location.href);
   }
 

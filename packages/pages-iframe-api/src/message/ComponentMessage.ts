@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { MessageProperty } from "./MessageProperty";
 import { MessageType } from "./MessageType";
 
 export interface ComponentMessage {
   type: MessageType;
-  properties: Map<MessageProperty | string, unknown>;
+  properties: Record<string, unknown>;
 }

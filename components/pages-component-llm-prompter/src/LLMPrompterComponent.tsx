@@ -101,14 +101,14 @@ export function LLMPrompterComponent(props: Props) {
   }, [viewData])
 
   useEffect(() => {
-    props.controller.setOnInit((params: Map<string, unknown>) => {
-      const prompt = params.get(PROMPT_PROP) as string;
-      let serverUrl = params.get(BASE_URL_PROP) as string;
-      const model = params.get(MODEL_PROP) as string;
-      const showPrompt = params.get(SHOW_PROMPT_PROP) === "true";
-      const showData = params.get(SHOW_DATA_PROP) === "true";
-      const autoRun = params.get(AUTO_RUN_PROP) === "true";
-      const responseTitle = params.get(RESPONSE_TITLE_PROP) as string | undefined;
+    props.controller.setOnInit((params: Record<string, unknown>) => {
+      const prompt = params[PROMPT_PROP] as string;
+      let serverUrl = params[BASE_URL_PROP] as string;
+      const model = params[MODEL_PROP] as string;
+      const showPrompt = params[SHOW_PROMPT_PROP] === "true";
+      const showData = params[SHOW_DATA_PROP] === "true";
+      const autoRun = params[AUTO_RUN_PROP] === "true";
+      const responseTitle = params[RESPONSE_TITLE_PROP] as string | undefined;
       if (!prompt) {
         const errorMessage = "Property 'prompt' is missing!";
         props.controller.requireConfigurationFix(errorMessage);
