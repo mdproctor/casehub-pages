@@ -60,7 +60,6 @@ describe("parameterised dataset URLs", () => {
     return {
       dataSet: undefined,
       totalRows: 0,
-      theme: "",
       error: "",
       activeSort: undefined,
       activePage: undefined,

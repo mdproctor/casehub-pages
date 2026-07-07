@@ -3,7 +3,7 @@ import { ALLOW_ALL } from "@casehubio/pages-component/dist/model/types.js";
 import type { HostPanelProps } from "@casehubio/pages-component/dist/model/component-props.js";
 import type { LayoutStore } from "./layout-store.js";
 import { renderComponent } from "@casehubio/pages-component/dist/renderer/render.js";
-import type { DataSetId, ColumnId, CellValue } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSetId, ColumnId, CellValue, TypedDataSet, Column } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { DataProviderConfig, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
@@ -490,7 +490,7 @@ export async function loadSite(
     const entry = registry.get(componentId);
     if (!entry?.vizElement) return;
 
-    const ds = entry.vizElement.dataSet;
+    const ds = entry.vizElement.dataSet as TypedDataSet | undefined;
     if (!ds) return;
 
     const { columnId, group } = detail;
@@ -534,7 +534,7 @@ export async function loadSite(
       } else {
         // Reset: check via column schema
         isRecordSelection = ds.columns.some(
-          c => c.id === childScope.idColumn,
+          (c: Column) => c.id === childScope.idColumn,
         );
       }
     }
@@ -1012,8 +1012,8 @@ export async function loadSite(
       const echartsThemeName = mode === "dark" ? "dark" : "";
       for (const [, entry] of registry) {
         const vizEl = entry.vizElement;
-        if (vizEl && "buildOption" in vizEl) {
-          (vizEl as { theme: string }).theme = echartsThemeName;
+        if (vizEl && "buildOption" in vizEl && "theme" in vizEl) {
+          (vizEl as unknown as { theme: string }).theme = echartsThemeName;
         }
       }
     },

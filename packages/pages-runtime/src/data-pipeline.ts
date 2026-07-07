@@ -22,12 +22,10 @@ import type { ComponentViewState } from "./component-view-state.js";
 import { getComponentState, updatePage } from "./component-view-state.js";
 import type { ContextManager } from "./context-wiring.js";
 import { hasTemplateVars, resolveTemplate, allTemplateVarsResolved } from "@casehubio/pages-component/dist/context/index.js";
+import type { DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
 
-export interface VizTarget {
-  dataSet: unknown;
+export interface VizTarget extends DataReceiver {
   totalRows: number;
-  theme: string;
-  error: string;
   activeSort: SortColumn | undefined;
   activePage: number | undefined;
 }
@@ -93,8 +91,7 @@ export function createDataPipeline(
   function handleSubtreeRemoved(removed: HTMLElement): void {
     const affected: Array<[string, HTMLElement]> = [];
     for (const [componentId, entry] of registry) {
-      const el = entry.vizElement as unknown as HTMLElement | undefined;
-      if (!el || !(el instanceof HTMLElement)) continue;
+      const el = entry.element;
       if (removed !== el && !removed.contains(el)) continue;
       affected.push([componentId, el]);
     }

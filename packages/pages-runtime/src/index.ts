@@ -19,6 +19,7 @@ export { createComponentViewState, updateSort, updatePage, getComponentState } f
 export type { ComponentState, ComponentViewState } from "./component-view-state.js";
 export { createDataPipeline } from "./data-pipeline.js";
 export type { DataPipeline, VizTarget } from "./data-pipeline.js";
+export type { DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
 export { registerPanel } from "./panel-registry.js";
 export type { LayoutStore } from "./layout-store.js";
 export { createLocalLayoutStore } from "./layout-store.js";

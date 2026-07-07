@@ -30,7 +30,7 @@ function regionDataSet(rows: string[][]) {
 }
 
 function makeTarget(): VizTarget {
-  return { dataSet: undefined, totalRows: -1, theme: "", error: "", activeSort: undefined, activePage: undefined };
+  return { dataSet: undefined, totalRows: -1, error: "", activeSort: undefined, activePage: undefined };
 }
 
 describe("createDataPipeline", () => {
