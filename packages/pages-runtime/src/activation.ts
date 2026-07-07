@@ -25,6 +25,10 @@ import { evaluateExpression, hasTemplateVars, resolveTemplate } from "@casehubio
 import type { EscapeMode } from "@casehubio/pages-component/dist/context/index.js";
 import type { PagesContentElement } from "@casehubio/pages-viz/dist/base/PagesContentElement.js";
 import { lookupPanel } from "./panel-registry.js";
+import type { ConfigurablePanel, DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
+import type { HostPanelProps } from "@casehubio/pages-component/dist/model/component-props.js";
+import type { VizTarget } from "./data-pipeline.js";
+import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 
 const FORM_INPUT_TYPES = new Set([
   "text-input",
@@ -66,6 +70,21 @@ export interface LazyPageOptions {
   readonly dataScopeRegistry: DataScopeRegistry;
   readonly saveConfigRegistry: SaveConfigRegistry;
   readonly lazyPageResolutions: Map<Component, Component>;
+}
+
+function createHostPanelProxy(panel: DataReceiver): VizTarget {
+  return {
+    set dataSet(v: unknown) { panel.dataSet = v; },
+    get dataSet() { return panel.dataSet; },
+    set error(v: string) { panel.error = v; },
+    get error() { return panel.error; },
+    set totalRows(_: number) {},
+    get totalRows() { return 0; },
+    set activeSort(_: SortColumn | undefined) {},
+    get activeSort() { return undefined; },
+    set activePage(_: number | undefined) {},
+    get activePage() { return undefined; },
+  };
 }
 
 export function createActivationCallback(
@@ -245,7 +264,7 @@ export function createActivationCallback(
     }
 
     if (component.type === "host-panel" && component.props) {
-      const { typeName, panelProps } = component.props as { typeName?: string; panelProps?: Record<string, unknown> };
+      const { typeName, panelProps, lookup } = component.props as unknown as HostPanelProps;
       if (!typeName) return;
 
       const tagName = lookupPanel(typeName);
@@ -255,19 +274,52 @@ export function createActivationCallback(
         return;
       }
 
-      // Register in component registry for layout panel capture
-      registry.set(componentId, {
-        element: el,
-        component,
-        pagePath,
-        hasExplicitId: component.id !== undefined,
-      });
-
       const panel = document.createElement(tagName);
-      const panelAny = panel as unknown as { configure?: (p: Record<string, unknown>) => void };
-      if (typeof panelAny.configure === "function") {
-        panelAny.configure(panelProps ?? {});
+
+      const configurable = panel as unknown as ConfigurablePanel;
+      if (typeof configurable.configure === "function") {
+        configurable.configure(panelProps ?? {});
       }
+
+      if (lookup) {
+        const panelAsReceiver = panel as unknown as Partial<DataReceiver>;
+        if (!("dataSet" in panel)) {
+          console.warn(`hostPanel "${typeName}": lookup specified but panel lacks DataReceiver properties`);
+          registry.set(componentId, {
+            element: el,
+            component,
+            pagePath,
+            hasExplicitId: component.id !== undefined,
+          });
+          el.appendChild(panel);
+          return;
+        } else {
+          const proxy = createHostPanelProxy(panelAsReceiver as DataReceiver);
+          registry.set(componentId, {
+            element: el,
+            vizElement: proxy,
+            component,
+            pagePath,
+            originalLookup: lookup,
+            hasExplicitId: component.id !== undefined,
+          });
+          el.appendChild(panel);
+          panel.dispatchEvent(new CustomEvent("pages-data-request", {
+            bubbles: true,
+            composed: true,
+            detail: { element: proxy, lookup },
+          }));
+          return;
+        }
+      } else {
+        registry.set(componentId, {
+          element: el,
+          component,
+          pagePath,
+          hasExplicitId: component.id !== undefined,
+        });
+      }
+
       el.appendChild(panel);
       return;
     }
