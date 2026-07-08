@@ -58,6 +58,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "countdown",
   "timeline",
   "graph",
+  "grouped-view",
   ...FORM_INPUT_TYPES,
 ]);
 

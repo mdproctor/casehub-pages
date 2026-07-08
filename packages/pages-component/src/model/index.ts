@@ -61,6 +61,12 @@ export type {
   GraphProps,
   RowStyleRule,
   ExpandableConfig,
+  GroupDisplayMode,
+  ContentDisplayMode,
+  GroupedViewPreset,
+  GroupedViewMode,
+  AggregationBinding,
+  GroupedViewProps,
 } from "./displayer-types.js";
 
 // Action types
@@ -136,6 +142,7 @@ export {
   isMeter,
   isSelector,
   isMap,
+  isGroupedView,
   isIframePlugin,
   isTextInput,
   isNumberInput,

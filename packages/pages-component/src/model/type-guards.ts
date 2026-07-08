@@ -34,6 +34,7 @@ import type {
   SelectorProps,
   MapProps,
   IframePluginProps,
+  GroupedViewProps,
 } from "./displayer-types.js";
 import type {
   TextInputProps,
@@ -85,6 +86,8 @@ export interface ComponentTypeRegistry {
   meter: MeterProps;
   selector: SelectorProps;
   map: MapProps;
+  // Grouped data components
+  "grouped-view": GroupedViewProps;
   // Plugin component
   "iframe-plugin": IframePluginProps;
   // Form input components
@@ -245,6 +248,11 @@ export function isSelector(c: Component): c is TypedComponent<"selector"> {
 
 export function isMap(c: Component): c is TypedComponent<"map"> {
   return c.type === "map";
+}
+
+// Grouped data components
+export function isGroupedView(c: Component): c is TypedComponent<"grouped-view"> {
+  return c.type === "grouped-view";
 }
 
 // Plugin component

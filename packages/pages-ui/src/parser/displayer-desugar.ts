@@ -21,6 +21,7 @@ const TYPE_MAP: Record<string, string> = {
   COUNTDOWN: "countdown",
   TIMELINE: "timeline",
   GRAPH: "graph",
+  GROUPED_VIEW: "grouped-view",
 };
 
 /**

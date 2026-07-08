@@ -147,3 +147,12 @@ export interface GraphProps extends DataComponentCommon, ChartSettings {
   readonly nodeColorMap?: Record<string, string>;
   readonly nodeSizeColumn?: ColumnId;
 }
+
+export type {
+  GroupDisplayMode,
+  ContentDisplayMode,
+  GroupedViewPreset,
+  GroupedViewMode,
+  AggregationBinding,
+  GroupedViewProps,
+} from "./grouped-view-types.js";
