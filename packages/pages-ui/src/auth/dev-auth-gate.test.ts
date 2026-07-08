@@ -190,7 +190,7 @@ describe("PagesDevAuth custom element", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const successPromise = new Promise<CustomEvent>((resolve) => {
-      document.addEventListener("pages-auth-success", (e) => resolve(e as CustomEvent), { once: true });
+      document.addEventListener("pages-auth-success", (e) => { resolve(e as CustomEvent); }, { once: true });
     });
 
     const input = el.shadowRoot?.querySelector(

@@ -538,7 +538,7 @@ describe("parsePage", () => {
       const datasets = pageProps.datasets!;
       expect(datasets).toBeDefined();
       expect(datasets).toHaveLength(1);
-      expect(datasets[0]!.uuid).toBe("global-ds");
+      expect((datasets[0] as { uuid: string }).uuid).toBe("global-ds");
     });
 
     it("merges global.dataset alongside existing datasets", () => {

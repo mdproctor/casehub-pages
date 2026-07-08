@@ -66,7 +66,7 @@ describe("PagesGraph", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("pages-graph") as PagesGraph;
+    el = document.createElement("pages-graph");
   });
 
   afterEach(() => {
@@ -182,7 +182,7 @@ describe("PagesGraph", () => {
       // Reset for circular test
       el.remove();
       vi.clearAllMocks();
-      el = document.createElement("pages-graph") as PagesGraph;
+      el = document.createElement("pages-graph");
 
       const circularProps: GraphProps = {
         lookup: mockLookup("test"),

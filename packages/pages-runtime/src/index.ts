@@ -7,8 +7,8 @@ export { LIGHT_THEME, DARK_THEME, applyTheme, clearTheme } from "@casehubio/page
 export { serializeToUrl, parseFromUrl } from "./url.js";
 export { buildPagePathMap } from "./page-paths.js";
 export type { PagePathMap } from "./page-paths.js";
-export { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
-export type { DataSetScope } from "./dataset-scope.js";
+export { buildDataSetScope, resolveDataSetDef, resolveDataSetEntry, isBinding, isDef } from "./dataset-scope.js";
+export type { DataSetScope, DataSetEntry } from "./dataset-scope.js";
 export { buildPageIndex, computeCurrentPage } from "./navigation.js";
 export type { PageIndex, ActiveSlots } from "./navigation.js";
 export type { ComponentRegistry, ComponentEntry } from "./registry.js";

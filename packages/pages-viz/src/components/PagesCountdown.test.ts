@@ -34,7 +34,7 @@ describe("PagesCountdown", () => {
   let element: PagesCountdown;
 
   beforeEach(() => {
-    element = document.createElement("pages-countdown") as PagesCountdown;
+    element = document.createElement("pages-countdown");
     document.body.appendChild(element);
     vi.useFakeTimers();
   });

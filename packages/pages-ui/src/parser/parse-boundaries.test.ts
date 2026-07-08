@@ -196,7 +196,7 @@ describe("inline content edge cases", () => {
     const pageProps = getProps(root, "page");
     const datasets = pageProps.datasets!;
     expect(datasets).toHaveLength(1);
-    expect(datasets[0]!.uuid).toBe("inline");
+    expect((datasets[0] as { uuid: string }).uuid).toBe("inline");
   });
 
   it("global.dataset is appended after explicit datasets", () => {
@@ -213,8 +213,8 @@ describe("inline content edge cases", () => {
     const pageProps = getProps(root, "page");
     const datasets = pageProps.datasets!;
     expect(datasets).toHaveLength(3);
-    expect(datasets[0]!.uuid).toBe("explicit-1");
-    expect(datasets[1]!.uuid).toBe("explicit-2");
-    expect(datasets[2]!.uuid).toBe("global-ds");
+    expect((datasets[0] as { uuid: string }).uuid).toBe("explicit-1");
+    expect((datasets[1] as { uuid: string }).uuid).toBe("explicit-2");
+    expect((datasets[2] as { uuid: string }).uuid).toBe("global-ds");
   });
 });

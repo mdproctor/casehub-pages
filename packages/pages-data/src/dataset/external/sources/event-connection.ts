@@ -182,7 +182,7 @@ export function createEventConnection(
         }
 
         if (batchEvents) {
-          eventQueue.push(msg as { topic?: string; payload?: unknown });
+          eventQueue.push(msg);
           if (!rafScheduled) {
             rafScheduled = true;
             requestAnimationFrame(() => {
@@ -197,7 +197,7 @@ export function createEventConnection(
           }
         } else {
           dispatchWireEvent(
-            msg as { topic?: string; payload?: unknown },
+            msg,
             config.eventTarget,
           );
         }

@@ -104,7 +104,7 @@ export abstract class PagesFormInput<
     if (!input) return;
 
     this.inputElement = input;
-    this.inputElement.addEventListener("keydown", this.handleKeydown as EventListener);
+    this.inputElement.addEventListener("keydown", this.handleKeydown);
   }
 
   /**
@@ -112,7 +112,7 @@ export abstract class PagesFormInput<
    */
   protected cleanupSubmitListener(): void {
     if (this.inputElement) {
-      this.inputElement.removeEventListener("keydown", this.handleKeydown as EventListener);
+      this.inputElement.removeEventListener("keydown", this.handleKeydown);
       this.inputElement = null;
     }
   }

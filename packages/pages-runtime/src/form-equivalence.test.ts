@@ -17,10 +17,11 @@ import {
   textarea,
   metric,
   title,
-  inlineDataset,
+  bind,
 } from "@casehubio/pages-ui/dist/dsl/builders.js";
 import { createLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import { inlineSource } from "@casehubio/pages-data/dist/datasource/sources/inline-source.js";
 
 const CONTACT_YAML = `
 datasets:
@@ -108,27 +109,23 @@ pages:
 
 function buildContactManagerTS() {
   const ds = "contacts" as DataSetId;
-  const dataset = inlineDataset(
-    "contacts",
-    JSON.stringify([
-      [1, "Alice", "alice@example.com", "+1-555-0101", "Work", "true", "2024-03-15", "Key client", 1],
-      [2, "Bob", "bob@example.com", "+1-555-0102", "Personal", "true", "2023-11-20", "", 2],
-      [3, "Carol", "carol@example.com", "+1-555-0103", "Work", "false", "2025-01-08", "On leave", 3],
-    ]),
-    {
-      columns: [
-        { id: columnId("id"), type: ColumnType.NUMBER },
-        { id: columnId("name"), type: ColumnType.TEXT },
-        { id: columnId("email"), type: ColumnType.TEXT },
-        { id: columnId("phone"), type: ColumnType.TEXT },
-        { id: columnId("category"), type: ColumnType.LABEL },
-        { id: columnId("active"), type: ColumnType.LABEL },
-        { id: columnId("startDate"), type: ColumnType.DATE },
-        { id: columnId("notes"), type: ColumnType.TEXT },
-        { id: columnId("priority"), type: ColumnType.NUMBER },
-      ],
-    },
-  );
+  const columns = [
+    { id: columnId("id"), type: ColumnType.NUMBER },
+    { id: columnId("name"), type: ColumnType.TEXT },
+    { id: columnId("email"), type: ColumnType.TEXT },
+    { id: columnId("phone"), type: ColumnType.TEXT },
+    { id: columnId("category"), type: ColumnType.LABEL },
+    { id: columnId("active"), type: ColumnType.LABEL },
+    { id: columnId("startDate"), type: ColumnType.DATE },
+    { id: columnId("notes"), type: ColumnType.TEXT },
+    { id: columnId("priority"), type: ColumnType.NUMBER },
+  ];
+  const data = JSON.stringify([
+    [1, "Alice", "alice@example.com", "+1-555-0101", "Work", "true", "2024-03-15", "Key client", 1],
+    [2, "Bob", "bob@example.com", "+1-555-0102", "Personal", "true", "2023-11-20", "", 2],
+    [3, "Carol", "carol@example.com", "+1-555-0103", "Work", "false", "2025-01-08", "On leave", 3],
+  ]);
+  const contactsBinding = bind("contacts", inlineSource(data, { columns }));
 
   return page("Contact List",
     title("Contact Manager"),
@@ -150,7 +147,7 @@ function buildContactManagerTS() {
         save: { trigger: "auto" as const, delay: 2000, adapter: "local" },
       },
     ),
-    { datasets: [dataset] },
+    { datasets: [contactsBinding] },
   );
 }
 

@@ -13,7 +13,7 @@ function mockFetch(body: unknown, status = 200): typeof globalThis.fetch {
     status,
     json: () => Promise.resolve(body),
     text: () => Promise.resolve(JSON.stringify(body)),
-  }) as unknown as typeof globalThis.fetch;
+  });
 }
 
 describe("ServerQueryClient", () => {

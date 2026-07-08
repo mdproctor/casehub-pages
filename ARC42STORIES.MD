@@ -84,15 +84,15 @@ yarn build:prod                   # production (includes examples gallery)
 ```
 TypeScript DSL (or YAML string)
     ↓  (DSL builders / js-yaml)
-Component tree + DataSetDef[]       — layout model
+Component tree + DataSourceBinding[]  — layout model (bind(id, source))
     ↓
-resolveDataSet() / PushSource       — @casehubio/pages-data
+DataSource.connect(sink)              — @casehubio/pages-data/datasource
+    ↓                                   (inline, csv, rest, sse, ws, simulated, replay, composite)
+DataSink → DataSetManager.apply()    — reactive: mutations cascade to bound components
     ↓
-DataSet (columns + rows)            — reactive: mutations cascade to bound components
+renderNode() / renderComponent()     — @casehubio/pages-component
     ↓
-renderNode() / renderComponent()    — @casehubio/pages-component
-    ↓
-<pages-bar-chart> / hostPanel()     — @casehubio/pages-viz Web Components + custom panels
+<pages-bar-chart> / hostPanel()      — @casehubio/pages-viz Web Components + custom panels
     ↓
 pages-filter / pages-sort / pages-event — DOM custom events back to data layer
 ```

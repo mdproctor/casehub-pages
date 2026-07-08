@@ -76,7 +76,7 @@ describe("parameterised dataset URLs", () => {
     const vizEl = document.createElement("pages-metric");
     registry.set(componentId, {
       element: el,
-      vizElement: vizEl as unknown as import("@casehubio/pages-viz/dist/base/PagesElement.js").PagesElement<import("@casehubio/pages-viz/dist/base/types.js").VizComponentProps>,
+      vizElement: vizEl,
       originalLookup: { dataSetId: dsLookupId, operations: [] },
       component,
       pagePath,

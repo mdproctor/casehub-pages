@@ -107,7 +107,7 @@ describe("SseSource", () => {
       "sse://myhost:8080/events",
       undefined,
       MockEventSource as unknown as typeof EventSource,
-    ).subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+    ).subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
     expect(MockEventSource.instances[0]!.url).toContain("http://myhost:8080/events");
   });
@@ -117,7 +117,7 @@ describe("SseSource", () => {
       "sses://secure.host/events",
       undefined,
       MockEventSource as unknown as typeof EventSource,
-    ).subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+    ).subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
     expect(MockEventSource.instances[0]!.url).toContain("https://secure.host/events");
   });
@@ -127,7 +127,7 @@ describe("SseSource", () => {
       "sse://host/events",
       { auth: { type: "query-param", token: "secret" } },
       MockEventSource as unknown as typeof EventSource,
-    ).subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+    ).subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
     const url = new URL(MockEventSource.instances[0]!.url);
     expect(url.searchParams.get("token")).toBe("secret");
@@ -141,7 +141,7 @@ describe("SseSource", () => {
     );
     const errors: Array<{ message: string; permanent: boolean }> = [];
 
-    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), (e) => errors.push(e));
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), (e) => errors.push(e));
 
     const es = MockEventSource.instances[0]!;
     es.open();
@@ -160,7 +160,7 @@ describe("SseSource", () => {
     );
     const errors: Array<{ message: string; permanent: boolean }> = [];
 
-    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), (e) => errors.push(e));
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), (e) => errors.push(e));
 
     const es = MockEventSource.instances[0]!;
     es.open();
@@ -177,8 +177,8 @@ describe("SseSource", () => {
       MockEventSource as unknown as typeof EventSource,
     );
 
-    source.subscribe(dataSetId("a"), { uuid: dataSetId("a") } as ExternalDataSetDef, vi.fn(), vi.fn());
-    source.subscribe(dataSetId("b"), { uuid: dataSetId("b") } as ExternalDataSetDef, vi.fn(), vi.fn());
+    source.subscribe(dataSetId("a"), { uuid: dataSetId("a") }, vi.fn(), vi.fn());
+    source.subscribe(dataSetId("b"), { uuid: dataSetId("b") }, vi.fn(), vi.fn());
 
     const es = MockEventSource.instances[0]!;
     es.open();
@@ -197,7 +197,7 @@ describe("SseSource", () => {
       undefined,
       MockEventSource as unknown as typeof EventSource,
     );
-    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
     const es = MockEventSource.instances[0]!;
     es.open();
@@ -205,5 +205,295 @@ describe("SseSource", () => {
 
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to parse"), expect.anything());
     warnSpy.mockRestore();
+  });
+
+  // ---- Characterisation: named event types ----
+
+  it("handles append event via named SSE event", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const events: DataSetEvent[] = [];
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds"), url: "sse://host/events?dataset=metrics" }, (e) => events.push(e), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    es.emit("append", JSON.stringify({
+      dataset: "metrics",
+      columns: [{ id: "val", type: "NUMBER" }],
+      rows: [["99"]],
+    }));
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.type).toBe("append");
+  });
+
+  it("handles replace event via named SSE event", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const events: DataSetEvent[] = [];
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds"), url: "sse://host/events?dataset=metrics", keyColumn: "id" }, (e) => events.push(e), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    es.emit("replace", JSON.stringify({
+      dataset: "metrics",
+      key: "1",
+      row: ["1", "100"],
+      columns: [{ id: "id", type: "LABEL" }, { id: "val", type: "NUMBER" }],
+    }));
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.type).toBe("replace");
+  });
+
+  it("handles remove event via named SSE event", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const events: DataSetEvent[] = [];
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds"), url: "sse://host/events?dataset=metrics", keyColumn: "id" }, (e) => events.push(e), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    es.emit("remove", JSON.stringify({
+      dataset: "metrics",
+      key: "1",
+    }));
+
+    expect(events).toHaveLength(1);
+    expect(events[0]!.type).toBe("remove");
+  });
+
+  // ---- Characterisation: connection lifecycle ----
+
+  it("does not create EventSource until first subscription", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+
+    expect(MockEventSource.instances).toHaveLength(0);
+
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
+
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  it("reuses EventSource for second subscription", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+
+    source.subscribe(dataSetId("ds-a"), { uuid: dataSetId("ds-a") }, vi.fn(), vi.fn());
+    source.subscribe(dataSetId("ds-b"), { uuid: dataSetId("ds-b") }, vi.fn(), vi.fn());
+
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  it("does not create new EventSource when already OPEN", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+
+    source.subscribe(dataSetId("ds-a"), { uuid: dataSetId("ds-a") }, vi.fn(), vi.fn());
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    source.subscribe(dataSetId("ds-b"), { uuid: dataSetId("ds-b") }, vi.fn(), vi.fn());
+
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  it("ignores duplicate subscription to same dataSetId", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
+
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  // ---- Characterisation: wire name resolution ----
+
+  it("extracts wire name from ?dataset= query param", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const events: DataSetEvent[] = [];
+    source.subscribe(dataSetId("local-id"), { uuid: dataSetId("local-id"), url: "sse://host/events?dataset=wire-name" }, (e) => events.push(e), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    es.emit("snapshot", JSON.stringify({
+      dataset: "wire-name",
+      columns: [],
+      rows: [],
+    }));
+
+    expect(events).toHaveLength(1);
+  });
+
+  it("uses dataSetId as wire name when no ?dataset= in URL", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const events: DataSetEvent[] = [];
+    source.subscribe(dataSetId("fallback-id"), { uuid: dataSetId("fallback-id"), url: "sse://host/events" }, (e) => events.push(e), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    es.emit("snapshot", JSON.stringify({
+      dataset: "fallback-id",
+      columns: [],
+      rows: [],
+    }));
+
+    expect(events).toHaveLength(1);
+  });
+
+  it("uses dataSetId as wire name when def.url is undefined", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const events: DataSetEvent[] = [];
+    source.subscribe(dataSetId("no-url"), { uuid: dataSetId("no-url") }, (e) => events.push(e), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    es.emit("snapshot", JSON.stringify({
+      dataset: "no-url",
+      columns: [],
+      rows: [],
+    }));
+
+    expect(events).toHaveLength(1);
+  });
+
+  // ---- Characterisation: error handling ----
+
+  it("does not emit error when readyState is CONNECTING", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const errors: Array<{ message: string; permanent: boolean }> = [];
+
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), (e) => errors.push(e));
+
+    const es = MockEventSource.instances[0]!;
+    es.readyState = MockEventSource.CONNECTING;
+    es.onerror?.();
+
+    expect(errors).toHaveLength(0);
+  });
+
+  it("logs warning on malformed JSON in named event", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+    es.emit("append", "{ invalid json }");
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to parse"), expect.anything());
+    warnSpy.mockRestore();
+  });
+
+  // ---- Characterisation: close() cleanup ----
+
+  it("close() closes EventSource and clears all subscriptions", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+
+    source.subscribe(dataSetId("a"), { uuid: dataSetId("a") }, vi.fn(), vi.fn());
+    source.subscribe(dataSetId("b"), { uuid: dataSetId("b") }, vi.fn(), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    source.close();
+
+    expect(es.readyState).toBe(MockEventSource.CLOSED);
+  });
+
+  it("close() allows new subscription after close", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+
+    source.subscribe(dataSetId("a"), { uuid: dataSetId("a") }, vi.fn(), vi.fn());
+    source.close();
+
+    expect(MockEventSource.instances).toHaveLength(1);
+
+    source.subscribe(dataSetId("b"), { uuid: dataSetId("b") }, vi.fn(), vi.fn());
+
+    expect(MockEventSource.instances).toHaveLength(2);
+  });
+
+  // ---- Characterisation: unsubscribe cleanup ----
+
+  it("unsubscribe removes wire name mapping", () => {
+    const source = createSseSource(
+      "sse://host/events",
+      undefined,
+      MockEventSource as unknown as typeof EventSource,
+    );
+    const events: DataSetEvent[] = [];
+
+    source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds"), url: "sse://host/events?dataset=wire" }, (e) => events.push(e), vi.fn());
+
+    const es = MockEventSource.instances[0]!;
+    es.open();
+
+    source.unsubscribe(dataSetId("ds"));
+
+    es.emit("snapshot", JSON.stringify({
+      dataset: "wire",
+      columns: [],
+      rows: [],
+    }));
+
+    expect(events).toHaveLength(0);
   });
 });

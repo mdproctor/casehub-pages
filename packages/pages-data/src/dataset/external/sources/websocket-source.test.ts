@@ -60,7 +60,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -90,7 +90,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -115,7 +115,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -144,7 +144,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -166,7 +166,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -197,7 +197,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -221,7 +221,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -250,7 +250,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -290,7 +290,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws1 = MockWebSocket.instances[0]!;
     ws1.open();
 
@@ -317,7 +317,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
 
     ws.readyState = 3;
@@ -340,7 +340,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
 
     ws.readyState = 3;
@@ -365,7 +365,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -403,7 +403,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -437,7 +437,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -461,7 +461,7 @@ describe("WebSocketSource", () => {
 
     source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-    await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+    await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
     const ws = MockWebSocket.instances[0]!;
     ws.open();
 
@@ -489,7 +489,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       const url = new URL(ws.url);
       expect(url.searchParams.get("token")).toBe("secret123");
@@ -508,7 +508,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       const url = new URL(ws.url);
       expect(url.searchParams.get("api_key")).toBe("key456");
@@ -528,7 +528,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       const url = new URL(ws.url);
       expect(url.hostname).toBe("relay.example.com");
@@ -552,7 +552,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       const url = new URL(ws.url);
       expect(url.hostname).toBe("relay.example.com");
@@ -573,7 +573,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       expect(MockWebSocket.instances[0]!.url).toBe("ws://localhost/ws");
     });
   });
@@ -593,7 +593,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -628,7 +628,7 @@ describe("WebSocketSource", () => {
       source.subscribe(dataSetId("d1"), def1, (e) => events.push(e), () => {});
       source.subscribe(dataSetId("d2"), def2, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -657,7 +657,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, (e) => events.push(e), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -692,7 +692,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("d1"), def1, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -725,7 +725,7 @@ describe("WebSocketSource", () => {
       const events: Array<{ topic: string; payload: unknown }> = [];
       eventTarget.addEventListener("pages-event", ((e: Event) => {
         events.push((e as CustomEvent).detail);
-      }) as EventListener);
+      }));
 
       const source = createWebSocketSource(
         "ws://localhost/ws",
@@ -739,7 +739,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -771,7 +771,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -804,7 +804,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws1 = MockWebSocket.instances[0]!;
       ws1.open();
 
@@ -850,7 +850,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -873,7 +873,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws1 = MockWebSocket.instances[0]!;
       ws1.open();
 
@@ -924,7 +924,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws1 = MockWebSocket.instances[0]!;
       ws1.open();
 
@@ -975,7 +975,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -994,7 +994,7 @@ describe("WebSocketSource", () => {
       // Re-subscribe after close — should not have since
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(2));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(2); });
       const ws2 = MockWebSocket.instances[1]!;
       ws2.open();
 
@@ -1016,7 +1016,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws1 = MockWebSocket.instances[0]!;
       ws1.open();
 
@@ -1059,7 +1059,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1084,7 +1084,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1113,7 +1113,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1140,7 +1140,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1170,7 +1170,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), () => {});
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws1 = MockWebSocket.instances[0]!;
       ws1.open();
 
@@ -1213,7 +1213,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), (e) => errors.push(e));
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1233,7 +1233,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), (e) => errors.push(e));
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1251,7 +1251,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, () => { throw new Error("listener crash"); }, (e) => errors.push(e));
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1276,7 +1276,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), (e) => errors.push(e));
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1294,7 +1294,7 @@ describe("WebSocketSource", () => {
 
       source.subscribe(dataSetId("chat"), def, vi.fn(), (e) => errors.push(e));
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1314,9 +1314,9 @@ describe("WebSocketSource", () => {
         { relay: { endpoint: "wss://relay.example.com" } },
         MockWebSocket as unknown as typeof WebSocket,
       );
-      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const url = new URL(MockWebSocket.instances[0]!.url);
       expect(url.searchParams.get("target")).toBe("ws://host/ws?existing=param");
     });
@@ -1327,9 +1327,9 @@ describe("WebSocketSource", () => {
         { auth: { type: "query-param", token: "secret" } },
         MockWebSocket as unknown as typeof WebSocket,
       );
-      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const url = new URL(MockWebSocket.instances[0]!.url);
       expect(url.hostname).toBe("myhost");
       expect(url.port).toBe("9090");
@@ -1343,7 +1343,7 @@ describe("WebSocketSource", () => {
       const def: ExternalDataSetDef = { uuid: dataSetId("ds"), url: "ws://localhost/ws?dataset=d", keyColumn: "id" };
       source.subscribe(dataSetId("ds"), def, vi.fn(), vi.fn());
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1360,7 +1360,7 @@ describe("WebSocketSource", () => {
       ws.onclose?.({ code: 1006, reason: "" });
       await vi.advanceTimersByTimeAsync(1000);
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(2));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(2); });
       const ws2 = MockWebSocket.instances[1]!;
       ws2.open();
 
@@ -1375,7 +1375,7 @@ describe("WebSocketSource", () => {
       const def: ExternalDataSetDef = { uuid: dataSetId("ds"), url: "ws://localhost/ws?dataset=d", keyColumn: "id" };
       source.subscribe(dataSetId("ds"), def, vi.fn(), vi.fn());
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1387,7 +1387,7 @@ describe("WebSocketSource", () => {
       ws.onclose?.({ code: 1006, reason: "" });
       await vi.advanceTimersByTimeAsync(1000);
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(2));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(2); });
       const ws2 = MockWebSocket.instances[1]!;
       ws2.open();
 
@@ -1403,9 +1403,9 @@ describe("WebSocketSource", () => {
         { auth: { type: "query-param", token: "secret" } },
         MockWebSocket as unknown as typeof WebSocket,
       );
-      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1413,7 +1413,7 @@ describe("WebSocketSource", () => {
       ws.onclose?.({ code: 1006, reason: "" });
       await vi.advanceTimersByTimeAsync(1000);
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(2));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(2); });
       const url = new URL(MockWebSocket.instances[1]!.url);
       expect(url.searchParams.get("token")).toBe("secret");
       vi.useRealTimers();
@@ -1426,9 +1426,9 @@ describe("WebSocketSource", () => {
         { relay: { endpoint: "wss://relay.example.com" } },
         MockWebSocket as unknown as typeof WebSocket,
       );
-      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") } as ExternalDataSetDef, vi.fn(), vi.fn());
+      source.subscribe(dataSetId("ds"), { uuid: dataSetId("ds") }, vi.fn(), vi.fn());
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(1); });
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
@@ -1436,7 +1436,7 @@ describe("WebSocketSource", () => {
       ws.onclose?.({ code: 1006, reason: "" });
       await vi.advanceTimersByTimeAsync(1000);
 
-      await vi.waitFor(() => expect(MockWebSocket.instances).toHaveLength(2));
+      await vi.waitFor(() => { expect(MockWebSocket.instances).toHaveLength(2); });
       const url = new URL(MockWebSocket.instances[1]!.url);
       expect(url.origin).toBe("wss://relay.example.com");
       expect(url.searchParams.get("target")).toBe("ws://host/ws");

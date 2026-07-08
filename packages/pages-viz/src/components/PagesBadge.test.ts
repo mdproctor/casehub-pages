@@ -26,7 +26,7 @@ describe("PagesBadge", () => {
   let element: PagesBadge;
 
   beforeEach(() => {
-    element = document.createElement("pages-badge") as PagesBadge;
+    element = document.createElement("pages-badge");
     document.body.appendChild(element);
   });
 
@@ -41,7 +41,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(1);
     expect(badges[0]!.textContent).toBe("PENDING");
@@ -58,7 +58,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(3);
     expect(badges[0]!.textContent).toBe("PENDING");
@@ -81,7 +81,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll<HTMLSpanElement>(".pages-badge");
     expect(badges.length).toBe(2);
     expect(badges[0]!.style.backgroundColor).toBe("rgb(255, 167, 38)"); // #ffa726
@@ -102,7 +102,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll<HTMLSpanElement>(".pages-badge");
     expect(badges.length).toBe(1);
     // Should have a background color (auto-generated)
@@ -120,7 +120,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
     // Should render from first column (id), not second (status)
@@ -140,7 +140,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
     expect(badges[0]!.textContent).toBe("PENDING");
@@ -158,7 +158,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badge = shadowRoot.querySelector(".pages-badge");
     expect(badge!.getAttribute("role")).toBe("status");
   });
@@ -174,7 +174,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(0);
   });
@@ -190,7 +190,7 @@ describe("PagesBadge", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const shadowRoot = element.shadowRoot!;
+    const shadowRoot = element.shadowRoot;
     const badges = shadowRoot.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
     expect(badges[0]!.textContent).toBe(""); // NULL renders as empty

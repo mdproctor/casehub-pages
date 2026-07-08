@@ -5,10 +5,13 @@ import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/exte
 import { LOCAL_CAPABILITIES } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
+import type { DataSource, DataSink, DataSourceBinding } from "@casehubio/pages-data/dist/datasource/types.js";
+import { inlineSource } from "@casehubio/pages-data/dist/datasource/sources/inline-source.js";
 import { createDataPipeline } from "./data-pipeline.js";
 import type { VizTarget } from "./data-pipeline.js";
 import type { ComponentRegistry } from "./registry.js";
 import type { DataSetScope } from "./dataset-scope.js";
+import type { DataSetEntry } from "./dataset-scope.js";
 import { createFilterState } from "./cross-filter.js";
 import { getActiveFilterOps } from "./cross-filter.js";
 import type { FilterState } from "./cross-filter.js";
@@ -268,7 +271,7 @@ describe("pipeline — sort from ComponentViewState", () => {
     });
 
     const cvs = createComponentViewState();
-    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "ASCENDING" } as SortColumn);
+    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "ASCENDING" });
 
     const pipeline = createDataPipeline(
       manager, new Map() as DataSetScope, registry,
@@ -364,7 +367,7 @@ describe("pipeline — sort from ComponentViewState", () => {
     });
 
     const cvs = createComponentViewState();
-    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "DESCENDING" } as SortColumn);
+    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "DESCENDING" });
 
     const pipeline = createDataPipeline(
       manager, new Map() as DataSetScope, registry,
@@ -766,9 +769,10 @@ describe("pipeline — eventTarget injection", () => {
         webSocket: { auth: { type: "query-param" as const, token: "t" } },
       },
       presetRegistry: { get: () => undefined, has: () => false },
+      capabilities: LOCAL_CAPABILITIES,
     });
 
-    expect(() => pipeline.dispose()).not.toThrow();
+    expect(() => { pipeline.dispose(); }).not.toThrow();
   });
 });
 
@@ -818,5 +822,341 @@ describe("refreshAll", () => {
 
     expect(target1.dataSet).toBeDefined();
     expect(target2.dataSet).toBeDefined();
+  });
+});
+
+describe("pipeline — DataSourceBinding path", () => {
+  it("connects a DataSourceBinding and delivers data via manager", () => {
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.refreshDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target1 = makeTarget();
+
+    registry.set("chart-1", {
+      element: document.createElement("div"),
+      vizElement: target1,
+      originalLookup: { dataSetId: "patients" as DataSetId, operations: [] },
+      component: { type: "bar-chart" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    // Create a DataSourceBinding using inlineSource
+    const binding: DataSourceBinding = {
+      id: dataSetId("patients"),
+      source: inlineSource([["Alice"], ["Bob"]], {
+        columns: [{ id: "region" as any, type: ColumnType.LABEL }],
+      }),
+    };
+
+    const scope: DataSetScope = new Map([
+      ["", new Map<DataSetId, DataSetEntry>([[binding.id, binding]])],
+    ]);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    pipeline.handleDataRequest(target1, { dataSetId: "patients" as DataSetId, operations: [] }, "chart-1");
+
+    // inlineSource connects synchronously → data should be in manager immediately
+    expect(manager.has("patients" as DataSetId)).toBe(true);
+    expect(target1.dataSet).toBeDefined();
+    expect(target1.totalRows).toBe(2);
+  });
+
+  it("serves from cache on subsequent requests after binding connected", () => {
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.refreshDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target1 = makeTarget();
+    const target2 = makeTarget();
+
+    registry.set("chart-1", {
+      element: document.createElement("div"),
+      vizElement: target1,
+      originalLookup: { dataSetId: "data" as DataSetId, operations: [] },
+      component: { type: "bar-chart" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+    registry.set("chart-2", {
+      element: document.createElement("div"),
+      vizElement: target2,
+      originalLookup: { dataSetId: "data" as DataSetId, operations: [] },
+      component: { type: "line-chart" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = {
+      id: dataSetId("data"),
+      source: inlineSource([["X"], ["Y"], ["Z"]], {
+        columns: [{ id: "region" as any, type: ColumnType.LABEL }],
+      }),
+    };
+
+    const scope: DataSetScope = new Map([
+      ["", new Map<DataSetId, DataSetEntry>([[binding.id, binding]])],
+    ]);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    // First request connects the source
+    pipeline.handleDataRequest(target1, { dataSetId: "data" as DataSetId, operations: [] }, "chart-1");
+    expect(target1.totalRows).toBe(3);
+
+    // Second request serves from manager cache
+    pipeline.handleDataRequest(target2, { dataSetId: "data" as DataSetId, operations: [] }, "chart-2");
+    expect(target2.totalRows).toBe(3);
+  });
+
+  it("disconnects sources on dispose", () => {
+    const disconnected: string[] = [];
+    const mockSource: DataSource = {
+      connect(sink: DataSink): void {
+        // Emit synchronously
+        const ds = toTypedDataSet({
+          columns: [col("name", "Name", ColumnType.LABEL)],
+          data: [["test"]],
+        });
+        sink.apply({ type: "snapshot", dataset: ds });
+      },
+      disconnect(): void {
+        disconnected.push("disposed");
+      },
+    };
+
+    const binding: DataSourceBinding = {
+      id: dataSetId("test"),
+      source: mockSource,
+    };
+
+    const manager = createDataSetManager();
+    const registry: ComponentRegistry = new Map();
+    registry.set("c1", {
+      element: document.createElement("div"),
+      component: { type: "bar-chart" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const scope: DataSetScope = new Map([
+      ["", new Map<DataSetId, DataSetEntry>([[binding.id, binding]])],
+    ]);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    pipeline.handleDataRequest(makeTarget(), { dataSetId: "test" as DataSetId, operations: [] }, "c1");
+    expect(disconnected).toHaveLength(0);
+
+    pipeline.dispose();
+    expect(disconnected).toHaveLength(1);
+  });
+
+  it("reports error to components when source emits permanent error", () => {
+    const errorSource: DataSource = {
+      connect(sink: DataSink): void {
+        sink.error({ message: "Connection failed", permanent: true });
+      },
+      disconnect(): void { /* no-op */ },
+    };
+
+    const binding: DataSourceBinding = {
+      id: dataSetId("failing"),
+      source: errorSource,
+    };
+
+    const manager = createDataSetManager();
+    const registry: ComponentRegistry = new Map();
+    const vizTarget = makeTarget();
+    registry.set("c1", {
+      element: document.createElement("div"),
+      vizElement: vizTarget,
+      originalLookup: { dataSetId: binding.id, operations: [] },
+      component: { type: "bar-chart" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const scope: DataSetScope = new Map([
+      ["", new Map<DataSetId, DataSetEntry>([[binding.id, binding]])],
+    ]);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    pipeline.handleDataRequest(makeTarget(), { dataSetId: "failing" as DataSetId, operations: [] }, "c1");
+
+    // Permanent error should be set on viz targets
+    expect(vizTarget.error).toBe("Connection failed");
+
+    pipeline.dispose();
+  });
+
+  it("sets error when binding not found in scope", () => {
+    const manager = createDataSetManager();
+    const registry: ComponentRegistry = new Map();
+    registry.set("c1", {
+      element: document.createElement("div"),
+      component: { type: "bar-chart" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const pipeline = createDataPipeline(
+      manager, new Map() as DataSetScope, registry,
+      createFilterState(), createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    const target = makeTarget();
+    pipeline.handleDataRequest(target, { dataSetId: "missing" as DataSetId, operations: [] }, "c1");
+
+    expect(target.error).toContain("missing");
+  });
+
+  it("applies filters to DataSourceBinding data", () => {
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.refreshDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+
+    registry.set("chart-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "regions" as DataSetId, operations: [] },
+      component: { type: "bar-chart", props: { filter: { listening: true } } },
+      pagePath: "page1",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = {
+      id: dataSetId("regions"),
+      source: inlineSource([["North"], ["South"], ["East"]], {
+        columns: [{ id: "region" as ColumnId, type: ColumnType.LABEL }],
+      }),
+    };
+
+    const filterState: FilterState = new Map([
+      ["page1", new Map<string | undefined, Map<string, string[]>>([
+        [undefined, new Map([["region", ["North"]]])],
+      ])],
+    ]);
+
+    const scope: DataSetScope = new Map([
+      ["page1", new Map<DataSetId, DataSetEntry>([[binding.id, binding]])],
+    ]);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      filterState, createDataScopeRegistry(), createComponentViewState(),
+    );
+
+    pipeline.handleDataRequest(target, { dataSetId: "regions" as DataSetId, operations: [] }, "chart-1");
+
+    expect(target.totalRows).toBe(1);
+  });
+
+  it("applies sort from ComponentViewState to DataSourceBinding data", () => {
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.refreshDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+
+    registry.set("t1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "data" as DataSetId, operations: [] },
+      component: { type: "table" },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const binding: DataSourceBinding = {
+      id: dataSetId("data"),
+      source: inlineSource([["B", "2"], ["A", "1"], ["C", "3"]], {
+        columns: [
+          { id: "name" as ColumnId, type: ColumnType.LABEL },
+          { id: "value" as ColumnId, type: ColumnType.NUMBER },
+        ],
+      }),
+    };
+
+    const scope: DataSetScope = new Map([
+      ["", new Map<DataSetId, DataSetEntry>([[binding.id, binding]])],
+    ]);
+
+    const cvs = createComponentViewState();
+    updateSort(cvs, "t1", { columnId: "name" as ColumnId, order: "ASCENDING" });
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    pipeline.handleDataRequest(target, { dataSetId: "data" as DataSetId, operations: [] }, "t1");
+
+    expect(target.totalRows).toBe(3);
+    expect(target.activeSort).toEqual({ columnId: "name", order: "ASCENDING" });
+    const rows = (target.dataSet as { rows: Array<{ text(id: ColumnId): string }> }).rows;
+    expect(rows[0]!.text("name" as ColumnId)).toBe("A");
+    expect(rows[1]!.text("name" as ColumnId)).toBe("B");
+    expect(rows[2]!.text("name" as ColumnId)).toBe("C");
+  });
+
+  it("applies pagination to DataSourceBinding data", () => {
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.refreshDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+
+    registry.set("t1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "data" as DataSetId, operations: [] },
+      component: { type: "table", props: { pageSize: 2 } },
+      pagePath: "",
+      hasExplicitId: true,
+    });
+
+    const binding: DataSourceBinding = {
+      id: dataSetId("data"),
+      source: inlineSource([["A"], ["B"], ["C"], ["D"], ["E"]], {
+        columns: [{ id: "name" as ColumnId, type: ColumnType.LABEL }],
+      }),
+    };
+
+    const scope: DataSetScope = new Map([
+      ["", new Map<DataSetId, DataSetEntry>([[binding.id, binding]])],
+    ]);
+
+    const cvs = createComponentViewState();
+    updatePage(cvs, "t1", 1);
+
+    const pipeline = createDataPipeline(
+      manager, scope, registry,
+      createFilterState(), createDataScopeRegistry(), cvs,
+    );
+
+    pipeline.handleDataRequest(target, { dataSetId: "data" as DataSetId, operations: [] }, "t1");
+
+    expect(target.totalRows).toBe(5);
+    expect(target.activePage).toBe(1);
+    const rows = (target.dataSet as { rows: unknown[] }).rows;
+    expect(rows).toHaveLength(2);
   });
 });

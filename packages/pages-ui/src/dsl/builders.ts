@@ -21,6 +21,7 @@ import type {
 import type { PageProps, PageSettings, DataScope, SaveConfig } from "../model/page-types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
+import type { DataSourceBinding, DataSource } from "@casehubio/pages-data/dist/datasource/types.js";
 import type {
   BarChartProps,
   LineChartProps,
@@ -51,7 +52,7 @@ export function resetGridCounter(): void {
 }
 
 export interface PageOptions {
-  readonly datasets?: readonly ExternalDataSetDef[];
+  readonly datasets?: readonly ExternalDataSetDef[] | readonly DataSourceBinding[];
   readonly settings?: PageSettings;
   readonly properties?: Record<string, string>;
   readonly dataScope?: DataScope;
@@ -417,29 +418,17 @@ export function textarea(props: TextareaProps): Component {
   return freeze({ type: "textarea" as const, props: freeze({ ...props }) });
 }
 
-// Dataset helpers
+// DataSource binding builder
 
-export function dataset(
+export function bind(
   id: string,
-  url: string,
-  overrides?: Partial<Omit<ExternalDataSetDef, "uuid" | "url" | "content" | "join">>,
-): ExternalDataSetDef {
+  source: DataSource,
+  options?: { keyColumn?: string },
+): DataSourceBinding {
   return Object.freeze({
-    uuid: id as DataSetId,
-    url,
-    ...overrides,
-  });
-}
-
-export function inlineDataset(
-  id: string,
-  content: string,
-  overrides?: Partial<Omit<ExternalDataSetDef, "uuid" | "url" | "content" | "join">>,
-): ExternalDataSetDef {
-  return Object.freeze({
-    uuid: id as DataSetId,
-    content,
-    ...overrides,
+    id: id as DataSetId,
+    source,
+    ...(options?.keyColumn !== undefined && { keyColumn: options.keyColumn }),
   });
 }
 

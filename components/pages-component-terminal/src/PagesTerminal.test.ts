@@ -246,7 +246,7 @@ describe("PagesTerminal", () => {
       const ws = MockWebSocket.instances[0]!;
       ws.open();
 
-      ws.onmessage?.({ data: "hello world" } as MessageEvent);
+      ws.onmessage?.({ data: "hello world" });
 
       expect(mockTerminal.write).toHaveBeenCalledWith("hello world");
     });
@@ -274,7 +274,7 @@ describe("PagesTerminal", () => {
       container.appendChild(el);
       const ws = MockWebSocket.instances[0]!;
       ws.open();
-      ws.onclose?.({ code: 4001, reason: "session-expired" } as CloseEvent);
+      ws.onclose?.({ code: 4001, reason: "session-expired" });
 
       const disconnected = events.find(e => e.detail.topic === "terminal-disconnected");
       expect(disconnected).toBeDefined();
@@ -287,7 +287,7 @@ describe("PagesTerminal", () => {
       container.appendChild(el);
       const ws = MockWebSocket.instances[0]!;
       ws.open();
-      ws.onclose?.({ code: 4001, reason: "session-expired" } as CloseEvent);
+      ws.onclose?.({ code: 4001, reason: "session-expired" });
 
       vi.advanceTimersByTime(5000);
       expect(MockWebSocket.instances).toHaveLength(1);
@@ -301,7 +301,7 @@ describe("PagesTerminal", () => {
       container.appendChild(el);
       const ws = MockWebSocket.instances[0]!;
       ws.open();
-      ws.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      ws.onclose?.({ code: 1006, reason: "" });
 
       expect(MockWebSocket.instances).toHaveLength(1);
 
@@ -330,7 +330,7 @@ describe("PagesTerminal", () => {
       };
       vi.stubGlobal("WebSocket", PatchedWS);
 
-      ws.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      ws.onclose?.({ code: 1006, reason: "" });
       vi.advanceTimersByTime(1000);
 
       expect(callOrder).toEqual(["reset", "websocket"]);
@@ -346,7 +346,7 @@ describe("PagesTerminal", () => {
 
       // Initial connection opens then drops
       MockWebSocket.instances[0]!.open();
-      MockWebSocket.instances[0]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[0]!.onclose?.({ code: 1006, reason: "" });
 
       // retry 0 → 1000ms delay
       vi.advanceTimersByTime(999);
@@ -355,7 +355,7 @@ describe("PagesTerminal", () => {
       expect(MockWebSocket.instances).toHaveLength(2);
 
       // Reconnected socket fails immediately (no open → retries not reset)
-      MockWebSocket.instances[1]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[1]!.onclose?.({ code: 1006, reason: "" });
 
       // retry 1 → 2000ms delay
       vi.advanceTimersByTime(1999);
@@ -363,7 +363,7 @@ describe("PagesTerminal", () => {
       vi.advanceTimersByTime(1);
       expect(MockWebSocket.instances).toHaveLength(3);
 
-      MockWebSocket.instances[2]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[2]!.onclose?.({ code: 1006, reason: "" });
 
       // retry 2 → 4000ms delay
       vi.advanceTimersByTime(3999);
@@ -371,15 +371,15 @@ describe("PagesTerminal", () => {
       vi.advanceTimersByTime(1);
       expect(MockWebSocket.instances).toHaveLength(4);
 
-      MockWebSocket.instances[3]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[3]!.onclose?.({ code: 1006, reason: "" });
       vi.advanceTimersByTime(8000); // retry 3 → 8000ms
       expect(MockWebSocket.instances).toHaveLength(5);
 
-      MockWebSocket.instances[4]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[4]!.onclose?.({ code: 1006, reason: "" });
       vi.advanceTimersByTime(16000); // retry 4 → 16000ms
       expect(MockWebSocket.instances).toHaveLength(6);
 
-      MockWebSocket.instances[5]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[5]!.onclose?.({ code: 1006, reason: "" });
 
       // retry 5 → capped at 30000ms (1000 * 2^5 = 32000 > cap)
       vi.advanceTimersByTime(29999);
@@ -397,13 +397,13 @@ describe("PagesTerminal", () => {
 
       // First failure → 1000ms backoff
       MockWebSocket.instances[0]!.open();
-      MockWebSocket.instances[0]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[0]!.onclose?.({ code: 1006, reason: "" });
       vi.advanceTimersByTime(1000);
       expect(MockWebSocket.instances).toHaveLength(2);
 
       // Successful reconnect resets retries
       MockWebSocket.instances[1]!.open();
-      MockWebSocket.instances[1]!.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      MockWebSocket.instances[1]!.onclose?.({ code: 1006, reason: "" });
 
       // Should be back to 1000ms, not 2000ms
       vi.advanceTimersByTime(999);
@@ -437,7 +437,7 @@ describe("PagesTerminal", () => {
       container.appendChild(el);
       const ws = MockWebSocket.instances[0]!;
       ws.open();
-      ws.onclose?.({ code: 1006, reason: "" } as CloseEvent);
+      ws.onclose?.({ code: 1006, reason: "" });
 
       expect(MockWebSocket.instances).toHaveLength(1);
 

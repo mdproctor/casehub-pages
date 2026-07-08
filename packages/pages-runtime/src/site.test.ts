@@ -711,7 +711,7 @@ describe("pages-event inter-panel communication", () => {
     const received: Array<{ topic: string; payload: unknown }> = [];
     document.addEventListener("pages-event", ((e: Event) => {
       received.push((e as CustomEvent).detail);
-    }) as EventListener);
+    }));
 
     const inner = target.querySelector("[data-component-type='html']")!;
     inner.dispatchEvent(new CustomEvent("pages-event", {

@@ -35,7 +35,7 @@ describe("split resize event", () => {
     const events: Array<{ componentId: string; ratios: number[] }> = [];
     container.addEventListener("pages-split-resize", ((e: Event) => {
       events.push((e as CustomEvent).detail);
-    }) as EventListener);
+    }));
 
     // Simulate drag: mousedown on handle, mousemove, mouseup
     handle.dispatchEvent(new MouseEvent("mousedown", { clientX: 100, bubbles: true }));
@@ -58,7 +58,7 @@ describe("split resize event", () => {
     const events: Array<{ componentId: string; ratios: number[] }> = [];
     container.addEventListener("pages-split-resize", ((e: Event) => {
       events.push((e as CustomEvent).detail);
-    }) as EventListener);
+    }));
 
     handle.dispatchEvent(new MouseEvent("mousedown", { clientX: 100, bubbles: true }));
     document.dispatchEvent(new MouseEvent("mouseup"));
@@ -78,7 +78,7 @@ describe("split resize event", () => {
     const events: Array<{ componentId: string; ratios: number[] }> = [];
     container.addEventListener("pages-split-resize", ((e: Event) => {
       events.push((e as CustomEvent).detail);
-    }) as EventListener);
+    }));
 
     handle.dispatchEvent(new MouseEvent("mousedown", { clientX: 100, bubbles: true }));
     document.dispatchEvent(new MouseEvent("mouseup"));

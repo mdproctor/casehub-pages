@@ -85,3 +85,5 @@ export {
   createEventStreamPool,
   type EventStreamPool,
 } from "./event-stream/index.js";
+
+export * from "./datasource/index.js";

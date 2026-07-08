@@ -1,9 +1,38 @@
 import type { Component } from "@casehubio/pages-component/dist/model/types.js";
 import type { DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { DataSourceBinding } from "@casehubio/pages-data/dist/datasource/types.js";
 import type { PagePathMap } from "./page-paths.js";
 
-export type DataSetScope = Map<string, Map<DataSetId, ExternalDataSetDef>>;
+/**
+ * A dataset entry in scope is either a legacy ExternalDataSetDef (from YAML)
+ * or a DataSourceBinding (from the programmatic API).
+ */
+export type DataSetEntry = ExternalDataSetDef | DataSourceBinding;
+
+export type DataSetScope = Map<string, Map<DataSetId, DataSetEntry>>;
+
+/**
+ * Type guard: returns true if the entry is a DataSourceBinding (has `source`),
+ * false if it is a legacy ExternalDataSetDef (has `uuid`).
+ */
+export function isBinding(entry: DataSetEntry): entry is DataSourceBinding {
+  return "source" in entry && typeof (entry).source === "object";
+}
+
+/**
+ * Type guard: returns true if the entry is a legacy ExternalDataSetDef.
+ */
+export function isDef(entry: DataSetEntry): entry is ExternalDataSetDef {
+  return !isBinding(entry);
+}
+
+/**
+ * Get the dataset ID from either entry type.
+ */
+function entryId(entry: DataSetEntry): DataSetId {
+  return isBinding(entry) ? entry.id : entry.uuid;
+}
 
 export function buildDataSetScope(
   root: Component,
@@ -16,7 +45,7 @@ export function buildDataSetScope(
 
 export function extendDataSetScope(
   root: Component,
-  inherited: Map<DataSetId, ExternalDataSetDef>,
+  inherited: Map<DataSetId, DataSetEntry>,
   paths: PagePathMap,
   scope: DataSetScope,
 ): void {
@@ -25,7 +54,7 @@ export function extendDataSetScope(
 
 function walkScope(
   component: Component,
-  inherited: Map<DataSetId, ExternalDataSetDef>,
+  inherited: Map<DataSetId, DataSetEntry>,
   paths: PagePathMap,
   scope: DataSetScope,
 ): void {
@@ -34,13 +63,14 @@ function walkScope(
   if (component.type === "page") {
     const pagePath = paths.get(component) ?? "";
     const datasets = (component.props as Record<string, unknown> | undefined)?.datasets as
-      | readonly ExternalDataSetDef[]
+      | readonly DataSetEntry[]
       | undefined;
 
     current = new Map(inherited);
     if (datasets) {
       for (const ds of datasets) {
-        current.set(ds.uuid, ds);
+        const id = entryId(ds);
+        current.set(id, ds);
       }
     }
     scope.set(pagePath, current);
@@ -66,12 +96,21 @@ export function resolveDataSetDef(
   pagePath: string,
   scope: DataSetScope,
 ): ExternalDataSetDef | undefined {
+  const entry = resolveDataSetEntry(dataSetId, pagePath, scope);
+  return entry && isDef(entry) ? entry : undefined;
+}
+
+export function resolveDataSetEntry(
+  dataSetId: DataSetId,
+  pagePath: string,
+  scope: DataSetScope,
+): DataSetEntry | undefined {
   let path = pagePath;
   for (;;) {
     const pageScope = scope.get(path);
     if (pageScope) {
-      const def = pageScope.get(dataSetId);
-      if (def) return def;
+      const entry = pageScope.get(dataSetId);
+      if (entry) return entry;
     }
     if (path === "") return undefined;
     const lastSlash = path.lastIndexOf("/");

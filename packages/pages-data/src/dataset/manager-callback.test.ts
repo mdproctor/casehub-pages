@@ -85,7 +85,7 @@ describe("DataSetManager — onChanged callback", () => {
     const mgr = createDataSetManager();
     const ds = testDataSet([["Alice", "100"]]);
     // Should not throw
-    expect(() => mgr.apply(ID_A, { type: "snapshot", dataset: ds })).not.toThrow();
+    expect(() => { mgr.apply(ID_A, { type: "snapshot", dataset: ds }); }).not.toThrow();
     expect(mgr.get(ID_A)).toBe(ds);
   });
 

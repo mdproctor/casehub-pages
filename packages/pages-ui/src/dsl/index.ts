@@ -28,8 +28,7 @@ export {
   withAccess,
   withStyle,
   // Dataset helpers
-  dataset,
-  inlineDataset,
+  bind,
   resetGridCounter,
   // Data component builders
   barChart,

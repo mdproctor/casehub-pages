@@ -46,7 +46,7 @@ describe("Form Submit", () => {
   let el: PagesTextInput;
 
   beforeEach(() => {
-    el = document.createElement("pages-text-input") as PagesTextInput;
+    el = document.createElement("pages-text-input");
   });
 
   afterEach(() => {
@@ -62,7 +62,7 @@ describe("Form Submit", () => {
       method: "POST",
     };
 
-    el.props = { field: "query", submit, lookup: mockLookup("test") } as TextInputProps & { submit: SubmitConfig };
+    el.props = { field: "query", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
@@ -77,7 +77,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "test search";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -100,7 +100,7 @@ describe("Form Submit", () => {
       fieldName: "customField",
     };
 
-    el.props = { field: "input", submit, lookup: mockLookup("test") } as TextInputProps & { submit: SubmitConfig };
+    el.props = { field: "input", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
@@ -115,7 +115,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "my value";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -134,7 +134,7 @@ describe("Form Submit", () => {
       url: "/api/user",
     };
 
-    el.props = { field: "username", submit, lookup: mockLookup("test") } as TextInputProps & { submit: SubmitConfig };
+    el.props = { field: "username", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
@@ -149,7 +149,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "alice";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -169,7 +169,7 @@ describe("Form Submit", () => {
       clearOnSubmit: true,
     };
 
-    el.props = { field: "message", submit, lookup: mockLookup("test") } as TextInputProps & { submit: SubmitConfig };
+    el.props = { field: "message", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
@@ -177,7 +177,7 @@ describe("Form Submit", () => {
     // Wait for MutationObserver to set up listener
     await new Promise(r => setTimeout(r, 50));
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "hello world";
 
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
@@ -208,7 +208,7 @@ describe("Form Submit", () => {
       onError: { message: "Submit failed" },
     };
 
-    el.props = { field: "message", submit, lookup: mockLookup("test") } as TextInputProps & { submit: SubmitConfig };
+    el.props = { field: "message", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
@@ -216,7 +216,7 @@ describe("Form Submit", () => {
     // Wait for MutationObserver to set up listener
     await new Promise(r => setTimeout(r, 50));
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "hello world";
 
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
@@ -246,7 +246,7 @@ describe("Form Submit", () => {
       url: "/api/search",
     };
 
-    el.props = { field: "query", submit, lookup: mockLookup("test") } as TextInputProps & { submit: SubmitConfig };
+    el.props = { field: "query", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
@@ -259,7 +259,7 @@ describe("Form Submit", () => {
       fieldChangeEvents.push(e);
     });
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "test search";
 
     const actionPromise = new Promise<void>((resolve) => {
@@ -294,7 +294,7 @@ describe("Form Submit", () => {
       actionEvents.push(e);
     });
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "test";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -309,7 +309,7 @@ describe("Form Submit", () => {
       method: "PUT",
     };
 
-    el.props = { field: "data", submit, lookup: mockLookup("test") } as TextInputProps & { submit: SubmitConfig };
+    el.props = { field: "data", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
     el.dataSet = ds;
@@ -324,7 +324,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot!.querySelector("input")!;
+    const input = el.shadowRoot.querySelector("input")!;
     input.value = "updated";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);

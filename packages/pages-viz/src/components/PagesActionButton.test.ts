@@ -6,7 +6,7 @@ describe("PagesActionButton", () => {
   let element: PagesActionButton;
 
   beforeEach(() => {
-    element = document.createElement("pages-action-button") as PagesActionButton;
+    element = document.createElement("pages-action-button");
     document.body.appendChild(element);
   });
 

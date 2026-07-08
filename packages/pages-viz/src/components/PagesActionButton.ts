@@ -107,7 +107,7 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
     this.button.setAttribute("aria-busy", "false");
 
     // Attach click handler
-    this.button.addEventListener("click", () => this.handleClick(props));
+    this.button.addEventListener("click", () => { this.handleClick(props); });
 
     wrapper.appendChild(this.button);
 
@@ -152,7 +152,7 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
 
     const detail: PagesActionRequestDetail = {
       config: { ...actionRequest, callbacks },
-      resolve: (result: ActionResult) => this.handleResult(result, props),
+      resolve: (result: ActionResult) => { this.handleResult(result, props); },
     };
 
     const event = new CustomEvent<PagesActionRequestDetail>("pages-action-request", {

@@ -871,7 +871,7 @@ export async function loadSite(
     const previous = splitRatios.get(componentId);
     const corrected = ratios.map((r, i) => {
       if (r === 0 && previous && previous[i] !== undefined && previous[i] !== 0) {
-        return previous[i]!;
+        return previous[i];
       }
       return r;
     });
@@ -898,7 +898,7 @@ export async function loadSite(
     if (layoutSaveTimer !== undefined) clearTimeout(layoutSaveTimer);
     layoutSaveTimer = setTimeout(() => {
       layoutSaveTimer = undefined;
-      options!.layoutStore!.save(options!.layoutKey!, captureLayout()).catch(() => {});
+      options.layoutStore!.save(options.layoutKey!, captureLayout()).catch(() => {});
     }, options?.layoutSaveDelayMs ?? 500);
   }
 

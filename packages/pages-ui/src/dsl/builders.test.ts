@@ -3,6 +3,7 @@ import type { Component } from "../model/types.js";
 import type { PageSettings } from "../model/page-types.js";
 import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import { getProps } from "../model/type-guards.js";
+import type { DataSource, DataSink } from "@casehubio/pages-data/dist/datasource/types.js";
 import {
   page,
   grid,
@@ -24,8 +25,7 @@ import {
   withId,
   withAccess,
   withStyle,
-  dataset,
-  inlineDataset,
+  bind,
   textInput,
   numberInput,
   dropdown,
@@ -464,56 +464,60 @@ describe("builders", () => {
     });
   });
 
-  describe("dataset()", () => {
-    it("creates an ExternalDataSetDef with url", () => {
-      const ds = dataset("sales", "http://api.example.com/sales");
+  describe("bind()", () => {
+    function stubSource(): DataSource {
+      return {
+        connect(_sink: DataSink): void { /* no-op */ },
+        disconnect(): void { /* no-op */ },
+      };
+    }
 
-      expect(ds.uuid).toBe("sales");
-      expect(ds.url).toBe("http://api.example.com/sales");
+    it("creates a DataSourceBinding with id and source", () => {
+      const source = stubSource();
+      const binding = bind("patients", source);
+
+      expect(binding.id).toBe("patients");
+      expect(binding.source).toBe(source);
+      expect(binding.keyColumn).toBeUndefined();
     });
 
-    it("accepts optional overrides", () => {
-      const ds = dataset("sales", "http://api.example.com/sales", {
-        dataPath: "data.items",
-        refreshTime: "5s",
-        cacheEnabled: true,
-      });
+    it("includes keyColumn when provided", () => {
+      const source = stubSource();
+      const binding = bind("patients", source, { keyColumn: "patient_id" });
 
-      expect(ds.uuid).toBe("sales");
-      expect(ds.url).toBe("http://api.example.com/sales");
-      expect(ds.dataPath).toBe("data.items");
-      expect(ds.refreshTime).toBe("5s");
-      expect(ds.cacheEnabled).toBe(true);
+      expect(binding.id).toBe("patients");
+      expect(binding.source).toBe(source);
+      expect(binding.keyColumn).toBe("patient_id");
     });
 
-    it("returns a frozen object", () => {
-      const ds = dataset("test", "http://example.com");
-      expect(Object.isFrozen(ds)).toBe(true);
-    });
-  });
+    it("omits keyColumn when not provided", () => {
+      const source = stubSource();
+      const binding = bind("patients", source);
 
-  describe("inlineDataset()", () => {
-    it("creates an ExternalDataSetDef with content", () => {
-      const ds = inlineDataset("local", '[{"a":1}]');
-
-      expect(ds.uuid).toBe("local");
-      expect(ds.content).toBe('[{"a":1}]');
-      expect(ds.url).toBeUndefined();
-    });
-
-    it("accepts optional overrides", () => {
-      const ds = inlineDataset("local", '{"data":[1,2]}', {
-        dataPath: "data",
-        expression: "$[0]",
-      });
-
-      expect(ds.dataPath).toBe("data");
-      expect(ds.expression).toBe("$[0]");
+      expect(binding).not.toHaveProperty("keyColumn");
     });
 
     it("returns a frozen object", () => {
-      const ds = inlineDataset("test", "[]");
-      expect(Object.isFrozen(ds)).toBe(true);
+      const source = stubSource();
+      const binding = bind("patients", source);
+
+      expect(Object.isFrozen(binding)).toBe(true);
+    });
+
+    it("works in page() PageOptions datasets", () => {
+      const source = stubSource();
+      const p = page("Test",
+        html("content"),
+        {
+          datasets: [bind("ds1", source)],
+        },
+      );
+
+      expect(p.type).toBe("page");
+      expect(p.props).toHaveProperty("datasets");
+      const datasets = (p.props as Record<string, unknown>).datasets as unknown[];
+      expect(datasets).toHaveLength(1);
+      expect((datasets[0] as { id: string }).id).toBe("ds1");
     });
   });
 
@@ -684,11 +688,20 @@ describe("builders", () => {
     });
   });
 
-  describe("appGrid removed", () => {
+  describe("removed exports", () => {
     it("appGrid is no longer exported", async () => {
-      // Use dynamic import to check export surface
       const module = await import("./index.js");
       expect("appGrid" in module).toBe(false);
+    });
+
+    it("dataset is no longer exported (replaced by bind)", async () => {
+      const module = await import("./index.js");
+      expect("dataset" in module).toBe(false);
+    });
+
+    it("inlineDataset is no longer exported (replaced by bind + inlineSource)", async () => {
+      const module = await import("./index.js");
+      expect("inlineDataset" in module).toBe(false);
     });
   });
 });

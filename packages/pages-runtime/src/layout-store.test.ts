@@ -15,7 +15,7 @@ describe("createLocalLayoutStore", () => {
         clear: () => { storage = {}; },
         length: 0,
         key: () => null,
-      } as Storage;
+      };
     }
   });
 

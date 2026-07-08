@@ -69,7 +69,7 @@ describe("PagesTimeline", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    el = document.createElement("pages-timeline") as PagesTimeline;
+    el = document.createElement("pages-timeline");
   });
 
   afterEach(() => {

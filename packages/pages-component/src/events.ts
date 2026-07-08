@@ -25,5 +25,5 @@ export function onPagesEvent<T>(
     }
   };
   target.addEventListener('pages-event', listener);
-  return () => target.removeEventListener('pages-event', listener);
+  return () => { target.removeEventListener('pages-event', listener); };
 }

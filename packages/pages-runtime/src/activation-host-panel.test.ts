@@ -81,7 +81,7 @@ describe("host-panel activation", () => {
     container.addEventListener("pages-data-request", ((e: Event) => {
       const detail = (e as CustomEvent).detail;
       received.push({ element: detail.element, lookup: detail.lookup });
-    }) as EventListener);
+    }));
     document.body.appendChild(container);
 
     const el = document.createElement("div");
@@ -186,7 +186,7 @@ describe("host-panel activation", () => {
     expect(entry?.vizElement).toBeDefined();
 
     entry!.vizElement!.dataSet = { columns: [], rows: [] };
-    const panel = el.querySelector("test-proxy-fwd") as any;
+    const panel = el.querySelector("test-proxy-fwd");
     expect(panel.dataSet).toEqual({ columns: [], rows: [] });
 
     entry!.vizElement!.error = "something broke";

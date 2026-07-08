@@ -1,4 +1,4 @@
-import type { DataSetId, DataSetOp, ExternalDataSetDef, ExternalColumnDef, HttpMethod } from "@casehubio/pages-data";
+import type { DataSetId, DataSetOp, ExternalDataSetDef, ExternalColumnDef, HttpMethod, DataSourceBinding } from "@casehubio/pages-data";
 import type { ChartSettings } from "./displayer-types.js";
 
 export interface DataScopeRef {
@@ -20,7 +20,7 @@ export interface SaveConfig {
 
 export interface PageProps {
   readonly name?: string;
-  readonly datasets?: readonly ExternalDataSetDef[];
+  readonly datasets?: readonly ExternalDataSetDef[] | readonly DataSourceBinding[];
   readonly settings?: PageSettings;
   readonly properties?: Readonly<Record<string, string>>;
   readonly dataScope?: DataScope;

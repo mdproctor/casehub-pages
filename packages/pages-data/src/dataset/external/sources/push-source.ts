@@ -64,7 +64,9 @@ export function processWireMessage(
 
   if (dataSetId === undefined) {
     if (wireName === undefined && subscriptions.size === 1) {
-      dataSetId = subscriptions.keys().next().value as DataSetId;
+      const firstKey = subscriptions.keys().next().value as DataSetId | undefined;
+      if (firstKey === undefined) return;
+      dataSetId = firstKey;
     } else {
       return;
     }

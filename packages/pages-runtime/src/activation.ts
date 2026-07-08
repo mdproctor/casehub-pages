@@ -3,6 +3,7 @@ import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js
 import { ColumnType } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ColumnId, DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
 import type { ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type { DataSetEntry } from "./dataset-scope.js";
 import { toTypedDataSet } from "@casehubio/pages-data/dist/dataset/conversion.js";
 import type { PagesElement } from "@casehubio/pages-viz/dist/base/PagesElement.js";
 import type { VizComponentProps } from "@casehubio/pages-viz/dist/base/types.js";
@@ -439,7 +440,7 @@ function integrateAndRender(
   }
 
   extendPagePathMap(pageComponent, basePath, pagePathMap);
-  const inheritedScope = dataSetScope.get(basePath) ?? new Map<DataSetId, ExternalDataSetDef>();
+  const inheritedScope = dataSetScope.get(basePath) ?? new Map<DataSetId, DataSetEntry>();
   extendDataSetScope(pageComponent, inheritedScope, pagePathMap, dataSetScope);
   extendPageIndex(pageComponent, pagePathMap, pageIndex);
   lazyPageResolutions.set(lazyPageComponent, pageComponent);

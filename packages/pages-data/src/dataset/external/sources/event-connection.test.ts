@@ -46,7 +46,7 @@ let origWS: typeof WebSocket;
 beforeEach(() => {
   MockWebSocket.instances = [];
   origWS = globalThis.WebSocket;
-  (globalThis as Record<string, unknown>).WebSocket = MockWebSocket as unknown as typeof WebSocket;
+  (globalThis as Record<string, unknown>).WebSocket = MockWebSocket;
 });
 
 afterEach(() => {
@@ -166,7 +166,7 @@ describe("createEventConnection", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
     lastWs().simulateMessage(JSON.stringify({
@@ -188,7 +188,7 @@ describe("createEventConnection", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
     lastWs().simulateMessage(JSON.stringify([
@@ -204,7 +204,7 @@ describe("createEventConnection", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
     lastWs().simulateMessage(JSON.stringify({
@@ -401,7 +401,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -418,7 +418,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -454,7 +454,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -473,7 +473,7 @@ describe("EventConnection seq tracking + dedup", () => {
     const handler = vi.fn();
     target.addEventListener("pages-event", handler);
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -506,7 +506,7 @@ describe("EventConnection seq tracking + dedup", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -543,7 +543,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -602,7 +602,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -639,7 +639,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -673,7 +673,7 @@ describe("EventConnection reconnect since", () => {
     vi.useFakeTimers();
     const target = new EventTarget();
     const conn = createEventConnection("wss://example.com/ws", {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
     });
     lastWs().simulateOpen();
 
@@ -865,7 +865,7 @@ describe('EventConnection rAF batching', () => {
     const handler = vi.fn();
     target.addEventListener('pages-event', handler);
     const conn = createEventConnection('ws://localhost:8080', {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
       // batchEvents not set — defaults to false
     });
     lastWs().simulateOpen();
@@ -893,7 +893,7 @@ describe('EventConnection rAF batching', () => {
     });
 
     const conn = createEventConnection('ws://localhost:8080', {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
       batchEvents: true,
     });
     lastWs().simulateOpen();
@@ -936,7 +936,7 @@ describe('EventConnection rAF batching', () => {
     });
 
     const conn = createEventConnection('ws://localhost:8080', {
-      config: { eventTarget: target as unknown as HTMLElement },
+      config: { eventTarget: target },
       batchEvents: true,
     });
     lastWs().simulateOpen();

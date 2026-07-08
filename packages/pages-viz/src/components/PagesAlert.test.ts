@@ -6,7 +6,7 @@ describe("PagesAlert", () => {
   let element: PagesAlert;
 
   beforeEach(() => {
-    element = document.createElement("pages-alert") as PagesAlert;
+    element = document.createElement("pages-alert");
     document.body.appendChild(element);
   });
 

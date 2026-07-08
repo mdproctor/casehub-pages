@@ -224,6 +224,256 @@ describe("resolveExternalDataSet", () => {
     }
   });
 
+  // ---- Characterisation: content + expression combination ----
+
+  it("content + expression applies JSONata transform before storage", async () => {
+    const ctx = makeCtx();
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-expr-combo"),
+      content: JSON.stringify([{ a: 1, b: 2 }, { a: 3, b: 4 }, { a: 5, b: 6 }]),
+      expression: "$[a > 2]",
+    };
+
+    const result = await resolveExternalDataSet(def, ctx);
+
+    expect(result.source).toBe("content");
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.dataset.rows[0]!.number(columnId("a"))).toBe(3);
+    expect(result.dataset.rows[1]!.number(columnId("a"))).toBe(5);
+  });
+
+  it("content + expression with complex transformation", async () => {
+    const ctx = makeCtx();
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-transform"),
+      content: JSON.stringify([{ name: "Alice", value: 100 }, { name: "Bob", value: 200 }]),
+      expression: '$.{"name": name, "doubled": value * 2}',
+    };
+
+    const result = await resolveExternalDataSet(def, ctx);
+
+    expect(result.source).toBe("content");
+    expect(result.dataset.rows).toHaveLength(2);
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(result.dataset.rows[0]!.number(columnId("doubled"))).toBe(200);
+  });
+
+  // ---- Characterisation: accumulate mode edge cases ----
+
+  it("accumulate=false replaces existing dataset", async () => {
+    const ctx = makeCtx();
+
+    // Initial resolution
+    const def1: ExternalDataSetDef = {
+      uuid: dataSetId("ds-replace"),
+      content: JSON.stringify([{ name: "Alice", value: 100 }]),
+      accumulate: false,
+    };
+    await resolveExternalDataSet(def1, ctx);
+
+    // Second resolution with different data
+    const def2: ExternalDataSetDef = {
+      uuid: dataSetId("ds-replace"),
+      content: JSON.stringify([{ name: "Bob", value: 200 }]),
+      accumulate: false,
+    };
+    await resolveExternalDataSet(def2, ctx);
+
+    const stored = ctx.manager.get(dataSetId("ds-replace"));
+    expect(stored).toBeDefined();
+    expect(stored!.rows).toHaveLength(1);
+    expect(stored!.rows[0]!.text(columnId("name"))).toBe("Bob");
+  });
+
+  it("accumulate with cacheMaxRows limits stored rows", async () => {
+    const ctx = makeCtx();
+
+    // First resolution — 3 rows
+    const def1: ExternalDataSetDef = {
+      uuid: dataSetId("ds-limited"),
+      content: JSON.stringify([{ id: 1 }, { id: 2 }, { id: 3 }]),
+      accumulate: true,
+      cacheMaxRows: 4,
+    };
+    await resolveExternalDataSet(def1, ctx);
+
+    // Second resolution — append 2 more rows (total 5, but maxRows=4)
+    const def2: ExternalDataSetDef = {
+      uuid: dataSetId("ds-limited"),
+      content: JSON.stringify([{ id: 4 }, { id: 5 }]),
+      accumulate: true,
+      cacheMaxRows: 4,
+    };
+    await resolveExternalDataSet(def2, ctx);
+
+    const stored = ctx.manager.get(dataSetId("ds-limited"));
+    expect(stored).toBeDefined();
+    expect(stored!.rows).toHaveLength(4);
+    // Oldest row (id=1) should be dropped
+    expect(stored!.rows[0]!.number(columnId("id"))).toBe(2);
+    expect(stored!.rows[3]!.number(columnId("id"))).toBe(5);
+  });
+
+  it("accumulate appends to end when no maxRows constraint", async () => {
+    const ctx = makeCtx();
+
+    const def1: ExternalDataSetDef = {
+      uuid: dataSetId("ds-append"),
+      content: JSON.stringify([{ x: 1 }]),
+      accumulate: true,
+    };
+    await resolveExternalDataSet(def1, ctx);
+
+    const def2: ExternalDataSetDef = {
+      uuid: dataSetId("ds-append"),
+      content: JSON.stringify([{ x: 2 }]),
+      accumulate: true,
+    };
+    await resolveExternalDataSet(def2, ctx);
+
+    const stored = ctx.manager.get(dataSetId("ds-append"));
+    expect(stored!.rows).toHaveLength(2);
+    expect(stored!.rows[0]!.number(columnId("x"))).toBe(1);
+    expect(stored!.rows[1]!.number(columnId("x"))).toBe(2);
+  });
+
+  // ---- Characterisation: join edge cases ----
+
+  it("join with empty constituent returns empty dataset", async () => {
+    const ctx = makeCtx();
+    const dsA = toTypedDataSet({ columns: COLS, data: [["Alice", "100"]] });
+    const dsB = toTypedDataSet({ columns: COLS, data: [] });
+    ctx.manager.apply(dataSetId("ds-a"), { type: "snapshot", dataset: dsA });
+    ctx.manager.apply(dataSetId("ds-b"), { type: "snapshot", dataset: dsB });
+
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-joined-empty"),
+      join: [dataSetId("ds-a"), dataSetId("ds-b")],
+    };
+
+    const result = await resolveExternalDataSet(def, ctx);
+
+    expect(result.source).toBe("join");
+    // Join concatenates all rows — empty constituent adds nothing
+    expect(result.dataset.rows).toHaveLength(1);
+  });
+
+  it("join with single constituent returns that dataset", async () => {
+    const ctx = makeCtx();
+    const ds = toTypedDataSet({ columns: COLS, data: [["Alice", "100"]] });
+    ctx.manager.apply(dataSetId("ds-single"), { type: "snapshot", dataset: ds });
+
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-joined-single"),
+      join: [dataSetId("ds-single")],
+    };
+
+    const result = await resolveExternalDataSet(def, ctx);
+
+    expect(result.source).toBe("join");
+    expect(result.dataset.rows).toHaveLength(1);
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
+  });
+
+  it("join with three constituents concatenates all rows", async () => {
+    const ctx = makeCtx();
+    const dsA = toTypedDataSet({ columns: COLS, data: [["A", "1"]] });
+    const dsB = toTypedDataSet({ columns: COLS, data: [["B", "2"]] });
+    const dsC = toTypedDataSet({ columns: COLS, data: [["C", "3"]] });
+    ctx.manager.apply(dataSetId("ds-a"), { type: "snapshot", dataset: dsA });
+    ctx.manager.apply(dataSetId("ds-b"), { type: "snapshot", dataset: dsB });
+    ctx.manager.apply(dataSetId("ds-c"), { type: "snapshot", dataset: dsC });
+
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-joined-triple"),
+      join: [dataSetId("ds-a"), dataSetId("ds-b"), dataSetId("ds-c")],
+    };
+
+    const result = await resolveExternalDataSet(def, ctx);
+
+    expect(result.source).toBe("join");
+    expect(result.dataset.rows).toHaveLength(3);
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("A");
+    expect(result.dataset.rows[2]!.text(columnId("name"))).toBe("C");
+  });
+
+  // ---- Characterisation: parameterised URL resolution ----
+
+  it("resolves url with query params from def", async () => {
+    let capturedRequest: DataRequest | undefined;
+    const captureProvider: DataProvider = {
+      fetch(req: DataRequest): Promise<FetchResult> {
+        capturedRequest = req;
+        return Promise.resolve({ data: JSON.stringify([{ result: "ok" }]) });
+      },
+    };
+    const ctx = makeCtx({
+      providerFactory: { create: () => captureProvider },
+    });
+
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-query"),
+      url: "https://api.example.com/data",
+      query: { page: "1", size: "100" },
+    };
+
+    await resolveExternalDataSet(def, ctx);
+
+    expect(capturedRequest).toBeDefined();
+    expect(capturedRequest!.query).toEqual({ page: "1", size: "100" });
+  });
+
+  it("resolves url with custom HTTP method", async () => {
+    let capturedRequest: DataRequest | undefined;
+    const captureProvider: DataProvider = {
+      fetch(req: DataRequest): Promise<FetchResult> {
+        capturedRequest = req;
+        return Promise.resolve({ data: JSON.stringify([{ result: "ok" }]) });
+      },
+    };
+    const ctx = makeCtx({
+      providerFactory: { create: () => captureProvider },
+    });
+
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-post"),
+      url: "https://api.example.com/data",
+      method: HttpMethod.POST,
+      body: JSON.stringify({ filter: "active" }),
+    };
+
+    await resolveExternalDataSet(def, ctx);
+
+    expect(capturedRequest).toBeDefined();
+    expect(capturedRequest!.method).toBe(HttpMethod.POST);
+    expect(capturedRequest!.body).toBe(JSON.stringify({ filter: "active" }));
+  });
+
+  it("resolves url with form data", async () => {
+    let capturedRequest: DataRequest | undefined;
+    const captureProvider: DataProvider = {
+      fetch(req: DataRequest): Promise<FetchResult> {
+        capturedRequest = req;
+        return Promise.resolve({ data: JSON.stringify([{ result: "ok" }]) });
+      },
+    };
+    const ctx = makeCtx({
+      providerFactory: { create: () => captureProvider },
+    });
+
+    const def: ExternalDataSetDef = {
+      uuid: dataSetId("ds-form"),
+      url: "https://api.example.com/data",
+      method: HttpMethod.POST,
+      form: { username: "admin", password: "secret" },
+    };
+
+    await resolveExternalDataSet(def, ctx);
+
+    expect(capturedRequest).toBeDefined();
+    expect(capturedRequest!.form).toEqual({ username: "admin", password: "secret" });
+  });
+
   // ---- Source field correctness ----
 
   it("returns source='url' for url-based definitions", async () => {
@@ -446,6 +696,82 @@ describe("resolveExternalDataSet", () => {
       const parsed = JSON.parse(capturedBodies[0]!);
       expect(parsed.operations).toHaveLength(1);
       expect(parsed.operations[0].type).toBe("sort");
+    });
+
+    it("defaults to empty operations when lookup is undefined", async () => {
+      const capturedBodies: string[] = [];
+      const mockFetch = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+        capturedBodies.push(init.body as string);
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ columns: [], rows: [] }),
+        });
+      }) as unknown as typeof globalThis.fetch;
+
+      const ctx = makeCtx({
+        providerConfig: {
+          serverQuery: { endpoint: "/api/dataset/query" },
+        },
+      });
+
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("sq-default"),
+        serverQuery: true,
+      };
+
+      await resolveExternalDataSet(def, ctx, undefined, mockFetch);
+
+      const parsed = JSON.parse(capturedBodies[0]!);
+      expect(parsed.operations).toEqual([]);
+    });
+
+    it("passes tokenFn to ServerQueryClient when configured", async () => {
+      const tokenFn = vi.fn().mockReturnValue("test-token");
+      const mockFetch = vi.fn().mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ columns: [], rows: [] }),
+        });
+      }) as unknown as typeof globalThis.fetch;
+
+      const ctx = makeCtx({
+        providerConfig: {
+          serverQuery: { endpoint: "/api/dataset/query", tokenFn },
+        },
+      });
+
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("sq-token"),
+        serverQuery: true,
+      };
+
+      await resolveExternalDataSet(def, ctx, undefined, mockFetch);
+
+      expect(tokenFn).toHaveBeenCalled();
+    });
+
+    it("bypasses normal validation when serverQuery is true", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ columns: [], rows: [] }),
+      }) as unknown as typeof globalThis.fetch;
+
+      const ctx = makeCtx({
+        providerConfig: {
+          serverQuery: { endpoint: "/api/dataset/query" },
+        },
+      });
+
+      // Definition has no url/content/join — would normally throw INVALID_DEFINITION
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("sq-bypass"),
+        serverQuery: true,
+      };
+
+      await expect(resolveExternalDataSet(def, ctx, undefined, mockFetch)).resolves.toBeDefined();
     });
   });
 });
