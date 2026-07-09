@@ -215,8 +215,8 @@ describe("DataSourceController", () => {
       emitAppend({ type: "append", rows: [newRow], maxRows: 2 });
       const result = ctrl.dataSet as TypedDataSet;
       expect(result.rows).toHaveLength(2);
-      expect(result.rows[0]!.cells[0]!.value).toBe("b");
-      expect(result.rows[1]!.cells[0]!.value).toBe("c");
+      expect((result.rows[0]!.cells[0]! as { value: unknown }).value).toBe("b");
+      expect((result.rows[1]!.cells[0]! as { value: unknown }).value).toBe("c");
     });
 
     it("ignores append when no existing dataset", () => {
@@ -287,7 +287,7 @@ describe("DataSourceController", () => {
 
       const result = ctrl.dataSet as TypedDataSet;
       expect(result.rows).toHaveLength(1);
-      expect(result.rows[0]!.cells[1]!.value).toBe("new");
+      expect((result.rows[0]!.cells[1]! as { value: unknown }).value).toBe("new");
     });
 
     it("ignores replace when key not found", () => {
@@ -307,7 +307,7 @@ describe("DataSourceController", () => {
       });
 
       expect((ctrl.dataSet as TypedDataSet).rows).toHaveLength(1);
-      expect((ctrl.dataSet as TypedDataSet).rows[0]!.cells[0]!.value).toBe("alice");
+      expect(((ctrl.dataSet as TypedDataSet).rows[0]!.cells[0]! as { value: unknown }).value).toBe("alice");
     });
   });
 
@@ -328,7 +328,7 @@ describe("DataSourceController", () => {
 
       const result = ctrl.dataSet as TypedDataSet;
       expect(result.rows).toHaveLength(1);
-      expect(result.rows[0]!.cells[0]!.value).toBe("bob");
+      expect((result.rows[0]!.cells[0]! as { value: unknown }).value).toBe("bob");
     });
 
     it("ignores remove when key not found", () => {
