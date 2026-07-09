@@ -52,7 +52,7 @@ function mockPushPool(): PushPool & {
 describe("sseSource", () => {
   it("acquires from pool and subscribes on connect", () => {
     const pool = mockPushPool();
-    const source = sseSource("sse://backend/events", pool, dataSetId("sse-ds"));
+    const source = sseSource("sse://backend/events", dataSetId("sse-ds"), { pool });
 
     const sink: DataSink = {
       apply() {},
@@ -68,7 +68,7 @@ describe("sseSource", () => {
 
   it("forwards events from push source to sink", () => {
     const pool = mockPushPool();
-    const source = sseSource("sse://backend/events", pool, dataSetId("sse-ds"));
+    const source = sseSource("sse://backend/events", dataSetId("sse-ds"), { pool });
 
     const events: DataSetEvent[] = [];
     const sink: DataSink = {
@@ -91,7 +91,7 @@ describe("sseSource", () => {
 
   it("maps PushSourceError to sink.error()", () => {
     const pool = mockPushPool();
-    const source = sseSource("sse://backend/events", pool, dataSetId("sse-ds"));
+    const source = sseSource("sse://backend/events", dataSetId("sse-ds"), { pool });
 
     const errors: SourceError[] = [];
     const sink: DataSink = {
@@ -113,7 +113,7 @@ describe("sseSource", () => {
 
   it("unsubscribes on disconnect", () => {
     const pool = mockPushPool();
-    const source = sseSource("sse://backend/events", pool, dataSetId("sse-ds"));
+    const source = sseSource("sse://backend/events", dataSetId("sse-ds"), { pool });
 
     const sink: DataSink = {
       apply() {},
@@ -128,7 +128,7 @@ describe("sseSource", () => {
 
   it("does not forward events after disconnect", () => {
     const pool = mockPushPool();
-    const source = sseSource("sse://backend/events", pool, dataSetId("sse-ds"));
+    const source = sseSource("sse://backend/events", dataSetId("sse-ds"), { pool });
 
     const events: DataSetEvent[] = [];
     const sink: DataSink = {
@@ -153,7 +153,7 @@ describe("sseSource", () => {
 
   it("passes options into the def", () => {
     const pool = mockPushPool();
-    const source = sseSource("sse://backend/events", pool, dataSetId("sse-ds"), {
+    const source = sseSource("sse://backend/events", dataSetId("sse-ds"), { pool,
       keyColumn: "id",
       cacheMaxRows: 1000,
     });
@@ -173,7 +173,7 @@ describe("sseSource", () => {
 describe("wsSource", () => {
   it("acquires from pool and subscribes on connect", () => {
     const pool = mockPushPool();
-    const source = wsSource("ws://backend/events", pool, dataSetId("ws-ds"));
+    const source = wsSource("ws://backend/events", dataSetId("ws-ds"), { pool });
 
     const sink: DataSink = {
       apply() {},
@@ -189,7 +189,7 @@ describe("wsSource", () => {
 
   it("forwards events from push source to sink", () => {
     const pool = mockPushPool();
-    const source = wsSource("ws://backend/events", pool, dataSetId("ws-ds"));
+    const source = wsSource("ws://backend/events", dataSetId("ws-ds"), { pool });
 
     const events: DataSetEvent[] = [];
     const sink: DataSink = {
@@ -210,7 +210,7 @@ describe("wsSource", () => {
 
   it("maps PushSourceError to sink.error()", () => {
     const pool = mockPushPool();
-    const source = wsSource("ws://backend/events", pool, dataSetId("ws-ds"));
+    const source = wsSource("ws://backend/events", dataSetId("ws-ds"), { pool });
 
     const errors: SourceError[] = [];
     const sink: DataSink = {
@@ -231,7 +231,7 @@ describe("wsSource", () => {
 
   it("unsubscribes on disconnect", () => {
     const pool = mockPushPool();
-    const source = wsSource("ws://backend/events", pool, dataSetId("ws-ds"));
+    const source = wsSource("ws://backend/events", dataSetId("ws-ds"), { pool });
 
     const sink: DataSink = {
       apply() {},

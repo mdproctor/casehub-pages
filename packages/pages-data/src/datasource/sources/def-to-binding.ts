@@ -1,5 +1,5 @@
 import type { ExternalDataSetDef } from "../../dataset/external/types.js";
-import type { ResolverContext } from "../../dataset/external/resolver.js";
+import type { PresetRegistry } from "../../dataset/external/types.js";
 import type { PushPool } from "../../dataset/external/sources/push-pool.js";
 import type { DataSetManager } from "../../dataset/manager.js";
 import type { DataSourceBinding } from "../types.js";
@@ -15,16 +15,12 @@ import { wsSource } from "./ws-source.js";
 import { joinSource } from "./join-source.js";
 import { serverQuerySource } from "./server-query-source.js";
 
-/**
- * Runtime dependencies needed to create DataSource instances from
- * ExternalDataSetDef. These are provided by the DataPipeline at
- * construction time.
- */
 export interface DefToBindingDeps {
-  readonly ctx: ResolverContext;
-  readonly wsPool: PushPool;
-  readonly ssePool: PushPool;
   readonly manager: DataSetManager;
+  readonly wsPool?: PushPool;
+  readonly ssePool?: PushPool;
+  readonly fetchFn?: typeof globalThis.fetch;
+  readonly presets?: PresetRegistry;
 }
 
 function buildInlineOpts(def: ExternalDataSetDef): InlineSourceOptions {
@@ -65,18 +61,6 @@ function buildRestOpts(def: ExternalDataSetDef): RestSourceOptions {
   return opts;
 }
 
-/**
- * Converts an ExternalDataSetDef (from YAML parsing) into a
- * DataSourceBinding with a fully-wired DataSource.
- *
- * Mapping rules follow spec §6.4:
- * - content set → inlineSource
- * - join set → joinSource
- * - serverQuery + url → serverQuerySource
- * - url ws:// / wss:// → wsSource
- * - url sse:// / sses:// → sseSource
- * - url (default) → restSource
- */
 export function defToBinding(
   def: ExternalDataSetDef,
   deps: DefToBindingDeps,
@@ -98,18 +82,10 @@ export function defToBinding(
 
   // 3. Server-side query
   if (def.serverQuery && def.url) {
-    const serverQueryConfig = deps.ctx.providerConfig.serverQuery;
     const opts: ServerQuerySourceOptions = {};
-    if (serverQueryConfig?.tokenFn !== undefined) {
-      (opts as { tokenFn: () => string | null }).tokenFn = serverQueryConfig.tokenFn;
-    }
     return {
       id: def.uuid,
-      source: serverQuerySource(
-        serverQueryConfig?.endpoint ?? def.url,
-        def.uuid,
-        opts,
-      ),
+      source: serverQuerySource(def.url, def.uuid, opts),
     };
   }
 
@@ -117,14 +93,24 @@ export function defToBinding(
 
   // 4. WebSocket
   if (url.startsWith("ws://") || url.startsWith("wss://")) {
-    return { ...base, source: wsSource(url, deps.wsPool, def.uuid, buildPushOpts(def)) };
+    const pushOpts = buildPushOpts(def);
+    return { ...base, source: wsSource(url, def.uuid, deps.wsPool ? { ...pushOpts, pool: deps.wsPool } : pushOpts) };
   }
 
   // 5. SSE
   if (url.startsWith("sse://") || url.startsWith("sses://")) {
-    return { ...base, source: sseSource(url, deps.ssePool, def.uuid, buildPushOpts(def)) };
+    const pushOpts = buildPushOpts(def);
+    return { ...base, source: sseSource(url, def.uuid, deps.ssePool ? { ...pushOpts, pool: deps.ssePool } : pushOpts) };
   }
 
   // 6. Default: REST
-  return { ...base, source: restSource(url, deps.ctx, def.uuid, buildRestOpts(def)) };
+  {
+    const restOpts = buildRestOpts(def);
+    const opts: RestSourceOptions = {
+      ...restOpts,
+      ...(deps.fetchFn !== undefined && { fetchFn: deps.fetchFn }),
+      ...(deps.presets !== undefined && { presets: deps.presets }),
+    };
+    return { ...base, source: restSource(url, def.uuid, opts) };
+  }
 }

@@ -1,6 +1,6 @@
 import { createEventConnection } from "../dataset/external/sources/event-connection.js";
 import { buildConnectionUrl } from "../dataset/external/sources/push-wire.js";
-import type { EventConnection } from "../dataset/external/sources/event-connection.js";
+import type { EventConnection, ConnectionStatus } from "../dataset/external/sources/event-connection.js";
 import type { PushSourceConfig } from "../dataset/external/sources/push-source.js";
 
 export interface EventStreamPool {
@@ -14,8 +14,9 @@ export interface EventStreamPool {
 
 export interface PoolHandle {
   readonly eventTarget: EventTarget;
-  readonly status: () => "connected" | "reconnecting" | "disconnected";
+  readonly status: () => ConnectionStatus;
   release(topics: readonly string[]): void;
+  onStatusChange?: ((status: ConnectionStatus) => void) | undefined;
 }
 
 interface PoolEntry {
@@ -23,6 +24,7 @@ interface PoolEntry {
   eventTarget: EventTarget;
   refCount: number;
   topicCounts: Map<string, number>;
+  handles: Set<PoolHandle>;
 }
 
 export function createEventStreamPool(): EventStreamPool {
@@ -35,11 +37,24 @@ export function createEventStreamPool(): EventStreamPool {
 
       if (!entry) {
         const eventTarget = new EventTarget();
+        const newEntry: PoolEntry = {
+          conn: undefined as unknown as EventConnection,
+          eventTarget,
+          refCount: 0,
+          topicCounts: new Map(),
+          handles: new Set(),
+        };
         const conn = createEventConnection(url, {
           config: config ? { ...config, eventTarget } : { eventTarget },
           batchEvents,
+          onStatusChange: (status) => {
+            for (const h of newEntry.handles) {
+              h.onStatusChange?.(status);
+            }
+          },
         });
-        entry = { conn, eventTarget, refCount: 0, topicCounts: new Map() };
+        newEntry.conn = conn;
+        entry = newEntry;
         entries.set(key, entry);
       }
 
@@ -59,10 +74,11 @@ export function createEventStreamPool(): EventStreamPool {
 
       const capturedEntry = entry;
 
-      return {
+      const handle: PoolHandle = {
         eventTarget: entry.eventTarget,
         status: () => capturedEntry.conn.status,
         release(relTopics: readonly string[]): void {
+          capturedEntry.handles.delete(handle);
           const deadTopics: string[] = [];
           for (const t of relTopics) {
             const count = capturedEntry.topicCounts.get(t) ?? 0;
@@ -83,6 +99,10 @@ export function createEventStreamPool(): EventStreamPool {
           }
         },
       };
+
+      entry.handles.add(handle);
+
+      return handle;
     },
   };
 }

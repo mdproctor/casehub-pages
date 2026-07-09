@@ -1,7 +1,7 @@
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
+import { DataSourceController } from "@casehubio/pages-component/dist/controller/data-source-controller.js";
 import type { VizComponentProps } from "./types.js";
 
 export interface PagesDataRequestDetail {
@@ -11,20 +11,20 @@ export interface PagesDataRequestDetail {
 
 export abstract class PagesElement<
   P extends VizComponentProps,
-> extends HTMLElement implements DataReceiver {
+> extends HTMLElement {
   declare readonly shadowRoot: ShadowRoot;
 
+  readonly controller = new DataSourceController({
+    onChange: () => { if (!this._batchUpdate) this.update(); },
+  });
+
   private _props: P | undefined;
-  private _dataset: TypedDataSet | undefined;
-  private _totalRows = -1;
   private _theme = "";
-  private _error = "";
   private _renderGen = 0;
+  private _batchUpdate = false;
   private _dataRequested = false;
   private _refreshTimer: ReturnType<typeof setInterval> | undefined;
   private _resizeObserver: ResizeObserver | undefined;
-  private _activeSort: SortColumn | undefined;
-  private _activePage: number | undefined;
 
   protected readonly container: HTMLDivElement;
 
@@ -47,10 +47,12 @@ export abstract class PagesElement<
     const oldInterval = this._props?.refresh?.interval;
     this._props = value;
 
+    this._batchUpdate = true;
     if (value?.lookup !== oldLookup) {
       this._dataRequested = false;
-      this._dataset = undefined;
+      this.controller.dataSet = undefined;
     }
+    this._batchUpdate = false;
 
     this.requestDataIfNeeded();
     if (value?.refresh?.interval !== oldInterval) {
@@ -59,22 +61,28 @@ export abstract class PagesElement<
     this.update();
   }
 
+  get loading(): boolean {
+    return this.controller.loading;
+  }
+
+  set loading(v: boolean) {
+    this.controller.loading = v;
+  }
+
   get dataSet(): TypedDataSet | undefined {
-    return this._dataset;
+    return this.controller.dataSet as TypedDataSet | undefined;
   }
 
   set dataSet(value: TypedDataSet | undefined) {
-    this._error = "";
-    this._dataset = value;
-    this.update();
+    this.controller.dataSet = value;
   }
 
   get totalRows(): number {
-    return this._totalRows;
+    return this.controller.totalRows;
   }
 
   set totalRows(value: number) {
-    this._totalRows = value;
+    this.controller.totalRows = value;
   }
 
   get theme(): string {
@@ -87,29 +95,27 @@ export abstract class PagesElement<
   }
 
   get error(): string {
-    return this._error;
+    return this.controller.error;
   }
 
   set error(value: string) {
-    this._dataset = undefined;
-    this._error = value;
-    this.update();
+    this.controller.error = value;
   }
 
   get activeSort(): SortColumn | undefined {
-    return this._activeSort;
+    return this.controller.activeSort;
   }
 
   set activeSort(value: SortColumn | undefined) {
-    this._activeSort = value;
+    this.controller.activeSort = value;
   }
 
   get activePage(): number | undefined {
-    return this._activePage;
+    return this.controller.activePage;
   }
 
   set activePage(value: number | undefined) {
-    this._activePage = value;
+    this.controller.activePage = value;
   }
 
   protected get renderGen(): number {
@@ -198,8 +204,8 @@ export abstract class PagesElement<
 
     ++this._renderGen;
 
-    if (this._error) {
-      this.renderError(this.container, this._error);
+    if (this.controller.error) {
+      this.renderError(this.container, this.controller.error);
       return;
     }
 
@@ -208,12 +214,12 @@ export abstract class PagesElement<
       return;
     }
 
-    if (!this._dataset) {
+    if (this.controller.loading || !this.controller.dataSet) {
       this.renderLoading(this.container);
       return;
     }
 
-    this.render(this.container, this._props, this._dataset);
+    this.render(this.container, this._props, this.controller.dataSet as TypedDataSet);
   }
 
   // ── Default renderers ───────────────────────────────────────────────
@@ -270,7 +276,7 @@ export abstract class PagesElement<
       retryBtn.setAttribute("data-pages-retry", "");
       retryBtn.textContent = "Retry";
       retryBtn.addEventListener("click", () => {
-        this._error = "";
+        this.controller.error = "";
         this._dataRequested = false;
         this.requestDataIfNeeded();
         this.update();

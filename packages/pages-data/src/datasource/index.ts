@@ -64,3 +64,4 @@ export { serverQuerySource } from "./sources/server-query-source.js";
 export type { ServerQuerySourceOptions } from "./sources/server-query-source.js";
 export { defToBinding } from "./sources/def-to-binding.js";
 export type { DefToBindingDeps } from "./sources/def-to-binding.js";
+export { defaultSsePushPool, defaultWsPushPool } from "./sources/default-pools.js";

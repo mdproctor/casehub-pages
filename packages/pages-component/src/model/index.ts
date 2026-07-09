@@ -36,7 +36,7 @@ export type {
 } from "./component-props.js";
 
 // Hosting contracts
-export type { ConfigurablePanel, DataReceiver } from "./hosting.js";
+export type { ConfigurablePanel, DataReceiver, VizTarget } from "./hosting.js";
 
 // Displayer types
 export type {

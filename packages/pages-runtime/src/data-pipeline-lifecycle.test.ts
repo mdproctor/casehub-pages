@@ -22,6 +22,7 @@ function makeScope(dsId: DataSetId, def: ExternalDataSetDef): DataSetScope {
 function makeVizElement(): VizTarget & HTMLElement {
   const el = document.createElement("div");
   return Object.assign(el, {
+    loading: false,
     dataSet: undefined,
     totalRows: 0,
     theme: "",

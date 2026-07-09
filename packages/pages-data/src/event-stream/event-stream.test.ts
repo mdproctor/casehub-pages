@@ -15,11 +15,13 @@ interface MockConn {
 let lastMockConn: MockConn;
 let capturedEventTarget: EventTarget | undefined;
 let capturedBatchEvents: boolean | undefined;
+let capturedOnStatusChange: ((status: "connected" | "reconnecting" | "disconnected") => void) | undefined;
 
 vi.mock("../dataset/external/sources/event-connection.js", () => ({
-  createEventConnection: (url: string, opts?: { config?: { eventTarget?: EventTarget }; batchEvents?: boolean }) => {
+  createEventConnection: (url: string, opts?: { config?: { eventTarget?: EventTarget }; batchEvents?: boolean; onStatusChange?: (status: "connected" | "reconnecting" | "disconnected") => void }) => {
     capturedEventTarget = opts?.config?.eventTarget;
     capturedBatchEvents = opts?.batchEvents;
+    capturedOnStatusChange = opts?.onStatusChange;
     const conn: MockConn = {
       listen: vi.fn().mockResolvedValue({ topics: [], gaps: [] }),
       unlisten: vi.fn().mockResolvedValue(undefined),
@@ -52,6 +54,7 @@ describe("EventStream", () => {
     pool = createEventStreamPool();
     capturedEventTarget = undefined;
     capturedBatchEvents = undefined;
+    capturedOnStatusChange = undefined;
   });
 
   it("connects and listens on topics", async () => {
@@ -234,5 +237,72 @@ describe("EventStream", () => {
     const ref2 = stream.all;
 
     expect(ref1).not.toBe(ref2);
+  });
+
+  describe("onReconnect", () => {
+    it("fires when connection transitions from reconnecting to connected (shared pool)", () => {
+      const onReconnect = vi.fn();
+      const stream = new EventStream("ws://test", "t:**", { pool, onReconnect });
+      stream.connect();
+
+      expect(capturedOnStatusChange).toBeDefined();
+      capturedOnStatusChange!("reconnecting");
+      expect(onReconnect).not.toHaveBeenCalled();
+
+      capturedOnStatusChange!("connected");
+      expect(onReconnect).toHaveBeenCalledOnce();
+
+      stream.disconnect();
+    });
+
+    it("fires when connection transitions from reconnecting to connected (dedicated)", () => {
+      const onReconnect = vi.fn();
+      const stream = new EventStream("ws://test", "t:**", { pool, shared: false, onReconnect });
+      stream.connect();
+
+      expect(capturedOnStatusChange).toBeDefined();
+      capturedOnStatusChange!("reconnecting");
+      capturedOnStatusChange!("connected");
+
+      expect(onReconnect).toHaveBeenCalledOnce();
+      stream.disconnect();
+    });
+
+    it("does not fire on initial connection (disconnected → connected)", () => {
+      const onReconnect = vi.fn();
+      const stream = new EventStream("ws://test", "t:**", { pool, onReconnect });
+      stream.connect();
+
+      capturedOnStatusChange!("connected");
+      expect(onReconnect).not.toHaveBeenCalled();
+
+      stream.disconnect();
+    });
+
+    it("does not fire after disconnect", () => {
+      const onReconnect = vi.fn();
+      const stream = new EventStream("ws://test", "t:**", { pool, onReconnect });
+      stream.connect();
+
+      capturedOnStatusChange!("reconnecting");
+      stream.disconnect();
+
+      capturedOnStatusChange!("connected");
+      expect(onReconnect).not.toHaveBeenCalled();
+    });
+
+    it("fires multiple times on repeated reconnections", () => {
+      const onReconnect = vi.fn();
+      const stream = new EventStream("ws://test", "t:**", { pool, onReconnect });
+      stream.connect();
+
+      capturedOnStatusChange!("reconnecting");
+      capturedOnStatusChange!("connected");
+      capturedOnStatusChange!("reconnecting");
+      capturedOnStatusChange!("connected");
+
+      expect(onReconnect).toHaveBeenCalledTimes(2);
+      stream.disconnect();
+    });
   });
 });

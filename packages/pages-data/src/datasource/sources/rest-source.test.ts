@@ -2,217 +2,208 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { restSource } from "./rest-source.js";
 import type { DataSink, SourceError } from "../types.js";
 import type { DataSetEvent } from "../../dataset/events.js";
-import type { ResolverContext } from "../../dataset/external/resolver.js";
 import { ColumnType, dataSetId, col } from "./test-helpers.js";
-import type { DataSetId } from "./test-helpers.js";
 import { HttpMethod } from "../../dataset/external/types.js";
-import type { DataSetManager } from "../../dataset/manager.js";
 
-function stubManager(): DataSetManager {
-  const datasets = new Map<DataSetId, import("../../dataset/types.js").TypedDataSet>();
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+function mockFetch(data: unknown, status = 200): typeof globalThis.fetch {
+  return vi.fn().mockResolvedValue(jsonResponse(data, status));
+}
+
+function collectSink(): { sink: DataSink; events: DataSetEvent[]; errors: SourceError[] } {
+  const events: DataSetEvent[] = [];
+  const errors: SourceError[] = [];
   return {
-    get(id: DataSetId) { return datasets.get(id); },
-    has(id: DataSetId) { return datasets.has(id); },
-    remove(id: DataSetId) { return datasets.delete(id); },
-    apply(id: DataSetId, event: DataSetEvent) {
-      if (event.type === "snapshot") {
-        datasets.set(id, event.dataset);
-      }
+    sink: {
+      apply(event) { events.push(event); },
+      error(err) { errors.push(err); },
     },
-    lookup() { return { dataset: { columns: [], rows: [] }, totalRows: 0 }; },
+    events,
+    errors,
   };
 }
 
-function makeResolverContext(manager?: DataSetManager): ResolverContext {
-  const mgr = manager ?? stubManager();
-  return {
-    manager: mgr,
-    providerFactory: {
-      create() {
-        return {
-          async fetch() {
-            return { data: [["alice"], ["bob"]] };
-          },
-        };
-      },
-    },
-    providerConfig: {},
-    presetRegistry: {
-      get() { return undefined; },
-      has() { return false; },
-    },
-    capabilities: {
-      serverSideQuery: false,
-      dataProviders: [],
-      dataProxy: false,
-      serverSideCache: false,
-    },
-  };
-}
-
-describe("restSource", () => {
+describe("restSource (standalone)", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it("emits snapshot on connect", async () => {
-    const ctx = makeResolverContext();
-    const source = restSource("https://api.example.com/data", ctx, dataSetId("test-ds"), {
+    const fetchFn = mockFetch([["alice"], ["bob"]]);
+    const source = restSource("https://api.example.com/data", dataSetId("test-ds"), {
       columns: [col("name", ColumnType.TEXT)],
+      fetchFn,
     });
 
-    const events: DataSetEvent[] = [];
-    const errors: SourceError[] = [];
-    const sink: DataSink = {
-      apply(event) { events.push(event); },
-      error(err) { errors.push(err); },
-    };
-
+    const { sink, events } = collectSink();
     source.connect(sink);
-
-    // Wait for the async fetch to complete
-    await vi.waitFor(() => {
-      expect(events.length).toBeGreaterThan(0);
-    });
+    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
 
     expect(events).toHaveLength(1);
     expect(events[0]!.type).toBe("snapshot");
-    expect(errors).toHaveLength(0);
-
     source.disconnect();
   });
 
   it("emits error when fetch fails", async () => {
-    const ctx = makeResolverContext();
-    // Override provider to throw
-    ctx.providerFactory.create = () => ({
-      async fetch() { throw new Error("network error"); },
-    });
-
-    const source = restSource("https://api.example.com/fail", ctx, dataSetId("fail-ds"), {
+    const fetchFn = vi.fn().mockRejectedValue(new Error("network error"));
+    const source = restSource("https://api.example.com/fail", dataSetId("fail-ds"), {
       columns: [col("x", ColumnType.TEXT)],
+      fetchFn,
     });
 
-    const errors: SourceError[] = [];
-    const sink: DataSink = {
-      apply() {},
-      error(err) { errors.push(err); },
-    };
-
+    const { sink, errors } = collectSink();
     source.connect(sink);
+    await vi.waitFor(() => expect(errors.length).toBeGreaterThan(0));
 
-    await vi.waitFor(() => {
-      expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0]!.message).toContain("network error");
+    source.disconnect();
+  });
+
+  it("uses globalThis.fetch by default", async () => {
+    const spy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse([["x"]]),
+    );
+
+    const source = restSource("https://api.example.com/data", dataSetId("default-fetch"), {
+      columns: [col("val", ColumnType.TEXT)],
     });
 
-    expect(errors).toHaveLength(1);
-    expect(errors[0]!.message).toContain("network error");
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
 
+    expect(spy).toHaveBeenCalledOnce();
+    spy.mockRestore();
     source.disconnect();
   });
 
   it("polls when refreshTime is set", async () => {
     vi.useFakeTimers();
-
     let fetchCount = 0;
-    const ctx = makeResolverContext();
-    ctx.providerFactory.create = () => ({
-      async fetch() {
-        fetchCount++;
-        return { data: [["row-" + String(fetchCount)]] };
-      },
+    const fetchFn = vi.fn().mockImplementation(async () => {
+      fetchCount++;
+      return jsonResponse([["row-" + String(fetchCount)]]);
     });
 
-    const source = restSource("https://api.example.com/data", ctx, dataSetId("poll-ds"), {
+    const source = restSource("https://api.example.com/data", dataSetId("poll-ds"), {
       columns: [col("val", ColumnType.TEXT)],
       refreshTime: "5second",
+      fetchFn,
     });
 
-    const events: DataSetEvent[] = [];
-    const sink: DataSink = {
-      apply(event) { events.push(event); },
-      error() {},
-    };
-
+    const { sink } = collectSink();
     source.connect(sink);
-
-    // Initial fetch is async — flush microtasks
     await vi.advanceTimersByTimeAsync(0);
-
     expect(fetchCount).toBe(1);
 
-    // Advance past one refresh interval
     await vi.advanceTimersByTimeAsync(5000);
     expect(fetchCount).toBe(2);
 
-    // Advance past another
-    await vi.advanceTimersByTimeAsync(5000);
-    expect(fetchCount).toBe(3);
-
     source.disconnect();
-
-    // After disconnect, no more fetches
     await vi.advanceTimersByTimeAsync(10000);
-    expect(fetchCount).toBe(3);
+    expect(fetchCount).toBe(2);
   });
 
   it("does not emit after disconnect", async () => {
     let resolveFetch: (() => void) | null = null;
-    const ctx = makeResolverContext();
-    ctx.providerFactory.create = () => ({
-      fetch() {
-        return new Promise<{ data: unknown }>((resolve) => {
-          resolveFetch = () => { resolve({ data: [["late"]] }); };
-        });
-      },
-    });
+    const fetchFn = vi.fn().mockImplementation(() =>
+      new Promise<Response>((resolve) => {
+        resolveFetch = () => resolve(jsonResponse([["late"]]));
+      }),
+    );
 
-    const source = restSource("https://api.example.com/data", ctx, dataSetId("late-ds"), {
+    const source = restSource("https://api.example.com/data", dataSetId("late-ds"), {
       columns: [col("val", ColumnType.TEXT)],
+      fetchFn,
     });
 
-    const events: DataSetEvent[] = [];
-    const sink: DataSink = {
-      apply(event) { events.push(event); },
-      error() {},
-    };
-
+    const { sink, events } = collectSink();
     source.connect(sink);
-
-    // Disconnect before fetch resolves
     source.disconnect();
-
-    // Now resolve — should not emit
     resolveFetch!();
     await new Promise(resolve => setTimeout(resolve, 10));
 
     expect(events).toHaveLength(0);
   });
 
-  it("passes method and headers to the underlying def", async () => {
-    const ctx = makeResolverContext();
-    const source = restSource("https://api.example.com/data", ctx, dataSetId("opts-ds"), {
+  it("passes method, headers, and body to fetch", async () => {
+    const fetchFn = mockFetch([["ok"]]);
+    const source = restSource("https://api.example.com/data", dataSetId("opts-ds"), {
       method: HttpMethod.POST,
       headers: { "Authorization": "Bearer token" },
       body: '{"q": "test"}',
       columns: [col("name", ColumnType.TEXT)],
+      fetchFn,
     });
 
-    const events: DataSetEvent[] = [];
-    const sink: DataSink = {
-      apply(event) { events.push(event); },
-      error() {},
-    };
-
+    const { sink, events } = collectSink();
     source.connect(sink);
+    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
 
-    await vi.waitFor(() => {
-      expect(events.length).toBeGreaterThan(0);
+    expect(fetchFn).toHaveBeenCalledWith(
+      "https://api.example.com/data",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ "Authorization": "Bearer token" }),
+        body: '{"q": "test"}',
+      }),
+    );
+    source.disconnect();
+  });
+
+  it("appends query params to URL", async () => {
+    const fetchFn = mockFetch([["ok"]]);
+    const source = restSource("https://api.example.com/data", dataSetId("query-ds"), {
+      query: { page: "1", size: "10" },
+      columns: [col("name", ColumnType.TEXT)],
+      fetchFn,
     });
 
-    // If we got here without error, the def was constructed correctly
-    expect(events[0]!.type).toBe("snapshot");
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
 
+    const calledUrl = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0]![0] as string;
+    expect(calledUrl).toContain("page=1");
+    expect(calledUrl).toContain("size=10");
+    source.disconnect();
+  });
+
+  it("sends form data as URL-encoded body", async () => {
+    const fetchFn = mockFetch([["ok"]]);
+    const source = restSource("https://api.example.com/data", dataSetId("form-ds"), {
+      form: { username: "alice", action: "login" },
+      columns: [col("name", ColumnType.TEXT)],
+      fetchFn,
+    });
+
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
+
+    const calledInit = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0]![1] as RequestInit;
+    expect(calledInit.body).toContain("username=alice");
+    expect((calledInit.headers as Record<string, string>)["Content-Type"]).toBe("application/x-www-form-urlencoded");
+    source.disconnect();
+  });
+
+  it("error is non-permanent (transient)", async () => {
+    const fetchFn = vi.fn().mockRejectedValue(new Error("timeout"));
+    const source = restSource("https://api.example.com/data", dataSetId("err-ds"), {
+      fetchFn,
+    });
+
+    const { sink, errors } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => expect(errors.length).toBeGreaterThan(0));
+
+    expect(errors[0]!.permanent).toBe(false);
     source.disconnect();
   });
 });

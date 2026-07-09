@@ -1,15 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import type { DataSetId } from "../../dataset/types.js";
 import { dataSetId, ColumnType, columnId } from "../../dataset/types.js";
 import type { ExternalDataSetDef } from "../../dataset/external/types.js";
-import { HttpMethod, LOCAL_CAPABILITIES } from "../../dataset/external/types.js";
+import { HttpMethod } from "../../dataset/external/types.js";
 import { createDataSetManager } from "../../dataset/manager.js";
-import { createDataProviderFactory } from "../../dataset/external/provider-factory.js";
 import type { DataSink } from "../types.js";
 import { defToBinding } from "./def-to-binding.js";
 import type { DefToBindingDeps } from "./def-to-binding.js";
 import type { PushPool } from "../../dataset/external/sources/push-pool.js";
-import type { ResolverContext } from "../../dataset/external/resolver.js";
 
 function createMockPool(): PushPool {
   return {
@@ -23,19 +20,12 @@ function createMockPool(): PushPool {
 }
 
 function createDeps(overrides?: Partial<DefToBindingDeps>): DefToBindingDeps {
-  const manager = overrides?.manager ?? createDataSetManager();
-  const ctx: ResolverContext = overrides?.ctx ?? {
-    manager,
-    providerFactory: createDataProviderFactory(),
-    providerConfig: {},
-    presetRegistry: { get: () => undefined, has: () => false },
-    capabilities: LOCAL_CAPABILITIES,
-  };
   return {
-    ctx,
+    manager: overrides?.manager ?? createDataSetManager(),
     wsPool: overrides?.wsPool ?? createMockPool(),
     ssePool: overrides?.ssePool ?? createMockPool(),
-    manager,
+    fetchFn: overrides?.fetchFn,
+    presets: overrides?.presets ?? { get: () => undefined, has: () => false },
   };
 }
 
@@ -67,7 +57,6 @@ describe("defToBinding", () => {
       expect(binding.source).toBeDefined();
       expect(binding.keyColumn).toBeUndefined();
 
-      // Verify source delivers data
       const { sink, events } = collectSink();
       binding.source.connect(sink);
       expect(events).toHaveLength(1);
@@ -115,7 +104,6 @@ describe("defToBinding", () => {
 
       expect(binding.id).toBe("joined");
       expect(binding.source).toBeDefined();
-      // joinSource doesn't set keyColumn
       expect(binding.keyColumn).toBeUndefined();
     });
   });
@@ -128,36 +116,9 @@ describe("defToBinding", () => {
         serverQuery: true,
       };
 
-      const deps = createDeps();
-      const binding = defToBinding(def, deps);
+      const binding = defToBinding(def, createDeps());
 
       expect(binding.id).toBe("sq");
-      expect(binding.source).toBeDefined();
-    });
-
-    it("uses serverQuery endpoint from providerConfig when available", () => {
-      const def: ExternalDataSetDef = {
-        uuid: dataSetId("sq2"),
-        url: "https://api.example.com/query",
-        serverQuery: true,
-      };
-
-      const manager = createDataSetManager();
-      const ctx: ResolverContext = {
-        manager,
-        providerFactory: createDataProviderFactory(),
-        providerConfig: {
-          serverQuery: {
-            endpoint: "https://configured-endpoint.example.com/query",
-            tokenFn: () => "test-token",
-          },
-        },
-        presetRegistry: { get: () => undefined, has: () => false },
-        capabilities: LOCAL_CAPABILITIES,
-      };
-
-      const binding = defToBinding(def, { ...createDeps(), ctx, manager });
-      expect(binding.id).toBe("sq2");
       expect(binding.source).toBeDefined();
     });
   });
@@ -269,6 +230,21 @@ describe("defToBinding", () => {
       expect(binding.id).toBe("http-ds");
       expect(binding.source).toBeDefined();
     });
+
+    it("passes fetchFn from deps to restSource", () => {
+      const fetchFn = vi.fn().mockResolvedValue(
+        new Response("[]", { headers: { "content-type": "application/json" } }),
+      );
+      const def: ExternalDataSetDef = {
+        uuid: dataSetId("fetch-ds"),
+        url: "https://api.example.com/data",
+      };
+
+      const binding = defToBinding(def, createDeps({ fetchFn }));
+      const { sink } = collectSink();
+      binding.source.connect(sink);
+      expect(fetchFn).toHaveBeenCalled();
+    });
   });
 
   describe("priority rules", () => {
@@ -280,11 +256,9 @@ describe("defToBinding", () => {
         columns: [{ id: columnId("c"), type: ColumnType.LABEL }],
       };
 
-      // Should produce inlineSource, not restSource
       const { sink, events } = collectSink();
       const binding = defToBinding(def, createDeps());
       binding.source.connect(sink);
-      // inlineSource delivers synchronously
       expect(events).toHaveLength(1);
     });
 
@@ -297,7 +271,6 @@ describe("defToBinding", () => {
 
       const binding = defToBinding(def, createDeps());
       expect(binding.id).toBe("join-prio");
-      // joinSource — not restSource
       expect(binding.source).toBeDefined();
     });
 

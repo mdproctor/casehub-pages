@@ -2,7 +2,6 @@ import type { DataSetId, TypedDataSet } from "@casehubio/pages-data/dist/dataset
 import type { DataSetManager, LookupOptions } from "@casehubio/pages-data/dist/dataset/manager.js";
 import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
 import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
-import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
 import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
 import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
@@ -25,13 +24,8 @@ import type { ComponentViewState } from "./component-view-state.js";
 import { getComponentState, updatePage } from "./component-view-state.js";
 import type { ContextManager } from "./context-wiring.js";
 import { hasTemplateVars, resolveTemplate, allTemplateVarsResolved } from "@casehubio/pages-component/dist/context/index.js";
-import type { DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
-
-export interface VizTarget extends DataReceiver {
-  totalRows: number;
-  activeSort: SortColumn | undefined;
-  activePage: number | undefined;
-}
+import type { VizTarget } from "@casehubio/pages-component/dist/model/hosting.js";
+export type { VizTarget } from "@casehubio/pages-component/dist/model/hosting.js";
 
 export interface DataPipeline {
   handleDataRequest(

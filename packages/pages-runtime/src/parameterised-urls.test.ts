@@ -58,6 +58,7 @@ describe("parameterised dataset URLs", () => {
 
   function makeTarget(): VizTarget {
     return {
+      loading: false,
       dataSet: undefined,
       totalRows: 0,
       error: "",

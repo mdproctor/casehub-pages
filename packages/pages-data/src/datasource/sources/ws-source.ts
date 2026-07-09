@@ -2,6 +2,7 @@ import type { DataSource, DataSink } from "../types.js";
 import type { DataSetId } from "../../dataset/types.js";
 import type { ExternalColumnDef, ExternalDataSetDef } from "../../dataset/external/types.js";
 import type { PushPool } from "../../dataset/external/sources/push-pool.js";
+import { defaultWsPushPool } from "./default-pools.js";
 
 export interface WsSourceOptions {
   readonly dataPath?: string;
@@ -10,27 +11,16 @@ export interface WsSourceOptions {
   readonly keyColumn?: string;
   readonly cacheMaxRows?: number;
   readonly accumulate?: boolean;
+  readonly pool?: PushPool;
 }
 
-/**
- * Creates a DataSource that receives live data via WebSocket.
- *
- * Wraps the existing PushPool/WebSocketSource machinery — connection pooling
- * is preserved (multiple wsSource calls with the same base URL share one
- * underlying WebSocket connection via the pool).
- *
- * @param url - WebSocket endpoint URL (ws:// or wss://)
- * @param pool - PushPool that manages shared WebSocket connections
- * @param dataSetId - Unique identifier for this dataset subscription
- * @param options - Optional extraction and caching configuration
- */
 export function wsSource(
   url: string,
-  pool: PushPool,
   dataSetId: DataSetId,
   options?: WsSourceOptions,
 ): DataSource {
   let connected = false;
+  const pool = options?.pool ?? defaultWsPushPool;
 
   function buildDef(): ExternalDataSetDef {
     const def: ExternalDataSetDef = { uuid: dataSetId, url };
@@ -55,18 +45,9 @@ export function wsSource(
       pushSource.subscribe(
         dataSetId,
         def,
-        (event) => {
-          if (connected) {
-            sink.apply(event);
-          }
-        },
+        (event) => { if (connected) sink.apply(event); },
         (error) => {
-          if (connected) {
-            sink.error({
-              message: error.message,
-              permanent: error.permanent,
-            });
-          }
+          if (connected) sink.error({ message: error.message, permanent: error.permanent });
         },
       );
     },

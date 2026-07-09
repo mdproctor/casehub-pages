@@ -26,9 +26,8 @@ import { evaluateExpression, hasTemplateVars, resolveTemplate } from "@casehubio
 import type { EscapeMode } from "@casehubio/pages-component/dist/context/index.js";
 import type { PagesContentElement } from "@casehubio/pages-viz/dist/base/PagesContentElement.js";
 import { lookupPanel } from "./panel-registry.js";
-import type { ConfigurablePanel, DataReceiver } from "@casehubio/pages-component/dist/model/hosting.js";
+import type { ConfigurablePanel, DataReceiver, VizTarget } from "@casehubio/pages-component/dist/model/hosting.js";
 import type { HostPanelProps } from "@casehubio/pages-component/dist/model/component-props.js";
-import type { VizTarget } from "./data-pipeline.js";
 import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
 
 const FORM_INPUT_TYPES = new Set([
@@ -76,6 +75,8 @@ export interface LazyPageOptions {
 
 function createHostPanelProxy(panel: DataReceiver): VizTarget {
   return {
+    set loading(v: boolean) { panel.loading = v; },
+    get loading() { return panel.loading; },
     set dataSet(v: unknown) { panel.dataSet = v; },
     get dataSet() { return panel.dataSet; },
     set error(v: string) { panel.error = v; },

@@ -23,7 +23,7 @@ describe("postMessageSource", () => {
   it("emits snapshot when matching postMessage arrives", async () => {
     const target = new EventTarget();
     const id = dataSetId("pm-ds");
-    const source = postMessageSource(id, noopRegistry, { eventTarget: target });
+    const source = postMessageSource(id, { presets: noopRegistry, eventTarget: target });
 
     const events: DataSetEvent[] = [];
     const sink: DataSink = {
@@ -52,7 +52,7 @@ describe("postMessageSource", () => {
   it("ignores messages for different dataset IDs", async () => {
     const target = new EventTarget();
     const id = dataSetId("pm-ds");
-    const source = postMessageSource(id, noopRegistry, { eventTarget: target });
+    const source = postMessageSource(id, { presets: noopRegistry, eventTarget: target });
 
     const events: DataSetEvent[] = [];
     const sink: DataSink = {
@@ -85,7 +85,7 @@ describe("postMessageSource", () => {
 
     const target = new EventTarget();
     const id = dataSetId("pm-ds");
-    const source = postMessageSource(id, noopRegistry, {
+    const source = postMessageSource(id, { presets: noopRegistry,
       timeoutMs: 100,
       eventTarget: target,
     });
@@ -108,7 +108,7 @@ describe("postMessageSource", () => {
   it("stops listening after disconnect", () => {
     const target = new EventTarget();
     const id = dataSetId("pm-ds");
-    const source = postMessageSource(id, noopRegistry, { eventTarget: target });
+    const source = postMessageSource(id, { presets: noopRegistry, eventTarget: target });
 
     const events: DataSetEvent[] = [];
     const sink: DataSink = {

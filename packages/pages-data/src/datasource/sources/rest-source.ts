@@ -1,9 +1,10 @@
 import type { DataSource, DataSink } from "../types.js";
 import type { DataSetId } from "../../dataset/types.js";
 import type { ExternalColumnDef, ExternalDataSetDef } from "../../dataset/external/types.js";
+import type { PresetRegistry } from "../../dataset/external/types.js";
 import { HttpMethod, parseRefreshTime } from "../../dataset/external/types.js";
-import type { ResolverContext } from "../../dataset/external/resolver.js";
-import { resolveExternalDataSet } from "../../dataset/external/resolver.js";
+import { extractDataSet } from "../../dataset/external/extraction.js";
+import { createPresetRegistry } from "../../dataset/external/presets/registry.js";
 
 export interface RestSourceOptions {
   readonly method?: HttpMethod;
@@ -19,59 +20,80 @@ export interface RestSourceOptions {
   readonly accumulate?: boolean;
   readonly maxRows?: number;
   readonly cacheEnabled?: boolean;
+  readonly fetchFn?: typeof globalThis.fetch;
+  readonly presets?: PresetRegistry;
 }
 
-/**
- * Creates a DataSource that fetches data from a REST endpoint.
- *
- * Internally creates an ExternalDataSetDef and delegates to
- * resolveExternalDataSet(). If `refreshTime` is set, sets up a polling
- * interval that re-fetches on the configured cadence.
- *
- * @param url - The REST endpoint URL
- * @param ctx - ResolverContext providing the DataSetManager, provider factory,
- *   and preset registry needed by the resolver
- * @param dataSetId - Unique identifier for this dataset in the manager
- * @param options - REST configuration (method, headers, extraction pipeline, etc.)
- * @param fetchFn - Optional fetch override for testing
- */
 export function restSource(
   url: string,
-  ctx: ResolverContext,
   dataSetId: DataSetId,
   options?: RestSourceOptions,
-  fetchFn?: typeof globalThis.fetch,
 ): DataSource {
   let refreshTimer: ReturnType<typeof setInterval> | null = null;
   let connected = false;
+  const presets = options?.presets ?? createPresetRegistry();
+
+  function buildUrl(): string {
+    if (!options?.query || Object.keys(options.query).length === 0) return url;
+    const base = new URL(url);
+    for (const [k, v] of Object.entries(options.query)) {
+      base.searchParams.set(k, v);
+    }
+    return base.toString();
+  }
+
+  function buildInit(): RequestInit {
+    const init: RequestInit = {};
+    const method = options?.method ?? HttpMethod.GET;
+    if (method !== HttpMethod.GET) init.method = method;
+    if (options?.headers) init.headers = { ...options.headers };
+    if (options?.body) init.body = options.body;
+    if (options?.form) {
+      const formData = new URLSearchParams(options.form);
+      init.body = formData.toString();
+      init.headers = {
+        ...(init.headers as Record<string, string> | undefined),
+        "Content-Type": "application/x-www-form-urlencoded",
+      };
+    }
+    return init;
+  }
 
   function buildDef(): ExternalDataSetDef {
     const def: ExternalDataSetDef = { uuid: dataSetId, url };
     if (!options) return def;
     return {
       ...def,
-      ...(options.method !== undefined && { method: options.method }),
-      ...(options.headers !== undefined && { headers: options.headers }),
-      ...(options.query !== undefined && { query: options.query }),
-      ...(options.form !== undefined && { form: options.form }),
-      ...(options.body !== undefined && { body: options.body }),
       ...(options.dataPath !== undefined && { dataPath: options.dataPath }),
       ...(options.type !== undefined && { type: options.type }),
       ...(options.expression !== undefined && { expression: options.expression }),
       ...(options.columns !== undefined && { columns: options.columns }),
-      ...(options.refreshTime !== undefined && { refreshTime: options.refreshTime }),
       ...(options.accumulate !== undefined && { accumulate: options.accumulate }),
       ...(options.maxRows !== undefined && { cacheMaxRows: options.maxRows }),
-      ...(options.cacheEnabled !== undefined && { cacheEnabled: options.cacheEnabled }),
     };
   }
 
   async function doFetch(sink: DataSink): Promise<void> {
+    const fetchFn = options?.fetchFn ?? globalThis.fetch.bind(globalThis);
     try {
-      const def = buildDef();
-      const result = await resolveExternalDataSet(def, ctx, undefined, fetchFn);
+      const response = await fetchFn(buildUrl(), buildInit());
+      if (!connected) return;
+
+      const contentType = response.headers?.get("content-type") ?? undefined;
+      let data: unknown;
+      if (contentType?.includes("application/json")) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
+      const { dataset } = await extractDataSet(
+        { data, ...(contentType ? { contentType } : {}) },
+        buildDef(),
+        presets,
+      );
       if (connected) {
-        sink.apply({ type: "snapshot", dataset: result.dataset });
+        sink.apply({ type: "snapshot", dataset });
       }
     } catch (err) {
       if (connected) {
@@ -86,7 +108,6 @@ export function restSource(
   return {
     connect(sink: DataSink): void {
       connected = true;
-
       void doFetch(sink);
 
       if (options?.refreshTime) {

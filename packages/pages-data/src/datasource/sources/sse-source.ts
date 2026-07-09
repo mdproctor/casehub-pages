@@ -2,6 +2,7 @@ import type { DataSource, DataSink } from "../types.js";
 import type { DataSetId } from "../../dataset/types.js";
 import type { ExternalColumnDef, ExternalDataSetDef } from "../../dataset/external/types.js";
 import type { PushPool } from "../../dataset/external/sources/push-pool.js";
+import { defaultSsePushPool } from "./default-pools.js";
 
 export interface SseSourceOptions {
   readonly dataPath?: string;
@@ -10,27 +11,16 @@ export interface SseSourceOptions {
   readonly keyColumn?: string;
   readonly cacheMaxRows?: number;
   readonly accumulate?: boolean;
+  readonly pool?: PushPool;
 }
 
-/**
- * Creates a DataSource that receives live data via Server-Sent Events.
- *
- * Wraps the existing PushPool/SseSource machinery — connection pooling is
- * preserved (multiple sseSource calls with the same base URL share one
- * underlying EventSource connection via the pool).
- *
- * @param url - SSE endpoint URL (supports sse:// and sses:// schemes)
- * @param pool - PushPool that manages shared SSE connections
- * @param dataSetId - Unique identifier for this dataset subscription
- * @param options - Optional extraction and caching configuration
- */
 export function sseSource(
   url: string,
-  pool: PushPool,
   dataSetId: DataSetId,
   options?: SseSourceOptions,
 ): DataSource {
   let connected = false;
+  const pool = options?.pool ?? defaultSsePushPool;
 
   function buildDef(): ExternalDataSetDef {
     const def: ExternalDataSetDef = { uuid: dataSetId, url };
@@ -55,18 +45,9 @@ export function sseSource(
       pushSource.subscribe(
         dataSetId,
         def,
-        (event) => {
-          if (connected) {
-            sink.apply(event);
-          }
-        },
+        (event) => { if (connected) sink.apply(event); },
         (error) => {
-          if (connected) {
-            sink.error({
-              message: error.message,
-              permanent: error.permanent,
-            });
-          }
+          if (connected) sink.error({ message: error.message, permanent: error.permanent });
         },
       );
     },

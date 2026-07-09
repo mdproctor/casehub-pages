@@ -14,6 +14,7 @@ export interface EventStreamOptions<T = unknown> {
   parse?: (raw: unknown) => T;
   pool?: EventStreamPool;
   onChange?: () => void;
+  onReconnect?: () => void;
 }
 
 export class EventStream<T = unknown> {
@@ -26,11 +27,13 @@ export class EventStream<T = unknown> {
   private readonly pool: EventStreamPool;
   private readonly config: PushSourceConfig | undefined;
   private readonly onChange: (() => void) | undefined;
+  private readonly onReconnect: (() => void) | undefined;
 
   private handle: PoolHandle | undefined;
   private listener: ((e: Event) => void) | undefined;
   private _latest: T | undefined;
   private _all: readonly T[] = [];
+  private _prevStatus: ConnectionStatus = "disconnected";
 
   constructor(
     url: string,
@@ -46,6 +49,7 @@ export class EventStream<T = unknown> {
     this.pool = options?.pool ?? defaultPool;
     this.config = options?.config;
     this.onChange = options?.onChange;
+    this.onReconnect = options?.onReconnect;
   }
 
   get latest(): T | undefined {
@@ -77,6 +81,9 @@ export class EventStream<T = unknown> {
           ? { ...this.config, eventTarget }
           : { eventTarget },
         batchEvents: this.batchEvents,
+        onStatusChange: (status) => {
+          this.handleStatusChange(status);
+        },
       });
       conn.listen([...this.topics]).catch((err) => {
         console.warn("EventStream: listen failed:", err);
@@ -90,6 +97,14 @@ export class EventStream<T = unknown> {
         },
       };
     }
+
+    if (this.shared && this.handle) {
+      this.handle.onStatusChange = (status) => {
+        this.handleStatusChange(status);
+      };
+    }
+
+    this._prevStatus = this.handle?.status() ?? "disconnected";
 
     this.listener = (e: Event) => {
       const detail = (e as CustomEvent<{ topic: string; payload: unknown }>).detail;
@@ -132,7 +147,19 @@ export class EventStream<T = unknown> {
       this.listener = undefined;
     }
 
+    if (this.handle.onStatusChange) {
+      this.handle.onStatusChange = undefined;
+    }
+
     this.handle.release(this.topics);
     this.handle = undefined;
+    this._prevStatus = "disconnected";
+  }
+
+  private handleStatusChange(status: ConnectionStatus): void {
+    if (this._prevStatus === "reconnecting" && status === "connected") {
+      this.onReconnect?.();
+    }
+    this._prevStatus = status;
   }
 }

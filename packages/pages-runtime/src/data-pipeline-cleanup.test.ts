@@ -18,6 +18,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
     target.appendChild(wrapper);
 
     const proxy: VizTarget = {
+      get loading() { return false; },
+      set loading(_: boolean) {},
       get dataSet() { return undefined; },
       set dataSet(_: unknown) {},
       get error() { return ""; },
@@ -71,6 +73,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
     target.appendChild(wrapper2);
 
     const proxy1: VizTarget = {
+      get loading() { return false; },
+      set loading(_: boolean) {},
       get dataSet() { return undefined; },
       set dataSet(_: unknown) {},
       get error() { return ""; },
@@ -84,6 +88,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
     };
 
     const proxy2: VizTarget = {
+      get loading() { return false; },
+      set loading(_: boolean) {},
       get dataSet() { return undefined; },
       set dataSet(_: unknown) {},
       get error() { return ""; },
@@ -143,6 +149,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
     target.appendChild(wrapper);
 
     const proxy: VizTarget = {
+      get loading() { return false; },
+      set loading(_: boolean) {},
       get dataSet() { return undefined; },
       set dataSet(_: unknown) {},
       get error() { return ""; },
@@ -190,6 +198,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
     target.appendChild(wrapper);
 
     const proxy: VizTarget = {
+      get loading() { return false; },
+      set loading(_: boolean) {},
       get dataSet() { return undefined; },
       set dataSet(_: unknown) {},
       get error() { return ""; },
@@ -240,6 +250,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
     target.appendChild(wrapper2);
 
     const proxy1: VizTarget = {
+      get loading() { return false; },
+      set loading(_: boolean) {},
       get dataSet() { return undefined; },
       set dataSet(_: unknown) {},
       get error() { return ""; },
@@ -253,6 +265,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
     };
 
     const proxy2: VizTarget = {
+      get loading() { return false; },
+      set loading(_: boolean) {},
       get dataSet() { return undefined; },
       set dataSet(_: unknown) {},
       get error() { return ""; },
@@ -354,6 +368,8 @@ describe("handleSubtreeRemoved with proxy vizElement", () => {
       target.appendChild(wrapper);
 
       const proxy: VizTarget = {
+        get loading() { return false; },
+        set loading(_: boolean) {},
         get dataSet() { return undefined; },
         set dataSet(_: unknown) {},
         get error() { return ""; },
