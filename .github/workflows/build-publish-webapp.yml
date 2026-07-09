@@ -27,6 +27,8 @@ concurrency:
 jobs:
   build-full-webapp:
     runs-on: ubuntu-latest
+    env:
+      GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
