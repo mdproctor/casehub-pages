@@ -2,8 +2,6 @@ import "@casehubio/pages-viz";
 
 export { loadSite } from "./site.js";
 export type { LiveSite, SiteOptions } from "./site.js";
-export type { PagesTheme } from "@casehubio/pages-viz/dist/base/theme.js";
-export { LIGHT_THEME, DARK_THEME, applyTheme, clearTheme } from "@casehubio/pages-viz/dist/base/theme.js";
 export { serializeToUrl, parseFromUrl } from "./url.js";
 export { buildPagePathMap } from "./page-paths.js";
 export type { PagePathMap } from "./page-paths.js";
