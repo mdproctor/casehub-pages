@@ -32,7 +32,7 @@ describe("ServerQueryClient", () => {
       headers: { "Content-Type": "application/json" },
     }));
     expect(result.columns).toHaveLength(1);
-    expect(result.columns[0].name).toBe("Name");
+    expect(result.columns[0]!.name).toBe("Name");
     expect(result.rows).toHaveLength(2);
   });
 
@@ -57,7 +57,7 @@ describe("ServerQueryClient", () => {
 
     await client.query(makeLookup("ds-1"));
 
-    const calledHeaders = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0][1].headers as Record<string, string>;
+    const calledHeaders = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0]![1]!.headers as Record<string, string>;
     expect(calledHeaders["Authorization"]).toBeUndefined();
   });
 
@@ -68,7 +68,7 @@ describe("ServerQueryClient", () => {
     // Mock document.dispatchEvent for the test
     const mockDispatchEvent = vi.fn();
     const originalDocument = globalThis.document;
-    (globalThis as { document?: { dispatchEvent: typeof mockDispatchEvent } }).document = { dispatchEvent: mockDispatchEvent };
+    (globalThis as unknown as { document?: { dispatchEvent: typeof mockDispatchEvent } }).document = { dispatchEvent: mockDispatchEvent };
 
     await expect(client.query(makeLookup("ds-1"))).rejects.toThrow("FETCH_FAILED");
     expect(mockDispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: "pages-auth-expired" }));
@@ -102,7 +102,7 @@ describe("ServerQueryClient", () => {
     const result = await client.query(makeLookup("ds-1"));
 
     expect(result.rows).toHaveLength(2);
-    expect(result.rows[1].cells[0].type).toBe("NULL");
-    expect(result.rows[1].cells[1].type).toBe("NULL");
+    expect(result.rows[1]!.cells[0]!.type).toBe("NULL");
+    expect(result.rows[1]!.cells[1]!.type).toBe("NULL");
   });
 });
