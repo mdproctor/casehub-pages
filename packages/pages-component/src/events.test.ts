@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { emitPagesEvent, onPagesEvent, PagesEventDetail } from './events.js';
+import { emitPagesEvent, onPagesEvent, type PagesEventDetail } from './events.js';
 
 describe('emitPagesEvent', () => {
   it('dispatches pages-event CustomEvent with topic and payload', () => {
@@ -10,7 +10,7 @@ describe('emitPagesEvent', () => {
     emitPagesEvent(target, 'test-topic', { value: 42 });
 
     expect(handler).toHaveBeenCalledOnce();
-    const event = handler.mock.calls[0][0] as CustomEvent<PagesEventDetail>;
+    const event = handler.mock.calls[0]![0] as CustomEvent<PagesEventDetail>;
     expect(event.detail.topic).toBe('test-topic');
     expect(event.detail.payload).toEqual({ value: 42 });
     expect(event.bubbles).toBe(true);

@@ -20,13 +20,16 @@ function createMockPool(): PushPool {
 }
 
 function createDeps(overrides?: Partial<DefToBindingDeps>): DefToBindingDeps {
-  return {
+  const deps: DefToBindingDeps = {
     manager: overrides?.manager ?? createDataSetManager(),
     wsPool: overrides?.wsPool ?? createMockPool(),
     ssePool: overrides?.ssePool ?? createMockPool(),
-    fetchFn: overrides?.fetchFn,
     presets: overrides?.presets ?? { get: () => undefined, has: () => false },
   };
+  if (overrides?.fetchFn !== undefined) {
+    (deps as { fetchFn: typeof globalThis.fetch }).fetchFn = overrides.fetchFn;
+  }
+  return deps;
 }
 
 function collectSink(): { sink: DataSink; events: unknown[]; errors: unknown[] } {

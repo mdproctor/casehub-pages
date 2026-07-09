@@ -186,12 +186,12 @@ describe("host-panel activation", () => {
     expect(entry?.vizElement).toBeDefined();
 
     entry!.vizElement!.dataSet = { columns: [], rows: [] };
-    const panel = el.querySelector("test-proxy-fwd");
-    expect(panel.dataSet).toEqual({ columns: [], rows: [] });
+    const panel = el.querySelector("test-proxy-fwd") as HTMLElement & { dataSet: unknown; error: string } | null;
+    expect(panel!.dataSet).toEqual({ columns: [], rows: [] });
 
     entry!.vizElement!.error = "something broke";
-    expect(panel.error).toBe("something broke");
-    expect(panel.dataSet).toBeUndefined();
+    expect(panel!.error).toBe("something broke");
+    expect(panel!.dataSet).toBeUndefined();
 
     document.body.removeChild(container);
   });
