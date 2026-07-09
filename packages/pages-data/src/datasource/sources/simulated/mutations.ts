@@ -11,21 +11,19 @@
  * are NOT visible to mutation B within the same tick.
  */
 
-import type { ColumnId } from "../../../dataset/types.js";
-import type { TypedRow, TypedDataSet, Column, CellValue } from "../../../dataset/types.js";
-import { ColumnType } from "../../../dataset/types.js";
-import type { DataSetEvent, ReplaceEvent, AppendEvent, RemoveEvent } from "../../../dataset/events.js";
-import type { ScenarioController } from "../../controller.js";
-import { createTypedRow } from "../../../dataset/conversion.js";
+import type {CellValue, Column, ColumnId, TypedRow} from "../../../dataset/types.js";
+import {ColumnType} from "../../../dataset/types.js";
+import type {AppendEvent, DataSetEvent, RemoveEvent, ReplaceEvent} from "../../../dataset/events.js";
+import {createTypedRow} from "../../../dataset/conversion.js";
 import {
-  type TransitionTracking,
-  type MutationTiming,
-  createTransitionTracking,
-  createMutationTiming,
-  trackRowEntry,
-  untrackRow,
-  isDelayElapsed,
-  shouldFire,
+    createMutationTiming,
+    createTransitionTracking,
+    isDelayElapsed,
+    type MutationTiming,
+    shouldFire,
+    trackRowEntry,
+    type TransitionTracking,
+    untrackRow,
 } from "./mutation-tracking.js";
 
 // ---------------------------------------------------------------------------

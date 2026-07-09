@@ -1,48 +1,67 @@
-import type { Component, PermissionContext, LayoutState, PanelEntry } from "@casehubio/pages-component/dist/model/types.js";
-import { ALLOW_ALL } from "@casehubio/pages-component/dist/model/types.js";
-import type { HostPanelProps } from "@casehubio/pages-component/dist/model/component-props.js";
-import type { LayoutStore } from "./layout-store.js";
-import { renderComponent } from "@casehubio/pages-component/dist/renderer/render.js";
-import type { DataSetId, ColumnId, CellValue, TypedDataSet, Column } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataProviderConfig, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { SortOrder } from "@casehubio/pages-data/dist/dataset/sort.js";
-import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
-import { createDataSetManager } from "@casehubio/pages-data/dist/dataset/manager.js";
-import { createDataProviderFactory, createPresetRegistry, LOCAL_CAPABILITIES, isServiceCapabilities } from "@casehubio/pages-data/dist/dataset/external/index.js";
-import type { ServiceCapabilities } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import type { Site, ViewState, DeepLink } from "@casehubio/pages-ui/dist/model/page-types.js";
-import { parsePage } from "@casehubio/pages-ui/dist/parser/page-parser.js";
-import { load as yamlLoad } from "js-yaml";
-import { cellToRaw } from "@casehubio/pages-viz/dist/base/cell-extract.js";
-import { injectTheme, applyThemeMode, DEFAULT_THEME } from "@casehubio/pages-ui-tokens";
-import type { ThemeConfig } from "@casehubio/pages-ui-tokens";
-import type { PagesFilterDetail } from "@casehubio/pages-viz/dist/base/filter-types.js";
-import { buildPagePathMap } from "./page-paths.js";
-import { buildDataSetScope, resolveDataSetDef } from "./dataset-scope.js";
-import { buildPageIndex, computeCurrentPage, walkNavigate } from "./navigation.js";
-import type { ActiveSlots } from "./navigation.js";
-import { createActivationCallback } from "./activation.js";
-import type { ComponentRegistry } from "./registry.js";
-import { createDataPipeline } from "./data-pipeline.js";
-import type { VizTarget } from "./data-pipeline.js";
-import { createFilterState, updateFilter, deriveActiveFilters, getActiveFilterOps, collectAncestorFilterOps, clearPageFilters } from "./cross-filter.js";
-import type { FilterState } from "./cross-filter.js";
-import { createComponentViewState, updateSort, updatePage, updateTextFilter, getComponentState } from "./component-view-state.js";
-import type { ComponentViewState } from "./component-view-state.js";
-import { createDataScopeRegistry, hasDataScope, getDataScope } from "./data-scope-registry.js";
-import { createSaveConfigRegistry, getSaveConfig } from "./save-config-registry.js";
-import { createEditState, updateEditState, clearEditState, isDirty, isAnyDirty, getEditState } from "./edit-state.js";
-import { serializeToUrl, parseFromUrl } from "./url.js";
-import type { SaveAdapter } from "./save-adapter.js";
-import { createLocalAdapter } from "./adapters/local-adapter.js";
-import { createRestAdapter } from "./adapters/rest-adapter.js";
-import { ContextManager } from "./context-wiring.js";
-import { ActionExecutor } from "./action.js";
-import type { PagesActionCompleteDetail } from "./action.js";
-import type { PagesActionRequestDetail } from "@casehubio/pages-component/dist/model/action-types.js";
-import type { DevAuthConfig } from "./dev-auth.js";
-import { createDevAuthTokenFn } from "./dev-auth.js";
+import type {
+    Component,
+    LayoutState,
+    PanelEntry,
+    PermissionContext
+} from "@casehubio/pages-component/dist/model/types.js";
+import {ALLOW_ALL} from "@casehubio/pages-component/dist/model/types.js";
+import type {HostPanelProps} from "@casehubio/pages-component/dist/model/component-props.js";
+import type {LayoutStore} from "./layout-store.js";
+import {renderComponent} from "@casehubio/pages-component/dist/renderer/render.js";
+import type {CellValue, Column, ColumnId, DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {
+    DataProviderConfig,
+    ExternalDataSetDef,
+    ServiceCapabilities
+} from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type {DataSetLookup} from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type {SortOrder} from "@casehubio/pages-data/dist/dataset/sort.js";
+import {createDataSetManager} from "@casehubio/pages-data/dist/dataset/manager.js";
+import {
+    createDataProviderFactory,
+    createPresetRegistry,
+    isServiceCapabilities,
+    LOCAL_CAPABILITIES
+} from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type {DeepLink, Site, ViewState} from "@casehubio/pages-ui/dist/model/page-types.js";
+import {parsePage} from "@casehubio/pages-ui/dist/parser/page-parser.js";
+import {load as yamlLoad} from "js-yaml";
+import {cellToRaw} from "@casehubio/pages-viz/dist/base/cell-extract.js";
+import type {ThemeConfig} from "@casehubio/pages-ui-tokens";
+import {applyThemeMode, DEFAULT_THEME, injectTheme} from "@casehubio/pages-ui-tokens";
+import type {PagesFilterDetail} from "@casehubio/pages-viz/dist/base/filter-types.js";
+import {buildPagePathMap} from "./page-paths.js";
+import {buildDataSetScope, resolveDataSetDef} from "./dataset-scope.js";
+import type {ActiveSlots} from "./navigation.js";
+import {buildPageIndex, computeCurrentPage, walkNavigate} from "./navigation.js";
+import {createActivationCallback} from "./activation.js";
+import type {ComponentRegistry} from "./registry.js";
+import type {VizTarget} from "./data-pipeline.js";
+import {createDataPipeline} from "./data-pipeline.js";
+import type {FilterState} from "./cross-filter.js";
+import {
+    clearPageFilters,
+    collectAncestorFilterOps,
+    createFilterState,
+    deriveActiveFilters,
+    updateFilter
+} from "./cross-filter.js";
+import type {ComponentViewState} from "./component-view-state.js";
+import {createComponentViewState, updatePage, updateSort, updateTextFilter} from "./component-view-state.js";
+import {createDataScopeRegistry, getDataScope, hasDataScope} from "./data-scope-registry.js";
+import {createSaveConfigRegistry, getSaveConfig} from "./save-config-registry.js";
+import {clearEditState, createEditState, getEditState, isAnyDirty, isDirty, updateEditState} from "./edit-state.js";
+import {parseFromUrl, serializeToUrl} from "./url.js";
+import type {SaveAdapter} from "./save-adapter.js";
+import {createLocalAdapter} from "./adapters/local-adapter.js";
+import {createRestAdapter} from "./adapters/rest-adapter.js";
+import {ContextManager} from "./context-wiring.js";
+import type {PagesActionCompleteDetail} from "./action.js";
+import {ActionExecutor} from "./action.js";
+import type {PagesActionRequestDetail} from "@casehubio/pages-component/dist/model/action-types.js";
+import type {DevAuthConfig} from "./dev-auth.js";
+import {createDevAuthTokenFn} from "./dev-auth.js";
+
 // --- Event detail interfaces for typed CustomEvent access ---
 
 interface DataRequestDetail {
@@ -799,7 +818,7 @@ export async function loadSite(
 
     // Re-fetch listed datasets
     for (const dsId of refresh) {
-      pipeline.refreshDataSet(dsId as any);
+      pipeline.refreshDataSet(dsId as DataSetId);
     }
   }), { signal: abortController.signal });
 

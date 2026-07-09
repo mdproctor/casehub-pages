@@ -1,9 +1,9 @@
-import type { DataSource, DataSink } from "@casehubio/pages-data/dist/datasource/types.js";
-import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
-import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
-import type { TypedDataSet, DataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { dataSetId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { VizTarget } from "../model/hosting.js";
+import type {DataSource} from "@casehubio/pages-data/dist/datasource/types.js";
+import type {DataSetEvent} from "@casehubio/pages-data/dist/dataset/events.js";
+import type {SortColumn} from "@casehubio/pages-data/dist/dataset/sort.js";
+import type {DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import {dataSetId} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {VizTarget} from "../model/hosting.js";
 
 export type SourceFactory = (url: string, id: DataSetId) => DataSource;
 

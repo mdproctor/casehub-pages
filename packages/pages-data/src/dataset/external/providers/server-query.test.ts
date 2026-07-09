@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ServerQueryClient } from "./server-query.js";
-import { dataSetId } from "../../types.js";
-import type { DataSetLookup } from "../../lookup.js";
+import {describe, expect, it, vi} from "vitest";
+import {ServerQueryClient} from "./server-query.js";
+import {dataSetId} from "../../types.js";
+import type {DataSetLookup} from "../../lookup.js";
 
 function makeLookup(id: string): DataSetLookup {
   return { dataSetId: dataSetId(id), operations: [] };

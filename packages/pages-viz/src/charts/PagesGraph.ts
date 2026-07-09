@@ -1,13 +1,13 @@
-import { use } from "echarts/core";
-import { GraphChart } from "echarts/charts";
-import { TooltipComponent, LegendComponent } from "echarts/components";
-import { CanvasRenderer } from "echarts/renderers";
-import { PagesChartElement } from "../base/PagesChartElement.js";
-import type { GraphProps } from "@casehubio/pages-component";
-import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
-import { cellToRaw } from "../base/cell-extract.js";
+import {use} from "echarts/core";
+import {GraphChart} from "echarts/charts";
+import {LegendComponent, TooltipComponent} from "echarts/components";
+import {CanvasRenderer} from "echarts/renderers";
+import {PagesChartElement} from "../base/PagesChartElement.js";
+import type {GraphProps} from "@casehubio/pages-component";
+import type {TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import {applyChartSettings} from "./option-pipeline.js";
+import {deepMerge} from "../base/deep-merge.js";
+import {cellToRaw} from "../base/cell-extract.js";
 
 // Register required ECharts components
 use([CanvasRenderer, GraphChart, TooltipComponent, LegendComponent]);

@@ -1,10 +1,9 @@
-import { createEventConnection } from "../dataset/external/sources/event-connection.js";
-import { buildConnectionUrl } from "../dataset/external/sources/push-wire.js";
-import { matchesTopic } from "../dataset/external/sources/topic-matching.js";
-import type { ConnectionStatus } from "../dataset/external/sources/event-connection.js";
-import type { PushSourceConfig } from "../dataset/external/sources/push-source.js";
-import type { EventStreamPool, PoolHandle } from "./event-stream-pool.js";
-import { defaultPool } from "./event-stream-pool.js";
+import type {ConnectionStatus} from "../dataset/external/sources/event-connection.js";
+import {createEventConnection} from "../dataset/external/sources/event-connection.js";
+import {matchesTopic} from "../dataset/external/sources/topic-matching.js";
+import type {PushSourceConfig} from "../dataset/external/sources/push-source.js";
+import type {EventStreamPool, PoolHandle} from "./event-stream-pool.js";
+import {defaultPool} from "./event-stream-pool.js";
 
 export interface EventStreamOptions<T = unknown> {
   config?: PushSourceConfig;

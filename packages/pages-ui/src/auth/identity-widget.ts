@@ -20,9 +20,9 @@ export class PagesIdentity extends HTMLElement {
       const parts = token.split(".");
       if (parts.length !== 3) return "Guest";
 
-      const payload = JSON.parse(
+      const payload: Record<string, unknown> = JSON.parse(
         atob(parts[1]!.replace(/-/g, "+").replace(/_/g, "/"))
-      );
+      ) as Record<string, unknown>;
 
       return typeof payload.sub === "string" ? payload.sub : "Guest";
     } catch {

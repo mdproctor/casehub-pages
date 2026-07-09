@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { EventStream, createEventStreamPool } from "./index.js";
-import type { EventStreamPool } from "./index.js";
+import {beforeEach, describe, expect, it, vi} from "vitest";
+import type {EventStreamPool} from "./index.js";
+import {createEventStreamPool, EventStream} from "./index.js";
 
 // Mock EventConnection returned by createEventConnection
 interface MockConn {

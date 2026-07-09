@@ -1,7 +1,7 @@
-import type { Component } from "../model/types.js";
-import type { ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { GroupingKey, GroupStrategy, Aggregation } from "@casehubio/pages-data/dist/dataset/group.js";
-import type { AggregationBinding, GroupedViewProps } from "@casehubio/pages-component";
+import type {Component} from "../model/types.js";
+import type {ColumnId} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {Aggregation, GroupingKey, GroupStrategy} from "@casehubio/pages-data/dist/dataset/group.js";
+import type {AggregationBinding} from "@casehubio/pages-component";
 
 function parseStrategy(raw: Record<string, unknown>): GroupStrategy {
   const strategy = raw.strategy as string;
@@ -79,5 +79,5 @@ export function desugarGroupedView(raw: Record<string, unknown>): Component {
   if (order != null) props.order = order;
   if (raw.emptyGroups != null) props.emptyGroups = raw.emptyGroups;
 
-  return { type: "grouped-view", props } as unknown as Component;
+  return { type: "grouped-view", props };
 }

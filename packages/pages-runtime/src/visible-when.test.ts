@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
-import { createActivationCallback } from "./activation.js";
-import { ContextManager } from "./context-wiring.js";
-import type { ComponentRegistry } from "./registry.js";
-import type { PagePathMap } from "./page-paths.js";
+import {beforeEach, describe, expect, it} from "vitest";
+import type {Component} from "@casehubio/pages-component/dist/model/types.js";
+import {createActivationCallback} from "./activation.js";
+import {ContextManager} from "./context-wiring.js";
+import type {ComponentRegistry} from "./registry.js";
+import type {PagePathMap} from "./page-paths.js";
 
 describe("visibleWhen conditional visibility", () => {
   let registry: ComponentRegistry;
@@ -121,7 +121,7 @@ describe("visibleWhen conditional visibility", () => {
     const el = activate(component);
     document.body.appendChild(el);
 
-    const vizEl = el.firstElementChild as any;
+    const _vizEl = el.firstElementChild as any;
 
     // Initially hidden (suspended)
     expect(el.hidden).toBe(true);

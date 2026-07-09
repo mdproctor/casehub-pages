@@ -25,14 +25,14 @@ describe("computeColumnWidths", () => {
     const dataset = makeDataset(["Name", "Value"], [["short", "1"], ["a much longer name", "2"]]);
     const widths = computeColumnWidths(dataset, ["Name", "Value"] as ColumnId[], "14px sans-serif");
     expect(widths).toHaveLength(2);
-    widths.forEach((w) => expect(w).toBeGreaterThan(0));
+    widths.forEach((w) => { expect(w).toBeGreaterThan(0); });
   });
 
   it("handles empty dataset", () => {
     const dataset = makeDataset(["A", "B"], []);
     const widths = computeColumnWidths(dataset, ["A", "B"] as ColumnId[], "14px sans-serif");
     expect(widths).toHaveLength(2);
-    widths.forEach((w) => expect(w).toBeGreaterThan(0));
+    widths.forEach((w) => { expect(w).toBeGreaterThan(0); });
   });
 
   it("respects sampleSize limit", () => {

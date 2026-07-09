@@ -1,6 +1,6 @@
-import { createActivationCallback } from "./activation.js";
-import { registerPanel, clearPanelRegistry } from "./panel-registry.js";
-import type { Component } from "@casehubio/pages-component/dist/model/types.js";
+import {createActivationCallback} from "./activation.js";
+import {clearPanelRegistry, registerPanel} from "./panel-registry.js";
+import type {Component} from "@casehubio/pages-component/dist/model/types.js";
 
 describe("host-panel activation", () => {
   afterEach(() => { clearPanelRegistry(); });
@@ -26,7 +26,7 @@ describe("host-panel activation", () => {
   it("calls configure(props) before appendChild", () => {
     const configureOrder: string[] = [];
     customElements.define("test-cfg-2", class extends HTMLElement {
-      configure(props: Record<string, unknown>) {
+      configure(_props: Record<string, unknown>) {
         configureOrder.push("configure");
       }
       connectedCallback() {
@@ -186,7 +186,7 @@ describe("host-panel activation", () => {
     expect(entry?.vizElement).toBeDefined();
 
     entry!.vizElement!.dataSet = { columns: [], rows: [] };
-    const panel = el.querySelector("test-proxy-fwd") as HTMLElement & { dataSet: unknown; error: string } | null;
+    const panel = el.querySelector("test-proxy-fwd");
     expect(panel!.dataSet).toEqual({ columns: [], rows: [] });
 
     entry!.vizElement!.error = "something broke";

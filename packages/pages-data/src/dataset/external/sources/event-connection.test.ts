@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createEventConnection, type ConnectionStatus } from "./event-connection.js";
-import { isMatchedByRegistrations } from "./topic-matching.js";
-import type { PushSourceConfig } from "./push-source.js";
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import {createEventConnection} from "./event-connection.js";
+import {isMatchedByRegistrations} from "./topic-matching.js";
 
 class MockWebSocket {
   static instances: MockWebSocket[] = [];

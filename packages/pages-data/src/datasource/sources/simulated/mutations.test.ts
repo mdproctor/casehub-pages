@@ -1,18 +1,9 @@
-import { describe, it, expect } from "vitest";
-import {
-  transition,
-  increment,
-  decrement,
-  addRow,
-  removeRow,
-  when,
-  evaluateMutations,
-} from "./mutations.js";
-import type { EvalContext } from "./mutations.js";
-import type { Column, TypedRow, CellValue } from "../../../dataset/types.js";
-import { ColumnType } from "../../../dataset/types.js";
-import type { ColumnId } from "../../../dataset/types.js";
-import { createTypedRow } from "../../../dataset/conversion.js";
+import {describe, expect, it} from "vitest";
+import type {EvalContext} from "./mutations.js";
+import {addRow, decrement, evaluateMutations, increment, removeRow, transition, when,} from "./mutations.js";
+import type {CellValue, Column, ColumnId, TypedRow} from "../../../dataset/types.js";
+import {ColumnType} from "../../../dataset/types.js";
+import {createTypedRow} from "../../../dataset/conversion.js";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -301,13 +292,13 @@ describe("Mutation DSL", () => {
   describe("evaluateMutations — snapshot semantics", () => {
     it("all mutations see tick-start state, not intermediate", () => {
       // Mutation 1: transition PENDING → ASSIGNED
-      const m1 = transition("status", {
+      const _m1 = transition("status", {
         from: "PENDING",
         to: "ASSIGNED",
         after: [0, 0],
       });
       // Mutation 2: only fires if row is PENDING (via when)
-      const m2 = when(
+      const _m2 = when(
         (row) => row["status"] === "PENDING",
         increment("count", { by: 100, every: 0 }),
       );
@@ -317,7 +308,7 @@ describe("Mutation DSL", () => {
       // Both mutations evaluate against the snapshot where status is PENDING.
       // m1 transitions to ASSIGNED, but m2 should still see PENDING and increment.
       // First tick: init timing for increment
-      const r1 = evaluateMutations(rows, [m1, m2], ctx(0));
+      const r1 = evaluateMutations(rows, [_m1, _m2], ctx(0));
       // m1 fires (after=[0,0]), m2 inits timing
       // The transition fires because delay=0 and elapsed=0 means 0-0>=0 → true
       expect(r1.events.length).toBeGreaterThanOrEqual(1);
@@ -357,13 +348,13 @@ describe("Mutation DSL", () => {
 
     it("mutation order does not affect result within a tick", () => {
       // Two transitions on the same row: both see original state
-      const m1 = transition("status", {
+      const _m1 = transition("status", {
         from: "PENDING",
         to: "ASSIGNED",
         after: [0, 0],
       });
       // increment fires on all rows — doesn't depend on transition
-      const m2 = increment("count", { by: 10, every: 0 });
+      const _m2 = increment("count", { by: 10, every: 0 });
 
       const rows = [makeRow(1, "PENDING", 5)];
 

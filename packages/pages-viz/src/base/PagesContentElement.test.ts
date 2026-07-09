@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { PagesContentElement } from "./PagesContentElement.js";
+import {afterEach, beforeEach, describe, expect, it} from "vitest";
+import {PagesContentElement} from "./PagesContentElement.js";
 
 interface TestProps {
   readonly label?: string;

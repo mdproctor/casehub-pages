@@ -1,15 +1,14 @@
-import { describe, it, expect, vi } from "vitest";
-import { createDataSetManager } from "./manager.js";
-import { toTypedDataSet } from "./conversion.js";
-import { createLookup } from "./lookup.js";
-import type { Column} from "./types.js";
-import { ColumnType, dataSetId, columnId} from "./types.js";
-import type { ResolvedFilterOp, FilterOp } from "./filter.js";
-import type { GroupOp } from "./group.js";
-import type { SortOp } from "./sort.js";
-import { parseTimeFrame } from "./timeframe.js";
-import { DataSetError } from "./errors.js";
-import type { DataSetEvent } from "./events.js";
+import {describe, expect, it, vi} from "vitest";
+import {createDataSetManager} from "./manager.js";
+import {toTypedDataSet} from "./conversion.js";
+import {createLookup} from "./lookup.js";
+import type {Column} from "./types.js";
+import {columnId, ColumnType, dataSetId} from "./types.js";
+import type {FilterOp, ResolvedFilterOp} from "./filter.js";
+import type {GroupOp} from "./group.js";
+import type {SortOp} from "./sort.js";
+import {parseTimeFrame} from "./timeframe.js";
+import {DataSetError} from "./errors.js";
 
 function col(id: string, name: string, type: ColumnType): Column {
   return { id: columnId(id), name, type };

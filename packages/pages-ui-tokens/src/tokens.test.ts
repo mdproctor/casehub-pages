@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { SPACING_SCALE, DENSITY_COMPACT_OVERRIDES } from './tokens.js';
-import { generateThemeCSS, DEFAULT_THEME } from './themes.js';
+import {describe, expect, it} from 'vitest';
+import {SPACING_SCALE} from './tokens.js';
+import {DEFAULT_THEME, generateThemeCSS} from './themes.js';
 
 describe('SPACING_SCALE', () => {
   it('uses hyphenated keys for fractional values', () => {

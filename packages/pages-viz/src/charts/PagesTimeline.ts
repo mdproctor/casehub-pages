@@ -1,18 +1,13 @@
-import { use } from "echarts/core";
-import { CustomChart } from "echarts/charts";
-import {
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  DataZoomComponent,
-} from "echarts/components";
-import { CanvasRenderer } from "echarts/renderers";
-import { PagesChartElement } from "../base/PagesChartElement.js";
-import type { TimelineProps } from "@casehubio/pages-component";
-import type { TypedDataSet, ColumnId } from "@casehubio/pages-data/dist/dataset/types.js";
-import { applyChartSettings } from "./option-pipeline.js";
-import { deepMerge } from "../base/deep-merge.js";
-import { cellToRaw } from "../base/cell-extract.js";
+import {use} from "echarts/core";
+import {CustomChart} from "echarts/charts";
+import {DataZoomComponent, GridComponent, LegendComponent, TooltipComponent,} from "echarts/components";
+import {CanvasRenderer} from "echarts/renderers";
+import {PagesChartElement} from "../base/PagesChartElement.js";
+import type {TimelineProps} from "@casehubio/pages-component";
+import type {TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import {applyChartSettings} from "./option-pipeline.js";
+import {deepMerge} from "../base/deep-merge.js";
+import {cellToRaw} from "../base/cell-extract.js";
 
 // Register required ECharts components
 use([CanvasRenderer, CustomChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent]);
@@ -68,7 +63,7 @@ export class PagesTimeline extends PagesChartElement<TimelineProps> {
       : [""];
 
     // Build custom series data
-    const seriesData = items.map((item, idx) => {
+    const seriesData = items.map((item, _idx) => {
       const dataItem: Record<string, unknown> = {
         name: item.name,
         value: [

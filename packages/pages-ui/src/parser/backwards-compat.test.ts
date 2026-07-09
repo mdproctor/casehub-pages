@@ -1,27 +1,27 @@
-import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "fs";
-import { load } from "js-yaml";
-import type { Component } from "../model/types.js";
-import { parsePage } from "./page-parser.js";
-import { join } from "path";
-import { globSync } from "glob";
+import {describe, expect, it} from "vitest";
+import {existsSync, readFileSync} from "fs";
+import {load} from "js-yaml";
+import type {Component} from "../model/types.js";
+import {parsePage} from "./page-parser.js";
+import {join} from "path";
+import {globSync} from "glob";
 
 const EXAMPLES_DIR = join(__dirname, "../../../../examples/samples");
 
-function findPageByName(root: Component, name: string): Component | undefined {
+function __findPageByName(root: Component, name: string): Component | undefined {
   if (root.type === "page" && (root.props as Record<string, unknown>)["name"] === name) {
     return root;
   }
   if (root.items) {
     for (const item of root.items) {
-      const found = findPageByName(item.component, name);
+      const found = _findPageByName(item.component, name);
       if (found) return found;
     }
   }
   if (root.slots) {
     for (const children of Object.values(root.slots)) {
       for (const child of children) {
-        const found = findPageByName(child, name);
+        const found = _findPageByName(child, name);
         if (found) return found;
       }
     }

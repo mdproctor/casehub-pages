@@ -1,30 +1,38 @@
-import type { DataSetId, TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
-import type { DataSetManager, LookupOptions } from "@casehubio/pages-data/dist/dataset/manager.js";
-import type { DataSetLookup } from "@casehubio/pages-data/dist/dataset/lookup.js";
-import type { DataSetOp } from "@casehubio/pages-data/dist/dataset/ops.js";
-import type { ResolverContext } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import type { ResolveResult, ExternalDataSetDef } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import { parseRefreshTime } from "@casehubio/pages-data/dist/dataset/external/types.js";
-import { resolveExternalDataSet } from "@casehubio/pages-data/dist/dataset/external/resolver.js";
-import { evaluateGenerator, createPushPool, createWebSocketSource, createSseSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
-import type { PushPool, PushSource } from "@casehubio/pages-data/dist/dataset/external/index.js";
-import type { DataSetEvent } from "@casehubio/pages-data/dist/dataset/events.js";
-import type { DataSource, DataSink, DataSourceBinding } from "@casehubio/pages-data/dist/datasource/types.js";
-import { defToBinding } from "@casehubio/pages-data/dist/datasource/sources/def-to-binding.js";
-import type { DefToBindingDeps } from "@casehubio/pages-data/dist/datasource/sources/def-to-binding.js";
-import type { ComponentRegistry } from "./registry.js";
-import type { DataSetScope } from "./dataset-scope.js";
-import { resolveDataSetDef, resolveDataSetEntry, isBinding, isDef } from "./dataset-scope.js";
-import type { FilterState } from "./cross-filter.js";
-import { getActiveFilterOps, collectAncestorFilterOps } from "./cross-filter.js";
-import type { DataScopeRegistry } from "./data-scope-registry.js";
-import { getDataScope } from "./data-scope-registry.js";
-import { resolveRefBindings } from "./ref-resolution.js";
-import type { ComponentViewState } from "./component-view-state.js";
-import { getComponentState, updatePage } from "./component-view-state.js";
-import type { ContextManager } from "./context-wiring.js";
-import { hasTemplateVars, resolveTemplate, allTemplateVarsResolved } from "@casehubio/pages-component/dist/context/index.js";
-import type { VizTarget } from "@casehubio/pages-component/dist/model/hosting.js";
+import type {DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {DataSetManager, LookupOptions} from "@casehubio/pages-data/dist/dataset/manager.js";
+import type {DataSetLookup} from "@casehubio/pages-data/dist/dataset/lookup.js";
+import type {DataSetOp} from "@casehubio/pages-data/dist/dataset/ops.js";
+import type {ResolverContext} from "@casehubio/pages-data/dist/dataset/external/resolver.js";
+import {resolveExternalDataSet} from "@casehubio/pages-data/dist/dataset/external/resolver.js";
+import type {ExternalDataSetDef, ResolveResult} from "@casehubio/pages-data/dist/dataset/external/types.js";
+import {parseRefreshTime} from "@casehubio/pages-data/dist/dataset/external/types.js";
+import type {PushSource} from "@casehubio/pages-data/dist/dataset/external/index.js";
+import {
+    createPushPool,
+    createSseSource,
+    createWebSocketSource,
+    evaluateGenerator
+} from "@casehubio/pages-data/dist/dataset/external/index.js";
+import type {DataSetEvent} from "@casehubio/pages-data/dist/dataset/events.js";
+import type {DataSink, DataSource, DataSourceBinding} from "@casehubio/pages-data/dist/datasource/types.js";
+import type {ComponentRegistry} from "./registry.js";
+import type {DataSetScope} from "./dataset-scope.js";
+import {isBinding, resolveDataSetDef, resolveDataSetEntry} from "./dataset-scope.js";
+import type {FilterState} from "./cross-filter.js";
+import {collectAncestorFilterOps, getActiveFilterOps} from "./cross-filter.js";
+import type {DataScopeRegistry} from "./data-scope-registry.js";
+import {getDataScope} from "./data-scope-registry.js";
+import {resolveRefBindings} from "./ref-resolution.js";
+import type {ComponentViewState} from "./component-view-state.js";
+import {getComponentState, updatePage} from "./component-view-state.js";
+import type {ContextManager} from "./context-wiring.js";
+import {
+    allTemplateVarsResolved,
+    hasTemplateVars,
+    resolveTemplate
+} from "@casehubio/pages-component/dist/context/index.js";
+import type {VizTarget} from "@casehubio/pages-component/dist/model/hosting.js";
+
 export type { VizTarget } from "@casehubio/pages-component/dist/model/hosting.js";
 
 export interface DataPipeline {
@@ -364,7 +372,7 @@ export function createDataPipeline(
     lookup: DataSetLookup,
     componentId: string,
     def: ExternalDataSetDef,
-    entry: { pagePath: string; component: { type: string; props?: Record<string, unknown> } },
+    _entry: { pagePath: string; component: { type: string; props?: Record<string, unknown> } },
   ): void {
     if (!resolverCtx) {
       target.error = `No resolver context available`;

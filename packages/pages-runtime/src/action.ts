@@ -1,6 +1,6 @@
-import type { ActionRequest, ActionCallbacks, ActionResult, PagesActionRequestDetail } from "@casehubio/pages-component/dist/model/action-types.js";
-import type { RuntimeContext } from "@casehubio/pages-component/dist/context/types.js";
-import { resolveTemplate } from "@casehubio/pages-component/dist/context/template-parser.js";
+import type {ActionCallbacks, ActionRequest, ActionResult} from "@casehubio/pages-component/dist/model/action-types.js";
+import type {RuntimeContext} from "@casehubio/pages-component/dist/context/types.js";
+import {resolveTemplate} from "@casehubio/pages-component/dist/context/template-parser.js";
 
 export interface PagesActionCompleteDetail {
   readonly refresh: readonly string[];

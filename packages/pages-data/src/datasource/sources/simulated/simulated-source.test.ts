@@ -1,14 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { simulated } from "./simulated-source.js";
-import { inlineSource } from "../inline-source.js";
-import { createScenarioController } from "../../controller.js";
-import { transition, increment, removeRow, when } from "./mutations.js";
-import type { DataSink, DataSource } from "../../types.js";
-import type { DataSetEvent, SnapshotEvent, ReplaceEvent, RemoveEvent } from "../../../dataset/events.js";
-import { ColumnType, columnId } from "../test-helpers.js";
-import type { ColumnId } from "../../../dataset/types.js";
-import type { ExternalColumnDef } from "../../../dataset/external/types.js";
-import { col as makeCol, makeDataset } from "../test-helpers.js";
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import {simulated} from "./simulated-source.js";
+import {inlineSource} from "../inline-source.js";
+import {createScenarioController} from "../../controller.js";
+import {increment, removeRow, transition, when} from "./mutations.js";
+import type {DataSink, DataSource} from "../../types.js";
+import type {DataSetEvent, RemoveEvent, ReplaceEvent} from "../../../dataset/events.js";
+import {col as makeCol, columnId, ColumnType, makeDataset} from "../test-helpers.js";
+import type {ColumnId} from "../../../dataset/types.js";
+import type {ExternalColumnDef} from "../../../dataset/external/types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -350,7 +349,7 @@ describe("simulated source", () => {
 
     vi.advanceTimersByTime(1000);
 
-    const replaces = sink.events.filter(e => e.type === "replace") as ReplaceEvent[];
+    const replaces = sink.events.filter(e => e.type === "replace");
     expect(replaces).toHaveLength(1);
     expect(replaces[0]!.key).toBe("1");
   });

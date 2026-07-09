@@ -1,5 +1,5 @@
-import type { LayoutState } from "@casehubio/pages-component/dist/model/types.js";
-import type { LayoutStore } from "./layout-store.js";
+import type {LayoutState} from "@casehubio/pages-component/dist/model/types.js";
+import type {LayoutStore} from "./layout-store.js";
 
 export function createRestLayoutStore(
   baseUrl: string,
@@ -34,7 +34,7 @@ export function createRestLayoutStore(
         }
 
         return JSON.parse(text) as LayoutState;
-      } catch (err) {
+      } catch {
         return null;
       }
     },

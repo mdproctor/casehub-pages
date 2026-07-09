@@ -43,7 +43,7 @@ describe("restSource (standalone)", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
+    await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
 
     expect(events).toHaveLength(1);
     expect(events[0]!.type).toBe("snapshot");
@@ -59,7 +59,7 @@ describe("restSource (standalone)", () => {
 
     const { sink, errors } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(errors.length).toBeGreaterThan(0));
+    await vi.waitFor(() => { expect(errors.length).toBeGreaterThan(0); });
 
     expect(errors[0]!.message).toContain("network error");
     source.disconnect();
@@ -76,7 +76,7 @@ describe("restSource (standalone)", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
+    await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
 
     expect(spy).toHaveBeenCalledOnce();
     spy.mockRestore();
@@ -114,7 +114,7 @@ describe("restSource (standalone)", () => {
     let resolveFetch: (() => void) | null = null;
     const fetchFn = vi.fn().mockImplementation(() =>
       new Promise<Response>((resolve) => {
-        resolveFetch = () => resolve(jsonResponse([["late"]]));
+        resolveFetch = () => { resolve(jsonResponse([["late"]])); };
       }),
     );
 
@@ -144,7 +144,7 @@ describe("restSource (standalone)", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
+    await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
 
     expect(fetchFn).toHaveBeenCalledWith(
       "https://api.example.com/data",
@@ -167,7 +167,7 @@ describe("restSource (standalone)", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
+    await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
 
     const calledUrl = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0]![0] as string;
     expect(calledUrl).toContain("page=1");
@@ -185,7 +185,7 @@ describe("restSource (standalone)", () => {
 
     const { sink, events } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(events.length).toBeGreaterThan(0));
+    await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
 
     const calledInit = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0]![1] as RequestInit;
     expect(calledInit.body).toContain("username=alice");
@@ -201,7 +201,7 @@ describe("restSource (standalone)", () => {
 
     const { sink, errors } = collectSink();
     source.connect(sink);
-    await vi.waitFor(() => expect(errors.length).toBeGreaterThan(0));
+    await vi.waitFor(() => { expect(errors.length).toBeGreaterThan(0); });
 
     expect(errors[0]!.permanent).toBe(false);
     source.disconnect();
