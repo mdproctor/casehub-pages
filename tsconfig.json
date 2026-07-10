@@ -2,6 +2,8 @@
   "files": [],
   "references": [
     { "path": "packages/pages-data" },
+    { "path": "packages/pages-primitives" },
+    { "path": "packages/pages-data-table" },
     { "path": "packages/pages-iframe-api" },
     { "path": "packages/pages-iframe-dev" },
     { "path": "packages/pages-component" },
