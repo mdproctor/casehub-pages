@@ -21,7 +21,7 @@
   "scripts": {
     "build:prod": "yarn build:packages && yarn build:components && yarn build:webapp && yarn build:examples",
     "build": "yarn build:packages && yarn build:components && yarn build:webapp",
-    "build:packages": "yarn workspace @casehubio/pages-primitives run build && yarn workspace @casehubio/pages-data-table run build && yarn workspace @casehubio/pages-iframe-api run build && yarn workspace @casehubio/pages-iframe-dev run build && yarn workspace @casehubio/pages-data run build && yarn workspace @casehubio/pages-component run build && yarn workspace @casehubio/pages-ui run build && yarn workspace @casehubio/pages-ui-tokens run build && yarn workspace @casehubio/pages-viz run build && yarn workspace @casehubio/pages-runtime run build",
+    "build:packages": "yarn workspace @casehubio/pages-primitives run build && yarn workspace @casehubio/pages-table run build && yarn workspace @casehubio/pages-iframe-api run build && yarn workspace @casehubio/pages-iframe-dev run build && yarn workspace @casehubio/pages-data run build && yarn workspace @casehubio/pages-component run build && yarn workspace @casehubio/pages-ui run build && yarn workspace @casehubio/pages-ui-tokens run build && yarn workspace @casehubio/pages-viz run build && yarn workspace @casehubio/pages-runtime run build",
     "build:components": "yarn workspaces foreach -Apt --include '@casehubio/pages-component-*' run build",
     "build:webapp": "yarn workspace @casehubio/pages-webapp run build",
     "build:examples": "yarn workspace @casehubio/pages-examples run build",

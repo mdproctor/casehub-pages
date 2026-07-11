@@ -1,7 +1,7 @@
 {
-  "name": "@casehubio/pages-data-table",
+  "name": "@casehubio/pages-table",
   "version": "0.2.0",
-  "description": "CaseHub Pages data table — CSS Grid rendering, virtual scroll, sorting, filtering, selection, tree rows, keyboard navigation",
+  "description": "CaseHub Pages table — CSS Grid rendering, virtual scroll, sorting, filtering, selection, tree rows, keyboard navigation",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"
@@ -20,6 +20,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@casehubio/pages-data": "workspace:*",
     "lit": "^3.0.0"
   },
   "devDependencies": {

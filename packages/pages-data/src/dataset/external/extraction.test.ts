@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { extractDataSet } from "./extraction.js";
 import { createPresetRegistry } from "./presets/registry.js";
-import type { ExternalDataSetDef, FetchResult, PresetRegistry} from "./types.js";
+import type { ExternalDataSetDef, ExtractionDef, FetchResult, PresetRegistry} from "./types.js";
 import type { CellValue } from "../types.js";
 import { ColumnType, dataSetId, columnId} from "../types.js";
 import { DataSetError } from "../errors.js";
@@ -562,5 +562,34 @@ describe("extractDataSet", () => {
     expect(codeCol).toBeDefined();
     const row200 = result.dataset.rows.filter(r => val(r.cell(columnId("code"))) === "200");
     expect(row200).toHaveLength(2);
+  });
+
+  // --- ExtractionDef (no uuid) ---
+
+  it("accepts ExtractionDef without uuid", async () => {
+    const result = await extractDataSet(
+      fetchResult([{ name: "Alice", score: 42 }]),
+      {
+        columns: [
+          { id: columnId("name"), type: ColumnType.TEXT },
+          { id: columnId("score"), type: ColumnType.NUMBER },
+        ],
+      } satisfies ExtractionDef,
+      registry,
+    );
+    expect(result.dataset.columns).toHaveLength(2);
+    expect(result.dataset.rows).toHaveLength(1);
+    expect(result.dataset.rows[0]!.text(columnId("name"))).toBe("Alice");
+    expect(result.dataset.rows[0]!.number(columnId("score"))).toBe(42);
+  });
+
+  it("accepts ExtractionDef with dataPath", async () => {
+    const result = await extractDataSet(
+      fetchResult({ items: [{ x: "hello" }], total: 50 }),
+      { dataPath: "items", columns: [{ id: columnId("x"), type: ColumnType.TEXT }] } satisfies ExtractionDef,
+      registry,
+    );
+    expect(result.dataset.rows).toHaveLength(1);
+    expect(result.dataset.rows[0]!.text(columnId("x"))).toBe("hello");
   });
 });

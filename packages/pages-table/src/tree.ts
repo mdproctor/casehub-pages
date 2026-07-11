@@ -1,18 +1,20 @@
-export interface TreeRow<R = unknown> {
-  readonly row: R;
+import type { TypedRow } from '@casehubio/pages-data/dist/dataset/types.js';
+
+export interface TreeRow {
+  readonly row: TypedRow;
   readonly depth: number;
   readonly hasChildren: boolean;
   readonly expanded: boolean;
 }
 
-export function flattenTree<R>(
-  rows: readonly R[],
-  getChildren: (row: R) => readonly R[],
+export function flattenTree(
+  rows: readonly TypedRow[],
+  getChildren: (row: TypedRow) => readonly TypedRow[],
   expandedIds: ReadonlySet<string>,
-  getRowId: (row: R) => string,
+  getRowId: (row: TypedRow) => string,
   depth = 0,
-): TreeRow<R>[] {
-  const result: TreeRow<R>[] = [];
+): TreeRow[] {
+  const result: TreeRow[] = [];
 
   for (const row of rows) {
     const id = getRowId(row);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toTypedDataSet, toWireDataSet } from "./conversion.js";
+import { toTypedDataSet, toWireDataSet, fromRows } from "./conversion.js";
 import type { DataSet, Column} from "./types.js";
 import { ColumnType, columnId} from "./types.js";
 
@@ -220,5 +220,84 @@ describe("toWireDataSet", () => {
     expect(wire.data[0]![1]).toBeNull();
     expect(wire.data[1]![0]).toBeNull();
     expect(wire.data[1]![1]).toBe("42");
+  });
+});
+
+describe("fromRows", () => {
+  it("converts domain objects to TypedDataSet with typed accessors", () => {
+    interface Capability { tag: string; score: number; }
+    const rows: Capability[] = [
+      { tag: "authentication", score: 0.95 },
+      { tag: "authorization", score: 0.72 },
+    ];
+    const dataset = fromRows(rows, [
+      { id: columnId("tag"), name: "Capability", type: ColumnType.TEXT, getValue: (c: Capability) => c.tag },
+      { id: columnId("score"), name: "Score", type: ColumnType.NUMBER, getValue: (c: Capability) => c.score },
+    ]);
+    expect(dataset.columns).toHaveLength(2);
+    expect(dataset.columns[0]!.id).toBe(columnId("tag"));
+    expect(dataset.columns[0]!.name).toBe("Capability");
+    expect(dataset.columns[0]!.type).toBe(ColumnType.TEXT);
+    expect(dataset.rows).toHaveLength(2);
+    expect(dataset.rows[0]!.text(columnId("tag"))).toBe("authentication");
+    expect(dataset.rows[0]!.number(columnId("score"))).toBe(0.95);
+    expect(dataset.rows[1]!.text(columnId("tag"))).toBe("authorization");
+  });
+
+  it("handles null/undefined values as NULL cells", () => {
+    const rows = [{ name: null as string | null }];
+    const dataset = fromRows(rows, [
+      { id: columnId("name"), type: ColumnType.TEXT, getValue: (r: { name: string | null }) => r.name },
+    ]);
+    const cell = dataset.rows[0]!.cell(columnId("name"));
+    expect(cell.type).toBe("NULL");
+  });
+
+  it("handles undefined getValue result as NULL", () => {
+    const rows = [{ x: undefined as string | undefined }];
+    const dataset = fromRows(rows, [
+      { id: columnId("x"), type: ColumnType.TEXT, getValue: (r: { x: string | undefined }) => r.x },
+    ]);
+    expect(dataset.rows[0]!.cell(columnId("x")).type).toBe("NULL");
+  });
+
+  it("handles Date values", () => {
+    const now = new Date("2026-07-11T10:00:00Z");
+    const rows = [{ created: now }];
+    const dataset = fromRows(rows, [
+      { id: columnId("created"), type: ColumnType.DATE, getValue: (r: { created: Date }) => r.created },
+    ]);
+    expect(dataset.rows[0]!.date(columnId("created")).getTime()).toBe(now.getTime());
+  });
+
+  it("coerces string to number for NUMBER columns", () => {
+    const rows = [{ val: "42.5" }];
+    const dataset = fromRows(rows, [
+      { id: columnId("val"), type: ColumnType.NUMBER, getValue: (r: { val: string }) => r.val },
+    ]);
+    expect(dataset.rows[0]!.number(columnId("val"))).toBe(42.5);
+  });
+
+  it("coerces string to Date for DATE columns", () => {
+    const rows = [{ d: "2026-07-11" }];
+    const dataset = fromRows(rows, [
+      { id: columnId("d"), type: ColumnType.DATE, getValue: (r: { d: string }) => r.d },
+    ]);
+    expect(dataset.rows[0]!.date(columnId("d"))).toBeInstanceOf(Date);
+  });
+
+  it("produces empty dataset for empty input", () => {
+    const dataset = fromRows([], [
+      { id: columnId("x"), type: ColumnType.TEXT, getValue: () => "" },
+    ]);
+    expect(dataset.columns).toHaveLength(1);
+    expect(dataset.rows).toHaveLength(0);
+  });
+
+  it("uses column id as name when name not provided", () => {
+    const dataset = fromRows([{ a: 1 }], [
+      { id: columnId("a"), type: ColumnType.NUMBER, getValue: (r: { a: number }) => r.a },
+    ]);
+    expect(dataset.columns[0]!.name).toBe("a");
   });
 });

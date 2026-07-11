@@ -1,25 +1,24 @@
 import type { TemplateResult } from 'lit';
+import type { ColumnId, CellValue, TypedRow, Column } from '@casehubio/pages-data/dist/dataset/types.js';
 
 export type DisplayMode = 'auto' | 'paginated' | 'scroll';
 export type SelectionMode = 'none' | 'single' | 'multi';
 export type SortDirection = 'asc' | 'desc' | 'none';
 export type ColumnAlign = 'start' | 'center' | 'end';
 
-export interface ColumnDef<R = unknown> {
-  readonly id: string;
-  readonly label: string;
-  readonly type?: 'text' | 'number' | 'date';
-  readonly getValue: (row: R) => unknown;
-  readonly render?: (value: unknown, row: R) => TemplateResult | string;
-  readonly compare?: (a: unknown, b: unknown) => number;
+export interface TableColumnConfig {
+  readonly id: ColumnId;
+  readonly label?: string;
   readonly sortable?: boolean;
-  readonly filterable?: boolean;
-  readonly filterValue?: (row: R) => string;
   readonly visible?: boolean;
   readonly width?: string;
   readonly minWidth?: string;
   readonly align?: ColumnAlign;
+  readonly filterable?: boolean;
+  readonly compare?: (a: CellValue, b: CellValue) => number;
 }
+
+export type ColumnRenderer = (cell: CellValue, row: TypedRow, column: Column) => TemplateResult | string;
 
 export interface SortEntry {
   readonly columnId: string;
@@ -37,9 +36,9 @@ export interface PageChangeDetail {
   readonly pageSize: number;
 }
 
-export interface SelectionChangeDetail<R = unknown> {
+export interface SelectionChangeDetail {
   readonly selectedKeys: readonly string[];
-  readonly selectedRows: readonly R[];
+  readonly selectedRows: readonly TypedRow[];
   readonly scope?: 'page';
 }
 
@@ -47,8 +46,8 @@ export interface ColumnChangeDetail {
   readonly visibleColumns: readonly string[];
 }
 
-export interface RowActivateDetail<R = unknown> {
-  readonly row: R;
+export interface RowActivateDetail {
+  readonly row: TypedRow;
   readonly key?: string;
 }
 

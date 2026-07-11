@@ -1,6 +1,7 @@
-export { PagesDataTable } from './pages-data-table.js';
+export { PagesTable } from './pages-table.js';
 export type {
-  ColumnDef,
+  TableColumnConfig,
+  ColumnRenderer,
   DisplayMode,
   SelectionMode,
   SortDirection,

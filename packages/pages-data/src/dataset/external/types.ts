@@ -1,4 +1,4 @@
-import type { ColumnId, ColumnType, DataSetId, TypedDataSet } from "../types.js";
+import type {ColumnId, ColumnType, DataSetId, TypedDataSet} from "../types.js";
 
 export enum HttpMethod {
   GET = "GET",
@@ -13,12 +13,21 @@ export interface ExternalColumnDef {
   readonly type: ColumnType;
 }
 
-export interface ExternalDataSetDef {
+export interface ExtractionDef {
+    readonly url?: string;
+    readonly content?: string;
+    readonly dataPath?: string;
+    readonly type?: string;
+    readonly expression?: string;
+    readonly columns?: readonly ExternalColumnDef[];
+    readonly accumulate?: boolean;
+}
+
+
+export interface ExternalDataSetDef extends ExtractionDef {
   readonly uuid: DataSetId;
   readonly name?: string;
 
-  readonly url?: string;
-  readonly content?: string;
   readonly join?: readonly DataSetId[];
   readonly serverQuery?: boolean;
 
@@ -28,16 +37,9 @@ export interface ExternalDataSetDef {
   readonly form?: Readonly<Record<string, string>>;
   readonly body?: string;
 
-  readonly dataPath?: string;
-  readonly type?: string;
-  readonly expression?: string;
-
-  readonly columns?: readonly ExternalColumnDef[];
-
   readonly cacheEnabled?: boolean;
   readonly cacheMaxRows?: number;
   readonly refreshTime?: string;
-  readonly accumulate?: boolean;
   readonly keyColumn?: string;
 }
 

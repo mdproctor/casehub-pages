@@ -1,22 +1,25 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { ColumnDef, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail } from './types.js';
+import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue } from '@casehubio/pages-data/dist/dataset/types.js';
+import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
+import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
-import { createComparator, createMultiComparator } from './sort.js';
+import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
 
 const AUTO_THRESHOLD = 50;
 
-@customElement('pages-data-table')
-export class PagesDataTable extends LitElement {
-  @property({ type: Array }) rows: readonly unknown[] = [];
-  @property({ type: Array }) columns: readonly ColumnDef[] = [];
+@customElement('pages-table')
+export class PagesTable extends LitElement {
+  @property({ attribute: false }) dataSet?: TypedDataSet;
+  @property({ attribute: false }) columnRenderers?: ReadonlyMap<ColumnId, ColumnRenderer>;
+  @property({ attribute: false }) columnConfig?: readonly TableColumnConfig[];
   @property({ type: String }) mode: DisplayMode = 'auto';
   @property({ type: String }) selection: SelectionMode = 'none';
   @property({ type: Array, attribute: 'selected-keys' }) selectedKeys?: readonly string[];
-  @property({ attribute: false }) getRowKey?: (row: unknown) => string;
-  @property({ attribute: false }) getRowClass?: (row: unknown) => string;
-  @property({ attribute: false }) getChildren?: (row: unknown) => readonly unknown[];
+  @property({ attribute: false }) getRowKey?: (row: TypedRow) => string;
+  @property({ attribute: false }) getRowClass?: (row: TypedRow) => string;
+  @property({ attribute: false }) getChildren?: (row: TypedRow) => readonly TypedRow[];
   @property({ type: Boolean }) loading = false;
   @property({ type: String, attribute: 'empty-message' }) emptyMessage = 'No data';
   @property({ type: Number, attribute: 'row-height' }) rowHeight = 48;
@@ -50,7 +53,7 @@ export class PagesDataTable extends LitElement {
 
   @state() private _sortStack: SortEntry[] = [];
   @state() private _expandedRowIds = new Set<string>();
-  private _treeMetadata = new Map<unknown, TreeRow>();
+  private _treeMetadata = new Map<TypedRow, TreeRow>();
 
   @state() private _scrollTop = 0;
   @state() private _containerHeight = 0;
@@ -63,6 +66,18 @@ export class PagesDataTable extends LitElement {
   @state() private _hiddenColumnIds = new Set<string>();
 
   private _filterDebounceTimer?: number;
+
+  private get _dataRows(): readonly TypedRow[] {
+    return this.dataSet?.rows ?? [];
+  }
+
+  private get _dataColumns(): readonly Column[] {
+    return this.dataSet?.columns ?? [];
+  }
+
+  private _configFor(col: Column): TableColumnConfig | undefined {
+    return this.columnConfig?.find(c => c.id === col.id);
+  }
 
   static override styles = css`
     :host {
@@ -448,7 +463,6 @@ export class PagesDataTable extends LitElement {
     const target = e.target as HTMLElement;
     this._scrollTop = target.scrollTop;
 
-    // Check for load-more in scroll mode
     if (this.mode === 'scroll' && this.hasMore && !this._loadingMore) {
       const { scrollTop, clientHeight, scrollHeight } = target;
       const bufferHeight = this.bufferSize * this.rowHeight;
@@ -480,14 +494,14 @@ export class PagesDataTable extends LitElement {
 
   private _goToFirstPage = (): void => {
     this.currentPage = 0;
-    this._focusRowIndex = 0; // I8
+    this._focusRowIndex = 0;
     this._emitPageChange(0);
   };
 
   private _goToPrevPage = (): void => {
     if (this.currentPage > 0) {
       this.currentPage = this.currentPage - 1;
-      this._focusRowIndex = 0; // I8
+      this._focusRowIndex = 0;
       this._emitPageChange(this.currentPage);
     }
   };
@@ -495,7 +509,7 @@ export class PagesDataTable extends LitElement {
   private _goToNextPage = (): void => {
     if (this.currentPage < this._totalPageCount - 1) {
       this.currentPage = this.currentPage + 1;
-      this._focusRowIndex = 0; // I8
+      this._focusRowIndex = 0;
       this._emitPageChange(this.currentPage);
     }
   };
@@ -503,7 +517,7 @@ export class PagesDataTable extends LitElement {
   private _goToLastPage = (): void => {
     const lastPage = this._totalPageCount - 1;
     this.currentPage = lastPage;
-    this._focusRowIndex = 0; // I8
+    this._focusRowIndex = 0;
     this._emitPageChange(lastPage);
   };
 
@@ -521,7 +535,6 @@ export class PagesDataTable extends LitElement {
 
   override firstUpdated(): void {
     this._updateContainerHeight();
-    // I13: ResizeObserver for container height
     const body = this.shadowRoot?.querySelector('.body');
     if (body && typeof ResizeObserver !== 'undefined') {
       this._resizeObserver = new ResizeObserver(() => {
@@ -532,22 +545,18 @@ export class PagesDataTable extends LitElement {
   }
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
-    // Reset _loadingMore when new rows arrive in scroll mode
-    if (changed.has('rows') && this.mode === 'scroll') {
+    if (changed.has('dataSet') && this.mode === 'scroll') {
       this._loadingMore = false;
     }
 
-    // Validate getRowKey requirement
     if (this.selection !== 'none' && !this.getRowKey) {
       throw new Error('getRowKey is required when selection is enabled');
     }
 
-    // Sync controlled selection state
     if (changed.has('selectedKeys') && this.selectedKeys !== undefined) {
       this._internalSelectedKeys = new Set(this.selectedKeys);
     }
 
-    // Reset currentPage when filter changes
     if (changed.has('filterText') && this.clientFilter) {
       this.currentPage = 0;
       this._emitFilterChange();
@@ -562,15 +571,13 @@ export class PagesDataTable extends LitElement {
   }
 
   private get _selectedKeys(): Set<string> {
-    // Controlled mode: use provided selectedKeys
     if (this.selectedKeys !== undefined) {
       return new Set(this.selectedKeys);
     }
-    // Uncontrolled mode: use internal state
     return this._internalSelectedKeys;
   }
 
-  private _isRowSelected(row: unknown): boolean {
+  private _isRowSelected(row: TypedRow): boolean {
     if (this.selection === 'none' || !this.getRowKey) return false;
     const key = this.getRowKey(row);
     return this._selectedKeys.has(key);
@@ -578,7 +585,7 @@ export class PagesDataTable extends LitElement {
 
   private _emitSelectionChange(keys: Set<string>): void {
     const selectedKeys = Array.from(keys);
-    const selectedRows = this.rows.filter(row => {
+    const selectedRows = this._dataRows.filter(row => {
       if (!this.getRowKey) return false;
       return keys.has(this.getRowKey(row));
     });
@@ -597,12 +604,10 @@ export class PagesDataTable extends LitElement {
   }
 
   private _emitFilterChange(): void {
-    // Clear existing timer
     if (this._filterDebounceTimer !== undefined) {
       clearTimeout(this._filterDebounceTimer);
     }
 
-    // Debounce the event emission
     this._filterDebounceTimer = window.setTimeout(() => {
       const detail: FilterChangeDetail = {
         text: this.filterText,
@@ -619,27 +624,24 @@ export class PagesDataTable extends LitElement {
 
   private _getFilteredRowCount(): number {
     if (!this.clientFilter || !this.filterText || this.totalRows !== undefined) {
-      return this.rows.length;
+      return this._dataRows.length;
     }
 
     const text = this.filterText.toLowerCase();
-    return this.rows.filter(row =>
+    return this._dataRows.filter(row =>
       this._visibleColumns.some(col => {
-        const isFilterable = col.filterable !== undefined
-          ? col.filterable
-          : (col.type !== 'number' && col.type !== 'date');
-
+        const config = this._configFor(col);
+        const isFilterable = config?.filterable ?? (col.type !== ColumnType.NUMBER && col.type !== ColumnType.DATE);
         if (!isFilterable) return false;
 
-        const val = col.filterValue
-          ? col.filterValue(row)
-          : String(col.getValue(row));
-        return val.toLowerCase().includes(text);
+        const cell = row.cell(col.id);
+        if (cell.type === 'NULL') return false;
+        return String(cell.value).toLowerCase().includes(text);
       })
     ).length;
   }
 
-  private _emitRowActivate(row: unknown): void {
+  private _emitRowActivate(row: TypedRow): void {
     const detail: RowActivateDetail = this.getRowKey
       ? { row, key: this.getRowKey(row) }
       : { row };
@@ -651,7 +653,7 @@ export class PagesDataTable extends LitElement {
     }));
   }
 
-  private _toggleRowSelection(row: unknown): void {
+  private _toggleRowSelection(row: TypedRow): void {
     if (!this.getRowKey) return;
     const key = this.getRowKey(row);
     const newSelection = new Set(this._selectedKeys);
@@ -662,7 +664,6 @@ export class PagesDataTable extends LitElement {
       newSelection.add(key);
     }
 
-    // Update internal state for uncontrolled mode
     if (this.selectedKeys === undefined) {
       this._internalSelectedKeys = newSelection;
     }
@@ -670,13 +671,12 @@ export class PagesDataTable extends LitElement {
     this._emitSelectionChange(newSelection);
   }
 
-  private _selectRow(row: unknown, exclusive = false): void {
+  private _selectRow(row: TypedRow, exclusive = false): void {
     if (!this.getRowKey) return;
     const key = this.getRowKey(row);
     const newSelection = exclusive ? new Set([key]) : new Set(this._selectedKeys);
     newSelection.add(key);
 
-    // Update internal state for uncontrolled mode
     if (this.selectedKeys === undefined) {
       this._internalSelectedKeys = newSelection;
     }
@@ -685,14 +685,14 @@ export class PagesDataTable extends LitElement {
     this._emitSelectionChange(newSelection);
   }
 
-  private _selectRange(row: unknown): void {
+  private _selectRange(row: TypedRow): void {
     if (!this.getRowKey || !this._lastClickedKey) {
       this._selectRow(row);
       return;
     }
 
     const currentKey = this.getRowKey(row);
-    const allKeys = this.rows.map(r => this.getRowKey!(r));
+    const allKeys = this._dataRows.map(r => this.getRowKey!(r));
     const lastIndex = allKeys.indexOf(this._lastClickedKey);
     const currentIndex = allKeys.indexOf(currentKey);
 
@@ -711,7 +711,6 @@ export class PagesDataTable extends LitElement {
       if (key) newSelection.add(key);
     }
 
-    // Update internal state for uncontrolled mode
     if (this.selectedKeys === undefined) {
       this._internalSelectedKeys = newSelection;
     }
@@ -719,7 +718,7 @@ export class PagesDataTable extends LitElement {
     this._emitSelectionChange(newSelection);
   }
 
-  private _handleRowClick = (row: unknown, event: MouseEvent): void => {
+  private _handleRowClick = (row: TypedRow, event: MouseEvent): void => {
     event.stopPropagation();
 
     if (this.selection === 'single') {
@@ -732,11 +731,10 @@ export class PagesDataTable extends LitElement {
     }
   };
 
-  private _handleRowDoubleClick = (_row: unknown, _event: MouseEvent): void => {
-    // Row activation is handled by single click. Double-click is a no-op.
+  private _handleRowDoubleClick = (_row: TypedRow, _event: MouseEvent): void => {
   };
 
-  private _handleCheckboxClick = (row: unknown, event: MouseEvent): void => {
+  private _handleCheckboxClick = (row: TypedRow, event: MouseEvent): void => {
     event.stopPropagation();
 
     if (event.shiftKey && this._lastClickedKey) {
@@ -753,8 +751,7 @@ export class PagesDataTable extends LitElement {
   private _handleSelectAll = (event: MouseEvent): void => {
     event.stopPropagation();
 
-    // C1 fix: Use correct source based on mode
-    const sourceRows = this._usePagination ? this._visibleRows : this.rows;
+    const sourceRows = this._usePagination ? this._visibleRows : this._dataRows;
     const visibleKeys = sourceRows
       .map(row => this.getRowKey!(row))
       .filter((key): key is string => key !== undefined);
@@ -763,14 +760,11 @@ export class PagesDataTable extends LitElement {
     const newSelection = new Set(this._selectedKeys);
 
     if (allSelected) {
-      // Deselect all visible
       visibleKeys.forEach(key => newSelection.delete(key));
     } else {
-      // Select all visible
       visibleKeys.forEach(key => newSelection.add(key));
     }
 
-    // Update internal state for uncontrolled mode
     if (this.selectedKeys === undefined) {
       this._internalSelectedKeys = newSelection;
     }
@@ -778,7 +772,7 @@ export class PagesDataTable extends LitElement {
     this._emitSelectionChange(newSelection);
   };
 
-  private _toggleExpand = (row: unknown, event: MouseEvent): void => {
+  private _toggleExpand = (row: TypedRow, event: MouseEvent): void => {
     event.stopPropagation();
     if (!this.getRowKey) return;
     const id = this.getRowKey(row);
@@ -791,10 +785,12 @@ export class PagesDataTable extends LitElement {
     this._expandedRowIds = next;
   };
 
-  private _handleHeaderClick = (column: ColumnDef, event?: MouseEvent): void => {
-    if (!column.sortable) return;
+  private _handleHeaderClick = (column: Column, event?: MouseEvent): void => {
+    const config = this._configFor(column);
+    if (!config?.sortable) return;
 
-    const existing = this._sortStack.find(e => e.columnId === column.id);
+    const colId = String(column.id);
+    const existing = this._sortStack.find(e => e.columnId === colId);
     const currentDirection = existing?.direction ?? 'none';
 
     let newDirection: SortDirection;
@@ -805,14 +801,14 @@ export class PagesDataTable extends LitElement {
     }
 
     if (event?.shiftKey && this._sortStack.length > 0) {
-      const stack = this._sortStack.filter(e => e.columnId !== column.id);
-      this._sortStack = newDirection === 'none' ? stack : [...stack, { columnId: column.id, direction: newDirection }];
+      const stack = this._sortStack.filter(e => e.columnId !== colId);
+      this._sortStack = newDirection === 'none' ? stack : [...stack, { columnId: colId, direction: newDirection }];
     } else {
-      this._sortStack = newDirection === 'none' ? [] : [{ columnId: column.id, direction: newDirection }];
+      this._sortStack = newDirection === 'none' ? [] : [{ columnId: colId, direction: newDirection }];
     }
 
     const detail: SortChangeDetail = {
-      columnId: column.id,
+      columnId: colId,
       direction: newDirection,
       sortStack: [...this._sortStack],
     };
@@ -835,18 +831,15 @@ export class PagesDataTable extends LitElement {
   };
 
   private _toggleColumnVisibility = (columnId: string): void => {
-    // I12 fix: Don't mutate columns property
-    const visibleCount = this.columns.filter(c => !this._hiddenColumnIds.has(c.id) && c.visible !== false).length;
+    const visibleCount = this._visibleColumns.length;
 
-    // Prevent hiding the last visible column
-    const targetColumn = this.columns.find(c => c.id === columnId);
-    const isCurrentlyHidden = this._hiddenColumnIds.has(columnId) || targetColumn?.visible === false;
+    const isCurrentlyHidden = this._hiddenColumnIds.has(columnId) ||
+      this.columnConfig?.find(c => String(c.id) === columnId)?.visible === false;
 
     if (!isCurrentlyHidden && visibleCount <= 1) {
       return;
     }
 
-    // Toggle internal hidden state
     const newHidden = new Set(this._hiddenColumnIds);
     if (isCurrentlyHidden) {
       newHidden.delete(columnId);
@@ -855,13 +848,11 @@ export class PagesDataTable extends LitElement {
     }
     this._hiddenColumnIds = newHidden;
 
-    const visibleColumns = this.columns
-      .filter(c => !this._hiddenColumnIds.has(c.id) && c.visible !== false)
-      .map(c => c.id);
+    const visibleColumns = this._dataColumns
+      .filter(c => !this._hiddenColumnIds.has(String(c.id)) && this._configFor(c)?.visible !== false)
+      .map(c => String(c.id));
 
-    const detail: ColumnChangeDetail = {
-      visibleColumns,
-    };
+    const detail: ColumnChangeDetail = { visibleColumns };
 
     this.dispatchEvent(new CustomEvent('column-change', {
       detail,
@@ -874,11 +865,8 @@ export class PagesDataTable extends LitElement {
     const key = event.key;
     const target = event.target as HTMLElement;
 
-    // Check if the event is coming from a row or from the grid container
     const isRowTarget = target.classList.contains('row') && !target.classList.contains('header');
-    const isGridTarget = target === this;
 
-    // For Escape, handle at grid level
     if (key === 'Escape' && this.selection === 'multi') {
       const newSelection = new Set<string>();
       if (this.selectedKeys === undefined) {
@@ -890,12 +878,10 @@ export class PagesDataTable extends LitElement {
       return;
     }
 
-    // For other keys, only handle if target is a row
     if (!isRowTarget) {
       return;
     }
 
-    // Find which row is currently focused by looking at the DOM
     const rows = this.shadowRoot?.querySelectorAll('.row[role="row"]:not(.header)');
     if (!rows || rows.length === 0) return;
 
@@ -909,7 +895,7 @@ export class PagesDataTable extends LitElement {
 
     if (currentRowIndex === -1) return;
 
-    const totalRows = this.rows.length;
+    const totalRows = this._dataRows.length;
     let handled = false;
 
     switch (key) {
@@ -917,9 +903,8 @@ export class PagesDataTable extends LitElement {
         event.preventDefault();
         if (this._focusRowIndex < totalRows - 1) {
           this._focusRowIndex++;
-          // I6: Shift+ArrowDown selection
           if (event.shiftKey && this.selection === 'multi') {
-            const row = this.rows[this._focusRowIndex];
+            const row = this._dataRows[this._focusRowIndex];
             if (row) this._toggleRowSelection(row);
           }
           this._scrollToRowIfNeeded(this._focusRowIndex);
@@ -932,9 +917,8 @@ export class PagesDataTable extends LitElement {
         event.preventDefault();
         if (this._focusRowIndex > 0) {
           this._focusRowIndex--;
-          // I6: Shift+ArrowUp selection
           if (event.shiftKey && this.selection === 'multi') {
-            const row = this.rows[this._focusRowIndex];
+            const row = this._dataRows[this._focusRowIndex];
             if (row) this._toggleRowSelection(row);
           }
           this._scrollToRowIfNeeded(this._focusRowIndex);
@@ -1042,10 +1026,8 @@ export class PagesDataTable extends LitElement {
     const viewBottom = viewTop + body.clientHeight;
 
     if (rowTop < viewTop) {
-      // Row is above the visible window, scroll up
       body.scrollTop = rowTop;
     } else if (rowBottom > viewBottom) {
-      // Row is below the visible window, scroll down
       body.scrollTop = rowBottom - body.clientHeight;
     }
   }
@@ -1055,34 +1037,38 @@ export class PagesDataTable extends LitElement {
     const rows = this.shadowRoot?.querySelectorAll('.row[role="row"]:not(.header)');
     if (!rows || rows.length === 0) return;
 
-    // In virtual scroll mode, map absolute index to display index
     if (this._useVirtualScroll && this._scrollWindow) {
       const displayIndex = index - this._scrollWindow.startIndex;
       if (displayIndex >= 0 && displayIndex < rows.length && rows[displayIndex]) {
         (rows[displayIndex] as HTMLElement).focus();
       }
     } else {
-      // Non-virtual scroll: direct mapping
       if (rows[index]) {
         (rows[index] as HTMLElement).focus();
       }
     }
   }
 
-  private get _visibleColumns(): readonly ColumnDef[] {
-    return this.columns.filter(c => !this._hiddenColumnIds.has(c.id) && c.visible !== false);
+  private get _visibleColumns(): readonly Column[] {
+    return this._dataColumns.filter(c => {
+      if (this._hiddenColumnIds.has(String(c.id))) return false;
+      const config = this._configFor(c);
+      return config?.visible !== false;
+    });
   }
 
   private get _gridTemplateColumns(): string {
     if (this._visibleColumns.length === 0) return '1fr';
-    const columns = this._visibleColumns.map(c => c.width ?? '1fr').join(' ');
-    // Prepend checkbox column in multi mode
+    const columns = this._visibleColumns.map(c => {
+      const config = this._configFor(c);
+      return config?.width ?? '1fr';
+    }).join(' ');
     return this.selection === 'multi' ? `40px ${columns}` : columns;
   }
 
   private get _useVirtualScroll(): boolean {
     if (this.mode === 'scroll') return true;
-    return this.mode === 'auto' && this.rows.length > AUTO_THRESHOLD;
+    return this.mode === 'auto' && this._dataRows.length > AUTO_THRESHOLD;
   }
 
   private get _usePagination(): boolean {
@@ -1091,41 +1077,33 @@ export class PagesDataTable extends LitElement {
 
   private get _totalPageCount(): number {
     if (!this._usePagination) return 1;
-
-    const total = this.totalRows ?? this.rows.length;
+    const total = this.totalRows ?? this._dataRows.length;
     return Math.ceil(total / this.pageSize);
   }
 
-  private get _visibleRows(): readonly unknown[] {
-    let rows = this.rows;
+  private get _visibleRows(): readonly TypedRow[] {
+    let rows: readonly TypedRow[] = this._dataRows;
 
-    // Apply client-side filtering first (before sort/paginate)
     if (this.clientFilter && this.filterText && this.totalRows === undefined) {
       const text = this.filterText.toLowerCase();
       rows = [...rows].filter(row =>
         this._visibleColumns.some(col => {
-          // Default filterable based on column type
-          const isFilterable = col.filterable !== undefined
-            ? col.filterable
-            : (col.type !== 'number' && col.type !== 'date');
-
+          const config = this._configFor(col);
+          const isFilterable = config?.filterable ?? (col.type !== ColumnType.NUMBER && col.type !== ColumnType.DATE);
           if (!isFilterable) return false;
 
-          const val = col.filterValue
-            ? col.filterValue(row)
-            : String(col.getValue(row));
-          return val.toLowerCase().includes(text);
+          const cell = row.cell(col.id);
+          if (cell.type === 'NULL') return false;
+          return String(cell.value).toLowerCase().includes(text);
         })
       );
     }
 
-    // Apply client-side sorting
     if (this.clientSort && this._sortStack.length > 0) {
-      const comparator = createMultiComparator(this._sortStack, this.columns);
+      const comparator = createMultiComparator(this._sortStack, this.columnConfig ?? []);
       rows = [...rows].sort(comparator);
     }
 
-    // Flatten tree if getChildren is provided
     this._treeMetadata.clear();
     if (this.getChildren && this.getRowKey) {
       const treeRows = flattenTree(rows, this.getChildren, this._expandedRowIds, this.getRowKey);
@@ -1136,11 +1114,9 @@ export class PagesDataTable extends LitElement {
     }
 
     if (this._usePagination) {
-      // Server-side: totalRows is set, render all provided rows (they ARE the page)
       if (this.totalRows !== undefined) {
         return rows;
       }
-      // Client-side: slice rows by current page
       const start = this.currentPage * this.pageSize;
       const end = start + this.pageSize;
       return rows.slice(start, end);
@@ -1172,37 +1148,41 @@ export class PagesDataTable extends LitElement {
       this._scrollTop,
       containerH,
       this.rowHeight,
-      this.rows.length,
+      this._dataRows.length,
       this.bufferSize,
     );
   }
 
-  private _formatValue(value: unknown, column: ColumnDef): string {
-    if (value == null) return '';
+  private _formatCell(cell: CellValue): string {
+    if (cell.type === 'NULL') return '';
 
-    switch (column.type) {
-      case 'date':
-        return new Date(value as string).toLocaleDateString();
-      case 'number':
-        return (value as number).toLocaleString();
-      case 'text':
+    switch (cell.type) {
+      case ColumnType.DATE:
+        return cell.value.toLocaleDateString();
+      case ColumnType.NUMBER:
+        return cell.value.toLocaleString();
+      case ColumnType.TEXT:
+      case ColumnType.LABEL:
       default:
-        return String(value);
+        return String(cell.value);
     }
   }
 
-  private _ariaSortValue(col: ColumnDef): string | typeof nothing {
-    if (!col.sortable) return nothing;
-    const entry = this._sortStack.find(e => e.columnId === col.id);
+  private _ariaSortValue(col: Column): string | typeof nothing {
+    const config = this._configFor(col);
+    if (!config?.sortable) return nothing;
+    const entry = this._sortStack.find(e => e.columnId === String(col.id));
     if (!entry) return 'none';
     if (entry.direction === 'asc') return 'ascending';
     if (entry.direction === 'desc') return 'descending';
     return 'none';
   }
 
-  private _renderSortIndicator(column: ColumnDef) {
-    if (!column.sortable) return nothing;
-    const index = this._sortStack.findIndex(e => e.columnId === column.id);
+  private _renderSortIndicator(column: Column) {
+    const config = this._configFor(column);
+    if (!config?.sortable) return nothing;
+    const colId = String(column.id);
+    const index = this._sortStack.findIndex(e => e.columnId === colId);
     const entry = index >= 0 ? this._sortStack[index] : null;
     const dir = entry?.direction ?? 'none';
     const arrow = dir === 'asc' ? '▲' : dir === 'desc' ? '▼' : '▲';
@@ -1210,8 +1190,10 @@ export class PagesDataTable extends LitElement {
     return html`<span class="sort-indicator ${entry && dir !== 'none' ? 'active' : ''}">${arrow}${priority}</span>`;
   }
 
-  private _renderHeaderCell(column: ColumnDef) {
-    const isSortable = column.sortable === true;
+  private _renderHeaderCell(column: Column) {
+    const config = this._configFor(column);
+    const isSortable = config?.sortable === true;
+    const label = config?.label ?? column.name;
 
     return html`
       <div
@@ -1220,13 +1202,13 @@ export class PagesDataTable extends LitElement {
         aria-sort="${this._ariaSortValue(column)}"
         @click="${isSortable ? (e: MouseEvent) => this._handleHeaderClick(column, e) : nothing}"
       >
-        ${column.label}${this._renderSortIndicator(column)}
+        ${label}${this._renderSortIndicator(column)}
       </div>
     `;
   }
 
   private _renderToolbar() {
-    const visibleCount = this.columns.filter(c => !this._hiddenColumnIds.has(c.id) && c.visible !== false).length;
+    const visibleCount = this._visibleColumns.length;
 
     const modes: Array<{ value: DisplayMode; label: string }> = [
       { value: 'auto', label: 'Auto' },
@@ -1234,7 +1216,6 @@ export class PagesDataTable extends LitElement {
       { value: 'scroll', label: 'Scroll' },
     ];
 
-    // Only show filter input when clientFilter is true AND not in server-paginated mode
     const showFilter = this.clientFilter && this.totalRows === undefined;
 
     return html`
@@ -1261,8 +1242,10 @@ export class PagesDataTable extends LitElement {
           ${this._columnPickerOpen ? html`
             <div class="column-picker-dropdown">
               <div class="picker-section-label">Columns</div>
-              ${this.columns.map(col => {
-                const isVisible = !this._hiddenColumnIds.has(col.id) && col.visible !== false;
+              ${this._dataColumns.map(col => {
+                const config = this._configFor(col);
+                const colId = String(col.id);
+                const isVisible = !this._hiddenColumnIds.has(colId) && config?.visible !== false;
                 const isLastVisible = isVisible && visibleCount === 1;
 
                 return html`
@@ -1271,9 +1254,9 @@ export class PagesDataTable extends LitElement {
                       type="checkbox"
                       .checked="${isVisible}"
                       ?disabled="${isLastVisible}"
-                      @change="${() => this._toggleColumnVisibility(col.id)}"
+                      @change="${() => this._toggleColumnVisibility(colId)}"
                     />
-                    <span>${col.label || col.id}</span>
+                    <span>${config?.label ?? col.name}</span>
                   </label>
                 `;
               })}
@@ -1299,13 +1282,15 @@ export class PagesDataTable extends LitElement {
     return this._renderToolbar();
   }
 
-  private _renderCell(row: unknown, column: ColumnDef, isFirstColumn = false) {
-    const value = column.getValue(row);
-    const content = column.render
-      ? column.render(value, row)
-      : this._formatValue(value, column);
+  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false) {
+    const cell = row.cell(column.id);
+    const renderer = this.columnRenderers?.get(column.id);
+    const content = renderer
+      ? renderer(cell, row, column)
+      : this._formatCell(cell);
 
-    const align = column.align ?? 'start';
+    const config = this._configFor(column);
+    const align = config?.align ?? 'start';
     const treeMeta = this._treeMetadata.get(row);
 
     if (isFirstColumn && treeMeta) {
@@ -1332,12 +1317,11 @@ export class PagesDataTable extends LitElement {
     `;
   }
 
-  private _renderCheckbox(row: unknown, isHeader = false) {
+  private _renderCheckbox(row: TypedRow, isHeader = false) {
     if (this.selection !== 'multi') return nothing;
 
     if (isHeader) {
-      // C1 fix: Use correct source based on mode
-      const sourceRows = this._usePagination ? this._visibleRows : this.rows;
+      const sourceRows = this._usePagination ? this._visibleRows : this._dataRows;
       const visibleKeys = sourceRows
         .map(r => this.getRowKey!(r))
         .filter((key): key is string => key !== undefined);
@@ -1372,12 +1356,11 @@ export class PagesDataTable extends LitElement {
     `;
   }
 
-  private _renderRow(row: unknown, actualIndex: number, displayIndex: number) {
+  private _renderRow(row: TypedRow, actualIndex: number, displayIndex: number) {
     const rowClass = this.getRowClass?.(row) ?? '';
     const part = rowClass ? `row ${rowClass}` : 'row';
-    const ariaRowIndex = actualIndex + 2; // 1-based, header is row 1
+    const ariaRowIndex = actualIndex + 2;
     const isSelected = this._isRowSelected(row);
-    // C3 fix: tabindex comparison uses actualIndex
     const tabindex = actualIndex === this._focusRowIndex ? '0' : '-1';
 
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';
@@ -1403,12 +1386,12 @@ export class PagesDataTable extends LitElement {
   private _renderPaginationFooter() {
     if (!this._usePagination || this.mode === 'scroll') return nothing;
 
-    const currentPageNum = this.currentPage + 1; // 1-based for display
+    const currentPageNum = this.currentPage + 1;
     const totalPages = this._totalPageCount;
     const isFirstPage = this.currentPage === 0;
     const isLastPage = this.currentPage === totalPages - 1;
 
-    const total = this.totalRows ?? this.rows.length;
+    const total = this.totalRows ?? this._dataRows.length;
     const start = this.currentPage * this.pageSize + 1;
     const end = Math.min((this.currentPage + 1) * this.pageSize, total);
 
@@ -1458,8 +1441,7 @@ export class PagesDataTable extends LitElement {
 
   override render() {
     const visibleCols = this._visibleColumns;
-    const totalRows = this.rows.length + 1; // +1 for header
-    const ariaRowCount = totalRows;
+    const rowCount = this._dataRows.length + 1;
     const ariaColCount = visibleCols.length;
 
     if (this.loading) {
@@ -1470,9 +1452,9 @@ export class PagesDataTable extends LitElement {
       `;
     }
 
-    if (this.rows.length === 0) {
+    if (this._dataRows.length === 0) {
       return html`
-        <div class="data-table" role="grid" aria-rowcount="${ariaRowCount}" aria-colcount="${ariaColCount}">
+        <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}">
           <div class="header-container">
             <div
               class="header"
@@ -1493,7 +1475,7 @@ export class PagesDataTable extends LitElement {
     const window = this._scrollWindow;
 
     return html`
-      <div class="data-table" role="grid" aria-rowcount="${ariaRowCount}" aria-colcount="${ariaColCount}" aria-label="Data table" @keydown="${this._handleKeyDown}">
+      <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}" aria-label="Data table" @keydown="${this._handleKeyDown}">
         <div class="header-container">
           <div
             class="header"
@@ -1501,7 +1483,7 @@ export class PagesDataTable extends LitElement {
             part="header-row"
             style="grid-template-columns: ${this._gridTemplateColumns}"
           >
-            ${this._renderCheckbox(this.rows[0], true)}
+            ${this._renderCheckbox(this._dataRows[0]!, true)}
             ${visibleCols.map(col => this._renderHeaderCell(col))}
           </div>
           ${this._renderColumnPicker()}
@@ -1537,6 +1519,6 @@ export class PagesDataTable extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'pages-data-table': PagesDataTable;
+    'pages-table': PagesTable;
   }
 }

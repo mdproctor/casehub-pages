@@ -159,3 +159,42 @@ export function toWireDataSet(ds: TypedDataSet): DataSet {
 
   return { columns: ds.columns, data };
 }
+
+export function fromRows<R>(
+  rows: readonly R[],
+  columns: readonly {
+    readonly id: ColumnId;
+    readonly name?: string;
+    readonly type: ColumnType;
+    readonly getValue: (row: R) => unknown;
+  }[],
+): TypedDataSet {
+  const cols: Column[] = columns.map(c => ({
+    id: c.id,
+    name: c.name ?? String(c.id),
+    type: c.type,
+  }));
+
+  const typedRows: TypedRow[] = rows.map((row) => {
+    const cells: CellValue[] = columns.map((col) => {
+      const raw = col.getValue(row);
+      if (raw === null || raw === undefined) {
+        return { type: "NULL" as const };
+      }
+      switch (col.type) {
+        case ColumnType.NUMBER:
+          return { type: ColumnType.NUMBER, value: typeof raw === "number" ? raw : parseFloat(String(raw)) };
+        case ColumnType.DATE:
+          return { type: ColumnType.DATE, value: raw instanceof Date ? raw : new Date(String(raw)) };
+        case ColumnType.LABEL:
+          return { type: ColumnType.LABEL, value: String(raw) };
+        case ColumnType.TEXT:
+        default:
+          return { type: ColumnType.TEXT, value: String(raw) };
+      }
+    });
+    return createTypedRow(cells, cols);
+  });
+
+  return { columns: cols, rows: typedRows };
+}

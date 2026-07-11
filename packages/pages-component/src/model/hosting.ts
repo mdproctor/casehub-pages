@@ -18,6 +18,7 @@ export interface ConfigurablePanel<P extends Record<string, unknown> = Record<st
 }
 
 import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
+import type { TypedDataSet } from "@casehubio/pages-data/dist/dataset/types.js";
 
 /**
  * Data delivery contract for components receiving pipeline data.
@@ -31,7 +32,7 @@ import type { SortColumn } from "@casehubio/pages-data/dist/dataset/sort.js";
  */
 export interface DataReceiver {
   loading: boolean;
-  dataSet: unknown;
+  dataSet: TypedDataSet | undefined;
   error: string;
 }
 

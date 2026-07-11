@@ -9,7 +9,7 @@ import type {
   FetchResult,
   ExtractionResult,
   PresetRegistry,
-  ExternalDataSetDef,
+  ExtractionDef,
   ExternalColumnDef,
 } from "./types.js";
 
@@ -62,7 +62,7 @@ function urlExtension(url: string | undefined): string | undefined {
   }
 }
 
-function parseRaw(result: FetchResult, def: ExternalDataSetDef): unknown {
+function parseRaw(result: FetchResult, def: ExtractionDef): unknown {
   const { data, contentType } = result;
 
   // Already structured — pass through
@@ -151,7 +151,7 @@ function csvToObjects(
 
 async function navigateAndExtract(
   data: unknown,
-  def: ExternalDataSetDef,
+  def: ExtractionDef,
   presetRegistry: PresetRegistry,
 ): Promise<unknown> {
   let current = data;
@@ -449,7 +449,7 @@ function tabulate(
 
 export async function extractDataSet(
   result: FetchResult,
-  def: ExternalDataSetDef,
+  def: ExtractionDef,
   presetRegistry: PresetRegistry,
 ): Promise<ExtractionResult> {
   // Stage 1: Parse

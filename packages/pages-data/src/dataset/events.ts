@@ -3,6 +3,7 @@ import type { TypedDataSet, TypedRow, ColumnId } from "./types.js";
 export interface SnapshotEvent {
   readonly type: "snapshot";
   readonly dataset: TypedDataSet;
+  readonly totalRows?: number;
 }
 
 export interface AppendEvent {

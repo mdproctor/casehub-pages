@@ -429,7 +429,7 @@ describe("DataSourceController", () => {
       ctrl.endpoint = "/api/items";
       ctrl.connect();
 
-      expect(factory).toHaveBeenCalledWith("/api/items", expect.anything());
+      expect(factory).toHaveBeenCalledWith("/api/items", expect.anything(), expect.anything());
       expect(ctrl.dataSet).toEqual(ds);
     });
 
@@ -439,7 +439,7 @@ describe("DataSourceController", () => {
       ctrl.endpoint = "https://api.example.com/data";
       ctrl.connect();
 
-      expect(factory).toHaveBeenCalledWith("https://api.example.com/data", expect.anything());
+      expect(factory).toHaveBeenCalledWith("https://api.example.com/data", expect.anything(), expect.anything());
     });
 
     it("endpoint without sourceFactory still creates a no-op source", () => {

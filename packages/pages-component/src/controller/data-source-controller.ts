@@ -2,21 +2,31 @@ import type {DataSource} from "@casehubio/pages-data/dist/datasource/types.js";
 import type {DataSetEvent} from "@casehubio/pages-data/dist/dataset/events.js";
 import type {SortColumn} from "@casehubio/pages-data/dist/dataset/sort.js";
 import type {DataSetId, TypedDataSet} from "@casehubio/pages-data/dist/dataset/types.js";
+import type {ExternalColumnDef} from "@casehubio/pages-data/dist/dataset/external/types.js";
 import {dataSetId} from "@casehubio/pages-data/dist/dataset/types.js";
 import type {VizTarget} from "../model/hosting.js";
 
-export type SourceFactory = (url: string, id: DataSetId) => DataSource;
+export interface SourceFactoryOptions {
+  readonly columns?: readonly ExternalColumnDef[];
+  readonly dataPath?: string;
+  readonly totalPath?: string;
+}
+
+export type SourceFactory = (url: string, id: DataSetId, options?: SourceFactoryOptions) => DataSource;
 
 export interface DataSourceControllerOptions {
   onChange?: () => void;
   onRefresh?: () => void;
   dataSetId?: DataSetId;
   sourceFactory?: SourceFactory;
+  columns?: readonly ExternalColumnDef[];
+  dataPath?: string;
+  totalPath?: string;
 }
 
 export class DataSourceController implements VizTarget {
   private _loading = false;
-  private _dataSet: unknown = undefined;
+  private _dataSet: TypedDataSet | undefined = undefined;
   private _error = "";
 
   private _totalRows = -1;
@@ -31,12 +41,18 @@ export class DataSourceController implements VizTarget {
   readonly onChange: (() => void) | undefined;
   private readonly _onRefresh: (() => void) | undefined;
   private readonly _sourceFactory: SourceFactory | undefined;
+  private readonly _columns: readonly ExternalColumnDef[] | undefined;
+  private readonly _dataPath: string | undefined;
+  private readonly _totalPath: string | undefined;
 
   constructor(options?: DataSourceControllerOptions) {
     this.onChange = options?.onChange;
     this._onRefresh = options?.onRefresh;
     this._sourceFactory = options?.sourceFactory;
     this._dataSetId = options?.dataSetId ?? dataSetId("ds-controller");
+    this._columns = options?.columns;
+    this._dataPath = options?.dataPath;
+    this._totalPath = options?.totalPath;
   }
 
   get loading(): boolean { return this._loading; }
@@ -48,8 +64,8 @@ export class DataSourceController implements VizTarget {
     this.onChange?.();
   }
 
-  get dataSet(): unknown { return this._dataSet; }
-  set dataSet(v: unknown) {
+  get dataSet(): TypedDataSet | undefined { return this._dataSet; }
+  set dataSet(v: TypedDataSet | undefined) {
     this._loading = false;
     this._error = "";
     this._dataSet = v;
@@ -149,6 +165,7 @@ export class DataSourceController implements VizTarget {
     switch (event.type) {
       case "snapshot":
         this.dataSet = event.dataset;
+        if (event.totalRows !== undefined) this.totalRows = event.totalRows;
         break;
       case "append": {
         const ds = this._dataSet as TypedDataSet | undefined;
@@ -193,7 +210,11 @@ export class DataSourceController implements VizTarget {
 
   private createSourceFromUrl(url: string): DataSource {
     if (this._sourceFactory) {
-      return this._sourceFactory(url, this._dataSetId);
+      return this._sourceFactory(url, this._dataSetId, {
+        columns: this._columns,
+        dataPath: this._dataPath,
+        totalPath: this._totalPath,
+      });
     }
     return {
       connect() {},
