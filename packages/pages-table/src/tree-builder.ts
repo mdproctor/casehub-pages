@@ -118,6 +118,20 @@ export function collectVisibleNodes(
   return result;
 }
 
+export function paginateTreeByRoots(
+  roots: readonly TreeNode[],
+  expandState: Map<string, boolean>,
+  page: number,
+  pageSize: number,
+): { pageNodes: TreeNode[]; rootCount: number } {
+  const rootCount = roots.length;
+  const start = page * pageSize;
+  const end = Math.min(start + pageSize, rootCount);
+  const pagedRoots = roots.slice(start, end);
+  const pageNodes = collectVisibleNodes(pagedRoots, expandState);
+  return { pageNodes, rootCount };
+}
+
 export function findMatchingNodes(
   nodes: readonly TreeNode[],
   term: string,

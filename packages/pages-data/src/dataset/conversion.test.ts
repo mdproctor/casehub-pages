@@ -65,6 +65,19 @@ describe("toTypedDataSet", () => {
     expect(() => toTypedDataSet(ds)).toThrow("SCHEMA_MISMATCH");
   });
 
+  it("parses epoch milliseconds as DATE", () => {
+    const ds: DataSet = {
+      columns: [col("time", "Time", ColumnType.DATE)],
+      data: [["1718460000000"]],
+    };
+
+    const result = toTypedDataSet(ds);
+    const date = result.rows[0]!.date(columnId("time"));
+
+    expect(date).toBeInstanceOf(Date);
+    expect(date.getTime()).toBe(1718460000000);
+  });
+
   it("throws DataSetError for unparseable DATE", () => {
     const ds: DataSet = {
       columns: [col("date", "Date", ColumnType.DATE)],

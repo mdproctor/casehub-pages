@@ -78,9 +78,12 @@ pages:
     columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Total Goals
+          size: h3
       - type: metric
         properties:
-          title: Total Goals
           lookup:
             uuid: fifa_matches
             group:
@@ -92,9 +95,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Average Goals by Match
+          size: h3
       - type: metric
         properties:
-          title: Average Goals by Match
           lookup:
             uuid: fifa_matches
             group:
@@ -103,9 +109,12 @@ pages:
                 function: AVERAGE
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Average Temperature
+          size: h3
       - type: metric
         properties:
-          title: Average Temperature
           lookup:
             uuid: fifa_matches
             group:
@@ -114,9 +123,12 @@ pages:
                 function: AVERAGE
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Average Attendance
+          size: h3
       - type: metric
         properties:
-          title: Average Attendance
           lookup:
             uuid: fifa_matches
             group:
@@ -126,9 +138,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Goals by Day
+          size: h3
       - type: line-chart
         properties:
-          title: Goals by Day
           lookup:
             uuid: fifa_matches
             group:
@@ -144,9 +159,12 @@ pages:
               labels_angle: 30
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Goals by Stadium
+          size: h3
       - type: bar-chart
         properties:
-          title: Goals by Stadium
           lookup:
             uuid: fifa_matches
             sort:
@@ -168,9 +186,12 @@ pages:
     columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Goals by Weather
+          size: h3
       - type: bubble-chart
         properties:
-          title: Goals by Weather
           lookup:
             uuid: fifa_matches
             sort:
@@ -192,9 +213,12 @@ pages:
                 column: TOTAL MATCHES
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Goals by Attendance
+          size: h3
       - type: bubble-chart
         properties:
-          title: Goals by Attendance
           chart:
             zoom: true
           lookup:

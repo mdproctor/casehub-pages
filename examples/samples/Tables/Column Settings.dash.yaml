@@ -58,9 +58,12 @@ pages:
             - id: growth
               expression: "value & '%'"
 
+      - type: title
+        properties:
+          text: Salary by Department
+          size: h3
       - type: bar-chart
         properties:
-          title: Salary by Department
           filter:
             listening: true
           lookup:

@@ -41,9 +41,12 @@ pages:
   - columns:
     - span: '7'
       components:
+      - type: title
+        properties:
+          text: Revenue by Quarter
+          size: h3
       - type: bar-chart
         properties:
-          title: Revenue by Quarter
           chart:
             height: 350
           lookup:
@@ -60,9 +63,12 @@ pages:
       rows:
       - columns:
         - components:
+          - type: title
+            properties:
+              text: Revenue by Region
+              size: h3
           - type: pie-chart
             properties:
-              title: Revenue by Region
               chart:
                 height: 200
               lookup:

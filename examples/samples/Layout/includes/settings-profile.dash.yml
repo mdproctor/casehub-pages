@@ -5,9 +5,12 @@ pages:
       <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
         ↳ Loaded from <code>settings-profile.dash.yml</code>
       </div>
+  - type: title
+    properties:
+      text: User Profile Fields
+      size: h3
   - type: table
     properties:
-      title: User Profile Fields
       pageSize: 5
       sortable: true
       lookup:

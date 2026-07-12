@@ -3,11 +3,56 @@ properties:
   refreshInterval: 2
 datasets:
 - uuid: recent_http_requests
-  type: prometheus
-  url: ${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total[1m:1s]
+  content: >-
+    [
+      ["/api/v1/query", "200", 1719849600, 42],
+      ["/api/v1/query", "200", 1719849601, 38],
+      ["/api/v1/query", "200", 1719849602, 51],
+      ["/api/v1/query_range", "200", 1719849600, 18],
+      ["/api/v1/query_range", "200", 1719849601, 22],
+      ["/api/v1/query_range", "200", 1719849602, 15],
+      ["/metrics", "200", 1719849600, 8],
+      ["/metrics", "200", 1719849601, 9],
+      ["/metrics", "200", 1719849602, 7],
+      ["/-/healthy", "200", 1719849600, 3],
+      ["/-/healthy", "200", 1719849601, 3],
+      ["/-/healthy", "200", 1719849602, 4]
+    ]
+  columns:
+  - id: handler
+    type: LABEL
+  - id: code
+    type: LABEL
+  - id: timestamp
+    type: NUMBER
+  - id: value
+    type: NUMBER
 - uuid: http_requests
-  type: prometheus
-  url: ${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total
+  content: >-
+    [
+      ["/api/v1/query", "200", 15234],
+      ["/api/v1/query", "400", 127],
+      ["/api/v1/query", "500", 12],
+      ["/api/v1/query_range", "200", 8421],
+      ["/api/v1/query_range", "400", 83],
+      ["/api/v1/query_range", "422", 7],
+      ["/metrics", "200", 42156],
+      ["/-/healthy", "200", 98234],
+      ["/-/ready", "200", 98230],
+      ["/api/v1/labels", "200", 3421],
+      ["/api/v1/label/__name__/values", "200", 2187],
+      ["/api/v1/series", "200", 1893],
+      ["/api/v1/targets", "200", 4521],
+      ["/api/v1/rules", "200", 1245],
+      ["/api/v1/alerts", "200", 867]
+    ]
+  columns:
+  - id: handler
+    type: LABEL
+  - id: code
+    type: LABEL
+  - id: value
+    type: NUMBER
 pages:
 - rows:
   - columns:
@@ -46,9 +91,12 @@ pages:
     columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Total Requests
+          size: h3
       - type: metric
         properties:
-          title: Total Requests
           chart:
             height: '90'
           filter:
@@ -66,9 +114,12 @@ pages:
       properties:
         color: '#2e7d32'
       components:
+      - type: title
+        properties:
+          text: Success (2xx)
+          size: h3
       - type: metric
         properties:
-          title: Success (2xx)
           filter:
             listening: 'true'
           lookup:
@@ -89,9 +140,12 @@ pages:
       properties:
         color: '#d32f2f'
       components:
+      - type: title
+        properties:
+          text: Errors (4xx/5xx)
+          size: h3
       - type: metric
         properties:
-          title: Errors (4xx/5xx)
           filter:
             listening: 'true'
           lookup:
@@ -112,9 +166,12 @@ pages:
       properties:
         color: '#1565c0'
       components:
+      - type: title
+        properties:
+          text: Endpoints
+          size: h3
       - type: metric
         properties:
-          title: Endpoints
           filter:
             listening: 'true'
           lookup:
@@ -130,9 +187,12 @@ pages:
     columns:
     - span: '8'
       components:
+      - type: title
+        properties:
+          text: Request Volume Over Time
+          size: h3
       - type: timeseries
         properties:
-          title: Request Volume Over Time
           chart:
             height: 350
           filter:
@@ -151,9 +211,12 @@ pages:
               - source: value
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Requests by Endpoint
+          size: h3
       - type: DONUT
         properties:
-          title: Requests by Endpoint
           chart:
             height: 350
           filter:
@@ -172,9 +235,12 @@ pages:
     columns:
     - span: '6'
       components:
+      - type: title
+        properties:
+          text: Requests by Handler
+          size: h3
       - type: bar-chart
         properties:
-          title: Requests by Handler
           chart:
             height: 300
           filter:
@@ -190,10 +256,13 @@ pages:
                 function: SUM
     - span: '6'
       components:
+      - type: title
+        properties:
+          text: Requests by Status Code
+          size: h3
       - type: bar-chart
         properties:
           subtype: bar
-          title: Requests by Status Code
           chart:
             height: 300
             margin:
@@ -211,9 +280,12 @@ pages:
                 function: SUM
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Request Details
+          size: h3
       - type: table
         properties:
-          title: Request Details
           sortable: true
           show_column_picker: true
           filter:

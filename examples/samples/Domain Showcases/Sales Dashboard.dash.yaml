@@ -129,9 +129,12 @@ pages:
   - columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Total Revenue
+          size: h3
       - type: metric
         properties:
-          title: Total Revenue
           lookup:
             uuid: sales_transactions
             filter:
@@ -148,9 +151,12 @@ pages:
             pattern: $#,###
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Won Deals
+          size: h3
       - type: metric
         properties:
-          title: Won Deals
           lookup:
             uuid: sales_transactions
             filter:
@@ -167,9 +173,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Avg Deal Size
+          size: h3
       - type: metric
         properties:
-          title: Avg Deal Size
           lookup:
             uuid: sales_transactions
             group:
@@ -181,9 +190,12 @@ pages:
             pattern: $#,###
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Total Deals
+          size: h3
       - type: metric
         properties:
-          title: Total Deals
           lookup:
             uuid: sales_transactions
             group:
@@ -196,10 +208,13 @@ pages:
   - columns:
     - span: 8
       components:
+      - type: title
+        properties:
+          text: Revenue by Region
+          size: h3
       - type: bar-chart
         properties:
           subtype: column-stacked
-          title: Revenue by Region
           filter:
             listening: true
           lookup:
@@ -218,10 +233,13 @@ pages:
                 function: SUM
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Revenue by Category
+          size: h3
       - type: pie-chart
         properties:
           subtype: donut
-          title: Revenue by Category
           filter:
             listening: true
           lookup:
@@ -256,9 +274,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Monthly Revenue
+          size: h3
       - type: line-chart
         properties:
-          title: Monthly Revenue
           filter:
             listening: true
           lookup:
@@ -279,9 +300,12 @@ pages:
                 function: ${GoalsFunction}
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Top Reps
+          size: h3
       - type: bar-chart
         properties:
-          title: Top Reps
           filter:
             listening: true
           lookup:
@@ -307,9 +331,12 @@ pages:
   - columns:
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Pipeline Value
+          size: h3
       - type: metric
         properties:
-          title: Pipeline Value
           lookup:
             uuid: pipeline
             group:
@@ -321,9 +348,12 @@ pages:
             pattern: $#,###
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Avg Probability
+          size: h3
       - type: metric
         properties:
-          title: Avg Probability
           lookup:
             uuid: pipeline
             group:
@@ -335,9 +365,12 @@ pages:
             pattern: '#'
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Active Deals
+          size: h3
       - type: metric
         properties:
-          title: Active Deals
           lookup:
             uuid: pipeline
             group:
@@ -358,10 +391,13 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Pipeline by Stage
+          size: h3
       - type: bar-chart
         properties:
           subtype: bar
-          title: Pipeline by Stage
           chart:
             margin:
               left: 100
@@ -376,10 +412,13 @@ pages:
                 function: SUM
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Pipeline by Rep
+          size: h3
       - type: pie-chart
         properties:
           subtype: donut
-          title: Pipeline by Rep
           lookup:
             uuid: pipeline
             group:
@@ -393,10 +432,13 @@ pages:
   rows:
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Revenue Trend
+          size: h3
       - type: line-chart
         properties:
           subtype: smooth
-          title: Revenue Trend
           chart:
             zoom: true
           lookup:
@@ -418,9 +460,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Quarterly Revenue
+          size: h3
       - type: bar-chart
         properties:
-          title: Quarterly Revenue
           lookup:
             uuid: sales_transactions
             filter:
@@ -439,10 +484,13 @@ pages:
                 function: SUM
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Category Trend
+          size: h3
       - type: bar-chart
         properties:
           subtype: column-stacked
-          title: Category Trend
           lookup:
             uuid: sales_transactions
             filter:

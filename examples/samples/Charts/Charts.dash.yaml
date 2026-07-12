@@ -14,9 +14,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype COLUMN (default)
+          size: h3
       - type: bar-chart
         properties:
-          title: subtype COLUMN (default)
           lookup:
             uuid: products
             group:
@@ -28,10 +31,13 @@ pages:
               - source: Quantity2
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype BAR
+          size: h3
       - type: bar-chart
         properties:
           subtype: bar
-          title: subtype BAR
           chart:
             margin:
               left: 80
@@ -47,10 +53,13 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype COLUMN_STACKED
+          size: h3
       - type: bar-chart
         properties:
           subtype: column-stacked
-          title: subtype COLUMN_STACKED
           lookup:
             uuid: products
             group:
@@ -62,10 +71,13 @@ pages:
               - source: Quantity2
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype BAR_STACKED
+          size: h3
       - type: bar-chart
         properties:
           subtype: bar-stacked
-          title: subtype BAR_STACKED
           chart:
             margin:
               left: 80
@@ -83,9 +95,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype LINE (default)
+          size: h3
       - type: line-chart
         properties:
-          title: subtype LINE (default)
           lookup:
             uuid: products
             group:
@@ -97,10 +112,13 @@ pages:
               - source: Quantity2
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype SMOOTH
+          size: h3
       - type: line-chart
         properties:
           subtype: smooth
-          title: subtype SMOOTH
           lookup:
             uuid: products
             group:
@@ -115,9 +133,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype AREA (default)
+          size: h3
       - type: area-chart
         properties:
-          title: subtype AREA (default)
           lookup:
             uuid: products
             group:
@@ -129,10 +150,13 @@ pages:
               - source: Quantity2
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype AREA_STACKED
+          size: h3
       - type: area-chart
         properties:
           subtype: area-stacked
-          title: subtype AREA_STACKED
           lookup:
             uuid: products
             group:
@@ -147,9 +171,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype PIE (default)
+          size: h3
       - type: pie-chart
         properties:
-          title: subtype PIE (default)
           lookup:
             uuid: products
             group:
@@ -160,10 +187,13 @@ pages:
               - source: Quantity
     - span: 6
       components:
+      - type: title
+        properties:
+          text: subtype DONUT
+          size: h3
       - type: pie-chart
         properties:
           subtype: donut
-          title: subtype DONUT
           lookup:
             uuid: products
             group:
@@ -174,9 +204,12 @@ pages:
               - source: Quantity
 - name: Bubble Chart
   components:
+  - type: title
+    properties:
+      text: Bubble Chart
+      size: h3
   - type: bubble-chart
     properties:
-      title: Bubble Chart
       lookup:
         uuid: products
         group:
@@ -189,9 +222,12 @@ pages:
           - source: Product
 - name: Timeseries
   components:
+  - type: title
+    properties:
+      text: Timeseries
+      size: h3
   - type: timeseries
     properties:
-      title: Timeseries
       chart:
         zoom: true
       lookup:

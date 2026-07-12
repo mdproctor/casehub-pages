@@ -37,9 +37,12 @@ datasets:
 
 pages:
   - components:
+      - type: title
+        properties:
+          text: Monthly Revenue vs Costs (2024-2025)
+          size: h3
       - type: timeseries
         properties:
-          title: Monthly Revenue vs Costs (2024-2025)
           chart:
             resizable: true
             zoom: true

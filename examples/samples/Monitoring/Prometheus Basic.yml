@@ -25,9 +25,12 @@ pages:
     columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Data Points
+          size: h3
       - type: metric
         properties:
-          title: Data Points
           lookup:
             uuid: prometheus
             group:
@@ -38,9 +41,12 @@ pages:
       properties:
         color: '#e65100'
       components:
+      - type: title
+        properties:
+          text: Max Value
+          size: h3
       - type: metric
         properties:
-          title: Max Value
           lookup:
             uuid: prometheus
             group:
@@ -54,9 +60,12 @@ pages:
       properties:
         color: '#2e7d32'
       components:
+      - type: title
+        properties:
+          text: Min Value
+          size: h3
       - type: metric
         properties:
-          title: Min Value
           lookup:
             uuid: prometheus
             group:
@@ -70,9 +79,12 @@ pages:
       properties:
         color: '#1565c0'
       components:
+      - type: title
+        properties:
+          text: Average
+          size: h3
       - type: metric
         properties:
-          title: Average
           lookup:
             uuid: prometheus
             group:
@@ -86,9 +98,12 @@ pages:
       margin-bottom: 24px
     columns:
     - components:
+      - type: title
+        properties:
+          text: Metric Values Over Time
+          size: h3
       - type: timeseries
         properties:
-          title: Metric Values Over Time
           chart:
             height: 350
           lookup:
@@ -103,9 +118,12 @@ pages:
     columns:
     - span: '6'
       components:
+      - type: title
+        properties:
+          text: Value Distribution (Area)
+          size: h3
       - type: area-chart
         properties:
-          title: Value Distribution (Area)
           chart:
             height: 280
           lookup:
@@ -117,9 +135,12 @@ pages:
               - source: value
     - span: '6'
       components:
+      - type: title
+        properties:
+          text: Total by Endpoint
+          size: h3
       - type: bar-chart
         properties:
-          title: Total by Endpoint
           chart:
             height: 280
           lookup:
@@ -134,9 +155,12 @@ pages:
   - columns:
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Request Share by Method
+          size: h3
       - type: pie-chart
         properties:
-          title: Request Share by Method
           chart:
             height: 300
           lookup:
@@ -150,9 +174,12 @@ pages:
                 function: SUM
     - span: '8'
       components:
+      - type: title
+        properties:
+          text: Raw Metrics
+          size: h3
       - type: table
         properties:
-          title: Raw Metrics
           sortable: true
           show_column_picker: true
           lookup:

@@ -2,7 +2,27 @@ properties:
   metricsUrl: metrics
 datasets:
 - uuid: metrics
-  url: ${metricsUrl}
+  content: >-
+    [
+      ["jupyterhub_proxy_add_duration_seconds_bucket", "0.005", 14],
+      ["jupyterhub_proxy_add_duration_seconds_bucket", "0.01", 28],
+      ["jupyterhub_proxy_add_duration_seconds_bucket", "0.025", 45],
+      ["jupyterhub_proxy_add_duration_seconds_bucket", "0.05", 52],
+      ["jupyterhub_proxy_add_duration_seconds_bucket", "0.1", 58],
+      ["jupyterhub_proxy_add_duration_seconds_bucket", "+Inf", 60],
+      ["jupyterhub_proxy_delete_duration_seconds_bucket", "0.005", 8],
+      ["jupyterhub_proxy_delete_duration_seconds_bucket", "0.01", 19],
+      ["jupyterhub_proxy_delete_duration_seconds_bucket", "0.025", 31],
+      ["jupyterhub_proxy_delete_duration_seconds_bucket", "0.05", 37],
+      ["jupyterhub_proxy_delete_duration_seconds_bucket", "0.1", 40],
+      ["jupyterhub_proxy_delete_duration_seconds_bucket", "+Inf", 42],
+      ["jupyterhub_server_spawn_duration_seconds_bucket", "1", 5],
+      ["jupyterhub_server_spawn_duration_seconds_bucket", "5", 22],
+      ["jupyterhub_server_spawn_duration_seconds_bucket", "10", 38],
+      ["jupyterhub_server_spawn_duration_seconds_bucket", "30", 44],
+      ["jupyterhub_server_spawn_duration_seconds_bucket", "60", 46],
+      ["jupyterhub_server_spawn_duration_seconds_bucket", "+Inf", 48]
+    ]
   columns:
   - id: Metric
     type: LABEL

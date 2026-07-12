@@ -39,12 +39,16 @@ pages:
 
       - type: selector
         properties:
+          subtype: labels
+          filter:
+            notification: true
           lookup:
             uuid: products
-            operations:
-              - type: group
-                columnGroup: category
-          subtype: labels
+            group:
+              - columnGroup:
+                  source: category
+                functions:
+                  - source: category
 
       - type: markdown
         visibleWhen: "#{filter.category}"
@@ -59,11 +63,15 @@ pages:
           - components:
               - type: bar-chart
                 properties:
+                  filter:
+                    listening: true
                   lookup:
                     uuid: products
           - components:
               - type: table
                 properties:
+                  filter:
+                    listening: true
                   lookup:
                     uuid: products
 

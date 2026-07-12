@@ -9,9 +9,12 @@ pages:
           </div>
   - columns:
     - components:
+      - type: title
+        properties:
+          text: All Team Members
+          size: h3
       - type: table
         properties:
-          title: All Team Members
           pageSize: 15
           sortable: true
           lookup:

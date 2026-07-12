@@ -104,9 +104,12 @@ pages:
   - columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Devices Online
+          size: h3
       - type: metric
         properties:
-          title: Devices Online
           lookup:
             uuid: devices
             filter:
@@ -123,9 +126,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Avg Temperature
+          size: h3
       - type: metric
         properties:
-          title: Avg Temperature
           lookup:
             uuid: sensor_readings
             group:
@@ -134,9 +140,12 @@ pages:
                 function: AVERAGE
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Avg Humidity
+          size: h3
       - type: metric
         properties:
-          title: Avg Humidity
           lookup:
             uuid: sensor_readings
             group:
@@ -145,9 +154,12 @@ pages:
                 function: AVERAGE
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Low Battery
+          size: h3
       - type: metric
         properties:
-          title: Low Battery
           lookup:
             uuid: sensor_readings
             filter:
@@ -165,9 +177,12 @@ pages:
   - columns:
     - span: 8
       components:
+      - type: title
+        properties:
+          text: Device Registry
+          size: h3
       - type: table
         properties:
-          title: Device Registry
           sortable: true
           filter:
             listening: true
@@ -175,9 +190,12 @@ pages:
             uuid: devices
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Temperature
+          size: h3
       - type: meter
         properties:
-          title: Temperature
           filter:
             listening: true
           lookup:
@@ -190,9 +208,12 @@ pages:
             end: 60
             warning: 30
             critical: 40
+      - type: title
+        properties:
+          text: Humidity
+          size: h3
       - type: meter
         properties:
-          title: Humidity
           filter:
             listening: true
           lookup:
@@ -205,9 +226,12 @@ pages:
             end: 100
             warning: 70
             critical: 85
+      - type: title
+        properties:
+          text: Pressure (hPa)
+          size: h3
       - type: meter
         properties:
-          title: Pressure (hPa)
           filter:
             listening: true
           lookup:
@@ -238,10 +262,13 @@ pages:
   rows:
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Temperature by Device
+          size: h3
       - type: area-chart
         properties:
           subtype: area-stacked
-          title: Temperature by Device
           chart:
             zoom: true
           lookup:
@@ -256,10 +283,13 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Humidity by Device
+          size: h3
       - type: line-chart
         properties:
           subtype: smooth
-          title: Humidity by Device
           lookup:
             uuid: sensor_readings
             group:
@@ -271,9 +301,12 @@ pages:
                 function: AVERAGE
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Pressure by Device
+          size: h3
       - type: area-chart
         properties:
-          title: Pressure by Device
           lookup:
             uuid: sensor_readings
             group:
@@ -285,9 +318,12 @@ pages:
                 function: AVERAGE
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Battery Level
+          size: h3
       - type: timeseries
         properties:
-          title: Battery Level
           lookup:
             uuid: sensor_readings
             group:
@@ -301,9 +337,12 @@ pages:
   rows:
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Devices
+          size: h3
       - type: table
         properties:
-          title: Devices
           sortable: true
           filter:
             listening: true
@@ -313,9 +352,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Readings by Device
+          size: h3
       - type: bar-chart
         properties:
-          title: Readings by Device
           filter:
             listening: true
           lookup:
@@ -331,10 +373,13 @@ pages:
                 function: AVERAGE
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Devices by Type
+          size: h3
       - type: pie-chart
         properties:
           subtype: donut
-          title: Devices by Type
           filter:
             listening: true
           lookup:
@@ -348,9 +393,12 @@ pages:
                 function: COUNT
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Sensor Readings
+          size: h3
       - type: table
         properties:
-          title: Sensor Readings
           pageSize: 10
           sortable: true
           filter:

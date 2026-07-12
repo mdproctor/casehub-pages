@@ -84,10 +84,13 @@ pages:
   - columns:
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Headcount
+          size: h3
       - type: pie-chart
         properties:
           subtype: donut
-          title: Headcount
           filter:
             listening: true
           lookup:
@@ -102,10 +105,13 @@ pages:
                 column: count
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Level Distribution
+          size: h3
       - type: bar-chart
         properties:
           subtype: column-stacked
-          title: Level Distribution
           filter:
             listening: true
           lookup:
@@ -120,10 +126,13 @@ pages:
                 column: count
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Avg Salary by Level
+          size: h3
       - type: bar-chart
         properties:
           subtype: bar
-          title: Avg Salary by Level
           chart:
             margin:
               left: 80
@@ -145,9 +154,12 @@ pages:
   - columns:
     - span: 8
       components:
+      - type: title
+        properties:
+          text: Tenure vs Salary
+          size: h3
       - type: scatter-chart
         properties:
-          title: Tenure vs Salary
           filter:
             listening: true
           lookup:
@@ -160,9 +172,12 @@ pages:
               - source: salary
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Rating Distribution
+          size: h3
       - type: pie-chart
         properties:
-          title: Rating Distribution
           filter:
             listening: true
           lookup:

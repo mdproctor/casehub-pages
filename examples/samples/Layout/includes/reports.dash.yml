@@ -10,9 +10,12 @@ pages:
   - columns:
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Reports Generated
+          size: h3
       - type: metric
         properties:
-          title: Reports Generated
           lookup:
             uuid: report-stats
             filter:
@@ -29,9 +32,12 @@ pages:
             pattern: '#,##0'
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Avg Generation Time
+          size: h3
       - type: metric
         properties:
-          title: Avg Generation Time
           lookup:
             uuid: report-stats
             filter:
@@ -48,9 +54,12 @@ pages:
             pattern: '#,##0 ms'
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Failed Reports
+          size: h3
       - type: metric
         properties:
-          title: Failed Reports
           lookup:
             uuid: report-stats
             filter:
@@ -67,9 +76,12 @@ pages:
             pattern: '#,##0'
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Recent Report Runs
+          size: h3
       - type: table
         properties:
-          title: Recent Report Runs
           pageSize: 6
           sortable: true
           lookup:

@@ -217,9 +217,12 @@ pages:
   - columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Total Patients
+          size: h3
       - type: metric
         properties:
-          title: Total Patients
           lookup:
             uuid: patients
             group:
@@ -231,9 +234,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Critical Count
+          size: h3
       - type: metric
         properties:
-          title: Critical Count
           lookup:
             uuid: patients
             filter:
@@ -250,9 +256,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Avg Age
+          size: h3
       - type: metric
         properties:
-          title: Avg Age
           lookup:
             uuid: patients
             group:
@@ -264,9 +273,12 @@ pages:
             pattern: '#.#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Flagged
+          size: h3
       - type: metric
         properties:
-          title: Flagged
           lookup:
             uuid: patients
             filter:
@@ -299,9 +311,12 @@ pages:
   - columns:
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Patients by Diagnosis
+          size: h3
       - type: pie-chart
         properties:
-          title: Patients by Diagnosis
           filter:
             listening: true
           lookup:
@@ -315,9 +330,12 @@ pages:
                 function: COUNT
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Patients by Ward
+          size: h3
       - type: bar-chart
         properties:
-          title: Patients by Ward
           filter:
             listening: true
           lookup:
@@ -331,10 +349,13 @@ pages:
                 function: COUNT
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Patients by Status
+          size: h3
       - type: pie-chart
         properties:
           subtype: donut
-          title: Patients by Status
           filter:
             listening: true
           lookup:
@@ -379,9 +400,16 @@ pages:
   - columns:
     - span: 9
       components:
+      - type: title
+        properties:
+          text: Admission Timelines
+          size: h3
       - type: timeline
         properties:
-          title: Admission Timelines
+          startColumn: admitDate
+          endColumn: dischargeDate
+          labelColumn: patient
+          categoryColumn: ward
           chart:
             zoom: true
             height: 300
@@ -389,18 +417,24 @@ pages:
             uuid: admissions
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Next ICU Rounds
+          size: h3
       - type: countdown
         properties:
-          title: Next ICU Rounds
           lookup:
             uuid: nextReview
 - name: Vitals Monitor
   rows:
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Heart Rate by Patient
+          size: h3
       - type: area-chart
         properties:
-          title: Heart Rate by Patient
           filter:
             listening: true
           lookup:
@@ -415,9 +449,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Blood Pressure
+          size: h3
       - type: line-chart
         properties:
-          title: Blood Pressure
           filter:
             listening: true
           lookup:
@@ -433,9 +470,12 @@ pages:
                 function: AVERAGE
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Oxygen Saturation
+          size: h3
       - type: line-chart
         properties:
-          title: Oxygen Saturation
           filter:
             listening: true
           lookup:
@@ -537,9 +577,12 @@ pages:
   rows:
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Doctor-Patient Assignments
+          size: h3
       - type: graph
         properties:
-          title: Doctor-Patient Assignments
           chart:
             height: 500
           lookup:

@@ -39,9 +39,12 @@ pages:
           </div>
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Teams Overview
+          size: h3
       - type: table
         properties:
-          title: Teams Overview
           pageSize: 10
           sortable: true
           lookup:
@@ -59,13 +62,87 @@ pages:
                 function: COUNT
                 column: Member Count
 - name: Team Detail
-  components:
-  - page: Team Detail
-    src: includes/team-detail.dash.yml
+  rows:
+  - columns:
+    - components:
+      - html: >-
+          <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+            ↳ Team detail — select a team from Overview to filter
+          </div>
+  - columns:
+    - components:
+      - type: title
+        properties:
+          text: All Team Members
+          size: h3
+      - type: table
+        properties:
+          pageSize: 15
+          sortable: true
+          filter:
+            listening: true
+          lookup:
+            uuid: team_members
 - name: Admin Settings
-  components:
-  - page: Admin Settings
-    src: includes/admin-settings.dash.yml
-    access:
-      roles:
-      - admin
+  rows:
+  - columns:
+    - components:
+      - html: >-
+          <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+            ↳ Admin settings
+          </div>
+  - columns:
+    - span: 4
+      components:
+      - type: title
+        properties:
+          text: Total Teams
+          size: h3
+      - type: metric
+        properties:
+          lookup:
+            uuid: team_members
+            group:
+            - functions:
+              - source: Team
+                function: COUNT
+                column: Count
+          columns:
+          - id: Count
+            pattern: '#,##0'
+    - span: 4
+      components:
+      - type: title
+        properties:
+          text: Total Members
+          size: h3
+      - type: metric
+        properties:
+          lookup:
+            uuid: team_members
+            group:
+            - functions:
+              - source: Member
+                function: COUNT
+                column: Count
+          columns:
+          - id: Count
+            pattern: '#,##0'
+    - span: 4
+      components:
+      - type: title
+        properties:
+          text: Departments
+          size: h3
+      - type: metric
+        properties:
+          lookup:
+            uuid: team_members
+            group:
+            - functions:
+              - source: Department
+                function: COUNT
+                column: Count
+          columns:
+          - id: Count
+            pattern: '#,##0'

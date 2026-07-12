@@ -1,10 +1,23 @@
 datasets:
 - uuid: github_repos
-  cacheEnabled: 'true'
-  refreshTime: 10minute
-  expression: '$.items.[name, stargazers_count, forks, watchers_count, open_issues, owner.login, created_at, language ? language
-    : ''-'', description ]'
-  url: https://api.github.com/search/repositories?q=stars:>1&s=stars
+  content: >-
+    [
+      ["freeCodeCamp", 409000, 38200, 409000, 342, "freeCodeCamp", "2014-12-24", "JavaScript", "freeCodeCamp.org's open-source codebase and curriculum"],
+      ["free-programming-books", 345000, 62100, 345000, 45, "EbookFoundation", "2013-10-11", "-", "Freely available programming books"],
+      ["awesome", 330000, 28400, 330000, 28, "sindresorhus", "2014-07-11", "-", "Awesome lists about all kinds of interesting topics"],
+      ["public-apis", 320000, 34800, 320000, 32, "public-apis", "2016-03-20", "Python", "A collective list of free APIs"],
+      ["coding-interview-university", 308000, 77500, 308000, 56, "jwasham", "2016-06-06", "-", "A complete computer science study plan"],
+      ["build-your-own-x", 305000, 29200, 305000, 198, "codecrafters-io", "2018-05-09", "Markdown", "Master programming by recreating your favorite technologies"],
+      ["developer-roadmap", 298000, 40100, 298000, 124, "kamranahmedse", "2017-03-15", "TypeScript", "Interactive roadmaps, guides and other educational content"],
+      ["system-design-primer", 280000, 47200, 280000, 237, "donnemartin", "2017-02-26", "Python", "Learn how to design large-scale systems"],
+      ["996.ICU", 270000, 21300, 270000, 0, "996icu", "2019-03-26", "Rust", "Repo for counting stars and contributing"],
+      ["react", 231000, 47300, 231000, 842, "facebook", "2013-05-24", "JavaScript", "The library for web and native user interfaces"],
+      ["vue", 208000, 33700, 208000, 603, "vuejs", "2013-07-29", "TypeScript", "An approachable, performant and versatile framework"],
+      ["tensorflow", 187000, 74300, 187000, 1823, "tensorflow", "2015-11-07", "C++", "An Open Source Machine Learning Framework"],
+      ["javascript-algorithms", 189000, 30600, 189000, 2, "trekhleb", "2018-03-24", "JavaScript", "Algorithms and data structures implemented in JavaScript"],
+      ["awesome-python", 225000, 24900, 225000, 345, "vinta", "2014-06-27", "Python", "An opinionated list of awesome Python frameworks"],
+      ["linux", 185000, 55200, 185000, 412, "torvalds", "2011-09-04", "C", "Linux kernel source tree"]
+    ]
   columns:
   - id: name
     type: label

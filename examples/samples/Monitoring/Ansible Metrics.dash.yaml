@@ -6,9 +6,29 @@ properties:
   subTitlesStyle: 'font-size: large; margin: 15px 0 10px 0'
 datasets:
 - uuid: metrics
-  url: data/metrics
-  cacheEnabled: true
-  refreshTime: 1minute
+  content: >-
+    [
+      ["awx_sessions_total", "type=\"all\"", 47],
+      ["awx_sessions_total", "type=\"user\"", 38],
+      ["awx_users_total", "", 156],
+      ["awx_teams_total", "", 12],
+      ["awx_organizations_total", "", 4],
+      ["awx_inventories_total", "", 23],
+      ["awx_projects_total", "", 35],
+      ["awx_job_templates_total", "", 89],
+      ["awx_inventory_scripts_total", "", 7],
+      ["awx_running_jobs_total", "", 5],
+      ["awx_pending_jobs_total", "", 2],
+      ["awx_hosts_total", "type=\"all\"", 342],
+      ["awx_hosts_total", "type=\"active\"", 287],
+      ["awx_schedules_total", "", 18],
+      ["awx_custom_virtualenvs_total", "", 3],
+      ["awx_instance_capacity", "", 200],
+      ["awx_instance_remaining_capacity", "", 124],
+      ["awx_status_total", "status=\"successful\"", 14523],
+      ["awx_status_total", "status=\"failed\"", 237],
+      ["awx_status_total", "status=\"error\"", 15]
+    ]
   columns:
   - id: metric
     type: LABEL
@@ -16,10 +36,7 @@ datasets:
     type: LABEL
   - id: Value
     type: Number
-  headers:
-    Authorization: ${authorizationHeader}
-    Content-Type: text/plain
-    Target-Url: ${towerUrl}/api/v2/metrics/?metrics
+
 pages:
 - properties:
     margin-left: 5px
@@ -37,9 +54,12 @@ pages:
   - columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Active Sessions
+          size: h3
       - type: metric
         properties:
-          title: Active Sessions
           lookup:
             filter:
             - column: metric
@@ -56,9 +76,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Users
+          size: h3
       - type: metric
         properties:
-          title: Users
           lookup:
             filter:
             - column: metric
@@ -71,9 +94,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Teams
+          size: h3
       - type: metric
         properties:
-          title: Teams
           lookup:
             filter:
             - column: metric
@@ -86,9 +112,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Organizations
+          size: h3
       - type: metric
         properties:
-          title: Organizations
           lookup:
             filter:
             - column: metric
@@ -105,9 +134,12 @@ pages:
   - columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Inventories
+          size: h3
       - type: metric
         properties:
-          title: Inventories
           lookup:
             filter:
             - column: metric
@@ -120,9 +152,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Projects
+          size: h3
       - type: metric
         properties:
-          title: Projects
           lookup:
             filter:
             - column: metric
@@ -135,9 +170,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Job Templates
+          size: h3
       - type: metric
         properties:
-          title: Job Templates
           lookup:
             filter:
             - column: metric
@@ -150,9 +188,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Inventory Scripts
+          size: h3
       - type: metric
         properties:
-          title: Inventory Scripts
           lookup:
             filter:
             - column: metric
@@ -169,9 +210,12 @@ pages:
   - columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Running Jobs
+          size: h3
       - type: metric
         properties:
-          title: Running Jobs
           lookup:
             filter:
             - column: metric
@@ -184,9 +228,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Pending Jobs
+          size: h3
       - type: metric
         properties:
-          title: Pending Jobs
           lookup:
             filter:
             - column: metric
@@ -199,9 +246,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: All Hosts
+          size: h3
       - type: metric
         properties:
-          title: All Hosts
           lookup:
             filter:
             - column: metric
@@ -218,9 +268,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Active Hosts
+          size: h3
       - type: metric
         properties:
-          title: Active Hosts
           lookup:
             filter:
             - column: metric
@@ -240,9 +293,12 @@ pages:
     columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Schedules
+          size: h3
       - type: metric
         properties:
-          title: Schedules
           lookup:
             filter:
             - column: metric
@@ -255,9 +311,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Virtual Envs
+          size: h3
       - type: metric
         properties:
-          title: Virtual Envs
           lookup:
             filter:
             - column: metric
@@ -270,9 +329,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Instance Capacity
+          size: h3
       - type: metric
         properties:
-          title: Instance Capacity
           lookup:
             filter:
             - column: metric
@@ -285,9 +347,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Remaining Capacity
+          size: h3
       - type: metric
         properties:
-          title: Remaining Capacity
           lookup:
             filter:
             - column: metric

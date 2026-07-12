@@ -23,9 +23,12 @@ pages:
   - columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Running Models
+          size: h3
       - type: metric
         properties:
-          title: Running Models
           lookup:
             uuid: metrics
             filter:
@@ -42,9 +45,12 @@ pages:
             pattern: '#'
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Inference Count
+          size: h3
       - type: metric
         properties:
-          title: Inference Count
           visible: 'true'
           lookup:
             uuid: metrics
@@ -62,9 +68,12 @@ pages:
             pattern: '#'
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Inference Requests Success
+          size: h3
       - type: metric
         properties:
-          title: Inference Requests Success
           visible: 'true'
           lookup:
             uuid: metrics
@@ -82,9 +91,12 @@ pages:
             pattern: '#'
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Inference Requests Failure
+          size: h3
       - type: metric
         properties:
-          title: Inference Requests Failure
           visible: 'true'
           lookup:
             uuid: metrics
@@ -131,9 +143,12 @@ pages:
     columns:
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Inference Count
+          size: h3
       - type: bar-chart
         properties:
-          title: Inference Count
           filter:
             listening: 'true'
           lookup:
@@ -164,9 +179,12 @@ pages:
             pattern: '#'
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Sucessful Inferences
+          size: h3
       - type: bar-chart
         properties:
-          title: Sucessful Inferences
           filter:
             listening: 'true'
           lookup:
@@ -197,9 +215,12 @@ pages:
             pattern: '#'
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Failed Inferences
+          size: h3
       - type: bar-chart
         properties:
-          title: Failed Inferences
           filter:
             listening: 'true'
           lookup:
@@ -233,9 +254,12 @@ pages:
     columns:
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Inference Request Duration
+          size: h3
       - type: bar-chart
         properties:
-          title: Inference Request Duration
           filter:
             listening: 'true'
           lookup:
@@ -263,9 +287,12 @@ pages:
               labels_angle: 15
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Inference Total Duration
+          size: h3
       - type: bar-chart
         properties:
-          title: Inference Total Duration
           filter:
             listening: 'true'
           lookup:
@@ -294,9 +321,12 @@ pages:
             expression: value.replaceAll("\"", "").replaceAll("model=", "").replaceAll("version=", "").replaceAll(",", " v")
     - span: '4'
       components:
+      - type: title
+        properties:
+          text: Queue Wait
+          size: h3
       - type: bar-chart
         properties:
-          title: Queue Wait
           filter:
             listening: 'true'
           lookup:

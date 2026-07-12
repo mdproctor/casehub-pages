@@ -47,9 +47,12 @@ pages:
           filter:
             notification: true
 
+      - type: title
+        properties:
+          text: Stock by Category
+          size: h3
       - type: bar-chart
         properties:
-          title: Stock by Category
           lookup:
             uuid: products
             group:

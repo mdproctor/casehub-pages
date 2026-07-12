@@ -5,7 +5,31 @@ properties:
   titleFontSize: 40px
 datasets:
 - uuid: metrics
-  url: ${modelMeshMetricsUrl}
+  content: >-
+    [
+      ["modelmesh_models_managed_total", "", 24],
+      ["modelmesh_models_with_failure_total", "", 2],
+      ["modelmesh_loadmodel_milliseconds_sum", "", 18750],
+      ["modelmesh_loaded_model_size_bytes_sum", "", 5242880],
+      ["modelmesh_request_size_bytes_sum", "", 1048576],
+      ["modelmesh_request_size_bytes_count", "", 8432],
+      ["modelmesh_response_size_bytes_sum", "", 3145728],
+      ["modelmesh_response_size_bytes_count", "", 8432],
+      ["jvm_memory_pool_bytes_used", "pool=\"G1 Eden Space\",", 41943040],
+      ["jvm_memory_pool_bytes_used", "pool=\"G1 Old Gen\",", 125829120],
+      ["jvm_memory_pool_bytes_used", "pool=\"G1 Survivor Space\",", 8388608],
+      ["jvm_memory_pool_bytes_used", "pool=\"Metaspace\",", 67108864],
+      ["jvm_memory_pool_bytes_used", "pool=\"CodeCache\",", 33554432],
+      ["jvm_memory_pool_bytes_committed", "pool=\"G1 Eden Space\",", 67108864],
+      ["jvm_memory_pool_bytes_committed", "pool=\"G1 Old Gen\",", 268435456],
+      ["jvm_memory_pool_bytes_committed", "pool=\"G1 Survivor Space\",", 16777216],
+      ["jvm_memory_pool_bytes_committed", "pool=\"Metaspace\",", 75497472],
+      ["jvm_memory_pool_bytes_committed", "pool=\"CodeCache\",", 50331648],
+      ["modelmesh_invoke_model_milliseconds_sum", "", 42560],
+      ["modelmesh_invoke_model_milliseconds_count", "", 8432],
+      ["modelmesh_models_loaded_total", "", 18],
+      ["modelmesh_cache_miss_total", "", 156]
+    ]
   columns:
   - id: metric
     type: LABEL
@@ -14,16 +38,10 @@ datasets:
   - id: value
     type: number
 - uuid: request_response_size
-  url: ${modelMeshMetricsUrl}
-  expression: >-
-    (
-        $requestSize := $number($[$[0] = "modelmesh_request_size_bytes_sum"][0][2]);
-        $requestCount := $number($[$[0] = "modelmesh_request_size_bytes_count"][0][2]);
-        $responseSize := $number($[$[0] = "modelmesh_response_size_bytes_sum"][0][2]);
-        $responseCount := $number($[$[0] = "modelmesh_response_size_bytes_count"][0][2]);
-
-        [ "Size", $requestSize / $requestCount,  $responseSize / $responseCount]
-    )
+  content: >-
+    [
+      ["Size", 124.36, 373.09]
+    ]
   columns:
   - id: Metric
     type: LABEL
@@ -32,13 +50,14 @@ datasets:
   - id: Response
     type: number
 - uuid: jvm_memory
-  url: ${modelMeshMetricsUrl}
-  expression: "(\n    $metrics := $[$[0] in [\"jvm_memory_pool_bytes_used\", \"jvm_memory_pool_bytes_committed\"]].[\n   \
-    \     {\n                \"metric\": $[0],\n                \"label\": $[1],\n                \"value\": $[2]\n      \
-    \      }\n    ];\n    $map($distinct($metrics.label), function($l) {\n        (\n            $used := $metrics[label =\
-    \ $l and metric = \"jvm_memory_pool_bytes_used\"].value;\n            $committed := $metrics[label = $l and metric = \"\
-    jvm_memory_pool_bytes_committed\"].value;\n            [\n              $l,\n              $used ?  $used : \"-1\",\n\
-    \              $committed ?  $committed : -1\n            ] \n      )\n    })\n)"
+  content: >-
+    [
+      ["pool=\"G1 Eden Space\",", 41943040, 67108864],
+      ["pool=\"G1 Old Gen\",", 125829120, 268435456],
+      ["pool=\"G1 Survivor Space\",", 8388608, 16777216],
+      ["pool=\"Metaspace\",", 67108864, 75497472],
+      ["pool=\"CodeCache\",", 33554432, 50331648]
+    ]
   columns:
   - id: Pool
     type: LABEL
@@ -58,9 +77,12 @@ pages:
   - columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Managed Models
+          size: h3
       - type: metric
         properties:
-          title: Managed Models
           lookup:
             filter:
             - column: metric
@@ -73,9 +95,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Models with Failure
+          size: h3
       - type: metric
         properties:
-          title: Models with Failure
           lookup:
             filter:
             - column: metric
@@ -88,9 +113,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Load Model (ms)
+          size: h3
       - type: metric
         properties:
-          title: Load Model (ms)
           lookup:
             filter:
             - column: metric
@@ -103,9 +131,12 @@ pages:
             uuid: metrics
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Models Size (kb)
+          size: h3
       - type: metric
         properties:
-          title: Models Size (kb)
           lookup:
             filter:
             - column: metric

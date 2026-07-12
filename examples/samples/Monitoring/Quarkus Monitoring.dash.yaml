@@ -49,9 +49,12 @@ pages:
   - columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: CPU Usage
+          size: h3
       - type: metric
         properties:
-          title: CPU Usage
           lookup:
             uuid: all_metrics
             filter:
@@ -70,9 +73,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Open Files
+          size: h3
       - type: metric
         properties:
-          title: Open Files
           lookup:
             uuid: all_metrics
             filter:
@@ -87,9 +93,12 @@ pages:
                 column: Total
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Uptime
+          size: h3
       - type: metric
         properties:
-          title: Uptime
           visible: true
           lookup:
             uuid: all_metrics
@@ -109,9 +118,12 @@ pages:
             expression: value / 60
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Peak Threads
+          size: h3
       - type: metric
         properties:
-          title: Peak Threads
           lookup:
             uuid: all_metrics
             filter:
@@ -127,9 +139,12 @@ pages:
     columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: JVM Memory Used Bytes (heap)
+          size: h3
       - type: bar-chart
         properties:
-          title: JVM Memory Used Bytes (heap)
           lookup:
             uuid: all_metrics
             filter:
@@ -161,9 +176,12 @@ pages:
             }
     - span: 6
       components:
+      - type: title
+        properties:
+          text: JVM Memory Used Bytes (nonheap)
+          size: h3
       - type: bar-chart
         properties:
-          title: JVM Memory Used Bytes (nonheap)
           lookup:
             uuid: all_metrics
             filter:
@@ -197,9 +215,12 @@ pages:
       margin-top: 20px
     columns:
     - components:
+      - type: title
+        properties:
+          text: Threads
+          size: h3
       - type: bar-chart
         properties:
-          title: Threads
           lookup:
             uuid: all_metrics
             filter:
@@ -230,9 +251,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Heap Memory Usage
+          size: h3
       - type: timeseries
         properties:
-          title: Heap Memory Usage
           chart:
             height: 300
           lookup:
@@ -253,9 +277,12 @@ pages:
               - source: value
     - span: 6
       components:
+      - type: title
+        properties:
+          text: CPU Usage
+          size: h3
       - type: timeseries
         properties:
-          title: CPU Usage
           chart:
             height: 300
           lookup:
@@ -273,9 +300,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Live Threads
+          size: h3
       - type: timeseries
         properties:
-          title: Live Threads
           chart:
             height: 300
           lookup:
@@ -292,9 +322,12 @@ pages:
               - source: value
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Loaded Classes
+          size: h3
       - type: timeseries
         properties:
-          title: Loaded Classes
           chart:
             height: 300
           lookup:
@@ -313,9 +346,12 @@ pages:
   rows:
   - columns:
     - components:
+      - type: title
+        properties:
+          text: Live CPU Usage (accumulating)
+          size: h3
       - type: timeseries
         properties:
-          title: Live CPU Usage (accumulating)
           chart:
             height: 350
             zoom: true
@@ -334,9 +370,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Live Threads (accumulating)
+          size: h3
       - type: timeseries
         properties:
-          title: Live Threads (accumulating)
           chart:
             height: 300
           lookup:
@@ -353,9 +392,12 @@ pages:
               - source: value
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Live Memory (accumulating)
+          size: h3
       - type: timeseries
         properties:
-          title: Live Memory (accumulating)
           chart:
             height: 300
           lookup:

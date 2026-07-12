@@ -4,23 +4,47 @@ global:
   mode: dark
 datasets:
 - uuid: metrics
-  url: ${kepler_metrics_url}
-  cacheEnabled: true
-  refreshTime: 5second
+  content: >-
+    [
+      ["kepler_container_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1842.5"],
+      ["kepler_container_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "956.3"],
+      ["kepler_container_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "412.8"],
+      ["kepler_container_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "2134.1"],
+      ["kepler_container_core_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1105.5"],
+      ["kepler_container_core_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "573.8"],
+      ["kepler_container_core_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "247.7"],
+      ["kepler_container_core_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "1280.5"],
+      ["kepler_container_dram_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "368.5"],
+      ["kepler_container_dram_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "191.3"],
+      ["kepler_container_dram_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "82.6"],
+      ["kepler_container_dram_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "426.8"],
+      ["kepler_container_uncore_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "92.1"],
+      ["kepler_container_uncore_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "47.8"],
+      ["kepler_container_package_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "1197.6"],
+      ["kepler_container_package_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "621.6"],
+      ["kepler_container_package_joules_total", "container_id=\"ghi789\",container_name=\"redis\",container_namespace=\"cache\",pod_name=\"redis-master-0\"", "330.3"],
+      ["kepler_container_package_joules_total", "container_id=\"jkl012\",container_name=\"postgres\",container_namespace=\"data\",pod_name=\"postgres-primary-0\"", "1707.3"],
+      ["kepler_container_gpu_joules_total", "container_id=\"def456\",container_name=\"worker\",container_namespace=\"prod\",pod_name=\"worker-3a8b2\"", "143.4"],
+      ["kepler_container_other_host_components_joules_total", "container_id=\"abc123\",container_name=\"api-server\",container_namespace=\"prod\",pod_name=\"api-server-7d4f9\"", "276.4"],
+      ["kepler_node_core_joules_total", "instance=\"node-01\",job=\"kepler\"", "8432.5"],
+      ["kepler_node_core_joules_total", "instance=\"node-02\",job=\"kepler\"", "6218.3"],
+      ["kepler_node_dram_joules_total", "instance=\"node-01\",job=\"kepler\"", "2108.1"],
+      ["kepler_node_dram_joules_total", "instance=\"node-02\",job=\"kepler\"", "1554.6"],
+      ["kepler_node_uncore_joules_total", "instance=\"node-01\",job=\"kepler\"", "421.6"],
+      ["kepler_node_uncore_joules_total", "instance=\"node-02\",job=\"kepler\"", "310.9"],
+      ["kepler_node_package_joules_total", "instance=\"node-01\",job=\"kepler\"", "8854.1"],
+      ["kepler_node_package_joules_total", "instance=\"node-02\",job=\"kepler\"", "6529.2"],
+      ["kepler_node_gpu_joules_total", "instance=\"node-01\",job=\"kepler\"", "1245.0"],
+      ["kepler_node_other_host_components_joules_total", "instance=\"node-01\",job=\"kepler\"", "1685.7"],
+      ["kepler_node_other_host_components_joules_total", "instance=\"node-02\",job=\"kepler\"", "1243.0"]
+    ]
 - uuid: joules_by_container
-  url: ${kepler_metrics_url}
-  cacheEnabled: true
-  expression: >-
-    $ [$contains($[0], /kepler_container.*joules_total/) and $[2] != "0"].[
-      $replace($[1], /(.+)container_name="([0-9a-zA-Z-_]+)",(.+)/, "$2"),
-      $replace($[1], /(.+)pod_name="([0-9a-zA-Z-_]+)"/, "$2"),
-      $[0] = "kepler_container_joules_total" ? $[2] : "0",
-      $[0] = "kepler_container_core_joules_total" ? $[2] : "0",
-      $[0] = "kepler_container_dram_joules_total" ? $[2] : "0",
-      $[0] = "kepler_container_uncore_joules_total" ? $[2] : "0",
-      $[0] = "kepler_container_package_joules_total" ? $[2] : "0",
-      $[0] = "kepler_container_gpu_joules_total" ? $[2] : "0",
-      $[0] = "kepler_container_other_host_components_joules_total" ? $[2] : "0"
+  content: >-
+    [
+      ["api-server", "api-server-7d4f9", 1842.5, 1105.5, 368.5, 92.1, 1197.6, 276.4, 0],
+      ["worker", "worker-3a8b2", 956.3, 573.8, 191.3, 47.8, 621.6, 0, 143.4],
+      ["redis", "redis-master-0", 412.8, 247.7, 82.6, 0, 330.3, 0, 0],
+      ["postgres", "postgres-primary-0", 2134.1, 1280.5, 426.8, 0, 1707.3, 0, 0]
     ]
   columns:
   - id: Container
@@ -40,13 +64,11 @@ datasets:
   - id: GPU
     type: NUMBER
 - uuid: joules_by_node
-  url: ${kepler_metrics_url}
-  cacheEnabled: true
-  expression: "$ [$contains($[0], /kepler_node.*joules_total/) and $[2] != \"0\"].[\n  $replace($[1], /instance=\"([0-9a-zA-Z-_]+)\"\
-    ,(.+)/, \"$1\"),        \n  $[0] = \"kepler_node_core_joules_total\" ? $[2] : \"0\",\n  $[0] = \"kepler_node_dram_joules_total\"\
-    \ ? $[2] : \"0\",\n  $[0] = \"kepler_node_uncore_joules_total\" ? $[2] : \"0\",\n  $[0] = \"kepler_node_package_joules_total\"\
-    \ ? $[2] : \"0\",\n  $[0] = \"kepler_node_gpu_joules_total\" ? $[2] : \"0\",\n  $[0] = \"kepler_node_other_host_components_joules_total\"\
-    \ ? $[2] : \"0\",\n  $[2]\n  \n]"
+  content: >-
+    [
+      ["node-01", 8432.5, 2108.1, 421.6, 8854.1, 1685.7, 1245.0, 22747.0],
+      ["node-02", 6218.3, 1554.6, 310.9, 6529.2, 1243.0, 0, 15856.0]
+    ]
   columns:
   - id: Node
   - id: Core
@@ -64,13 +86,13 @@ datasets:
   - id: Value
     type: NUMBER
 - uuid: monitoring
-  url: ${kepler_metrics_url}
-  cacheEnabled: true
-  accumulate: true
-  refreshTime: 5second
-  expression: "(\n  $now := $now() ~> $toMillis();\n  $[$[0] = \"kepler_container_joules_total\" and $[2] != \"0\"].[\n  \
-    \  $replace($[1], /(.+)container_namespace=\"([0-9a-zA-Z-_]+)\",(.+)/, \"$2\"),\n    $replace($[1], /(.+)container_name=\"\
-    ([0-9a-zA-Z-_]+)\",(.+)/, \"$2\"),        \n    $[2],\n    $now\n  ]\n)"
+  content: >-
+    [
+      ["prod", "api-server", 1842.5, 1719849600000],
+      ["prod", "worker", 956.3, 1719849600000],
+      ["cache", "redis", 412.8, 1719849600000],
+      ["data", "postgres", 2134.1, 1719849600000]
+    ]
   columns:
   - id: Namespace
   - id: Container
@@ -96,9 +118,12 @@ pages:
       margin-top: 30px
     columns:
     - components:
+      - type: title
+        properties:
+          text: Joules by Container over time
+          size: h3
       - type: timeseries
         properties:
-          title: Joules by Container over time
           filter:
             listening: true
           lookup:
@@ -124,9 +149,12 @@ pages:
             source: Node
           functions:
           - source: Node
+  - type: title
+    properties:
+      text: Total Joules by Node
+      size: h3
   - type: metric
     properties:
-      title: Total Joules by Node
       filter:
         listening: true
       lookup:
@@ -138,9 +166,12 @@ pages:
       columns:
       - id: Total
         pattern: '###,###.000'
+  - type: title
+    properties:
+      text: Joules by Node
+      size: h3
   - type: bar-chart
     properties:
-      title: Joules by Node
       chart:
         height: 400
       filter:
@@ -192,9 +223,12 @@ pages:
             source: Pod
           functions:
           - source: Pod
+  - type: title
+    properties:
+      text: Total Joules by Container
+      size: h3
   - type: metric
     properties:
-      title: Total Joules by Container
       filter:
         listening: true
       lookup:
@@ -206,9 +240,12 @@ pages:
       columns:
       - id: Total
         pattern: '###,###.000'
+  - type: title
+    properties:
+      text: Joules by Container
+      size: h3
   - type: bar-chart
     properties:
-      title: Joules by Container
       chart:
         height: 400
       filter:

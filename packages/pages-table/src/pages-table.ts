@@ -11,7 +11,7 @@ import { resolveColumnName, cellToRaw, applyCellExpression, resolveColumnExpress
 import { until } from 'lit/directives/until.js';
 import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
 import { evaluateExpression, createRowContext } from '@casehubio/pages-component/dist/context/expression-evaluator.js';
-import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, findMatchingNodes, rowMatchesText, sortTreeLevel, type TreeNode, type ExpandableConfig } from './tree-builder.js';
+import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, paginateTreeByRoots, findMatchingNodes, rowMatchesText, sortTreeLevel, type TreeNode, type ExpandableConfig } from './tree-builder.js';
 import { EMPTY_CONTEXT } from '@casehubio/pages-component/dist/context/types.js';
 
 const AUTO_THRESHOLD = 50;
@@ -302,11 +302,14 @@ export class PagesTable extends LitElement {
       border-bottom: 1px solid var(--pages-neutral-6, #d4d4d4);
       background: var(--pages-neutral-2, #fafafa);
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
     }
 
     .header {
       display: grid;
-      padding-right: 36px;
+      flex: 1;
+      min-width: 0;
     }
 
     .header-cell {
@@ -554,15 +557,11 @@ export class PagesTable extends LitElement {
     }
 
     .toolbar {
-      position: absolute;
-      top: 0;
-      right: 0;
       display: flex;
       align-items: center;
       gap: var(--pages-space-2, 8px);
-      height: 100%;
       padding: 0 var(--pages-space-2, 8px);
-      z-index: 2;
+      flex-shrink: 0;
     }
 
     .filter-input {
@@ -1355,6 +1354,9 @@ export class PagesTable extends LitElement {
 
   private get _totalPageCount(): number {
     if (!this._usePagination) return 1;
+    if (this._expandableConfig && this._treeRoots.length > 0) {
+      return Math.ceil(this._treeRoots.length / this.pageSize);
+    }
     const total = this.totalRows ?? this._dataRows.length;
     return Math.ceil(total / this.pageSize);
   }
@@ -1384,6 +1386,10 @@ export class PagesTable extends LitElement {
 
     this._treeMetadata.clear();
     if (this._expandableConfig && this._treeRoots.length > 0) {
+      if (this._usePagination) {
+        const { pageNodes } = paginateTreeByRoots(this._treeRoots, this._treeExpandState, this.currentPage, this.pageSize);
+        return pageNodes.map(n => n.row);
+      }
       const visibleNodes = collectVisibleNodes(this._treeRoots, this._treeExpandState);
       rows = visibleNodes.map(n => n.row);
     } else if (this.getChildren && this.getRowKey) {

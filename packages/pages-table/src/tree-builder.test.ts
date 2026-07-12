@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data/dist/dataset/types.js';
 import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
+import { buildTreeIndex, computeDefaultExpandState, paginateTreeByRoots } from './tree-builder.js';
 
 type TableEl = HTMLElement & {
   dataSet?: TypedDataSet;
@@ -36,6 +37,57 @@ function makeOrgDataSet() {
     ],
   );
 }
+
+function makeMultiRootDataSet() {
+  return fromRows(
+    [
+      { id: 'A', parentId: '', name: 'Root A', level: 'Root' },
+      { id: 'A1', parentId: 'A', name: 'Child A1', level: 'Child' },
+      { id: 'A2', parentId: 'A', name: 'Child A2', level: 'Child' },
+      { id: 'B', parentId: '', name: 'Root B', level: 'Root' },
+      { id: 'B1', parentId: 'B', name: 'Child B1', level: 'Child' },
+      { id: 'C', parentId: '', name: 'Root C', level: 'Root' },
+      { id: 'C1', parentId: 'C', name: 'Child C1', level: 'Child' },
+      { id: 'C2', parentId: 'C', name: 'Child C2', level: 'Child' },
+      { id: 'C3', parentId: 'C', name: 'Child C3', level: 'Child' },
+    ],
+    [
+      { id: idCol, name: 'ID', type: ColumnType.TEXT, getValue: (r: { id: string; parentId: string; name: string; level: string }) => r.id },
+      { id: parentIdCol, name: 'Parent', type: ColumnType.TEXT, getValue: (r: { id: string; parentId: string; name: string; level: string }) => r.parentId },
+      { id: nameCol, name: 'Name', type: ColumnType.TEXT, getValue: (r: { id: string; parentId: string; name: string; level: string }) => r.name },
+      { id: levelCol, name: 'Level', type: ColumnType.LABEL, getValue: (r: { id: string; parentId: string; name: string; level: string }) => r.level },
+    ],
+  );
+}
+
+describe('paginateTreeByRoots', () => {
+  it('slices by root count, including all expanded children', () => {
+    const ds = makeMultiRootDataSet();
+    const config = { idColumn: idCol, parentColumn: parentIdCol };
+    const { roots } = buildTreeIndex(ds, config);
+    const expandState = computeDefaultExpandState(roots, true);
+
+    const page0 = paginateTreeByRoots(roots, expandState, 0, 2);
+    expect(page0.rootCount).toBe(3);
+    const page0Names = page0.pageNodes.map(n => n.row.text(nameCol));
+    expect(page0Names).toEqual(['Root A', 'Child A1', 'Child A2', 'Root B', 'Child B1']);
+
+    const page1 = paginateTreeByRoots(roots, expandState, 1, 2);
+    const page1Names = page1.pageNodes.map(n => n.row.text(nameCol));
+    expect(page1Names).toEqual(['Root C', 'Child C1', 'Child C2', 'Child C3']);
+  });
+
+  it('returns correct rootCount for page calculation', () => {
+    const ds = makeMultiRootDataSet();
+    const config = { idColumn: idCol, parentColumn: parentIdCol };
+    const { roots } = buildTreeIndex(ds, config);
+    const expandState = computeDefaultExpandState(roots, false);
+
+    const result = paginateTreeByRoots(roots, expandState, 0, 2);
+    expect(result.rootCount).toBe(3);
+    expect(result.pageNodes).toHaveLength(2);
+  });
+});
 
 describe('tree table (expandable)', () => {
   let el: TableEl;

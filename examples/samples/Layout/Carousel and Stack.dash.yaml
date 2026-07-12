@@ -38,16 +38,22 @@ pages:
                 sections:
                   Bar Chart:
                     components:
+                      - type: title
+                        properties:
+                          text: Team Headcount
+                          size: h3
                       - type: bar-chart
                         properties:
-                          title: Team Headcount
                           lookup:
                             uuid: demo-data
                   Pie Chart:
                     components:
+                      - type: title
+                        properties:
+                          text: Division Breakdown
+                          size: h3
                       - type: pie-chart
                         properties:
-                          title: Division Breakdown
                           lookup:
                             uuid: demo-data
                             group:

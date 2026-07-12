@@ -13,9 +13,12 @@ pages:
   components:
   - html: Metric components render an HTML template based on data. Users can customize the HTML and Javascript based on data.
   - html: <h4><strong>Default Metric</strong></h4><br />
+  - type: title
+    properties:
+      text: Total Products
+      size: h3
   - type: metric
     properties:
-      title: Total Products
       visible: true
       chart:
         height: 100
@@ -30,9 +33,12 @@ pages:
     properties:
       margin-top: 20px
       margin-bottom: 20px
+  - type: title
+    properties:
+      text: Total Products
+      size: h3
   - type: metric
     properties:
-      title: Total Products
       visible: true
       lookup:
         uuid: products
@@ -54,9 +60,12 @@ pages:
     font-size: x-large
     text-align: center
   components:
+  - type: title
+    properties:
+      text: Memory Usage
+      size: h3
   - type: meter
     properties:
-      title: Memory Usage
       chart:
         resizable: false
         legend:

@@ -22,7 +22,8 @@ function parseCell(value: string, column: Column, rowIndex: number): CellValue {
     }
 
     case ColumnType.DATE: {
-      const d = new Date(value);
+      const epoch = Number(value);
+      const d = Number.isNaN(epoch) ? new Date(value) : new Date(epoch);
       if (Number.isNaN(d.getTime())) {
         throw new DataSetError(
           "SCHEMA_MISMATCH",

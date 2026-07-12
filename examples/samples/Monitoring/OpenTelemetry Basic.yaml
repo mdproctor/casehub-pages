@@ -1,13 +1,22 @@
 datasets:
 - uuid: traces
-  url: traces.json
-  expression: >-
-    $.data.spans.[
-        $.traceID,
-        $.spanID,
-        $.operationName,
-        $.startTime /  1000,
-        $.duration
+  content: >-
+    [
+      ["abc123def456", "span001", "HTTP GET /api/users", 1719849600000, 45230],
+      ["abc123def456", "span002", "pg.query SELECT", 1719849600012, 18450],
+      ["abc123def456", "span003", "redis.GET cache:users", 1719849600005, 2340],
+      ["fed789abc012", "span004", "HTTP POST /api/orders", 1719849660000, 125670],
+      ["fed789abc012", "span005", "pg.query INSERT", 1719849660015, 34210],
+      ["fed789abc012", "span006", "kafka.produce order.created", 1719849660052, 8920],
+      ["fed789abc012", "span007", "HTTP GET /api/inventory", 1719849660065, 28450],
+      ["a1b2c3d4e5f6", "span008", "HTTP GET /api/products", 1719849720000, 67890],
+      ["a1b2c3d4e5f6", "span009", "elasticsearch.search products", 1719849720008, 42310],
+      ["a1b2c3d4e5f6", "span010", "redis.MGET cache:products", 1719849720003, 5670],
+      ["112233445566", "span011", "HTTP PUT /api/users/profile", 1719849780000, 89340],
+      ["112233445566", "span012", "pg.query UPDATE", 1719849780022, 15670],
+      ["112233445566", "span013", "s3.putObject avatar.png", 1719849780040, 38920],
+      ["aabbccddeeff", "span014", "HTTP DELETE /api/sessions", 1719849840000, 12450],
+      ["aabbccddeeff", "span015", "redis.DEL session:token", 1719849840003, 1890]
     ]
   columns:
   - id: Trace ID
@@ -30,9 +39,9 @@ pages:
         uuid: traces
         group:
         - columnGroup:
-            source: Column 2
+            source: Operation
           functions:
-          - source: Column 2
+          - source: Operation
   - type: bubble-chart
     properties:
       chart:
@@ -45,10 +54,10 @@ pages:
         uuid: traces
         group:
         - functions:
-          - source: Column 3
-          - source: Column 4
-          - source: Column 4
-          - source: Column 2
+          - source: Start Time
+          - source: Duration
+          - source: Duration
+          - source: Operation
       axis:
         x:
           labels_show: false

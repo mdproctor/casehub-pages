@@ -16,17 +16,23 @@ pages:
       - columns:
           - span: 4
             components:
+              - type: title
+                properties:
+                  text: All rows (rowCount 10)
+                  size: h3
               - type: line-chart
                 properties:
-                  title: All rows (rowCount 10)
                   lookup:
                     uuid: data
                     rowCount: 10
           - span: 4
             components:
+              - type: title
+                properties:
+                  text: Values > 0
+                  size: h3
               - type: bar-chart
                 properties:
-                  title: Values > 0
                   lookup:
                     uuid: data
                     filter:
@@ -36,10 +42,13 @@ pages:
                           - 0
           - span: 4
             components:
+              - type: title
+                properties:
+                  text: Values < 0
+                  size: h3
               - type: bar-chart
                 properties:
                   subtype: bar
-                  title: Values < 0
                   lookup:
                     uuid: data
                     filter:

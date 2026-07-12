@@ -2,7 +2,26 @@ properties:
   metricsUrl: metrics
 datasets:
 - uuid: metrics
-  url: ${metricsUrl}
+  content: >-
+    [
+      ["jupyterhub_total_users", "", 84],
+      ["jupyterhub_running_servers", "", 12],
+      ["process_resident_memory_bytes", "", 268435456],
+      ["jupyterhub_hub_startup_duration_seconds_sum", "", 3],
+      ["jupyterhub_server_spawn_duration_seconds_count", "success", 142],
+      ["jupyterhub_server_spawn_duration_seconds_count", "failure", 7],
+      ["jupyterhub_server_spawn_duration_seconds_count", "timeout", 3],
+      ["jupyterhub_server_stop_seconds_count", "success", 128],
+      ["jupyterhub_server_stop_seconds_count", "failure", 2],
+      ["jupyterhub_server_stop_seconds_count", "timeout", 1],
+      ["jupyterhub_proxy_add_duration_seconds_count", "success", 156],
+      ["jupyterhub_proxy_add_duration_seconds_count", "failure", 4],
+      ["jupyterhub_request_duration_seconds_count", "200 GET /hub/api", 3842],
+      ["jupyterhub_request_duration_seconds_count", "200 POST /hub/spawn", 1247],
+      ["jupyterhub_request_duration_seconds_count", "302 GET /hub/login", 967],
+      ["jupyterhub_request_duration_seconds_count", "404 GET /hub/api", 23],
+      ["jupyterhub_request_duration_seconds_count", "500 POST /hub/spawn", 8]
+    ]
   columns:
   - id: Metric
     type: LABEL
@@ -18,9 +37,12 @@ pages:
   - columns:
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Users
+          size: h3
       - type: metric
         properties:
-          title: Users
           lookup:
             filter:
             - column: metric
@@ -36,9 +58,12 @@ pages:
             pattern: '#'
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Running Servers
+          size: h3
       - type: metric
         properties:
-          title: Running Servers
           lookup:
             filter:
             - column: metric
@@ -54,9 +79,12 @@ pages:
             pattern: '#'
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Memory (mb)
+          size: h3
       - type: metric
         properties:
-          title: Memory (mb)
           lookup:
             filter:
             - column: metric
@@ -73,9 +101,12 @@ pages:
             pattern: '#'
     - span: '3'
       components:
+      - type: title
+        properties:
+          text: Startup (seconds)
+          size: h3
       - type: metric
         properties:
-          title: Startup (seconds)
           lookup:
             filter:
             - column: metric

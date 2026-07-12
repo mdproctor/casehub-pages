@@ -85,6 +85,42 @@ pages:
                           uuid: inventory
                         sortable: true
 
+          Dock Bar:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **dock-bar** renders icon buttons that toggle panel visibility.
+                    Each item's `panelId` matches a component `id` — clicking the
+                    button shows or hides that panel.
+              - dock-bar:
+                  orientation: horizontal
+                  items:
+                    - icon: "\U0001F4CA"
+                      label: Charts
+                      panelId: charts-panel
+                      defaultOpen: true
+                    - icon: "\U0001F4CB"
+                      label: Data
+                      panelId: data-panel
+              - split:
+                  direction: horizontal
+                  ratio: [50, 50]
+                  children:
+                    - type: bar-chart
+                      id: charts-panel
+                      properties:
+                        chart:
+                          height: 300
+                        lookup:
+                          uuid: inventory
+                    - type: table
+                      id: data-panel
+                      properties:
+                        lookup:
+                          uuid: inventory
+                        sortable: true
+
           Three Panel:
             components:
               - type: markdown

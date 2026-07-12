@@ -228,6 +228,36 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
     };
   }
 
+  // Columns layout component — type: columns with columns: [{components: [...]}]
+  if ("type" in raw && raw.type === "columns" && "columns" in raw) {
+    const columnsArray = raw.columns as Array<Record<string, unknown>>;
+    const props = raw.properties as Record<string, unknown> | undefined;
+    const spanStr = props?.span as string | undefined;
+    const spans = spanStr
+      ? spanStr.split(",").map(s => Number(s.trim()))
+      : columnsArray.map(() => Math.floor(12 / columnsArray.length));
+    const visibleWhen = raw.visibleWhen as string | undefined;
+
+    const items: { placement: { x: number; y: number; w: number; h: number }; component: Component }[] = [];
+    let x = 0;
+    for (let ci = 0; ci < columnsArray.length; ci++) {
+      const col = columnsArray[ci]!;
+      const span = spans[ci] ?? Math.floor(12 / columnsArray.length);
+      const colComponents = (col.components ?? []) as Array<Record<string, unknown>>;
+      for (let ri = 0; ri < colComponents.length; ri++) {
+        const component = desugarComponent(colComponents[ri]!, displayerDefaults);
+        items.push({ placement: { x, y: ri, w: span, h: 1 }, component });
+      }
+      x += span;
+    }
+
+    return {
+      type: "grid",
+      items,
+      ...(visibleWhen ? { visibleWhen } : {}),
+    };
+  }
+
   // Type-based dispatch (navigation, external, or displayer type)
   if ("type" in raw && typeof raw.type === "string") {
     const rawType = raw.type;
@@ -341,8 +371,10 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       const displayerInput = { type: rawType, ...rawProps };
       const component = desugarDisplayer(displayerInput);
       const visibleWhen = raw.visibleWhen as string | undefined;
+      const rawId = raw.id as string | undefined;
       return {
         ...component,
+        ...(rawId ? { id: rawId } : {}),
         ...(visibleWhen ? { visibleWhen } : {}),
       };
     }

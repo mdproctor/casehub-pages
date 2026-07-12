@@ -59,9 +59,12 @@ pages:
   - columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Total Revenue
+          size: h3
       - type: metric
         properties:
-          title: Total Revenue
           lookup:
             uuid: sales
             group:
@@ -73,9 +76,12 @@ pages:
             pattern: $#,##0
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Products
+          size: h3
       - type: metric
         properties:
-          title: Products
           lookup:
             uuid: sales
             group:
@@ -89,9 +95,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Regions
+          size: h3
       - type: metric
         properties:
-          title: Regions
           lookup:
             uuid: sales
             group:
@@ -105,9 +114,12 @@ pages:
             pattern: '#'
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Avg Deal
+          size: h3
       - type: metric
         properties:
-          title: Avg Deal
           lookup:
             uuid: sales
             group:
@@ -120,9 +132,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Revenue by Product
+          size: h3
       - type: bar-chart
         properties:
-          title: Revenue by Product
           lookup:
             uuid: sales
             group:
@@ -134,10 +149,13 @@ pages:
                 function: SUM
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Monthly Trend
+          size: h3
       - type: line-chart
         properties:
           subtype: smooth
-          title: Monthly Trend
           chart:
             height: 250
           lookup:
@@ -156,21 +174,119 @@ pages:
       navGroupId: SettingsPages
 - name: Profile
   components:
-  - page: Profile Detail
-    src: includes/settings-profile.dash.yml
-- name: Security
-  components:
+  - html: >-
+      <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+        ↳ Profile settings
+      </div>
+  - type: title
+    properties:
+      text: User Profile Fields
+      size: h3
   - type: table
     properties:
-      title: Security Audit Log
+      pageSize: 5
+      sortable: true
+      lookup:
+        uuid: profile
+- name: Security
+  components:
+  - type: title
+    properties:
+      text: Security Audit Log
+      size: h3
+  - type: table
+    properties:
       pageSize: 5
       sortable: true
       lookup:
         uuid: security-log
 - name: Reports
-  components:
-  - page: Reports Detail
-    src: includes/reports.dash.yml
+  rows:
+  - columns:
+    - components:
+      - html: >-
+          <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+            ↳ Reports overview
+          </div>
+  - columns:
+    - span: 4
+      components:
+      - type: title
+        properties:
+          text: Reports Generated
+          size: h3
+      - type: metric
+        properties:
+          lookup:
+            uuid: report-stats
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - Generated
+            group:
+            - functions:
+              - source: Count
+                function: SUM
+          columns:
+          - id: Count
+            pattern: '#,##0'
+    - span: 4
+      components:
+      - type: title
+        properties:
+          text: Avg Generation Time
+          size: h3
+      - type: metric
+        properties:
+          lookup:
+            uuid: report-stats
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - AvgTime
+            group:
+            - functions:
+              - source: Count
+                function: SUM
+          columns:
+          - id: Count
+            pattern: '#,##0 ms'
+    - span: 4
+      components:
+      - type: title
+        properties:
+          text: Failed Reports
+          size: h3
+      - type: metric
+        properties:
+          lookup:
+            uuid: report-stats
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - Failed
+            group:
+            - functions:
+              - source: Count
+                function: SUM
+          columns:
+          - id: Count
+            pattern: '#,##0'
+  - columns:
+    - components:
+      - type: title
+        properties:
+          text: Recent Report Runs
+          size: h3
+      - type: table
+        properties:
+          pageSize: 6
+          sortable: true
+          lookup:
+            uuid: report-runs
 - name: Sales
   components:
   - type: tabs
@@ -181,9 +297,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Revenue by Product
+          size: h3
       - type: bar-chart
         properties:
-          title: Revenue by Product
           lookup:
             uuid: sales
             group:
@@ -195,10 +314,13 @@ pages:
                 function: SUM
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Revenue Share
+          size: h3
       - type: pie-chart
         properties:
           subtype: donut
-          title: Revenue Share
           lookup:
             uuid: sales
             group:
@@ -215,9 +337,12 @@ pages:
       navGroupId: TransactionViews
 - name: Txn Table
   components:
+  - type: title
+    properties:
+      text: Recent Transactions
+      size: h3
   - type: table
     properties:
-      title: Recent Transactions
       pageSize: 8
       sortable: true
       filter:
@@ -257,9 +382,12 @@ pages:
   - columns:
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Total Revenue
+          size: h3
       - type: metric
         properties:
-          title: Total Revenue
           lookup:
             uuid: sales
             group:
@@ -271,9 +399,12 @@ pages:
             pattern: $#,##0
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Avg Deal Size
+          size: h3
       - type: metric
         properties:
-          title: Avg Deal Size
           lookup:
             uuid: sales
             group:
@@ -285,9 +416,12 @@ pages:
             pattern: $#,##0
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Total Deals
+          size: h3
       - type: metric
         properties:
-          title: Total Deals
           lookup:
             uuid: sales
             group:
@@ -301,10 +435,13 @@ pages:
       margin-top: 20px
     columns:
     - components:
+      - type: title
+        properties:
+          text: Revenue Trend
+          size: h3
       - type: line-chart
         properties:
           subtype: smooth
-          title: Revenue Trend
           chart:
             height: 250
           lookup:
@@ -326,9 +463,12 @@ pages:
   - columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: CPU
+          size: h3
       - type: metric
         properties:
-          title: CPU
           lookup:
             uuid: ops
             filter:
@@ -342,9 +482,12 @@ pages:
                 function: MAX
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Memory
+          size: h3
       - type: metric
         properties:
-          title: Memory
           lookup:
             uuid: ops
             filter:
@@ -358,9 +501,12 @@ pages:
                 function: MAX
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Disk
+          size: h3
       - type: metric
         properties:
-          title: Disk
           lookup:
             uuid: ops
             filter:
@@ -374,9 +520,12 @@ pages:
                 function: MAX
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Network
+          size: h3
       - type: metric
         properties:
-          title: Network
           lookup:
             uuid: ops
             filter:
@@ -393,9 +542,12 @@ pages:
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Request Latency (ms)
+          size: h3
       - type: bar-chart
         properties:
-          title: Request Latency (ms)
           chart:
             margin:
               left: 100
@@ -413,9 +565,12 @@ pages:
                 function: AVERAGE
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Error Rate (%)
+          size: h3
       - type: bar-chart
         properties:
-          title: Error Rate (%)
           lookup:
             uuid: services
             sort:

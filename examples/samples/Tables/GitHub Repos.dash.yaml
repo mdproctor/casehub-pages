@@ -1,9 +1,18 @@
 datasets:
 - uuid: quarkus_repos
-  url: https://api.github.com/search/repositories?q=quarkus&sort=updated&per_page=30
-  cacheEnabled: true
-  expression: >-
-    items.[full_name, description, stargazers_count, language, updated_at]
+  content: >-
+    [
+      ["quarkusio/quarkus", "Quarkus: Supersonic Subatomic Java", 14200, "Java", "2026-07-12"],
+      ["quarkusio/quarkus-quickstarts", "Quarkus quickstart code", 1920, "Java", "2026-07-11"],
+      ["quarkiverse/quarkus-langchain4j", "Quarkus Langchain4j extension", 842, "Java", "2026-07-10"],
+      ["quarkusio/quarkus-super-heroes", "Quarkus sample application - Super Heroes", 256, "Java", "2026-07-09"],
+      ["quarkiverse/quarkus-cxf", "Quarkus CXF extension", 198, "Java", "2026-07-08"],
+      ["quarkiverse/quarkus-quinoa", "Quarkus Quinoa extension for web bundlers", 162, "Java", "2026-07-07"],
+      ["quarkiverse/quarkus-jberet", "Quarkus JBeret Batch extension", 45, "Java", "2026-07-06"],
+      ["quarkiverse/quarkus-reactive-messaging-nats", "NATS Reactive Messaging connector", 38, "Java", "2026-07-05"],
+      ["quarkusio/quarkus-platform", "Quarkus Platform BOM and descriptor", 112, "Java", "2026-07-04"],
+      ["quarkiverse/quarkus-openapi-generator", "OpenAPI Generator extension for Quarkus", 142, "Java", "2026-07-03"]
+    ]
   columns:
   - id: Repository
     type: LABEL

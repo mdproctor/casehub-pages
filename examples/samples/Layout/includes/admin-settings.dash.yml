@@ -10,9 +10,12 @@ pages:
   - columns:
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Total Teams
+          size: h3
       - type: metric
         properties:
-          title: Total Teams
           lookup:
             uuid: team_members
             group:
@@ -25,9 +28,12 @@ pages:
             pattern: '#,##0'
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Total Members
+          size: h3
       - type: metric
         properties:
-          title: Total Members
           lookup:
             uuid: team_members
             group:
@@ -40,9 +46,12 @@ pages:
             pattern: '#,##0'
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Departments
+          size: h3
       - type: metric
         properties:
-          title: Departments
           lookup:
             uuid: team_members
             group:

@@ -3,7 +3,29 @@ properties:
   historyUrl: /data/quarkus/history.json
 datasets:
 - uuid: history
-  url: ${historyUrl}
+  content: >-
+    [
+      ["jvm_memory_used_bytes", "area=heap,id=G1 Eden", 42991616, 1719849600],
+      ["jvm_memory_used_bytes", "area=heap,id=G1 Eden", 48234496, 1719849602],
+      ["jvm_memory_used_bytes", "area=heap,id=G1 Eden", 35127296, 1719849604],
+      ["jvm_memory_used_bytes", "area=heap,id=G1 Old Gen", 28311552, 1719849600],
+      ["jvm_memory_used_bytes", "area=heap,id=G1 Old Gen", 28573696, 1719849602],
+      ["jvm_memory_used_bytes", "area=heap,id=G1 Old Gen", 29097984, 1719849604],
+      ["jvm_memory_used_bytes", "area=nonheap,id=Metaspace", 65011712, 1719849600],
+      ["jvm_memory_used_bytes", "area=nonheap,id=Metaspace", 65273856, 1719849602],
+      ["jvm_threads_live_threads", "", 42, 1719849600],
+      ["jvm_threads_live_threads", "", 44, 1719849602],
+      ["jvm_threads_live_threads", "", 43, 1719849604],
+      ["jvm_classes_loaded_classes", "", 12845, 1719849600],
+      ["jvm_classes_loaded_classes", "", 12847, 1719849602],
+      ["jvm_classes_loaded_classes", "", 12848, 1719849604],
+      ["system_cpu_usage", "", 0.23, 1719849600],
+      ["system_cpu_usage", "", 0.31, 1719849602],
+      ["system_cpu_usage", "", 0.18, 1719849604],
+      ["process_cpu_usage", "", 0.12, 1719849600],
+      ["process_cpu_usage", "", 0.19, 1719849602],
+      ["process_cpu_usage", "", 0.09, 1719849604]
+    ]
   columns:
   - id: metric
     type: LABEL
@@ -13,24 +35,6 @@ datasets:
     type: NUMBER
   - id: timestamp
     type: NUMBER
-- uuid: metrics
-  url: ${metricsUrl}
-  accumulate: true
-  cacheMaxRows: 30000
-  refreshTime: 2second
-  expression: >-
-    $map($, function($v){
-        [$v[0], $v[1], $v[2] = 'NaN' ? -1 : $v[2], $now() ~> $toMillis()]
-    })
-  columns:
-  - id: metric
-    type: label
-  - id: labels
-    type: label
-  - id: value
-    type: number
-  - id: register
-    type: number
 pages:
 - properties:
     margin-left: 10px
@@ -43,19 +47,22 @@ pages:
           lookup:
             group:
             - columnGroup:
-                source: register
+                source: timestamp
               functions:
               - source: metric
-              - source: register
+              - source: timestamp
               - source: value
                 function: SUM
             uuid: history
   - columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Heap Memory Usage
+          size: h3
       - type: timeseries
         properties:
-          title: Heap Memory Usage
           chart:
             height: 300
           lookup:
@@ -76,9 +83,12 @@ pages:
               - source: value
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Live Threads
+          size: h3
       - type: timeseries
         properties:
-          title: Live Threads
           chart:
             height: 300
           lookup:
@@ -98,9 +108,12 @@ pages:
     columns:
     - span: 6
       components:
+      - type: title
+        properties:
+          text: Loaded Classes
+          size: h3
       - type: timeseries
         properties:
-          title: Loaded Classes
           chart:
             height: 300
           lookup:
@@ -117,9 +130,12 @@ pages:
               - source: value
     - span: 6
       components:
+      - type: title
+        properties:
+          text: CPU Usage
+          size: h3
       - type: timeseries
         properties:
-          title: CPU Usage
           chart:
             height: 300
           lookup:

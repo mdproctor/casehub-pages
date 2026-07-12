@@ -1,7 +1,37 @@
 datasets:
 - uuid: metrics
-  url: metrics
-  cacheEnabled: true
+  content: >-
+    [
+      ["nodejs_version_info", "18.17.1", 1],
+      ["process_start_time_seconds", "", 1719849600],
+      ["process_heap_bytes", "", 104857600],
+      ["process_open_fds", "", 42],
+      ["nodejs_active_resources", "TCPSocketWrap", 12],
+      ["nodejs_active_resources", "Timeout", 8],
+      ["nodejs_active_resources", "FSReqCallback", 3],
+      ["nodejs_active_resources", "TTYWrap", 2],
+      ["nodejs_eventloop_lag_min_seconds", "", 0.000512],
+      ["nodejs_eventloop_lag_max_seconds", "", 0.042816],
+      ["nodejs_eventloop_lag_mean_seconds", "", 0.009734],
+      ["nodejs_heap_size_total_bytes", "", 78643200],
+      ["nodejs_heap_size_used_bytes", "", 52428800],
+      ["nodejs_heap_space_size_used_bytes", "old_space", 38797312],
+      ["nodejs_external_memory_bytes", "", 2097152],
+      ["up", "", 1],
+      ["process_max_fds", "", 1048576],
+      ["nodejs_active_handles_total", "", 15],
+      ["nodejs_active_requests_total", "", 3],
+      ["http_request_duration_seconds_count", "GET /api/catalog", 1523],
+      ["http_request_duration_seconds_count", "GET /api/techdocs", 874],
+      ["http_request_duration_seconds_count", "POST /api/scaffolder", 156]
+    ]
+  columns:
+  - id: metric
+    type: LABEL
+  - id: labels
+    type: LABEL
+  - id: value
+    type: number
 pages:
 - name: index
   rows:
@@ -17,9 +47,12 @@ pages:
   - columns:
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Node Version
+          size: h3
       - type: metric
         properties:
-          title: Node Version
           lookup:
             filter:
             - column: metric
@@ -32,9 +65,12 @@ pages:
             uuid: metrics
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Started
+          size: h3
       - type: metric
         properties:
-          title: Started
           lookup:
             filter:
             - column: metric
@@ -53,9 +89,12 @@ pages:
                                     .replace("T", " ")
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Heap Bytes
+          size: h3
       - type: metric
         properties:
-          title: Heap Bytes
           lookup:
             filter:
             - column: metric
@@ -71,9 +110,12 @@ pages:
             expression: parseInt(value / (1024 * 1024)) + " MB"
     - span: 3
       components:
+      - type: title
+        properties:
+          text: Open Files
+          size: h3
       - type: metric
         properties:
-          title: Open Files
           lookup:
             filter:
             - column: metric
@@ -92,9 +134,12 @@ pages:
   - columns:
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Active Resources
+          size: h3
       - type: bar-chart
         properties:
-          title: Active Resources
           lookup:
             sort:
             - column: value
@@ -117,9 +162,12 @@ pages:
               labels_angle: -10
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Event Loop Lag (seconds)
+          size: h3
       - type: bar-chart
         properties:
-          title: Event Loop Lag (seconds)
           lookup:
             sort:
             - column: metric
@@ -142,9 +190,12 @@ pages:
               \ === \"nodejs_eventloop_lag_max_seconds\")\n  lbl = \"Max\";\nlbl;"
     - span: 4
       components:
+      - type: title
+        properties:
+          text: Used Bytes (MB)
+          size: h3
       - type: bar-chart
         properties:
-          title: Used Bytes (MB)
           lookup:
             sort:
             - column: value

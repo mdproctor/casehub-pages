@@ -149,6 +149,77 @@ describe("desugar-new-types", () => {
     });
   });
 
+  describe("columns layout component", () => {
+    it("should desugar type: columns with span into grid with child items", () => {
+      const result = desugarComponent({
+        type: "columns",
+        properties: { span: "4,4,4" },
+        columns: [
+          { components: [{ html: "Left" }] },
+          { components: [{ html: "Middle" }] },
+          { components: [{ html: "Right" }] },
+        ],
+      });
+
+      expect(result.type).toBe("grid");
+      expect(result.items).toBeDefined();
+      expect(result.items).toHaveLength(3);
+      expect(result.items![0]!.placement.w).toBe(4);
+      expect(result.items![1]!.placement.w).toBe(4);
+      expect(result.items![2]!.placement.w).toBe(4);
+      expect(result.items![0]!.component.type).toBe("html");
+      expect(result.items![1]!.component.type).toBe("html");
+      expect(result.items![2]!.component.type).toBe("html");
+    });
+
+    it("should default span to equal distribution", () => {
+      const result = desugarComponent({
+        type: "columns",
+        columns: [
+          { components: [{ html: "Left" }] },
+          { components: [{ html: "Right" }] },
+        ],
+      });
+
+      expect(result.type).toBe("grid");
+      expect(result.items).toHaveLength(2);
+      expect(result.items![0]!.placement.w).toBe(6);
+      expect(result.items![1]!.placement.w).toBe(6);
+    });
+
+    it("should handle multiple components per column", () => {
+      const result = desugarComponent({
+        type: "columns",
+        properties: { span: "6,6" },
+        columns: [
+          { components: [{ html: "Top" }, { html: "Bottom" }] },
+          { components: [{ html: "Single" }] },
+        ],
+      });
+
+      expect(result.type).toBe("grid");
+      expect(result.items).toHaveLength(3);
+      expect(result.items![0]!.placement).toEqual({ x: 0, y: 0, w: 6, h: 1 });
+      expect(result.items![1]!.placement).toEqual({ x: 0, y: 1, w: 6, h: 1 });
+      expect(result.items![2]!.placement).toEqual({ x: 6, y: 0, w: 6, h: 1 });
+    });
+  });
+
+  describe("id preservation", () => {
+    it("should preserve id on data components", () => {
+      const result = desugarComponent({
+        type: "bar-chart",
+        id: "my-chart",
+        properties: {
+          lookup: { uuid: "test" },
+        },
+      });
+
+      expect(result.type).toBe("bar-chart");
+      expect(result.id).toBe("my-chart");
+    });
+  });
+
   describe("visibleWhen extraction", () => {
     it("should extract visibleWhen from displayer", () => {
       const result = desugarDisplayer({

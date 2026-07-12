@@ -13,9 +13,12 @@ datasets:
     type: NUMBER
 pages:
 - components:
+  - type: title
+    properties:
+      text: System CPU Usage
+      size: h3
   - type: metric
     properties:
-      title: System CPU Usage
       chart:
         height: 200
         margin:
