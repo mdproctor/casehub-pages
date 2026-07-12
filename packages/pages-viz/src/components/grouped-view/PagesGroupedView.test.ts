@@ -134,15 +134,15 @@ describe("PagesGroupedView", () => {
     expect(events[0]!.detail.payload.expanded).toBe(false);
   });
 
-  it("shows column header bar in sectioned mode", async () => {
+  it("shows column header table in sectioned mode", async () => {
     element.props = makeProps({ preset: "sectioned" });
     element.dataSet = makeGroupedDataset();
     await new Promise((r) => setTimeout(r, 0));
 
     const shadow = element.shadowRoot;
-    const headerBar = shadow.querySelector(".column-header-bar");
-    expect(headerBar).not.toBeNull();
-    const buttons = headerBar!.querySelectorAll(".col-header");
+    const headerTable = shadow.querySelector(".column-header-table");
+    expect(headerTable).not.toBeNull();
+    const buttons = headerTable!.querySelectorAll(".col-header");
     expect(buttons.length).toBe(2);
   });
 
@@ -168,5 +168,29 @@ describe("PagesGroupedView", () => {
     for (const content of contents) {
       expect(content.hasAttribute("hidden")).toBe(true);
     }
+  });
+
+  it("sectioned mode renders column headers inside a table, not a separate grid", async () => {
+    element.props = makeProps({ preset: "sectioned" });
+    element.dataSet = makeGroupedDataset();
+    await new Promise((r) => setTimeout(r, 0));
+
+    const shadow = element.shadowRoot;
+    const headerBar = shadow.querySelector(".column-header-bar");
+    expect(headerBar).toBeNull();
+
+    const headerTable = shadow.querySelector(".column-header-table");
+    expect(headerTable).not.toBeNull();
+    expect(headerTable!.tagName).toBe("TABLE");
+
+    const ths = headerTable!.querySelectorAll("th");
+    expect(ths.length).toBeGreaterThan(0);
+
+    const contentTable = shadow.querySelector(".section-content table");
+    expect(contentTable).not.toBeNull();
+    const contentColgroup = contentTable!.querySelector("colgroup");
+    const headerColgroup = headerTable!.querySelector("colgroup");
+    expect(headerColgroup).not.toBeNull();
+    expect(headerColgroup!.innerHTML).toBe(contentColgroup!.innerHTML);
   });
 });

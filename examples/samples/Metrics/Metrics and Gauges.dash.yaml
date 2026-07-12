@@ -1,0 +1,116 @@
+pages:
+- name: index
+  properties:
+    margin: 10px
+  components:
+  - type: tabs
+    properties:
+      width: 100%
+      navGroupId: MetricsNav
+      targetDivId: metrics_div
+  - div: metrics_div
+- name: Metric
+  components:
+  - html: Metric components render an HTML template based on data. Users can customize the HTML and Javascript based on data.
+  - html: <h4><strong>Default Metric</strong></h4><br />
+  - type: metric
+    properties:
+      title: Total Products
+      visible: true
+      chart:
+        height: 100
+        width: 150
+      lookup:
+        uuid: products
+        group:
+        - functions:
+          - source: Quantity
+            function: SUM
+  - html: 'The following metric uses custom HTML and Javascript template:'
+    properties:
+      margin-top: 20px
+      margin-bottom: 20px
+  - type: metric
+    properties:
+      title: Total Products
+      visible: true
+      lookup:
+        uuid: products
+        group:
+        - functions:
+          - source: Quantity
+            function: SUM
+      html:
+        html: <h2><strong>&#10026; Total Products:</strong>&nbsp;<span id="${this}">${value}</span></h2>
+        javascript: >-
+          ${this}.onmouseover = function() {
+                ${this}.style.color = "red";
+            };
+            ${this}.onmouseout = function() {
+                ${this}.style.color = "black";
+            };
+- name: Meter
+  properties:
+    font-size: x-large
+    text-align: center
+  components:
+  - type: meter
+    properties:
+      title: Memory Usage
+      chart:
+        resizable: false
+        legend:
+          show: 'true'
+          position: bottom
+      lookup:
+        uuid: memory_usage
+        group:
+        - columnGroup:
+            source: Server
+          functions:
+          - source: Server
+          - source: Usage
+            function: SUM
+      meter:
+        end: '4120'
+        critical: '3000'
+        warning: '2000'
+navTree:
+  root_items:
+  - type: GROUP
+    id: MetricsNav
+    children:
+    - page: Metric
+    - page: Meter
+datasets:
+- uuid: products
+  content: >-
+    [
+      ["Computers", "Scanner", 5, 3],
+      ["Computers", "Printer", 7, 4],
+      ["Computers", "Laptop", 3, 2],
+      ["Electronics", "Camera", 10, 7],
+      ["Electronics", "Headphones", 5, 9]
+    ]
+  columns:
+  - id: Section
+    type: LABEL
+  - id: Product
+    type: LABEL
+  - id: Quantity
+    type: NUMBER
+  - id: Quantity2
+    type: NUMBER
+- uuid: memory_usage
+  content: >-
+    [
+      ["Server 1", 2512],
+      ["Server 2", 1900],
+      ["Server 3", 3200],
+      ["Server 4", 1200]
+    ]
+  columns:
+  - id: Server
+    type: LABEL
+  - id: Usage
+    type: NUMBER

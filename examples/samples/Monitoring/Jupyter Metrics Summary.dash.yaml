@@ -1,0 +1,171 @@
+properties:
+  metricsUrl: metrics
+datasets:
+- uuid: metrics
+  url: ${metricsUrl}
+  columns:
+  - id: Metric
+    type: LABEL
+  - id: Label
+    type: LABEL
+  - id: Value
+    type: NUMBER
+pages:
+- rows:
+  - columns:
+    - components:
+      - title: Jupyter Hub Metrics Summary
+  - columns:
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Users
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jupyterhub_total_users
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+          columns:
+          - id: value
+            pattern: '#'
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Running Servers
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jupyterhub_running_servers
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+          columns:
+          - id: value
+            pattern: '#'
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Memory (mb)
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - process_resident_memory_bytes
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+          columns:
+          - id: value
+            expression: value / 1014 / 1024
+            pattern: '#'
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Startup (seconds)
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jupyterhub_hub_startup_duration_seconds_sum
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+          columns:
+          - id: value
+            pattern: '#'
+  - columns:
+    - span: '4'
+      components:
+      - type: bar-chart
+        properties:
+          filter:
+            listening: 'true'
+          lookup:
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jupyterhub_server_spawn_duration_seconds_count
+            group:
+            - columnGroup:
+                source: Label
+              functions:
+              - source: Label
+              - source: Value
+            uuid: metrics
+    - span: '4'
+      components:
+      - type: bar-chart
+        properties:
+          filter:
+            listening: 'true'
+          lookup:
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jupyterhub_server_stop_seconds_count
+            group:
+            - columnGroup:
+                source: Label
+              functions:
+              - source: Label
+              - source: Value
+            uuid: metrics
+    - span: '4'
+      components:
+      - type: bar-chart
+        properties:
+          lookup:
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jupyterhub_proxy_add_duration_seconds_count
+            group:
+            - columnGroup:
+                source: Label
+              functions:
+              - source: Label
+              - source: Value
+            uuid: metrics
+  - columns:
+    - components:
+      - type: bar-chart
+        properties:
+          lookup:
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jupyterhub_request_duration_seconds_count
+            uuid: metrics
+            sort:
+            - column: value
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Label
+              functions:
+              - source: Label
+              - source: Value
+          columns:
+          - id: Label
+            expression: "value.replaceAll(\"code=\", \"\")\n     .replaceAll(\"handler=\", \"\")\n     .replaceAll(\"method=\"\
+              , \"\")\n     .replaceAll(\"\\\"\", \"\")                  "

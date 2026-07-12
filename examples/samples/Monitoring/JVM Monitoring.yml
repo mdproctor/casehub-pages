@@ -1,0 +1,102 @@
+properties:
+  refreshInterval: 5
+  metricsUrl: /data/quarkus/metrics
+datasets:
+- uuid: pop
+  url: ${metricsUrl}
+  columns:
+  - id: Metric
+    type: LABEL
+  - id: Labels
+    type: LABEL
+  - id: Value
+    type: NUMBER
+pages:
+- components:
+  - type: metric
+    properties:
+      title: System CPU Usage
+      chart:
+        height: 200
+        margin:
+          left: 10
+          bottom: '60'
+      lookup:
+        filter:
+        - column: Metric
+          function: EQUALS_TO
+          args:
+          - system_cpu_usage
+        sort:
+        - column: Total
+          order: DESCENDING
+        group:
+        - functions:
+          - source: Value
+            function: MAX
+            column: Total
+        uuid: pop
+      columns:
+      - id: Total
+        expression: value * 100
+  - title: Threads
+  - type: bar-chart
+    properties:
+      lookup:
+        filter:
+        - column: Metric
+          function: EQUALS_TO
+          args:
+          - jvm_threads_states_threads
+        sort:
+        - column: Total
+          order: DESCENDING
+        group:
+        - columnGroup:
+            source: Labels
+          functions:
+          - source: Labels
+          - source: Value
+            function: MAX
+            column: Total
+        uuid: pop
+      columns:
+      - id: Labels
+        expression: value.replaceAll('state="', '').replaceAll('",', '')
+  - title: JVM Memory Used Bytes
+  - type: bar-chart
+    properties:
+      lookup:
+        filter:
+        - column: Metric
+          function: EQUALS_TO
+          args:
+          - jvm_memory_used_bytes
+        sort:
+        - column: Total
+          order: DESCENDING
+        axis:
+          x:
+            labels_angle: 10
+        group:
+        - columnGroup:
+            source: Labels
+          functions:
+          - source: Labels
+          - source: Value
+            function: MAX
+            column: Total
+        uuid: pop
+      columns:
+      - id: Total
+        pattern: '#'
+      - id: Labels
+        expression: "value.replaceAll('id=\"', ' ')\n  .replaceAll('area=\"heap\",', \"\")\n  .replaceAll('area=\"nonheap\"\
+          ,', \"\")                            \n  .replaceAll('\",', \"\")\n  .trim()\n"
+  - title: All Metrics
+  - type: table
+    properties:
+      lookup:
+        uuid: pop
+      chart:
+        height: 400

@@ -1,0 +1,49 @@
+datasets:
+  - uuid: data
+    content: >-
+      [
+          ["A", 3],
+          ["B", 2],
+          ["C", 1],
+          ["D", 0],
+          ["E", -1],
+          ["F", -2],
+          ["G", -3]
+      ]
+
+pages:
+  - rows:
+      - columns:
+          - span: 4
+            components:
+              - type: line-chart
+                properties:
+                  title: All rows (rowCount 10)
+                  lookup:
+                    uuid: data
+                    rowCount: 10
+          - span: 4
+            components:
+              - type: bar-chart
+                properties:
+                  title: Values > 0
+                  lookup:
+                    uuid: data
+                    filter:
+                      - column: Column 1
+                        function: GREATER_THAN
+                        args:
+                          - 0
+          - span: 4
+            components:
+              - type: bar-chart
+                properties:
+                  subtype: bar
+                  title: Values < 0
+                  lookup:
+                    uuid: data
+                    filter:
+                      - column: Column 1
+                        function: LOWER_THAN
+                        args:
+                          - 0

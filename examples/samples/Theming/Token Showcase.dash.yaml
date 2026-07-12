@@ -1,0 +1,150 @@
+pages:
+  - name: Token Showcase
+    components:
+      - type: title
+        properties:
+          text: OKLCH Design Tokens
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            The **pages-ui-tokens** package generates 12-step OKLCH colour scales
+            injected as CSS custom properties. Each scale runs from step 1 (lightest)
+            to step 12 (darkest). Themes override the seed hue — all scales regenerate
+            automatically.
+
+      - type: title
+        properties:
+          text: Accent Scale
+          size: h3
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-bottom: 8px;">
+              <div style="background: var(--pages-accent-1); height: 48px; border-radius: 4px;" title="accent-1"></div>
+              <div style="background: var(--pages-accent-2); height: 48px; border-radius: 4px;" title="accent-2"></div>
+              <div style="background: var(--pages-accent-3); height: 48px; border-radius: 4px;" title="accent-3"></div>
+              <div style="background: var(--pages-accent-4); height: 48px; border-radius: 4px;" title="accent-4"></div>
+              <div style="background: var(--pages-accent-5); height: 48px; border-radius: 4px;" title="accent-5"></div>
+              <div style="background: var(--pages-accent-6); height: 48px; border-radius: 4px;" title="accent-6"></div>
+              <div style="background: var(--pages-accent-7); height: 48px; border-radius: 4px;" title="accent-7"></div>
+              <div style="background: var(--pages-accent-8); height: 48px; border-radius: 4px;" title="accent-8"></div>
+              <div style="background: var(--pages-accent-9); height: 48px; border-radius: 4px;" title="accent-9"></div>
+              <div style="background: var(--pages-accent-10); height: 48px; border-radius: 4px;" title="accent-10"></div>
+              <div style="background: var(--pages-accent-11); height: 48px; border-radius: 4px;" title="accent-11"></div>
+              <div style="background: var(--pages-accent-12); height: 48px; border-radius: 4px;" title="accent-12"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; font-size: 11px; color: var(--pages-neutral-11, #666); text-align: center;">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span>
+              <span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+            </div>
+
+      - type: title
+        properties:
+          text: Neutral Scale
+          size: h3
+
+      - type: html
+        properties:
+          content: |
+            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin-bottom: 8px;">
+              <div style="background: var(--pages-neutral-1); height: 48px; border-radius: 4px; border: 1px solid var(--pages-neutral-6);" title="neutral-1"></div>
+              <div style="background: var(--pages-neutral-2); height: 48px; border-radius: 4px;" title="neutral-2"></div>
+              <div style="background: var(--pages-neutral-3); height: 48px; border-radius: 4px;" title="neutral-3"></div>
+              <div style="background: var(--pages-neutral-4); height: 48px; border-radius: 4px;" title="neutral-4"></div>
+              <div style="background: var(--pages-neutral-5); height: 48px; border-radius: 4px;" title="neutral-5"></div>
+              <div style="background: var(--pages-neutral-6); height: 48px; border-radius: 4px;" title="neutral-6"></div>
+              <div style="background: var(--pages-neutral-7); height: 48px; border-radius: 4px;" title="neutral-7"></div>
+              <div style="background: var(--pages-neutral-8); height: 48px; border-radius: 4px;" title="neutral-8"></div>
+              <div style="background: var(--pages-neutral-9); height: 48px; border-radius: 4px;" title="neutral-9"></div>
+              <div style="background: var(--pages-neutral-10); height: 48px; border-radius: 4px;" title="neutral-10"></div>
+              <div style="background: var(--pages-neutral-11); height: 48px; border-radius: 4px;" title="neutral-11"></div>
+              <div style="background: var(--pages-neutral-12); height: 48px; border-radius: 4px;" title="neutral-12"></div>
+            </div>
+
+      - type: title
+        properties:
+          text: Semantic Scales
+          size: h3
+
+      - type: columns
+        properties:
+          span: "4,4,4"
+        columns:
+          - components:
+              - type: markdown
+                properties:
+                  content: "**Success**"
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
+                      <div style="background: var(--pages-success-1); height: 36px; border-radius: 4px;" title="success-1"></div>
+                      <div style="background: var(--pages-success-3); height: 36px; border-radius: 4px;" title="success-3"></div>
+                      <div style="background: var(--pages-success-5); height: 36px; border-radius: 4px;" title="success-5"></div>
+                      <div style="background: var(--pages-success-7); height: 36px; border-radius: 4px;" title="success-7"></div>
+                      <div style="background: var(--pages-success-9); height: 36px; border-radius: 4px;" title="success-9"></div>
+                      <div style="background: var(--pages-success-11); height: 36px; border-radius: 4px;" title="success-11"></div>
+                    </div>
+
+          - components:
+              - type: markdown
+                properties:
+                  content: "**Warning**"
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
+                      <div style="background: var(--pages-warning-1); height: 36px; border-radius: 4px;" title="warning-1"></div>
+                      <div style="background: var(--pages-warning-3); height: 36px; border-radius: 4px;" title="warning-3"></div>
+                      <div style="background: var(--pages-warning-5); height: 36px; border-radius: 4px;" title="warning-5"></div>
+                      <div style="background: var(--pages-warning-7); height: 36px; border-radius: 4px;" title="warning-7"></div>
+                      <div style="background: var(--pages-warning-9); height: 36px; border-radius: 4px;" title="warning-9"></div>
+                      <div style="background: var(--pages-warning-11); height: 36px; border-radius: 4px;" title="warning-11"></div>
+                    </div>
+
+          - components:
+              - type: markdown
+                properties:
+                  content: "**Danger**"
+              - type: html
+                properties:
+                  content: |
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;">
+                      <div style="background: var(--pages-danger-1); height: 36px; border-radius: 4px;" title="danger-1"></div>
+                      <div style="background: var(--pages-danger-3); height: 36px; border-radius: 4px;" title="danger-3"></div>
+                      <div style="background: var(--pages-danger-5); height: 36px; border-radius: 4px;" title="danger-5"></div>
+                      <div style="background: var(--pages-danger-7); height: 36px; border-radius: 4px;" title="danger-7"></div>
+                      <div style="background: var(--pages-danger-9); height: 36px; border-radius: 4px;" title="danger-9"></div>
+                      <div style="background: var(--pages-danger-11); height: 36px; border-radius: 4px;" title="danger-11"></div>
+                    </div>
+
+      - type: title
+        properties:
+          text: Typography & Spacing
+          size: h3
+
+      - type: html
+        properties:
+          content: |
+            <div style="font-family: var(--pages-font-family, system-ui); color: var(--pages-neutral-12, #111);">
+              <div style="margin-bottom: 16px;">
+                <span style="font-size: var(--pages-font-size-xs, 11px); padding: 4px 8px; background: var(--pages-neutral-3); border-radius: 4px; margin-right: 8px;">xs</span>
+                <span style="font-size: var(--pages-font-size-sm, 13px); padding: 4px 8px; background: var(--pages-neutral-3); border-radius: 4px; margin-right: 8px;">sm</span>
+                <span style="font-size: var(--pages-font-size-md, 15px); padding: 4px 8px; background: var(--pages-neutral-3); border-radius: 4px; margin-right: 8px;">md</span>
+                <span style="font-size: var(--pages-font-size-lg, 18px); padding: 4px 8px; background: var(--pages-neutral-3); border-radius: 4px; margin-right: 8px;">lg</span>
+                <span style="font-size: var(--pages-font-size-xl, 22px); padding: 4px 8px; background: var(--pages-neutral-3); border-radius: 4px;">xl</span>
+              </div>
+              <div style="display: flex; gap: 4px; align-items: flex-end;">
+                <div style="width: 40px; height: var(--pages-space-1, 4px); background: var(--pages-accent-9); border-radius: 2px;" title="space-1"></div>
+                <div style="width: 40px; height: var(--pages-space-2, 8px); background: var(--pages-accent-9); border-radius: 2px;" title="space-2"></div>
+                <div style="width: 40px; height: var(--pages-space-3, 12px); background: var(--pages-accent-9); border-radius: 2px;" title="space-3"></div>
+                <div style="width: 40px; height: var(--pages-space-4, 16px); background: var(--pages-accent-9); border-radius: 2px;" title="space-4"></div>
+                <div style="width: 40px; height: var(--pages-space-5, 24px); background: var(--pages-accent-9); border-radius: 2px;" title="space-5"></div>
+                <div style="width: 40px; height: var(--pages-space-6, 32px); background: var(--pages-accent-9); border-radius: 2px;" title="space-6"></div>
+                <div style="width: 40px; height: var(--pages-space-7, 48px); background: var(--pages-accent-9); border-radius: 2px;" title="space-7"></div>
+                <div style="width: 40px; height: var(--pages-space-8, 64px); background: var(--pages-accent-9); border-radius: 2px;" title="space-8"></div>
+              </div>
+            </div>

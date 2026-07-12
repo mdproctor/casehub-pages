@@ -434,4 +434,262 @@ describe("desugarComponent", () => {
       expect(result.type).toBe("html");
     });
   });
+
+  describe("modern type: + properties: format", () => {
+    it("type: bar-chart with properties routes through displayer desugar", () => {
+      const result = desugarComponent({
+        type: "bar-chart",
+        properties: {
+          title: "Revenue",
+          lookup: { uuid: "sales" },
+        },
+      });
+      expect(result.type).toBe("bar-chart");
+      expect(result.props?.["title"]).toBe("Revenue");
+    });
+
+    it("type: table with properties normalizes lookup uuid to dataSetId", () => {
+      const result = desugarComponent({
+        type: "table",
+        properties: {
+          lookup: { uuid: "employees" },
+        },
+      });
+      expect(result.type).toBe("table");
+      const lookup = result.props?.["lookup"] as { dataSetId: string } | undefined;
+      expect(lookup?.dataSetId).toBe("employees");
+    });
+
+    it("type: metric with lookup and filter", () => {
+      const result = desugarComponent({
+        type: "metric",
+        properties: {
+          title: "Total",
+          lookup: {
+            uuid: "data",
+            filter: [{ column: "status", function: "EQUALS_TO", args: ["active"] }],
+          },
+        },
+      });
+      expect(result.type).toBe("metric");
+      expect(result.props?.["title"]).toBe("Total");
+      const lookup = result.props?.["lookup"] as { dataSetId: string; operations: unknown[] };
+      expect(lookup.dataSetId).toBe("data");
+      expect(lookup.operations.length).toBeGreaterThan(0);
+    });
+
+    it("type: selector with subtype", () => {
+      const result = desugarComponent({
+        type: "selector",
+        properties: {
+          subtype: "labels",
+          lookup: { uuid: "data" },
+        },
+      });
+      expect(result.type).toBe("selector");
+      expect(result.props?.["subtype"]).toBe("labels");
+    });
+
+    it("legacy uppercase type: BARCHART maps to bar-chart", () => {
+      const result = desugarComponent({
+        type: "BARCHART",
+        properties: {
+          lookup: { uuid: "data" },
+        },
+      });
+      expect(result.type).toBe("bar-chart");
+    });
+
+    it("preserves visibleWhen on modern data components", () => {
+      const result = desugarComponent({
+        type: "bar-chart",
+        properties: { lookup: { uuid: "data" } },
+        visibleWhen: "#{filter.active}",
+      });
+      expect(result.visibleWhen).toBe("#{filter.active}");
+    });
+
+    it("type: grouped-view routes through grouped-view desugar", () => {
+      const result = desugarComponent({
+        type: "grouped-view",
+        properties: {
+          groupBy: { column: "dept" },
+          preset: "sectioned",
+          lookup: { uuid: "team" },
+        },
+      });
+      expect(result.type).toBe("grouped-view");
+      const groupBy = (result.props as Record<string, unknown>)?.groupBy as Record<string, unknown>;
+      expect(groupBy.columnId).toBe("dept");
+      expect(groupBy.strategy).toEqual({ mode: "distinct" });
+    });
+  });
+
+  describe("case-insensitive navigation types", () => {
+    it("lowercase type: tabs", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        properties: { navGroupId: "MainNav" },
+      });
+      expect(result.type).toBe("tabs");
+      expect(result.props).toEqual({ navGroupId: "MainNav" });
+    });
+
+    it("lowercase type: sidebar", () => {
+      const result = desugarComponent({
+        type: "sidebar",
+        properties: { navGroupId: "SideNav" },
+      });
+      expect(result.type).toBe("sidebar");
+    });
+
+    it("lowercase type: accordion", () => {
+      const result = desugarComponent({
+        type: "accordion",
+        properties: { targetPage: true },
+      });
+      expect(result.type).toBe("accordion");
+    });
+
+    it("lowercase type: pills", () => {
+      const result = desugarComponent({ type: "pills" });
+      expect(result.type).toBe("pills");
+    });
+
+    it("lowercase type: carousel", () => {
+      const result = desugarComponent({ type: "carousel" });
+      expect(result.type).toBe("carousel");
+    });
+  });
+
+  describe("inline slot building for navigation types", () => {
+    it("type: tabs with inline tabs content builds slots", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        properties: { targetPage: true },
+        tabs: {
+          "Tab A": { components: [{ html: "Content A" }] },
+          "Tab B": { components: [{ html: "Content B" }] },
+        },
+      });
+      expect(result.type).toBe("tabs");
+      expect(result.slots).toBeDefined();
+      expect(result.slots?.["Tab A"]).toHaveLength(1);
+      expect(result.slots?.["Tab A"]?.[0]?.type).toBe("html");
+      expect(result.slots?.["Tab B"]).toHaveLength(1);
+      expect(result.slots?.["Tab B"]?.[0]?.type).toBe("html");
+    });
+
+    it("type: accordion with inline sections builds slots", () => {
+      const result = desugarComponent({
+        type: "accordion",
+        sections: {
+          "Section 1": { components: [{ markdown: "# S1" }] },
+          "Section 2": { components: [{ markdown: "# S2" }] },
+        },
+      });
+      expect(result.type).toBe("accordion");
+      expect(result.slots?.["Section 1"]).toHaveLength(1);
+      expect(result.slots?.["Section 2"]).toHaveLength(1);
+    });
+
+    it("type: tabs preserves visibleWhen alongside slots", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        visibleWhen: "#{active}",
+        tabs: {
+          Only: { components: [{ html: "X" }] },
+        },
+      });
+      expect(result.visibleWhen).toBe("#{active}");
+      expect(result.slots?.["Only"]).toHaveLength(1);
+    });
+
+    it("nav type without slots omits slots property", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        properties: { navGroupId: "Nav1" },
+      });
+      expect(result.slots).toBeUndefined();
+    });
+
+    it("recursively desugars child components in slots", () => {
+      const result = desugarComponent({
+        type: "tabs",
+        tabs: {
+          Charts: {
+            components: [
+              { type: "bar-chart", properties: { lookup: { uuid: "d" } } },
+            ],
+          },
+        },
+      });
+      const child = result.slots?.["Charts"]?.[0];
+      expect(child?.type).toBe("bar-chart");
+    });
+  });
+
+  describe("modern content type handlers", () => {
+    it("type: html with properties.content", () => {
+      const result = desugarComponent({
+        type: "html",
+        properties: { content: "<p>Hello</p>" },
+      });
+      expect(result.type).toBe("html");
+      expect(result.props).toEqual({ content: "<p>Hello</p>" });
+    });
+
+    it("type: HTML with legacy HTML_CODE still works", () => {
+      const result = desugarComponent({
+        type: "HTML",
+        properties: { HTML_CODE: "Legacy content" },
+      });
+      expect(result.type).toBe("html");
+      expect(result.props).toEqual({ content: "Legacy content" });
+    });
+
+    it("type: html prefers HTML_CODE over content for backward compat", () => {
+      const result = desugarComponent({
+        type: "html",
+        properties: { HTML_CODE: "Legacy", content: "Modern" },
+      });
+      expect(result.props?.["content"]).toBe("Legacy");
+    });
+
+    it("type: html extracts CSS properties to style", () => {
+      const result = desugarComponent({
+        type: "html",
+        properties: { content: "<p>text</p>", "font-size": "large" },
+      });
+      expect(result.props).toEqual({ content: "<p>text</p>" });
+      expect(result.style).toEqual({ "font-size": "large" });
+    });
+
+    it("type: markdown with properties.content", () => {
+      const result = desugarComponent({
+        type: "markdown",
+        properties: { content: "# Heading" },
+      });
+      expect(result.type).toBe("markdown");
+      expect(result.props).toEqual({ content: "# Heading" });
+    });
+
+    it("type: title with properties.text and size", () => {
+      const result = desugarComponent({
+        type: "title",
+        properties: { text: "My Title", size: "h2" },
+      });
+      expect(result.type).toBe("title");
+      expect(result.props).toEqual({ text: "My Title", size: "h2" });
+    });
+
+    it("type: title with no text defaults to empty", () => {
+      const result = desugarComponent({
+        type: "title",
+        properties: {},
+      });
+      expect(result.type).toBe("title");
+      expect(result.props?.["text"]).toBe("");
+    });
+  });
 });

@@ -1,0 +1,85 @@
+datasets:
+- uuid: contacts
+  content: >-
+    [
+      [1, "Alice Johnson", "alice@example.com", "+1-555-0101", "Work", "true", "2024-03-15", "Key client contact", 1],
+      [2, "Bob Smith", "bob@example.com", "+1-555-0102", "Personal", "true", "2023-11-20", "", 2],
+      [3, "Carol Davis", "carol@example.com", "+1-555-0103", "Work", "false", "2025-01-08", "On leave until March", 3]
+    ]
+  columns:
+  - id: id
+    type: NUMBER
+  - id: name
+    type: TEXT
+  - id: email
+    type: TEXT
+  - id: phone
+    type: TEXT
+  - id: category
+    type: LABEL
+  - id: active
+    type: LABEL
+  - id: startDate
+    type: DATE
+  - id: notes
+    type: TEXT
+  - id: priority
+    type: NUMBER
+pages:
+- name: Contact List
+  components:
+  - title: Contact Manager
+  - type: table
+    properties:
+      pageSize: 10
+      sortable: true
+      filter:
+        enabled: true
+        notification: true
+      lookup:
+        uuid: contacts
+  - page: Contact Form
+- name: Contact Form
+  dataScope:
+    dataset: contacts
+    idColumn: id
+  save:
+    trigger: auto
+    delay: 2000
+    adapter: local
+  components:
+  - text-input:
+      field: name
+      label: Full Name
+      required: true
+  - text-input:
+      field: email
+      label: Email
+      required: true
+  - text-input:
+      field: phone
+      label: Phone
+  - number-input:
+      field: priority
+      label: Priority
+      min: 1
+      max: 5
+  - dropdown:
+      field: category
+      label: Category
+      options:
+        values:
+        - Work
+        - Personal
+        - Family
+        - Other
+  - checkbox:
+      field: active
+      label: Active
+  - date-picker:
+      field: startDate
+      label: Start Date
+  - textarea:
+      field: notes
+      label: Notes
+      rows: 3

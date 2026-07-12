@@ -1,0 +1,248 @@
+properties:
+  GoalsFunction: AVERAGE
+  SeriesColor: cyan
+global:
+  mode: dark
+datasets:
+- uuid: fifa_matches
+  url: https://api.fifa.com/api/v3/calendar/matches?from=2022-11-20T00%3A00%3A00Z&to=2022-12-20T23%3A59%3A59Z&language=en&count=500&idSeason=255711
+  cacheEnabled: true
+  expression: "$.Results.[\n    ( $.MatchStatus = 0 ? \n          [\n              $.IdMatch,\n              $.LocalDate =\
+    \ null ? \"\" : $.LocalDate, \n              $toMillis($.LocalDate) ~>  $fromMillis('[D]-[M]-[Y]'),\n              $toMillis($.LocalDate)\
+    \ ~>  $fromMillis('[H]:[m]'),\n              $.Weather.Humidity != null ? $.Weather.Humidity : \"-1\",\n             \
+    \ $.Weather.Temperature != null ? $.Weather.Temperature : \"-1\", \n              $.Weather.WindSpeed != null ? $.Weather.WindSpeed\
+    \ :  \"-1\",\n              $.Weather.TypeLocalized[0].Description != null ? $.Weather.TypeLocalized[0].Description :\
+    \  \"\",\n              $.Home.IdCountry != null ? $.Home.IdCountry : \"\", \n              $.Home.ShortClubName != null\
+    \ ? $.Home.ShortClubName : \"\", \n              $.HomeTeamScore != null ? $.HomeTeamScore : \"-1\",\n              $.Away.IdCountry\
+    \ != null ? $.Away.IdCountry : \"\", \n              $.Away.ShortClubName != null ? $.Away.ShortClubName : \"\", \n  \
+    \            $.Away.Score != null ? $.Away.Score : \"-1\",\n              $.Stadium.Name[0].Description,\n           \
+    \   $.Stadium.CityName[0].Description,\n              $.Attendance != null ? $.Attendance :  \"-1\",                 \
+    \       \n              $.HomeTeamScore + $.AwayTeamScore,\n              $join([$.Home.ShortClubName, $.Away.ShortClubName],\
+    \ ' vs ')\n              \n          ]\n    )\n]"
+  columns:
+  - id: ID
+    type: LABEL
+  - id: Date
+    type: LABEL
+  - id: Day
+    type: LABEL
+  - id: Hour
+    type: LABEL
+  - id: Humidity
+    type: NUMBER
+  - id: Temperature
+    type: NUMBER
+  - id: WindSpeed
+    type: NUMBER
+  - id: Weather
+    type: LABEL
+  - id: Team 1 Country
+    type: LABEL
+  - id: Team 1 Name
+    type: LABEL
+  - id: Team 1 Score
+    type: NUMBER
+  - id: Team 2 Country
+    type: LABEL
+  - id: Team 2 Name
+    type: LABEL
+  - id: Team 2 Score
+    type: NUMBER
+  - id: Stadium Name
+    type: LABEL
+  - id: Stadium Location Name
+    type: LABEL
+  - id: Attendance
+    type: NUMBER
+  - id: Total Goals
+    type: NUMBER
+  - id: Match Name
+    type: LABEL
+pages:
+- rows:
+  - columns:
+    - components:
+      - html: >-
+          <p>
+              <p style="font-size: xx-large">
+              FIFA World Cup Qatar 2022™
+              </p>
+              <small>
+                  Goals Score Statistics
+              </small>
+              <hr />
+          </p>
+  - properties:
+      margin-bottom: 100px
+      margin-top: 50px
+    columns:
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Total Goals
+          lookup:
+            uuid: fifa_matches
+            group:
+            - functions:
+              - source: Total Goals
+                function: SUM
+          columns:
+          - id: Total Goals
+            pattern: '#'
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Average Goals by Match
+          lookup:
+            uuid: fifa_matches
+            group:
+            - functions:
+              - source: Total Goals
+                function: AVERAGE
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Average Temperature
+          lookup:
+            uuid: fifa_matches
+            group:
+            - functions:
+              - source: Temperature
+                function: AVERAGE
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Average Attendance
+          lookup:
+            uuid: fifa_matches
+            group:
+            - functions:
+              - source: Attendance
+                function: AVERAGE
+  - columns:
+    - span: 6
+      components:
+      - type: line-chart
+        properties:
+          title: Goals by Day
+          lookup:
+            uuid: fifa_matches
+            group:
+            - columnGroup:
+                source: Day
+              functions:
+              - source: Day
+              - source: Total Goals
+                column: Goals
+                function: ${GoalsFunction}
+          axis:
+            x:
+              labels_angle: 30
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: Goals by Stadium
+          lookup:
+            uuid: fifa_matches
+            sort:
+            - column: Goals
+              order: DESCENDING
+            group:
+            - columnGroup:
+                source: Stadium Name
+              functions:
+              - source: Stadium Name
+              - source: Total Goals
+                function: ${GoalsFunction}
+                column: Goals
+          axis:
+            x:
+              labels_angle: 15
+  - properties:
+      margin-top: 20px
+    columns:
+    - span: 6
+      components:
+      - type: bubble-chart
+        properties:
+          title: Goals by Weather
+          lookup:
+            uuid: fifa_matches
+            sort:
+            - column: TOTAL MATCHES
+              order: ASCENDING
+            group:
+            - columnGroup:
+                source: Weather
+              functions:
+              - source: Weather
+              - source: Total Goals
+                function: ${GoalsFunction}
+                column: Goals
+              - source: Weather
+                function: COUNT
+                column: TOTAL MATCHES
+              - source: Weather
+                function: COUNT
+                column: TOTAL MATCHES
+    - span: 6
+      components:
+      - type: bubble-chart
+        properties:
+          title: Goals by Attendance
+          chart:
+            zoom: true
+          lookup:
+            uuid: fifa_matches
+            group:
+            - columnGroup:
+                source: Match Name
+              functions:
+              - source: Match Name
+              - source: Attendance
+                column: Attendance
+              - source: Total Goals
+                column: Goals
+              - source: Total Goals
+                column: Goals
+          axis:
+            x:
+              labels_show: false
+            y:
+              title: Attendance
+  - columns:
+    - components:
+      - html: >-
+          <hr style="width: 2px; border: dashed 1px" /> <p style="margin: 1px 10px 30px 10px; font-size: x-large">
+
+              <strong>All Matches</strong>
+          </p>
+      - type: table
+        properties:
+          chart:
+            resizable: true
+          lookup:
+            uuid: fifa_matches
+            group:
+            - functions:
+              - source: Temperature
+              - source: ID
+              - source: Date
+              - source: Team 1 Score
+              - source: Match Name
+              - source: Team 2 Score
+              - source: Weather
+              - source: Stadium Name
+              - source: Attendance
+          columns:
+          - id: Date
+            expression: new Date(value).toLocaleDateString() + " " + new Date(value).toLocaleTimeString()
+          - id: Team 1 Score
+            pattern: '#'
+          - id: Team 2 Score
+            pattern: '#'

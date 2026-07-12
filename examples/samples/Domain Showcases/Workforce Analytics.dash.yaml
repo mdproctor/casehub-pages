@@ -1,0 +1,190 @@
+datasets:
+- uuid: employees
+  content: >-
+    [
+        [1, "Emma Wilson", "Engineering", "Senior", 5.2, 125000, 4, "London", "F", "2021-03-15"],
+        [2, "James Chen", "Engineering", "Lead", 7.8, 155000, 5, "London", "M", "2018-09-01"],
+        [3, "Sofia Rodriguez", "Product", "Mid", 2.1, 85000, 3, "New York", "F", "2024-05-20"],
+        [4, "Amir Patel", "Engineering", "Junior", 0.8, 65000, 3, "London", "M", "2025-10-10"],
+        [5, "Li Wei", "Design", "Senior", 6.3, 115000, 4, "Singapore", "M", "2020-04-01"],
+        [6, "Priya Sharma", "Marketing", "Mid", 3.5, 78000, 4, "London", "F", "2023-01-15"],
+        [7, "Tom Baker", "Sales", "Director", 12.0, 180000, 5, "New York", "M", "2014-06-01"],
+        [8, "Yuki Tanaka", "Engineering", "Senior", 4.9, 130000, 4, "Singapore", "F", "2021-08-15"],
+        [9, "Maria Santos", "HR", "Mid", 3.2, 72000, 3, "London", "F", "2023-04-20"],
+        [10, "David Kim", "Engineering", "Mid", 2.5, 95000, 3, "New York", "M", "2024-01-08"],
+        [11, "Anna Müller", "Finance", "Lead", 8.1, 145000, 5, "London", "F", "2018-05-15"],
+        [12, "Carlos Ruiz", "Operations", "Senior", 5.5, 105000, 4, "New York", "M", "2021-01-10"],
+        [13, "Sarah O'Brien", "Product", "Lead", 6.7, 140000, 4, "London", "F", "2019-11-01"],
+        [14, "Raj Gupta", "Engineering", "Junior", 1.0, 62000, 2, "Singapore", "M", "2025-06-15"],
+        [15, "Emily Chang", "Design", "Mid", 3.8, 88000, 4, "New York", "F", "2022-09-01"],
+        [16, "Michael Brown", "Sales", "Senior", 5.0, 110000, 3, "London", "M", "2021-06-20"],
+        [17, "Fatima Al-Rashid", "Engineering", "Senior", 4.2, 128000, 5, "London", "F", "2022-04-01"],
+        [18, "Lucas Martin", "Marketing", "Junior", 0.5, 52000, 3, "New York", "M", "2026-01-15"],
+        [19, "Mei Lin", "Engineering", "Director", 10.5, 195000, 5, "Singapore", "F", "2016-02-01"],
+        [20, "Patrick Kelly", "Operations", "Mid", 2.8, 76000, 3, "London", "M", "2023-08-10"],
+        [21, "Olga Ivanova", "Finance", "Senior", 4.5, 118000, 4, "London", "F", "2022-01-20"],
+        [22, "Hassan Ahmed", "Engineering", "Mid", 3.0, 98000, 4, "London", "M", "2023-06-01"],
+        [23, "Julia Costa", "Product", "Junior", 0.7, 58000, 3, "New York", "F", "2025-11-15"],
+        [24, "Ben Thompson", "Design", "Lead", 7.2, 138000, 5, "London", "M", "2019-03-01"],
+        [25, "Ling Zhang", "Engineering", "Senior", 5.8, 132000, 4, "Singapore", "NB", "2020-10-15"],
+        [26, "Grace Okafor", "HR", "Senior", 6.0, 95000, 4, "New York", "F", "2020-06-01"],
+        [27, "Alex Rivera", "Sales", "Mid", 2.3, 82000, 3, "London", "NB", "2024-03-10"],
+        [28, "Nina Kowalski", "Marketing", "Senior", 4.8, 98000, 4, "London", "F", "2021-09-01"],
+        [29, "Oscar Eriksson", "Engineering", "Lead", 8.5, 160000, 5, "London", "M", "2018-01-15"],
+        [30, "Amara Diallo", "Operations", "Junior", 0.9, 55000, 2, "New York", "F", "2025-08-01"],
+        [31, "Ryan Mitchell", "Finance", "Mid", 2.6, 82000, 3, "London", "M", "2023-11-15"],
+        [32, "Sakura Hayashi", "Design", "Junior", 1.2, 60000, 3, "Singapore", "F", "2025-04-20"],
+        [33, "Daniel Murphy", "Engineering", "Junior", 1.5, 68000, 4, "New York", "M", "2025-01-10"],
+        [34, "Isabel Ferreira", "Product", "Senior", 5.3, 120000, 4, "London", "F", "2021-02-15"],
+        [35, "Kevin Ng", "Sales", "Lead", 9.0, 165000, 5, "Singapore", "M", "2017-08-01"],
+        [36, "Zara Hussein", "HR", "Junior", 0.4, 48000, 3, "London", "F", "2026-02-10"],
+        [37, "Pierre Leclerc", "Marketing", "Lead", 7.0, 130000, 4, "New York", "M", "2019-05-15"],
+        [38, "Tanya Reddy", "Engineering", "Mid", 2.9, 96000, 3, "Singapore", "F", "2023-07-01"],
+        [39, "Chris Anderson", "Operations", "Lead", 8.3, 140000, 5, "London", "M", "2018-03-20"],
+        [40, "Elena Popov", "Finance", "Junior", 1.1, 56000, 2, "London", "F", "2025-05-01"]
+    ]
+  columns:
+  - id: id
+    type: NUMBER
+  - id: name
+    type: TEXT
+  - id: department
+    type: LABEL
+  - id: level
+    type: LABEL
+  - id: tenure
+    type: NUMBER
+  - id: salary
+    type: NUMBER
+  - id: rating
+    type: NUMBER
+  - id: location
+    type: LABEL
+  - id: gender
+    type: LABEL
+  - id: startDate
+    type: DATE
+pages:
+- rows:
+  - columns:
+    - components:
+      - type: selector
+        properties:
+          subtype: labels
+          filter:
+            enabled: true
+            notification: true
+          lookup:
+            uuid: employees
+            group:
+            - columnGroup:
+                source: department
+              functions:
+              - source: department
+  - columns:
+    - span: 4
+      components:
+      - type: pie-chart
+        properties:
+          subtype: donut
+          title: Headcount
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+            - columnGroup:
+                source: department
+              functions:
+              - source: department
+              - source: department
+                function: COUNT
+                column: count
+    - span: 4
+      components:
+      - type: bar-chart
+        properties:
+          subtype: column-stacked
+          title: Level Distribution
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+            - columnGroup:
+                source: level
+              functions:
+              - source: level
+              - source: level
+                function: COUNT
+                column: count
+    - span: 4
+      components:
+      - type: bar-chart
+        properties:
+          subtype: bar
+          title: Avg Salary by Level
+          chart:
+            margin:
+              left: 80
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            sort:
+            - column: Salary
+              order: ASCENDING
+            group:
+            - columnGroup:
+                source: level
+              functions:
+              - source: level
+              - source: salary
+                function: AVERAGE
+                column: Salary
+  - columns:
+    - span: 8
+      components:
+      - type: scatter-chart
+        properties:
+          title: Tenure vs Salary
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+            - columnGroup:
+                source: name
+              functions:
+              - source: tenure
+              - source: salary
+    - span: 4
+      components:
+      - type: pie-chart
+        properties:
+          title: Rating Distribution
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+            group:
+            - columnGroup:
+                source: rating
+              functions:
+              - source: rating
+              - source: rating
+                function: COUNT
+                column: count
+  - columns:
+    - components:
+      - type: table
+        properties:
+          pageSize: 15
+          sortable: true
+          filter:
+            listening: true
+          lookup:
+            uuid: employees
+          columns:
+          - id: salary
+            pattern: $#,###

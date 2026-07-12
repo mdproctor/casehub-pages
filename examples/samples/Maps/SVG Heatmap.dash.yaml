@@ -1,0 +1,71 @@
+datasets:
+  - uuid: zones
+    content: >-
+      [
+        ["Zone A", "Reception", "72"],
+        ["Zone B", "Open Office", "85"],
+        ["Zone C", "Meeting Room", "91"],
+        ["Zone D", "Server Room", "38"],
+        ["Zone E", "Break Room", "65"],
+        ["Zone F", "Storage", "22"]
+      ]
+    columns:
+      - id: zone
+        type: LABEL
+      - id: area
+        type: TEXT
+      - id: occupancy
+        type: NUMBER
+
+pages:
+  - name: SVG Heatmap
+    rows:
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: SVG Heatmap
+                  size: h2
+
+              - type: markdown
+                properties:
+                  content: |
+                    A floor plan with zones coloured by occupancy percentage.
+                    High occupancy zones are red, medium are amber, low are green.
+
+              - type: html
+                properties:
+                  content: |
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" style="width:100%;max-width:640px">
+                      <rect x="10" y="10" width="90" height="70" rx="6" fill="#4caf50" opacity="0.8"/>
+                      <text x="55" y="40" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Reception</text>
+                      <text x="55" y="58" text-anchor="middle" font-size="18" fill="#fff" font-weight="700">72%</text>
+
+                      <rect x="110" y="10" width="90" height="70" rx="6" fill="#ff9800" opacity="0.8"/>
+                      <text x="155" y="40" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Open Office</text>
+                      <text x="155" y="58" text-anchor="middle" font-size="18" fill="#fff" font-weight="700">85%</text>
+
+                      <rect x="210" y="10" width="90" height="70" rx="6" fill="#f44336" opacity="0.8"/>
+                      <text x="255" y="40" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Meeting Rm</text>
+                      <text x="255" y="58" text-anchor="middle" font-size="18" fill="#fff" font-weight="700">91%</text>
+
+                      <rect x="310" y="10" width="90" height="70" rx="6" fill="#2196f3" opacity="0.8"/>
+                      <text x="355" y="40" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Server Room</text>
+                      <text x="355" y="58" text-anchor="middle" font-size="18" fill="#fff" font-weight="700">38%</text>
+
+                      <rect x="110" y="95" width="90" height="70" rx="6" fill="#4caf50" opacity="0.8"/>
+                      <text x="155" y="125" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Break Room</text>
+                      <text x="155" y="143" text-anchor="middle" font-size="18" fill="#fff" font-weight="700">65%</text>
+
+                      <rect x="210" y="95" width="90" height="70" rx="6" fill="#2196f3" opacity="0.8"/>
+                      <text x="255" y="125" text-anchor="middle" font-size="11" fill="#fff" font-weight="600">Storage</text>
+                      <text x="255" y="143" text-anchor="middle" font-size="18" fill="#fff" font-weight="700">22%</text>
+                    </svg>
+
+      - columns:
+          - components:
+              - type: table
+                properties:
+                  lookup:
+                    uuid: zones
+                  sortable: true

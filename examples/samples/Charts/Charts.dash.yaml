@@ -1,0 +1,252 @@
+pages:
+- name: index
+  properties:
+    margin: 10px
+  components:
+  - type: tabs
+    properties:
+      width: 100%
+      navGroupId: ChartsNav
+      targetDivId: charts_div
+  - div: charts_div
+- name: Bar Chart
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: subtype COLUMN (default)
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          subtype: bar
+          title: subtype BAR
+          chart:
+            margin:
+              left: 80
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+  - columns:
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          subtype: column-stacked
+          title: subtype COLUMN_STACKED
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          subtype: bar-stacked
+          title: subtype BAR_STACKED
+          chart:
+            margin:
+              left: 80
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+- name: Line Chart
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: line-chart
+        properties:
+          title: subtype LINE (default)
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+    - span: 6
+      components:
+      - type: line-chart
+        properties:
+          subtype: smooth
+          title: subtype SMOOTH
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+- name: Area Chart
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: area-chart
+        properties:
+          title: subtype AREA (default)
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+    - span: 6
+      components:
+      - type: area-chart
+        properties:
+          subtype: area-stacked
+          title: subtype AREA_STACKED
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+              - source: Quantity2
+- name: Pie Chart
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: pie-chart
+        properties:
+          title: subtype PIE (default)
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+    - span: 6
+      components:
+      - type: pie-chart
+        properties:
+          subtype: donut
+          title: subtype DONUT
+          lookup:
+            uuid: products
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Quantity
+- name: Bubble Chart
+  components:
+  - type: bubble-chart
+    properties:
+      title: Bubble Chart
+      lookup:
+        uuid: products
+        group:
+        - columnGroup:
+            source: Product
+          functions:
+          - source: Product
+          - source: Quantity
+          - source: Quantity2
+          - source: Product
+- name: Timeseries
+  components:
+  - type: timeseries
+    properties:
+      title: Timeseries
+      chart:
+        zoom: true
+      lookup:
+        uuid: timeseries
+      width: 100%
+navTree:
+  root_items:
+  - type: GROUP
+    id: ChartsNav
+    children:
+    - page: Bar Chart
+    - page: Line Chart
+    - page: Area Chart
+    - page: Pie Chart
+    - page: Bubble Chart
+    - page: Timeseries
+datasets:
+- uuid: products
+  content: >-
+    [
+      ["Computers", "Scanner", 5, 3],
+      ["Computers", "Printer", 7, 4],
+      ["Computers", "Laptop", 3, 2],
+      ["Electronics", "Camera", 10, 7],
+      ["Electronics", "Headphones", 5, 9]
+    ]
+  columns:
+  - id: Section
+    type: LABEL
+  - id: Product
+    type: LABEL
+  - id: Quantity
+    type: NUMBER
+  - id: Quantity2
+    type: NUMBER
+- uuid: timeseries
+  content: >-
+    [
+      ["2024-01-01", 120, 80],
+      ["2024-02-01", 135, 95],
+      ["2024-03-01", 150, 110],
+      ["2024-04-01", 140, 105],
+      ["2024-05-01", 165, 120],
+      ["2024-06-01", 180, 130],
+      ["2024-07-01", 175, 125],
+      ["2024-08-01", 190, 140],
+      ["2024-09-01", 200, 155],
+      ["2024-10-01", 210, 160],
+      ["2024-11-01", 195, 150],
+      ["2024-12-01", 220, 170]
+    ]
+  columns:
+  - id: Date
+    type: DATE
+  - id: Series A
+    type: NUMBER
+  - id: Series B
+    type: NUMBER

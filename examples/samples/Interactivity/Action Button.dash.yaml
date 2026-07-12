@@ -1,0 +1,105 @@
+pages:
+  - name: Action Buttons
+    components:
+      - type: title
+        properties:
+          text: Action Buttons
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **Action buttons** dispatch HTTP requests on click. They show loading state
+            during the request and error state on failure. Without a backend handler,
+            buttons demonstrate the error flow — useful for understanding the full lifecycle.
+
+      - type: columns
+        properties:
+          span: "4,4,4"
+        columns:
+          - components:
+              - type: title
+                properties:
+                  text: Primary
+                  size: h3
+              - action-button:
+                  label: Submit Report
+                  url: /api/reports
+                  method: POST
+                  style: primary
+              - type: markdown
+                properties:
+                  content: >
+                    Default style. Dispatches a POST request to the endpoint.
+
+          - components:
+              - type: title
+                properties:
+                  text: Danger
+                  size: h3
+              - action-button:
+                  label: Delete Record
+                  url: /api/records/42
+                  method: DELETE
+                  style: danger
+                  confirm: Are you sure you want to delete this record?
+              - type: markdown
+                properties:
+                  content: >
+                    Danger style with **confirmation dialog**. The `confirm` property
+                    shows a prompt before dispatching the request.
+
+          - components:
+              - type: title
+                properties:
+                  text: Secondary
+                  size: h3
+              - action-button:
+                  label: Refresh Cache
+                  url: /api/cache/refresh
+                  method: POST
+                  style: secondary
+              - type: markdown
+                properties:
+                  content: >
+                    Secondary style for less prominent actions.
+
+      - type: title
+        properties:
+          text: With Callbacks
+          size: h3
+
+      - type: markdown
+        properties:
+          content: >
+            Buttons support `onSuccess` and `onError` callbacks. On success,
+            the button can refresh datasets or show a message. On error,
+            a custom error message is displayed.
+
+      - type: columns
+        properties:
+          span: "6,6"
+        columns:
+          - components:
+              - action-button:
+                  label: Export Data
+                  url: /api/export
+                  method: POST
+                  style: primary
+                  onSuccess:
+                    message: Export complete
+              - type: markdown
+                properties:
+                  content: "Success callback with a **message** toast."
+
+          - components:
+              - action-button:
+                  label: Sync Upstream
+                  url: /api/sync
+                  method: POST
+                  style: secondary
+                  onError:
+                    message: Sync failed — check connectivity
+              - type: markdown
+                properties:
+                  content: "Custom **error message** replaces the default."

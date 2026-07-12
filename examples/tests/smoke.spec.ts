@@ -117,7 +117,7 @@ test.describe("Smoke — all samples load without errors", () => {
 
   for (const sample of allSamples) {
     if (EXPECTED_LOAD_FAILURES.has(sample.name)) {
-      test(`[known-fail] ${sample.name} — loads but may show errors (#35)`, async ({
+      test(`[known-fail] ${sample.category}/${sample.name} — loads but may show errors (#35)`, async ({
         page,
       }) => {
         const consoleErrors: string[] = [];
@@ -131,7 +131,7 @@ test.describe("Smoke — all samples load without errors", () => {
       continue;
     }
 
-    test(`${sample.name} — loads and renders without errors`, async ({ page }) => {
+    test(`${sample.category}/${sample.name} — loads and renders without errors`, async ({ page }) => {
       const consoleErrors: string[] = [];
       page.on("pageerror", (err) => consoleErrors.push(err.message));
 

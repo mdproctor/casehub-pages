@@ -1,0 +1,23 @@
+datasets:
+- uuid: histogram
+  expression: "(\n      $n := 1 +  $count($) ~> $sqrt ~> $floor;\n      $s := $max($) / $n;                \n      $t := $;\n\
+    \      [0..$n].(\n          $lt := $s * $;\n          $gt := ($ +1) * $s;        \n          [[ $lt  & \"-\" & $gt,  $map($t,\
+    \ function($v) { $v >= $lt and $v < $gt ? 1 : 0}) ~> $sum]]\n      )\n  )"
+  content: "[\n  5, 6, 7, 10, 3, 5, 11, 20, 6, 10, 5, 17, \n  13, 22, 13, 50, 2, 4, 6, 10, 12, 5, 8, 10\n]"
+pages:
+- components:
+  - type: bar-chart
+    properties:
+      lookup:
+        uuid: histogram
+      extraConfiguration: >-
+        {
+            "series": {
+                "barCategoryGap": "1%"
+            }
+
+        }
+  - type: table
+    properties:
+      lookup:
+        uuid: histogram

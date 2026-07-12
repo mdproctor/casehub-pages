@@ -2,9 +2,10 @@ import type {Component} from "../model/types.js";
 import type {ColumnId} from "@casehubio/pages-data/dist/dataset/types.js";
 import type {Aggregation, GroupingKey, GroupStrategy} from "@casehubio/pages-data/dist/dataset/group.js";
 import type {AggregationBinding} from "@casehubio/pages-component";
+import { parseLookup } from "@casehubio/pages-data/dist/dataset/lookup-parser.js";
 
 function parseStrategy(raw: Record<string, unknown>): GroupStrategy {
-  const strategy = raw.strategy as string;
+  const strategy = (raw.strategy as string | undefined) ?? "distinct";
   switch (strategy) {
     case "distinct":
       return { mode: "distinct" };
@@ -25,7 +26,7 @@ function parseStrategy(raw: Record<string, unknown>): GroupStrategy {
 function parseAggregation(fnStr: string): Aggregation {
   switch (fnStr) {
     case "SUM": return { fn: "SUM" };
-    case "AVERAGE": return { fn: "AVERAGE" };
+    case "AVERAGE": case "AVG": return { fn: "AVERAGE" };
     case "MEDIAN": return { fn: "MEDIAN" };
     case "COUNT": return { fn: "COUNT" };
     case "DISTINCT": return { fn: "DISTINCT" };
@@ -78,6 +79,10 @@ export function desugarGroupedView(raw: Record<string, unknown>): Component {
   if (aggregations.length > 0) props.aggregations = aggregations;
   if (order != null) props.order = order;
   if (raw.emptyGroups != null) props.emptyGroups = raw.emptyGroups;
+
+  if (raw.lookup != null) {
+    props.lookup = parseLookup(raw.lookup);
+  }
 
   return { type: "grouped-view", props };
 }

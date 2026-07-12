@@ -117,14 +117,22 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     showSummary: boolean,
   ): void {
     const isListMode = contentDisplay === "list";
-    const headerBarItems = contentColumns.map((id) => {
-      const col = dataset.columns.find((c) => c.id === id);
-      const label = col?.name ?? String(id);
-      if (isListMode) {
-        return `<span class="col-label">${label}</span>`;
-      }
-      return `<button class="col-header" data-column="${String(id)}">${label}</button>`;
-    }).join("");
+    const colgroup = colWidths.map((w) => `<col style="width: ${w}px">`).join("");
+
+    let headerHtml: string;
+    if (isListMode) {
+      const headerBarItems = contentColumns.map((id) => {
+        const col = dataset.columns.find((c) => c.id === id);
+        return `<span class="col-label">${col?.name ?? String(id)}</span>`;
+      }).join("");
+      headerHtml = `<div class="column-header-bar" style="grid-template-columns: ${colWidthsCss}">${headerBarItems}</div>`;
+    } else {
+      const headerCells = contentColumns.map((id) => {
+        const col = dataset.columns.find((c) => c.id === id);
+        return `<th><button class="col-header" data-column="${String(id)}">${col?.name ?? String(id)}</button></th>`;
+      }).join("");
+      headerHtml = `<table class="column-header-table" style="table-layout: fixed"><colgroup>${colgroup}</colgroup><thead><tr>${headerCells}</tr></thead></table>`;
+    }
 
     let sectionsHtml = "";
     for (let gi = 0; gi < boundaries.length; gi++) {
@@ -141,7 +149,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
 
     const modeClass = isListMode ? "list-mode" : "sectioned";
     container.innerHTML = `<div class="pages-grouped-view ${modeClass}">
-      <div class="column-header-bar" style="grid-template-columns: ${colWidthsCss}">${headerBarItems}</div>
+      ${headerHtml}
       ${sectionsHtml}
     </div>`;
   }

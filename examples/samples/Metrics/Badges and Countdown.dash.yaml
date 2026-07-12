@@ -1,0 +1,119 @@
+datasets:
+  - uuid: status-data
+    content: >-
+      [
+        ["API Gateway", "healthy", "99.9"],
+        ["Database", "healthy", "99.7"],
+        ["Cache", "degraded", "95.2"],
+        ["Queue", "healthy", "99.8"],
+        ["Search", "down", "0.0"],
+        ["Storage", "healthy", "99.5"]
+      ]
+    columns:
+      - id: service
+        type: LABEL
+      - id: status
+        type: LABEL
+      - id: uptime
+        type: NUMBER
+
+  - uuid: launch-date
+    content: '[["2026-08-01T00:00:00Z"]]'
+    columns:
+      - id: target
+        type: DATE
+
+pages:
+  - name: Metrics Showcase
+    rows:
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: Status Badges
+                  size: h2
+
+              - type: markdown
+                properties:
+                  content: >
+                    **Badge** components display a single value with a status colour.
+                    Useful for service health, build status, or any categorical indicator.
+
+      - columns:
+          - span: 2
+            components:
+              - type: badge
+                properties:
+                  lookup:
+                    uuid: status-data
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
+                        args: ["API Gateway"]
+          - span: 2
+            components:
+              - type: badge
+                properties:
+                  lookup:
+                    uuid: status-data
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
+                        args: ["Database"]
+          - span: 2
+            components:
+              - type: badge
+                properties:
+                  lookup:
+                    uuid: status-data
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
+                        args: ["Cache"]
+          - span: 2
+            components:
+              - type: badge
+                properties:
+                  lookup:
+                    uuid: status-data
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
+                        args: ["Queue"]
+          - span: 2
+            components:
+              - type: badge
+                properties:
+                  lookup:
+                    uuid: status-data
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
+                        args: ["Search"]
+          - span: 2
+            components:
+              - type: badge
+                properties:
+                  lookup:
+                    uuid: status-data
+                    filter:
+                      - column: service
+                        function: EQUALS_TO
+                        args: ["Storage"]
+
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: Countdown Timer
+                  size: h2
+
+              - type: markdown
+                properties:
+                  content: >
+                    **Countdown** displays time remaining until a target date.
+
+              - type: countdown
+                properties:
+                  lookup:
+                    uuid: launch-date

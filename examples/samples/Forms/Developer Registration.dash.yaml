@@ -1,0 +1,131 @@
+datasets:
+- uuid: devs
+  url: https://dev-register-secure-melviz.kie-tooling-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/developers
+  expression: $.[name, language, workingYears]
+  columns:
+  - id: Name
+    type: Text
+  - id: Language
+    type: Label
+  - id: Working Years
+    type: label
+pages:
+- name: Developers registration
+  rows:
+  - columns:
+    - components:
+      - type: html
+        properties:
+          content: Developers registration
+          font-size: x-large
+          margin-bottom: 20px
+      - type: iframe-plugin
+        properties:
+          componentId: uniforms
+          height: 350px
+          settings:
+            uniforms.url: https://dev-register-secure-melviz.kie-tooling-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/developers
+            uniforms.schema: >-
+              {
+                 "title":"Developers",
+                 "type":"object",
+                 "properties":{
+                    "name":{
+                       "type":"string"
+                    },
+                    "language":{
+                       "type":"string"
+                    },
+                    "workingYears":{
+                       "description":"Work experience in years",
+                       "type":"integer",
+                       "minimum":0,
+                       "maximum":100
+                    }
+                 },
+                 "required":[
+                    "name", "language", "workingYears"
+                 ]
+              }
+  - columns:
+    - components:
+      - type: html
+        properties:
+          content: <strong>Data</strong> <hr />
+          font-size: large
+  - columns:
+    - span: '4'
+      components:
+      - type: html
+        properties:
+          content: <strong>Working Years</strong><hr />
+          font-size: small
+      - type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            height: '200'
+            margin:
+              left: '30'
+          lookup:
+            uuid: devs
+            sort:
+            - column: Total
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Working Years
+                groupStrategy: DYNAMIC
+              functions:
+              - source: Working Years
+              - source: Working Years
+                function: count
+                column: Total
+          columns:
+          - id: Total
+            pattern: '#'
+          refresh:
+            interval: '2'
+    - span: '4'
+      components:
+      - type: html
+        properties:
+          content: <strong>Language</strong><hr />
+          font-size: small
+      - type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            height: '200'
+            margin:
+              left: '80'
+          lookup:
+            uuid: devs
+            sort:
+            - column: Total
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Language
+                groupStrategy: DYNAMIC
+              functions:
+              - source: Language
+              - source: Language
+                function: count
+                column: Total
+          columns:
+          - id: Total
+            pattern: '#'
+          refresh:
+            interval: '2'
+  - columns:
+    - components:
+      - type: table
+        properties:
+          chart:
+            resizable: 'true'
+          sortable: true
+          lookup:
+            uuid: devs
+          refresh:
+            interval: '2'

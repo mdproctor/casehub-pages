@@ -1,0 +1,98 @@
+datasets:
+  - uuid: org
+    content: >
+      [
+        ["1", "", "Acme Corp", "Company", "500", "London"],
+        ["2", "1", "Engineering", "Division", "180", "London"],
+        ["3", "1", "Product", "Division", "85", "New York"],
+        ["4", "1", "Operations", "Division", "120", "Berlin"],
+        ["5", "2", "Platform Team", "Team", "45", "London"],
+        ["6", "2", "Frontend Team", "Team", "35", "London"],
+        ["7", "2", "Data Team", "Team", "28", "Berlin"],
+        ["8", "2", "SRE Team", "Team", "22", "London"],
+        ["9", "3", "Core Product", "Team", "30", "New York"],
+        ["10", "3", "Growth", "Team", "20", "New York"],
+        ["11", "3", "Design", "Team", "18", "San Francisco"],
+        ["12", "4", "DevOps", "Team", "35", "Berlin"],
+        ["13", "4", "IT Support", "Team", "25", "Berlin"],
+        ["14", "4", "Security", "Team", "20", "London"],
+        ["15", "5", "API Squad", "Squad", "15", "London"],
+        ["16", "5", "Infra Squad", "Squad", "12", "London"],
+        ["17", "6", "Web Squad", "Squad", "18", "London"],
+        ["18", "6", "Mobile Squad", "Squad", "10", "San Francisco"],
+        ["19", "7", "Analytics Squad", "Squad", "14", "Berlin"],
+        ["20", "7", "ML Squad", "Squad", "8", "Berlin"]
+      ]
+    columns:
+      - id: id
+        type: TEXT
+      - id: parentId
+        type: TEXT
+      - id: name
+        type: TEXT
+      - id: level
+        type: LABEL
+      - id: headcount
+        type: NUMBER
+      - id: location
+        type: LABEL
+
+pages:
+  - name: Tree Table
+    components:
+      - type: title
+        properties:
+          text: Expandable Tree Table
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **expandable** creates hierarchical rows using `idColumn` and
+            `parentColumn`. Rows whose `parentId` matches another row's `id`
+            nest underneath it. `defaultExpanded` controls how many levels
+            are open initially — set to a number for depth, or `true` for all.
+
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Expand 2 Levels:
+            components:
+              - type: table
+                properties:
+                  lookup:
+                    uuid: org
+                  sortable: true
+                  expandable:
+                    idColumn: id
+                    parentColumn: parentId
+                    defaultExpanded: 2
+
+          Fully Expanded:
+            components:
+              - type: table
+                properties:
+                  lookup:
+                    uuid: org
+                  sortable: true
+                  expandable:
+                    idColumn: id
+                    parentColumn: parentId
+                    defaultExpanded: true
+
+          Collapsed:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Start collapsed — click rows to expand manually.
+              - type: table
+                properties:
+                  lookup:
+                    uuid: org
+                  sortable: true
+                  expandable:
+                    idColumn: id
+                    parentColumn: parentId
+                    defaultExpanded: false

@@ -5,31 +5,22 @@ const samplesDir = path.join(__dirname, '../samples');
 const outputFile = path.join(__dirname, '../samples.json');
 
 const CATEGORY_ORDER = [
-  'Sales',
-  'Clinical',
-  'IoT',
-  'People',
-  'Prometheus',
-  'Micrometer',
-  'ansible',
-  'jupyterhub',
-  'kepler',
-  'OpenTelemetry',
-  'modelmesh',
-  'triton',
-  'Backstage',
-  'misc',
-  'Basic Usage',
+  'Charts',
+  'Tables',
+  'Metrics',
+  'Maps',
+  'Forms',
+  'Layout',
+  'Interactivity',
+  'Live Data',
+  'Content',
+  'Custom Components',
+  'Theming',
+  'Monitoring',
+  'Domain Showcases',
 ];
 
-const DISPLAY_NAMES = {
-  'ansible': 'Ansible',
-  'jupyterhub': 'JupyterHub',
-  'kepler': 'Kepler',
-  'misc': 'Misc',
-  'modelmesh': 'ModelMesh',
-  'triton': 'Triton',
-};
+const DISPLAY_NAMES = {};
 
 // Recursively find all sample files
 function findSamples(dir, baseDir = dir) {
@@ -83,8 +74,8 @@ const categorized = sortedCategories.map(category => ({
 }));
 
 const output = {
-  version: '1.0.0',
-  description: 'Melviz Examples',
+  version: '2.0.0',
+  description: 'CaseHub Pages Examples Gallery',
   totalSamples: samples.length,
   categories: categorized
 };

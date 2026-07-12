@@ -1,0 +1,638 @@
+pages:
+- name: index
+  components:
+  - html: >-
+      <div style="padding: 12px 20px; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #e0e0e0; margin-bottom:
+      16px; border-radius: 8px">
+        <strong style="font-size: 1.3em">Navigation Rebinding</strong>
+        <span style="margin-left: 12px; opacity: 0.7">Same three-level content hierarchy, different navigation wrappers —
+      switch pills to compare</span>
+      </div>
+  - type: pills
+    properties:
+      width: 100%
+      navGroupId: Variants
+- name: Tree View
+  components:
+  - type: tree
+    properties:
+      navGroupId: MainNav
+- name: Tabs View
+  components:
+  - type: tabs
+    properties:
+      width: 100%
+      navGroupId: MainNav
+- name: Menu View
+  components:
+  - type: menu
+    properties:
+      width: 100%
+      navGroupId: MainNav
+- name: Sidebar View
+  components:
+  - type: sidebar
+    properties:
+      navGroupId: MainNav
+- name: Tiles View
+  components:
+  - type: tiles
+    properties:
+      navGroupId: MainNav
+- name: Carousel View
+  components:
+  - type: carousel
+    properties:
+      navGroupId: MainNav
+- name: Accordion View
+  components:
+  - type: accordion
+    properties:
+      navGroupId: MainNav
+- name: App Grid View
+  components:
+  - type: app_grid
+    properties:
+      navGroupId: MainNav
+- name: Dashboard
+  rows:
+  - columns:
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Total Revenue
+          lookup:
+            uuid: sales
+            group:
+            - functions:
+              - source: Revenue
+                function: SUM
+          columns:
+          - id: Revenue
+            pattern: $#,##0
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Products
+          lookup:
+            uuid: sales
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+                function: COUNT
+          columns:
+          - id: Product
+            pattern: '#'
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Regions
+          lookup:
+            uuid: sales
+            group:
+            - columnGroup:
+                source: Region
+              functions:
+              - source: Region
+                function: COUNT
+          columns:
+          - id: Region
+            pattern: '#'
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Avg Deal
+          lookup:
+            uuid: sales
+            group:
+            - functions:
+              - source: Revenue
+                function: AVERAGE
+          columns:
+          - id: Revenue
+            pattern: $#,##0
+  - columns:
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: Revenue by Product
+          lookup:
+            uuid: sales
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Revenue
+                function: SUM
+    - span: 6
+      components:
+      - type: line-chart
+        properties:
+          subtype: smooth
+          title: Monthly Trend
+          chart:
+            height: 250
+          lookup:
+            uuid: monthly
+            group:
+            - columnGroup:
+                source: Month
+              functions:
+              - source: Month
+              - source: Revenue
+              - source: Target
+- name: Settings
+  components:
+  - type: tabs
+    properties:
+      navGroupId: SettingsPages
+- name: Profile
+  components:
+  - page: Profile Detail
+    src: includes/settings-profile.dash.yml
+- name: Security
+  components:
+  - type: table
+    properties:
+      title: Security Audit Log
+      pageSize: 5
+      sortable: true
+      lookup:
+        uuid: security-log
+- name: Reports
+  components:
+  - page: Reports Detail
+    src: includes/reports.dash.yml
+- name: Sales
+  components:
+  - type: tabs
+    properties:
+      navGroupId: SalesPages
+- name: Revenue
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: Revenue by Product
+          lookup:
+            uuid: sales
+            group:
+            - columnGroup:
+                source: Product
+              functions:
+              - source: Product
+              - source: Revenue
+                function: SUM
+    - span: 6
+      components:
+      - type: pie-chart
+        properties:
+          subtype: donut
+          title: Revenue Share
+          lookup:
+            uuid: sales
+            group:
+            - columnGroup:
+                source: Region
+              functions:
+              - source: Region
+              - source: Revenue
+                function: SUM
+- name: Transactions
+  components:
+  - type: pills
+    properties:
+      navGroupId: TransactionViews
+- name: Txn Table
+  components:
+  - type: table
+    properties:
+      title: Recent Transactions
+      pageSize: 8
+      sortable: true
+      filter:
+        enabled: true
+        notification: true
+      lookup:
+        uuid: sales
+- name: Txn Form
+  dataScope:
+    dataset: sales
+    idColumn: id
+  save:
+    trigger: auto
+    delay: 500
+    adapter: local
+  components:
+  - html: >-
+      <div style="display:flex;gap:8px;padding:0 0 12px">
+        <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'prev'}}))"
+          style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">←
+      Previous</button>
+        <button onclick="this.dispatchEvent(new CustomEvent('pages-record-navigate',{bubbles:true,composed:true,detail:{direction:'next'}}))"
+          style="padding:6px 16px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">Next
+      →</button>
+      </div>
+  - text-input:
+      field: Product
+      label: Product
+  - text-input:
+      field: Region
+      label: Region
+  - number-input:
+      field: Revenue
+      label: Revenue
+- name: Pipeline
+  rows:
+  - columns:
+    - span: 4
+      components:
+      - type: metric
+        properties:
+          title: Total Revenue
+          lookup:
+            uuid: sales
+            group:
+            - functions:
+              - source: Revenue
+                function: SUM
+          columns:
+          - id: Revenue
+            pattern: $#,##0
+    - span: 4
+      components:
+      - type: metric
+        properties:
+          title: Avg Deal Size
+          lookup:
+            uuid: sales
+            group:
+            - functions:
+              - source: Revenue
+                function: AVERAGE
+          columns:
+          - id: Revenue
+            pattern: $#,##0
+    - span: 4
+      components:
+      - type: metric
+        properties:
+          title: Total Deals
+          lookup:
+            uuid: sales
+            group:
+            - functions:
+              - source: Revenue
+                function: COUNT
+          columns:
+          - id: Revenue
+            pattern: '#'
+  - properties:
+      margin-top: 20px
+    columns:
+    - components:
+      - type: line-chart
+        properties:
+          subtype: smooth
+          title: Revenue Trend
+          chart:
+            height: 250
+          lookup:
+            uuid: monthly
+            group:
+            - columnGroup:
+                source: Month
+              functions:
+              - source: Month
+              - source: Revenue
+              - source: Target
+- name: Operations
+  components:
+  - type: tabs
+    properties:
+      navGroupId: OpsPages
+- name: Monitoring
+  rows:
+  - columns:
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: CPU
+          lookup:
+            uuid: ops
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - CPU
+            group:
+            - functions:
+              - source: Value
+                function: MAX
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Memory
+          lookup:
+            uuid: ops
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - Memory
+            group:
+            - functions:
+              - source: Value
+                function: MAX
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Disk
+          lookup:
+            uuid: ops
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - Disk
+            group:
+            - functions:
+              - source: Value
+                function: MAX
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Network
+          lookup:
+            uuid: ops
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - Network
+            group:
+            - functions:
+              - source: Value
+                function: MAX
+- name: Services
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: Request Latency (ms)
+          chart:
+            margin:
+              left: 100
+          lookup:
+            uuid: services
+            sort:
+            - column: Latency
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Service
+              functions:
+              - source: Service
+              - source: Latency
+                function: AVERAGE
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: Error Rate (%)
+          lookup:
+            uuid: services
+            sort:
+            - column: ErrorRate
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Service
+              functions:
+              - source: Service
+              - source: ErrorRate
+                function: AVERAGE
+navTree:
+  root_items:
+  - type: GROUP
+    id: Variants
+    children:
+    - page: Tree View
+    - page: Tabs View
+    - page: Menu View
+    - page: Sidebar View
+    - page: Tiles View
+    - page: Carousel View
+  - type: GROUP
+    id: MainNav
+    children:
+    - page: Dashboard
+    - type: GROUP
+      id: Settings
+      children:
+      - page: Profile
+      - page: Security
+    - page: Reports
+    - type: GROUP
+      id: Sales
+      children:
+      - page: Revenue
+      - page: Transactions
+      - page: Pipeline
+    - type: GROUP
+      id: Operations
+      children:
+      - page: Monitoring
+      - page: Services
+  - type: GROUP
+    id: SettingsPages
+    children:
+    - page: Profile
+    - page: Security
+  - type: GROUP
+    id: SalesPages
+    children:
+    - page: Revenue
+    - page: Transactions
+    - page: Pipeline
+  - type: GROUP
+    id: TransactionViews
+    children:
+    - page: Txn Table
+    - page: Txn Form
+  - type: GROUP
+    id: OpsPages
+    children:
+    - page: Monitoring
+    - page: Services
+datasets:
+- uuid: sales
+  content: >-
+    [
+      [1, "Laptops", "North", 12500],
+      [2, "Laptops", "South", 9800],
+      [3, "Laptops", "East", 11200],
+      [4, "Phones", "North", 18300],
+      [5, "Phones", "South", 15600],
+      [6, "Phones", "East", 14200],
+      [7, "Tablets", "North", 6700],
+      [8, "Tablets", "South", 8900],
+      [9, "Tablets", "East", 7100],
+      [10, "Monitors", "North", 4300],
+      [11, "Monitors", "South", 3800],
+      [12, "Monitors", "East", 5200],
+      [13, "Accessories", "North", 2100],
+      [14, "Accessories", "South", 3400],
+      [15, "Accessories", "East", 2800]
+    ]
+  columns:
+  - id: id
+    type: NUMBER
+  - id: Product
+    type: LABEL
+  - id: Region
+    type: LABEL
+  - id: Revenue
+    type: NUMBER
+- uuid: monthly
+  content: >-
+    [
+      ["Jan", 42000, 40000],
+      ["Feb", 45000, 42000],
+      ["Mar", 48000, 44000],
+      ["Apr", 44000, 46000],
+      ["May", 51000, 48000],
+      ["Jun", 55000, 50000],
+      ["Jul", 53000, 52000],
+      ["Aug", 58000, 54000],
+      ["Sep", 62000, 56000],
+      ["Oct", 59000, 58000],
+      ["Nov", 65000, 60000],
+      ["Dec", 71000, 62000]
+    ]
+  columns:
+  - id: Month
+    type: LABEL
+  - id: Revenue
+    type: NUMBER
+  - id: Target
+    type: NUMBER
+- uuid: ops
+  content: >-
+    [
+      ["CPU", 72],
+      ["Memory", 64],
+      ["Disk", 45],
+      ["Network", 31]
+    ]
+  columns:
+  - id: Metric
+    type: LABEL
+  - id: Value
+    type: NUMBER
+- uuid: services
+  content: >-
+    [
+      ["auth-service", 45, 0.2],
+      ["user-api", 120, 1.5],
+      ["payment-gw", 230, 0.8],
+      ["notifications", 85, 3.1],
+      ["search-index", 340, 0.4],
+      ["file-storage", 190, 2.2]
+    ]
+  columns:
+  - id: Service
+    type: LABEL
+  - id: Latency
+    type: NUMBER
+  - id: ErrorRate
+    type: NUMBER
+- uuid: security-log
+  content: >-
+    [
+      ["2026-06-21 09:14", "Login", "mark@example.com", "Success"],
+      ["2026-06-21 08:02", "API Key Rotated", "system", "Success"],
+      ["2026-06-20 23:45", "Login", "admin@example.com", "Failed"],
+      ["2026-06-20 18:30", "Permission Changed", "mark@example.com", "Success"],
+      ["2026-06-20 14:12", "Login", "dev@example.com", "Success"],
+      ["2026-06-19 11:00", "MFA Enabled", "mark@example.com", "Success"],
+      ["2026-06-19 09:22", "Login", "admin@example.com", "Success"],
+      ["2026-06-18 16:40", "Password Changed", "dev@example.com", "Success"]
+    ]
+  columns:
+  - id: Timestamp
+    type: LABEL
+  - id: Action
+    type: LABEL
+  - id: User
+    type: LABEL
+  - id: Result
+    type: LABEL
+- uuid: profile
+  content: >-
+    [
+      ["Display Name", "Mark Proctor", "Yes"],
+      ["Email", "mark@example.com", "Yes"],
+      ["Role", "Platform Admin", "No"],
+      ["Timezone", "Europe/London", "Yes"],
+      ["Language", "English (UK)", "Yes"],
+      ["MFA", "Enabled (TOTP)", "No"],
+      ["Last Login", "2026-06-21 09:14", "No"],
+      ["API Key", "ch_live_•••••k4f", "No"]
+    ]
+  columns:
+  - id: Field
+    type: LABEL
+  - id: Value
+    type: LABEL
+  - id: Editable
+    type: LABEL
+- uuid: report-stats
+  content: >-
+    [
+      ["Generated", 1247],
+      ["AvgTime", 3420],
+      ["Failed", 23]
+    ]
+  columns:
+  - id: Metric
+    type: LABEL
+  - id: Count
+    type: NUMBER
+- uuid: report-runs
+  content: >-
+    [
+      ["Sales Q2 Summary", "2026-06-21 08:00", "Completed", 2140],
+      ["Ops Weekly Digest", "2026-06-20 23:00", "Completed", 4520],
+      ["Revenue Forecast", "2026-06-20 18:30", "Completed", 8930],
+      ["Inventory Alert", "2026-06-20 12:00", "Failed", 0],
+      ["Customer Churn", "2026-06-19 09:00", "Completed", 5670],
+      ["Pipeline Health", "2026-06-19 06:00", "Completed", 3100],
+      ["Monthly KPIs", "2026-06-18 00:00", "Completed", 12400],
+      ["SLA Compliance", "2026-06-17 23:00", "Completed", 6780]
+    ]
+  columns:
+  - id: Report
+    type: LABEL
+  - id: RunTime
+    type: LABEL
+  - id: Status
+    type: LABEL
+  - id: Duration
+    type: NUMBER

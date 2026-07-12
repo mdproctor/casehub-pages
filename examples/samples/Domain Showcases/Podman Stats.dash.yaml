@@ -1,0 +1,236 @@
+properties:
+  baseUrl: /data/podman
+datasets:
+- uuid: images
+  expression: $.[Id, Names[0], $fromMillis(Created * 1000), $round(Size / 1000000), Containers]
+  url: ${baseUrl}/images/json
+  columns:
+  - id: ID
+    type: label
+  - id: name
+    type: label
+  - id: created
+    type: date
+  - id: Size (MB)
+    type: number
+  - id: containers
+    type: number
+- uuid: containers
+  expression: $.[Id, Names[0], Image, $fromMillis(Created * 1000), State, Status]
+  url: ${baseUrl}/containers/json
+  columns:
+  - id: ID
+    type: label
+  - id: name
+    type: label
+  - id: image
+    type: label
+  - id: created
+    type: date
+  - id: State
+    type: label
+  - id: Status
+    type: label
+pages:
+- name: Images
+  rows:
+  - columns:
+    - span: '6'
+      components:
+      - markdown: '**Images by Size**'
+      - type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            height: '350'
+            margin:
+              left: '120'
+          lookup:
+            uuid: images
+            rowCount: 7
+            group:
+            - columnGroup:
+                source: name
+              functions:
+              - source: name
+              - source: Size (MB)
+                column: Total Size (MB)
+            sort:
+            - column: Total Size (MB)
+              sortOrder: DESCENDING
+          extraConfiguration: >
+            "series": {
+              "label": {
+                  "position": "top"
+              }
+            }
+    - span: '6'
+      components:
+      - markdown: '**Containers by Image**'
+      - type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            width: '500'
+            height: '350'
+            margin:
+              left: '120'
+          lookup:
+            uuid: images
+            rowCount: 7
+            group:
+            - columnGroup:
+                source: name
+              functions:
+              - source: name
+              - source: containers
+                column: containers total
+            sort:
+            - column: containers total
+              sortOrder: DESCENDING
+            filter:
+            - column: containers
+              function: GREATER_THAN
+              args:
+              - 0
+          columns:
+          - id: containers total
+            pattern: '#'
+  - columns:
+    - components:
+      - markdown: '**Images List**'
+      - type: table
+        properties:
+          lookup:
+            uuid: images
+- name: Containers
+  rows:
+  - column: null
+  - columns:
+    - components:
+      - markdown: '**Filters**'
+        properties:
+          font-size: small
+  - columns:
+    - span: '2'
+      components:
+      - type: selector
+        properties:
+          filter:
+            notification: 'true'
+          lookup:
+            uuid: containers
+            group:
+            - columnGroup:
+                source: image
+              functions:
+              - source: image
+                column: image
+    - span: '2'
+      components:
+      - type: selector
+        properties:
+          filter:
+            notification: true
+          lookup:
+            uuid: containers
+            group:
+            - columnGroup:
+                source: state
+              functions:
+              - source: state
+                column: state
+  - properties:
+      margin-top: 20px
+    columns:
+    - span: '5'
+      components:
+      - html: <strong>Containers by State</strong>
+        properties:
+          font-size: medium
+      - type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            width: '500'
+            height: '350'
+            margin:
+              left: '70'
+          filter:
+            listening: true
+          lookup:
+            uuid: containers
+            rowCount: 7
+            group:
+            - columnGroup:
+                source: state
+              functions:
+              - source: state
+              - source: state
+                function: COUNT
+                column: total
+          columns:
+          - id: total
+            pattern: '#'
+    - span: '6'
+      components:
+      - markdown: '**Containers by Image**'
+        properties:
+          font-size: medium
+      - type: bar-chart
+        properties:
+          subtype: bar
+          chart:
+            width: '500'
+            height: '350'
+            margin:
+              left: '120'
+          filter:
+            listening: true
+          lookup:
+            uuid: containers
+            rowCount: 7
+            group:
+            - columnGroup:
+                source: image
+              functions:
+              - source: image
+              - source: image
+                function: Count
+                column: Total
+            sort:
+            - column: Total
+              sortOrder: DESCENDING
+  - columns:
+    - components:
+      - title: Containers List
+        properties:
+          size: xl
+      - type: table
+        properties:
+          lookup:
+            uuid: containers
+- name: index
+  rows:
+  - columns:
+    - components:
+      - html: '<h1><strong>Podman Dashboard</strong></h1> <p> This is a dashboard to provide basic information about Podman</p>
+          <p> It uses <a href="https://docs.podman.io/en/latest/_static/api.html">Podman REST API</a>,   so make sure podman
+          service is running on localhost on port 8000 with CORS enabled</p> <p> The following command starts the podman service:
+          </p> <p><em>podman system service tcp:localhost:8000 --cors https://jesuino.github.io  -t 0 </em></strong></p>'
+      - type: tabs
+        properties:
+          targetDivId: podman_tabs_div
+          navGroupId: podman_nav_group
+      - type: div
+        properties:
+          width: 100%
+          divId: podman_tabs_div
+navTree:
+  root_items:
+  - id: podman_nav_group
+    type: GROUP
+    name: Podman Dashboard
+    children:
+    - page: Containers
+    - page: Images

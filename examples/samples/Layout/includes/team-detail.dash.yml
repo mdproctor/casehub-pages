@@ -1,0 +1,18 @@
+pages:
+- name: Team Detail
+  rows:
+  - columns:
+    - components:
+      - html: >-
+          <div style="padding: 4px 0 12px; color: #6b7280; font-size: 12px">
+            ↳ Loaded from <code>team-detail.dash.yml</code>
+          </div>
+  - columns:
+    - components:
+      - type: table
+        properties:
+          title: All Team Members
+          pageSize: 15
+          sortable: true
+          lookup:
+            uuid: team_members

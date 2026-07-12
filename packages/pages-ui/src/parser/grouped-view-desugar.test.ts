@@ -106,4 +106,48 @@ describe("desugarGroupedView", () => {
     const groupBy = (result.props as Record<string, unknown>).groupBy as Record<string, unknown>;
     expect(groupBy.emptyIntervals).toBe(true);
   });
+
+  it("defaults strategy to distinct when not specified", () => {
+    const result = desugarGroupedView({
+      type: "GROUPED_VIEW",
+      groupBy: { column: "department" },
+    });
+    const groupBy = (result.props as Record<string, unknown>).groupBy as Record<string, unknown>;
+    expect(groupBy.strategy).toEqual({ mode: "distinct" });
+    expect(groupBy.columnId).toBe("department");
+  });
+
+  it("parses lookup with uuid normalization", () => {
+    const result = desugarGroupedView({
+      type: "GROUPED_VIEW",
+      groupBy: { column: "dept" },
+      lookup: { uuid: "team-data" },
+    });
+    const lookup = (result.props as Record<string, unknown>).lookup as { dataSetId: string };
+    expect(lookup.dataSetId).toBe("team-data");
+  });
+
+  it("accepts AVG as alias for AVERAGE in aggregations", () => {
+    const result = desugarGroupedView({
+      type: "GROUPED_VIEW",
+      groupBy: { column: "dept" },
+      aggregations: [{ column: "salary", fn: "AVG" }],
+    });
+    const aggs = (result.props as Record<string, unknown>).aggregations as Array<{ fn: { fn: string } }>;
+    expect(aggs[0].fn).toEqual({ fn: "AVERAGE" });
+  });
+
+  it("preserves preset and display options", () => {
+    const result = desugarGroupedView({
+      type: "GROUPED_VIEW",
+      groupBy: { column: "dept" },
+      preset: "spreadsheet",
+      defaultExpanded: true,
+      showGroupSummary: true,
+    });
+    const props = result.props as Record<string, unknown>;
+    expect(props.preset).toBe("spreadsheet");
+    expect(props.defaultExpanded).toBe(true);
+    expect(props.showGroupSummary).toBe(true);
+  });
 });

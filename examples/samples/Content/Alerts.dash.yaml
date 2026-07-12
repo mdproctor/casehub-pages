@@ -1,0 +1,66 @@
+pages:
+  - name: Alerts
+    components:
+      - type: title
+        properties:
+          text: Alert Components
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **Alerts** display contextual messages with severity levels.
+            Each severity has a distinct visual treatment. The `dismissible`
+            property adds a close button.
+
+      - type: title
+        properties:
+          text: Severity Levels
+          size: h3
+
+      - alert:
+          severity: info
+          content: System update scheduled for tonight at 23:00 UTC. No downtime expected.
+
+      - alert:
+          severity: success
+          content: Deployment v2.4.1 completed successfully. All health checks passing.
+
+      - alert:
+          severity: warning
+          content: Memory usage is above 85%. Consider scaling up or reviewing recent changes.
+
+      - alert:
+          severity: error
+          content: Database connection pool exhausted. 3 requests timed out in the last minute.
+
+      - type: title
+        properties:
+          text: Dismissible Alerts
+          size: h3
+
+      - type: markdown
+        properties:
+          content: >
+            Set `dismissible: true` to let users close the alert.
+
+      - alert:
+          severity: info
+          content: Welcome! This is your first visit. Click the close button to dismiss.
+          dismissible: true
+
+      - alert:
+          severity: warning
+          content: Your session will expire in 10 minutes.
+          dismissible: true
+
+      - type: title
+        properties:
+          text: Alerts with Visibility
+          size: h3
+
+      - type: markdown
+        properties:
+          content: >
+            Combine alerts with `visibleWhen` to show them conditionally —
+            for example, only when a filter is active or a threshold is crossed.

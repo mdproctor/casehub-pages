@@ -1,0 +1,85 @@
+datasets:
+  - uuid: countries
+    content: >
+      [
+        ["US", "United States"],
+        ["UK", "United Kingdom"],
+        ["DE", "Germany"],
+        ["FR", "France"],
+        ["JP", "Japan"],
+        ["AU", "Australia"],
+        ["CA", "Canada"],
+        ["BR", "Brazil"]
+      ]
+    columns:
+      - id: code
+        type: LABEL
+      - id: name
+        type: TEXT
+
+pages:
+  - name: Form Components
+    components:
+      - type: title
+        properties:
+          text: Form Input Components
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            All available form input types. Each input dispatches filter events
+            that can drive cross-filtering with other components on the page.
+
+      - type: columns
+        properties:
+          span: "6,6"
+        columns:
+          - components:
+              - type: title
+                properties:
+                  text: Text Inputs
+                  size: h3
+
+              - type: text-input
+                properties:
+                  label: Full Name
+                  placeholder: Enter your name
+
+              - type: text-input
+                properties:
+                  label: Email Address
+                  placeholder: user@example.com
+
+              - type: textarea
+                properties:
+                  label: Notes
+                  placeholder: Additional comments...
+                  rows: 4
+
+          - components:
+              - type: title
+                properties:
+                  text: Selection Inputs
+                  size: h3
+
+              - type: dropdown
+                properties:
+                  label: Country
+                  lookup:
+                    uuid: countries
+
+              - type: number-input
+                properties:
+                  label: Quantity
+                  min: 0
+                  max: 100
+                  step: 1
+
+              - type: date-picker
+                properties:
+                  label: Start Date
+
+              - type: checkbox
+                properties:
+                  label: I agree to the terms and conditions

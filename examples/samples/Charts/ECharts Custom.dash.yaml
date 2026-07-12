@@ -1,0 +1,71 @@
+pages:
+- components:
+  - type: iframe-plugin
+    properties:
+      componentId: echarts
+      settings:
+        title:
+          text: Products
+          left: center
+        option: >-
+          {
+            "toolbox": {
+                "feature": {
+                    "dataZoom": {},
+                    "magicType": {
+                        "type": ["line", "bar", "stack"]
+                    },
+                    "saveAsImage": {}
+                }
+            },
+            "series": [
+                    {
+                        "type": "bar",
+                        "markLine": {
+                            "data": [
+                                { "type": "max" }
+                            ]
+                        }
+
+                    },
+                    {
+                        "type": "bar",
+                        "markLine": {
+                            "data": [
+                                { "type": "max" }
+                            ]
+                        }
+
+                    }
+            ]
+            }
+      lookup:
+        uuid: products
+        group:
+        - columnGroup:
+            source: product
+          functions:
+          - source: product
+          - source: quantity
+          - source: quantity2
+      width: 100%
+      height: 400px
+datasets:
+- uuid: products
+  content: >-
+    [
+      ["Computers", "Scanner", 5, 3],
+      ["Computers", "Printer", 7, 4],
+      ["Computers", "Laptop", 3, 2],
+      ["Electronics", "Camera", 10, 7],
+      ["Electronics", "Headphones", 5, 9]
+    ]
+  columns:
+  - id: Section
+    type: LABEL
+  - id: Product
+    type: LABEL
+  - id: Quantity
+    type: NUMBER
+  - id: Quantity2
+    type: NUMBER

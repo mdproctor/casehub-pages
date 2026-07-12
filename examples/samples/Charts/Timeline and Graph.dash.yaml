@@ -1,0 +1,105 @@
+datasets:
+  - uuid: milestones
+    content: >
+      [
+        ["Planning", "Research & Discovery", "2026-01-15T00:00:00Z", "2026-02-28T00:00:00Z"],
+        ["Planning", "Requirements Finalised", "2026-03-01T00:00:00Z", "2026-03-15T00:00:00Z"],
+        ["Development", "Core Architecture", "2026-03-01T00:00:00Z", "2026-04-30T00:00:00Z"],
+        ["Development", "API Implementation", "2026-04-01T00:00:00Z", "2026-06-15T00:00:00Z"],
+        ["Development", "Frontend Build", "2026-05-01T00:00:00Z", "2026-07-31T00:00:00Z"],
+        ["Testing", "Integration Testing", "2026-06-01T00:00:00Z", "2026-07-15T00:00:00Z"],
+        ["Testing", "Performance Audit", "2026-07-01T00:00:00Z", "2026-07-31T00:00:00Z"],
+        ["Release", "Beta Launch", "2026-08-01T00:00:00Z", "2026-08-15T00:00:00Z"],
+        ["Release", "GA Release", "2026-09-01T00:00:00Z", "2026-09-15T00:00:00Z"]
+      ]
+    columns:
+      - id: phase
+        type: LABEL
+      - id: task
+        type: TEXT
+      - id: start
+        type: DATE
+      - id: end
+        type: DATE
+
+  - uuid: dependencies
+    content: >
+      [
+        ["API Gateway", "Auth Service", "3"],
+        ["API Gateway", "Rate Limiter", "2"],
+        ["Auth Service", "User Store", "5"],
+        ["Auth Service", "Token Cache", "4"],
+        ["User Store", "Database", "8"],
+        ["Token Cache", "Redis", "3"],
+        ["Rate Limiter", "Redis", "2"],
+        ["Frontend", "API Gateway", "6"],
+        ["Frontend", "CDN", "1"],
+        ["CDN", "Storage", "2"],
+        ["Database", "Backup Service", "1"],
+        ["Backup Service", "Storage", "3"]
+      ]
+    columns:
+      - id: from
+        type: TEXT
+      - id: to
+        type: TEXT
+      - id: weight
+        type: NUMBER
+
+pages:
+  - name: Timeline and Graph
+    components:
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Timeline:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Timeline** — Gantt-style visualisation of project milestones.
+                    Each bar spans from `startColumn` to `endColumn`, grouped by
+                    `categoryColumn`.
+              - type: timeline
+                properties:
+                  lookup:
+                    uuid: milestones
+                  startColumn: start
+                  endColumn: end
+                  labelColumn: task
+                  categoryColumn: phase
+
+          Graph:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Graph** — force-directed network showing system dependencies.
+                    Nodes are auto-extracted from `sourceColumn` and `targetColumn`.
+                    Edge thickness reflects the `valueColumn` weight.
+              - type: graph
+                properties:
+                  lookup:
+                    uuid: dependencies
+                  sourceColumn: from
+                  targetColumn: to
+                  valueColumn: weight
+                  layout: force
+                  directed: true
+
+          Circular Layout:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Circular layout** — same dependency data arranged in a ring.
+              - type: graph
+                properties:
+                  lookup:
+                    uuid: dependencies
+                  sourceColumn: from
+                  targetColumn: to
+                  valueColumn: weight
+                  layout: circular
+                  directed: true

@@ -1,0 +1,94 @@
+datasets:
+  - uuid: live-metrics
+    accumulate: true
+    cacheMaxRows: 30
+    refreshTime: 3second
+    expression: >-
+      [["cpu", $now() ~> $toMillis(), ($random() * 40 + 30)]]
+    content: >-
+      [["cpu", 1718460000000, 45],["cpu", 1718463600000, 52],["cpu", 1718467200000, 38],["cpu", 1718470800000, 61],["cpu", 1718474400000, 55],["cpu", 1718478000000, 42]]
+    columns:
+      - id: metric
+        type: LABEL
+      - id: time
+        type: DATE
+      - id: value
+        type: NUMBER
+
+  - uuid: multi-metrics
+    accumulate: true
+    cacheMaxRows: 50
+    refreshTime: 5second
+    expression: >-
+      [["memory", $now() ~> $toMillis(), ($random() * 20 + 60)], ["disk", $now() ~> $toMillis(), ($random() * 10 + 70)]]
+    content: >-
+      [["memory", 1718460000000, 68],["disk", 1718460000000, 74],["memory", 1718463600000, 72],["disk", 1718463600000, 75],["memory", 1718467200000, 65],["disk", 1718467200000, 73]]
+    columns:
+      - id: series
+        type: LABEL
+      - id: time
+        type: DATE
+      - id: value
+        type: NUMBER
+
+pages:
+  - name: Live Polling
+    components:
+      - type: title
+        properties:
+          text: Live Data Polling
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **refreshTime** on a dataset triggers automatic re-evaluation at the
+            specified interval. Combined with **accumulate**, each refresh appends
+            new rows — building a live timeseries. The **expression** uses JSONata
+            to generate timestamped data points on each tick.
+
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Single Metric:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    CPU usage polling every **3 seconds**. The chart grows as rows
+                    accumulate, capped at 30 rows by `cacheMaxRows`.
+              - type: timeseries
+                properties:
+                  lookup:
+                    uuid: live-metrics
+                  chart:
+                    resizable: true
+
+          Multi-Series:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Memory and disk usage on the same chart, polling every **5 seconds**.
+                    The expression emits two rows per tick — one per series.
+              - type: timeseries
+                properties:
+                  lookup:
+                    uuid: multi-metrics
+                  chart:
+                    resizable: true
+
+          Raw Data:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    The same polling dataset rendered as a **table** — watch rows
+                    appear in real time as the expression evaluates.
+              - type: table
+                properties:
+                  lookup:
+                    uuid: live-metrics
+                  pageSize: 10
+                  sortable: true

@@ -1,0 +1,78 @@
+datasets:
+  - uuid: tasks
+    content: >
+      [
+        ["TASK-001", "Deploy v2.4", "Critical", "9", "Error", "2026-07-01"],
+        ["TASK-002", "Update dependencies", "Normal", "4", "Complete", "2026-06-28"],
+        ["TASK-003", "Fix login timeout", "High", "8", "In Progress", "2026-07-05"],
+        ["TASK-004", "Add dark mode", "Normal", "3", "Pending", "2026-07-10"],
+        ["TASK-005", "Database migration", "Critical", "10", "Error", "2026-06-30"],
+        ["TASK-006", "Write API docs", "Low", "2", "Pending", "2026-07-15"],
+        ["TASK-007", "Cache layer", "High", "7", "In Progress", "2026-07-08"],
+        ["TASK-008", "Auth refactor", "Critical", "9", "Complete", "2026-06-25"],
+        ["TASK-009", "Rate limiting", "Normal", "5", "Pending", "2026-07-12"],
+        ["TASK-010", "Monitoring alerts", "High", "8", "Error", "2026-07-03"],
+        ["TASK-011", "CI pipeline", "Normal", "4", "Complete", "2026-06-20"],
+        ["TASK-012", "Load testing", "Low", "3", "Pending", "2026-07-20"],
+        ["TASK-013", "SSL renewal", "Critical", "10", "In Progress", "2026-07-02"],
+        ["TASK-014", "Log aggregation", "Normal", "5", "Complete", "2026-06-22"],
+        ["TASK-015", "Feature flags", "High", "7", "Pending", "2026-07-18"]
+      ]
+    columns:
+      - id: id
+        type: TEXT
+      - id: task
+        type: TEXT
+      - id: severity
+        type: LABEL
+      - id: priority
+        type: NUMBER
+      - id: status
+        type: LABEL
+      - id: due
+        type: DATE
+
+pages:
+  - name: Row Styles
+    components:
+      - type: title
+        properties:
+          text: Conditional Row Styling
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            **rowStyle** rules apply CSS styles conditionally per row.
+            Each rule has a `condition` expression evaluated against row data.
+            When true, either a `className` or inline `style` is applied.
+
+      - type: table
+        properties:
+          lookup:
+            uuid: tasks
+          sortable: true
+          pageSize: 15
+          rowStyle:
+            - condition: "#{row.status} == 'Error'"
+              style:
+                backgroundColor: "#fce4ec"
+                color: "#b71c1c"
+            - condition: "#{row.priority} > 7"
+              style:
+                fontWeight: bold
+            - condition: "#{row.status} == 'Pending'"
+              style:
+                backgroundColor: "#fff8e1"
+            - condition: "#{row.status} == 'Complete'"
+              style:
+                color: "#1b5e20"
+
+      - type: markdown
+        properties:
+          content: |
+            **Rules applied** (first match wins):
+            - `#{row.status} == 'Error'` → red background
+            - `#{row.priority} > 7` → bold text
+            - `#{row.status} == 'Pending'` → yellow background
+            - `#{row.status} == 'Complete'` → green text

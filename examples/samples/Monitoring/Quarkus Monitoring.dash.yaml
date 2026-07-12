@@ -1,0 +1,384 @@
+properties:
+  refreshInterval: 10
+  metricsUrl: /data/quarkus/metrics
+  historyUrl: /data/quarkus/history.json
+global:
+  mode: dark
+datasets:
+- uuid: all_metrics
+  url: ${metricsUrl}
+  cacheEnabled: true
+  refreshTime: 5second
+- uuid: live_metrics
+  url: ${metricsUrl}
+  accumulate: true
+  cacheMaxRows: 10000
+  refreshTime: 3second
+  expression: >-
+    $map($, function($v){
+        [$v[0], $v[1], $v[2] = 'NaN' ? -1 : $v[2], $now() ~> $toMillis()]
+    })
+  columns:
+  - id: metric
+    type: LABEL
+  - id: labels
+    type: LABEL
+  - id: value
+    type: NUMBER
+  - id: timestamp
+    type: NUMBER
+- uuid: history
+  url: ${historyUrl}
+  columns:
+  - id: metric
+    type: LABEL
+  - id: labels
+    type: LABEL
+  - id: value
+    type: NUMBER
+  - id: timestamp
+    type: NUMBER
+pages:
+- name: index
+  components:
+  - type: sidebar
+    properties:
+      navGroupId: QuarkusNav
+- name: Current Status
+  rows:
+  - columns:
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: CPU Usage
+          lookup:
+            uuid: all_metrics
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - system_cpu_usage
+            group:
+            - functions:
+              - source: Value
+                function: MAX
+                column: CPU
+          columns:
+          - id: CPU
+            expression: value * 100
+            pattern: '#'
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Open Files
+          lookup:
+            uuid: all_metrics
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - process_files_open_files
+            group:
+            - functions:
+              - source: Value
+                function: MAX
+                column: Total
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Uptime
+          visible: true
+          lookup:
+            uuid: all_metrics
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - process_uptime_seconds
+            group:
+            - functions:
+              - source: Value
+                function: MAX
+                column: UPTIME
+          columns:
+          - id: UPTIME
+            pattern: '#'
+            expression: value / 60
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Peak Threads
+          lookup:
+            uuid: all_metrics
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jvm_threads_peak_threads
+            group:
+            - functions:
+              - source: Value
+  - properties:
+      margin-top: 50px
+    columns:
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: JVM Memory Used Bytes (heap)
+          lookup:
+            uuid: all_metrics
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jvm_memory_used_bytes
+            - column: labels
+              function: LIKE_TO
+              args:
+              - heap%
+            sort:
+            - column: Total
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Labels
+              functions:
+              - source: Labels
+              - source: Value
+                function: MAX
+                column: Total
+          columns:
+          - id: Labels
+            expression: value.replace("heap, ", "");
+          extraConfiguration: >-
+            {
+              "color" : ["#5ec962"]
+            }
+    - span: 6
+      components:
+      - type: bar-chart
+        properties:
+          title: JVM Memory Used Bytes (nonheap)
+          lookup:
+            uuid: all_metrics
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jvm_memory_used_bytes
+            - column: labels
+              function: LIKE_TO
+              args:
+              - nonheap%
+            sort:
+            - column: Total
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Labels
+              functions:
+              - source: Labels
+              - source: Value
+                function: MAX
+                column: Total
+          columns:
+          - id: Labels
+            expression: value.replace("nonheap, ", "");
+          extraConfiguration: >-
+            {
+              "color" : ["#5ec962"]
+            }
+  - properties:
+      margin-top: 20px
+    columns:
+    - components:
+      - type: bar-chart
+        properties:
+          title: Threads
+          lookup:
+            uuid: all_metrics
+            filter:
+            - column: Metric
+              function: EQUALS_TO
+              args:
+              - jvm_threads_states_threads
+            sort:
+            - column: Total
+              sortOrder: DESCENDING
+            group:
+            - columnGroup:
+                source: Labels
+              functions:
+              - source: Labels
+              - source: Value
+                function: MAX
+                column: Total
+          columns:
+          - id: Labels
+            expression: value;
+          extraConfiguration: >-
+            {
+              "color" : ["#4695EB"]
+            }
+- name: History
+  rows:
+  - columns:
+    - span: 6
+      components:
+      - type: timeseries
+        properties:
+          title: Heap Memory Usage
+          chart:
+            height: 300
+          lookup:
+            uuid: history
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jvm_memory_used_bytes
+            - column: labels
+              function: LIKE_TO
+              args:
+              - heap%
+            group:
+            - functions:
+              - source: labels
+              - source: timestamp
+              - source: value
+    - span: 6
+      components:
+      - type: timeseries
+        properties:
+          title: CPU Usage
+          chart:
+            height: 300
+          lookup:
+            uuid: history
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - system_cpu_usage
+            group:
+            - functions:
+              - source: metric
+              - source: timestamp
+              - source: value
+  - columns:
+    - span: 6
+      components:
+      - type: timeseries
+        properties:
+          title: Live Threads
+          chart:
+            height: 300
+          lookup:
+            uuid: history
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jvm_threads_live_threads
+            group:
+            - functions:
+              - source: metric
+              - source: timestamp
+              - source: value
+    - span: 6
+      components:
+      - type: timeseries
+        properties:
+          title: Loaded Classes
+          chart:
+            height: 300
+          lookup:
+            uuid: history
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jvm_classes_loaded_classes
+            group:
+            - functions:
+              - source: metric
+              - source: timestamp
+              - source: value
+- name: Live
+  rows:
+  - columns:
+    - components:
+      - type: timeseries
+        properties:
+          title: Live CPU Usage (accumulating)
+          chart:
+            height: 350
+            zoom: true
+          lookup:
+            uuid: live_metrics
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - system_cpu_usage
+            group:
+            - functions:
+              - source: metric
+              - source: timestamp
+              - source: value
+  - columns:
+    - span: 6
+      components:
+      - type: timeseries
+        properties:
+          title: Live Threads (accumulating)
+          chart:
+            height: 300
+          lookup:
+            uuid: live_metrics
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jvm_threads_live_threads
+            group:
+            - functions:
+              - source: metric
+              - source: timestamp
+              - source: value
+    - span: 6
+      components:
+      - type: timeseries
+        properties:
+          title: Live Memory (accumulating)
+          chart:
+            height: 300
+          lookup:
+            uuid: live_metrics
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - jvm_memory_used_bytes
+            - column: labels
+              function: LIKE_TO
+              args:
+              - heap%
+            group:
+            - functions:
+              - source: labels
+              - source: timestamp
+              - source: value
+navTree:
+  root_items:
+  - type: GROUP
+    id: QuarkusNav
+    children:
+    - page: Current Status
+    - page: History
+    - page: Live

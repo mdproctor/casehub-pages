@@ -1,0 +1,41 @@
+datasets:
+- uuid: a
+  content: '[["A", 1], ["B", 2], ["C", 3]]'
+pages:
+- rows:
+  - columns:
+    - properties:
+        border: solid 1px
+      span: '6'
+      components:
+      - type: bar-chart
+        properties:
+          chart:
+            height: 300
+    - span: '6'
+      rows:
+      - properties:
+          border: solid 1px
+          margin: 1px
+        columns:
+        - components:
+          - type: pie-chart
+            properties:
+              chart:
+                height: 150
+      - properties:
+          border: solid 1px
+          margin: 1px
+        columns:
+        - components:
+          - type: meter
+            properties:
+              chart:
+                height: 150
+              lookup:
+                uuid: a
+  - properties:
+      border: solid blue
+    columns:
+    - components:
+      - html: ROW 2

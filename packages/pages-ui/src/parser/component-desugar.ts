@@ -15,6 +15,25 @@ const NAV_TYPE_MAP: Record<string, string> = {
   ACCORDION: "accordion",
 };
 
+const DATA_COMPONENT_TYPES = new Set([
+  "bar-chart", "line-chart", "area-chart", "pie-chart",
+  "scatter-chart", "bubble-chart", "timeseries",
+  "table", "metric", "meter", "selector", "map",
+  "grouped-view", "iframe-plugin",
+  "badge", "countdown", "timeline", "graph",
+  "text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea",
+  "action-button", "alert",
+  "split", "dock-bar", "host-panel",
+]);
+
+const LEGACY_TYPE_MAP: Record<string, string> = {
+  BARCHART: "bar-chart", LINECHART: "line-chart", AREACHART: "area-chart",
+  PIECHART: "pie-chart", SCATTERCHART: "scatter-chart", BUBBLECHART: "bubble-chart",
+  TIMESERIES: "timeseries", TABLE: "table", METRIC: "metric", METERCHART: "meter",
+  SELECTOR: "selector", MAP: "map", GROUPED_VIEW: "grouped-view",
+  BADGE: "badge", COUNTDOWN: "countdown", TIMELINE: "timeline", GRAPH: "graph",
+};
+
 /**
  * Converts a raw YAML component object to a typed Component.
  *
@@ -212,13 +231,41 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
   if ("type" in raw && typeof raw.type === "string") {
     const rawType = raw.type;
 
-    // Navigation components
-    const mappedNavType = NAV_TYPE_MAP[rawType];
+    // Navigation components (case-insensitive lookup)
+    const mappedNavType = NAV_TYPE_MAP[rawType] ?? NAV_TYPE_MAP[rawType.toUpperCase()];
     if (mappedNavType) {
       const props = raw.properties as Record<string, unknown> | undefined;
+      const visibleWhen = raw.visibleWhen as string | undefined;
+
+      // Build slots from inline content keys (tabs:, sections:, sidebar:, content:)
+      let slots: Record<string, Component[]> | undefined;
+      const slotSource = (raw.tabs ?? raw.sections) as Record<string, unknown> | undefined;
+      if (slotSource && typeof slotSource === "object") {
+        slots = {};
+        for (const [name, content] of Object.entries(slotSource)) {
+          const contentObj = content as Record<string, unknown> | undefined;
+          const comps = (contentObj?.components ?? contentObj) as unknown[];
+          if (Array.isArray(comps)) {
+            slots[name] = comps.map(c => desugarComponent(c as Record<string, unknown>, displayerDefaults));
+          }
+        }
+      }
+
+      // Sidebar has sidebar: (nav) and content: (main) slots
+      if (raw.sidebar && Array.isArray(raw.sidebar)) {
+        slots = slots ?? {};
+        slots["nav"] = (raw.sidebar as unknown[]).map(c => desugarComponent(c as Record<string, unknown>, displayerDefaults));
+      }
+      if (raw.content && Array.isArray(raw.content)) {
+        slots = slots ?? {};
+        slots["main"] = (raw.content as unknown[]).map(c => desugarComponent(c as Record<string, unknown>, displayerDefaults));
+      }
+
       return {
         type: mappedNavType,
         ...(props ? { props } : {}),
+        ...(visibleWhen ? { visibleWhen } : {}),
+        ...(slots ? { slots } : {}),
       };
     }
 
@@ -245,27 +292,58 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
       };
     }
 
-    // Legacy HTML component (type: "HTML" with properties.HTML_CODE)
+    // HTML component (legacy HTML_CODE or modern content)
     if (rawType === "HTML" || rawType === "html") {
       const properties = (raw.properties as Record<string, unknown> | undefined) || {};
-      const htmlCode = properties["HTML_CODE"] as string | undefined;
-      // Extract CSS-related properties (everything except HTML_CODE)
+      const content = (properties["HTML_CODE"] ?? properties["content"]) as string | undefined;
       const style: Record<string, string> = {};
       for (const [key, value] of Object.entries(properties)) {
-        if (key !== "HTML_CODE") {
+        if (key !== "HTML_CODE" && key !== "content") {
           style[key] = String(value);
         }
       }
       return {
         type: "html",
-        props: { content: htmlCode ?? "" },
+        props: { content: content ?? "" },
         ...(Object.keys(style).length > 0 ? { style } : {}),
+      };
+    }
+
+    // Markdown component
+    if (rawType === "markdown") {
+      const properties = (raw.properties as Record<string, unknown> | undefined) || {};
+      return {
+        type: "markdown",
+        props: { content: (properties["content"] as string) ?? "" },
+      };
+    }
+
+    // Title component
+    if (rawType === "title") {
+      const properties = (raw.properties as Record<string, unknown> | undefined) || {};
+      return {
+        type: "title",
+        props: { text: (properties["text"] as string) ?? "", size: properties["size"] as string | undefined },
       };
     }
 
     // Displayer type (type: "Displayer" or type: "displayer")
     if (rawType === "Displayer" || rawType === "displayer") {
       return desugarDisplayer(raw);
+    }
+
+    // Modern data component format: type + properties
+    // Route through displayer desugar for full normalization (lookup, groupBy, chart, axis, etc.)
+    const normalized = LEGACY_TYPE_MAP[rawType] ?? rawType.toLowerCase();
+    if (DATA_COMPONENT_TYPES.has(normalized)) {
+      const rawProps = (raw.properties as Record<string, unknown> | undefined) ?? {};
+      const displayerInput = { type: rawType, ...rawProps };
+      const component = desugarDisplayer(displayerInput);
+      const visibleWhen = raw.visibleWhen as string | undefined;
+      return {
+        ...component,
+        ...(visibleWhen ? { visibleWhen } : {}),
+      };
     }
   }
 

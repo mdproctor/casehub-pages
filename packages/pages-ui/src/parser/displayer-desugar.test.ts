@@ -462,4 +462,99 @@ describe("desugarDisplayer", () => {
     expect(result.type).toBe("bar-chart");
     expect(result.props?.["inlineDataSet"]).toBe('["Hello World", 42]');
   });
+
+  describe("modern hyphenated type names", () => {
+    it("bar-chart maps to bar-chart", () => {
+      const result = desugarDisplayer({ type: "bar-chart", lookup: { uuid: "d" } });
+      expect(result.type).toBe("bar-chart");
+    });
+
+    it("line-chart maps to line-chart", () => {
+      const result = desugarDisplayer({ type: "line-chart", lookup: { uuid: "d" } });
+      expect(result.type).toBe("line-chart");
+    });
+
+    it("meter maps to meter (not table)", () => {
+      const result = desugarDisplayer({ type: "meter", lookup: { uuid: "d" } });
+      expect(result.type).toBe("meter");
+    });
+
+    it("iframe-plugin with componentId and settings", () => {
+      const result = desugarDisplayer({
+        type: "iframe-plugin",
+        componentId: "svg-heatmap",
+        settings: { svg: "<svg></svg>" },
+        lookup: { uuid: "data" },
+      });
+      expect(result.type).toBe("iframe-plugin");
+      expect(result.props?.["componentId"]).toBe("svg-heatmap");
+      expect(result.props?.["settings"]).toEqual({ svg: "<svg></svg>" });
+    });
+
+    it("grouped-view routes to grouped-view desugar", () => {
+      const result = desugarDisplayer({
+        type: "grouped-view",
+        groupBy: { column: "dept" },
+        lookup: { uuid: "team" },
+      });
+      expect(result.type).toBe("grouped-view");
+      const groupBy = (result.props as Record<string, unknown>).groupBy as Record<string, unknown>;
+      expect(groupBy.columnId).toBe("dept");
+    });
+
+    it("GROUPED_VIEW also routes to grouped-view desugar", () => {
+      const result = desugarDisplayer({
+        type: "GROUPED_VIEW",
+        groupBy: { column: "status", strategy: "distinct" },
+        lookup: { uuid: "data" },
+      });
+      expect(result.type).toBe("grouped-view");
+    });
+  });
+
+  describe("prop passthrough for component-specific fields", () => {
+    it("passes startColumn and endColumn through for timeline", () => {
+      const result = desugarDisplayer({
+        type: "timeline",
+        startColumn: "start",
+        endColumn: "end",
+        labelColumn: "task",
+        categoryColumn: "phase",
+        lookup: { uuid: "milestones" },
+      });
+      expect(result.type).toBe("timeline");
+      expect(result.props?.["startColumn"]).toBe("start");
+      expect(result.props?.["endColumn"]).toBe("end");
+      expect(result.props?.["labelColumn"]).toBe("task");
+      expect(result.props?.["categoryColumn"]).toBe("phase");
+    });
+
+    it("passes sourceColumn and targetColumn through for graph", () => {
+      const result = desugarDisplayer({
+        type: "graph",
+        sourceColumn: "from",
+        targetColumn: "to",
+        layout: "force",
+        directed: true,
+        lookup: { uuid: "deps" },
+      });
+      expect(result.props?.["sourceColumn"]).toBe("from");
+      expect(result.props?.["targetColumn"]).toBe("to");
+      expect(result.props?.["layout"]).toBe("force");
+      expect(result.props?.["directed"]).toBe(true);
+    });
+
+    it("does not pass through handled keys", () => {
+      const result = desugarDisplayer({
+        type: "BARCHART",
+        general: { title: "Test" },
+        chart: { resizable: true },
+        lookup: { uuid: "d" },
+      });
+      expect(result.props?.["general"]).toBeUndefined();
+      expect(result.props?.["chart"]).toBeUndefined();
+      expect(result.props?.["title"]).toBe("Test");
+      expect(result.props?.["resizable"]).toBe(true);
+    });
+  });
 });

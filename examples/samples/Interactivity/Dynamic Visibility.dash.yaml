@@ -1,0 +1,75 @@
+datasets:
+  - uuid: products
+    content: >
+      [
+        ["Electronics", "Laptop Pro", "1299", "In Stock"],
+        ["Electronics", "Wireless Mouse", "29", "In Stock"],
+        ["Electronics", "USB-C Hub", "49", "Low Stock"],
+        ["Furniture", "Standing Desk", "599", "In Stock"],
+        ["Furniture", "Ergonomic Chair", "449", "Out of Stock"],
+        ["Furniture", "Monitor Arm", "89", "In Stock"],
+        ["Clothing", "Merino Hoodie", "79", "In Stock"],
+        ["Clothing", "Running Shoes", "129", "Low Stock"],
+        ["Clothing", "Rain Jacket", "199", "In Stock"]
+      ]
+    columns:
+      - id: category
+        type: LABEL
+      - id: product
+        type: TEXT
+      - id: price
+        type: NUMBER
+      - id: availability
+        type: LABEL
+
+pages:
+  - name: Dynamic Visibility
+    components:
+      - type: title
+        properties:
+          text: "Dynamic Visibility with visibleWhen"
+          size: h2
+
+      - type: markdown
+        properties:
+          content: >
+            Select a **category** below. The charts and details only appear when
+            a filter is active — they use `visibleWhen` to show/hide based on
+            the current filter state.
+
+      - type: selector
+        properties:
+          lookup:
+            uuid: products
+            operations:
+              - type: group
+                columnGroup: category
+          subtype: labels
+
+      - type: markdown
+        visibleWhen: "#{filter.category}"
+        properties:
+          content: "### Showing: #{filter.category}"
+
+      - type: columns
+        visibleWhen: "#{filter.category}"
+        properties:
+          span: "6,6"
+        columns:
+          - components:
+              - type: bar-chart
+                properties:
+                  lookup:
+                    uuid: products
+          - components:
+              - type: table
+                properties:
+                  lookup:
+                    uuid: products
+
+      - type: markdown
+        visibleWhen: "#{filter.category}"
+        properties:
+          content: >
+            *This section appears only when a category is selected.
+            Clear the filter to hide it again.*

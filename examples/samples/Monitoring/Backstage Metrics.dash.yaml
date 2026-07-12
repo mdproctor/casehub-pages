@@ -1,0 +1,199 @@
+datasets:
+- uuid: metrics
+  url: metrics
+  cacheEnabled: true
+pages:
+- name: index
+  rows:
+  - columns:
+    - components:
+      - screen: Cards
+      - panel: Charts
+      - panel: Metrics Table
+- name: Cards
+  properties:
+    margin-top: 10px
+  rows:
+  - columns:
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Node Version
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - nodejs_version_info
+            group:
+            - functions:
+              - source: labels
+            uuid: metrics
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Started
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - process_start_time_seconds
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+          columns:
+          - id: value
+            expression: >-
+              new Date(value * 1000).toISOString()
+                                    .substring(0, 19)
+                                    .replace("T", " ")
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Heap Bytes
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - process_heap_bytes
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+          columns:
+          - id: value
+            expression: parseInt(value / (1024 * 1024)) + " MB"
+    - span: 3
+      components:
+      - type: metric
+        properties:
+          title: Open Files
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - process_open_fds
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+          columns:
+          - id: value
+            pattern: '#'
+- name: Charts
+  rows:
+  - columns:
+    - span: 4
+      components:
+      - type: bar-chart
+        properties:
+          title: Active Resources
+          lookup:
+            sort:
+            - column: value
+              order: DESCENDING
+            group:
+            - functions:
+              - source: labels
+              - source: value
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - nodejs_active_resources
+            uuid: metrics
+          columns:
+          - id: value
+            pattern: '#'
+          axis:
+            x:
+              labels_angle: -10
+    - span: 4
+      components:
+      - type: bar-chart
+        properties:
+          title: Event Loop Lag (seconds)
+          lookup:
+            sort:
+            - column: metric
+              order: DESCENDING
+            group:
+            - functions:
+              - source: metric
+              - source: value
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - nodejs_eventloop_lag_min_seconds
+              - nodejs_eventloop_lag_max_seconds
+              - nodejs_eventloop_lag_mean_seconds
+            uuid: metrics
+          columns:
+          - id: metric
+            expression: "lbl = \"Mean\"; if (value === \"nodejs_eventloop_lag_min_seconds\") \n  lbl = \"Min\";\nif (value\
+              \ === \"nodejs_eventloop_lag_max_seconds\")\n  lbl = \"Max\";\nlbl;"
+    - span: 4
+      components:
+      - type: bar-chart
+        properties:
+          title: Used Bytes (MB)
+          lookup:
+            sort:
+            - column: value
+              order: DESCENDING
+            group:
+            - functions:
+              - source: metric
+              - source: value
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - nodejs_heap_size_total_bytes
+              - nodejs_heap_size_used_bytes
+            uuid: metrics
+          columns:
+          - id: metric
+            expression: value.replaceAll("nodejs_heap_size_", "") .replaceAll("_bytes", "")
+          - id: value
+            expression: parseInt(value / (1024 * 1024))
+            pattern: '#'
+- name: Metrics Table
+  rows:
+  - columns:
+    - components:
+      - type: table
+        properties:
+          lookup:
+            .filter:
+            - function: NOT_EQUALS_TO
+              column: metric
+              args:
+              - process_open_fds
+              - process_max_fds
+              - process_start_time_seconds
+              - nodejs_active_resources
+              - nodejs_version_info
+              - process_heap_bytes
+              - nodejs_eventloop_lag_min_seconds
+              - nodejs_eventloop_lag_max_seconds
+              - nodejs_eventloop_lag_mean_seconds
+              - nodejs_heap_size_total_bytes
+              - nodejs_heap_space_size_used_bytes
+              - nodejs_external_memory_bytes
+              - up
+            group:
+            - functions:
+              - source: metric
+              - source: value
+              columnGroup:
+                source: metric
+            uuid: metrics

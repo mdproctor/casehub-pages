@@ -1,0 +1,113 @@
+datasets:
+  - uuid: team-data
+    content: >
+      [
+        ["Engineering", "Alice Chen", "Staff Engineer", "92", "Active"],
+        ["Engineering", "Bob Kim", "Senior Engineer", "87", "Active"],
+        ["Engineering", "Carlos Ruiz", "Engineer", "74", "Active"],
+        ["Design", "Diana Park", "Lead Designer", "95", "Active"],
+        ["Design", "Eve Johnson", "UX Researcher", "88", "On Leave"],
+        ["Product", "Frank Lee", "Product Manager", "91", "Active"],
+        ["Product", "Grace Wu", "Product Analyst", "82", "Active"],
+        ["Engineering", "Henry Zhang", "Junior Engineer", "68", "Active"],
+        ["Design", "Iris Patel", "UI Designer", "79", "Active"],
+        ["Product", "Jack Brown", "Program Manager", "85", "Active"],
+        ["Engineering", "Kate Liu", "DevOps Engineer", "90", "Active"],
+        ["Product", "Leo Garcia", "Data Analyst", "77", "On Leave"]
+      ]
+    columns:
+      - id: department
+        type: LABEL
+      - id: name
+        type: TEXT
+      - id: role
+        type: TEXT
+      - id: score
+        type: NUMBER
+      - id: status
+        type: LABEL
+
+pages:
+  - name: Grouped View
+    components:
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Sectioned:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Groups displayed as **section headings** with table content below each.
+                    The default preset — best for scanning grouped data.
+              - type: grouped-view
+                properties:
+                  lookup:
+                    uuid: team-data
+                  groupBy:
+                    column: department
+                  preset: sectioned
+                  defaultExpanded: true
+                  showGroupSummary: true
+                  aggregations:
+                    - column: score
+                      fn: AVG
+
+          Spreadsheet:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Groups displayed as **inline table rows** — compact spreadsheet view.
+                    Groups are collapsible rows within the table itself.
+              - type: grouped-view
+                properties:
+                  lookup:
+                    uuid: team-data
+                  groupBy:
+                    column: department
+                  preset: spreadsheet
+                  defaultExpanded: true
+
+          List:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Groups displayed as **section headings** with list content.
+                    Best for text-heavy data where a table layout would be too dense.
+              - type: grouped-view
+                properties:
+                  lookup:
+                    uuid: team-data
+                  groupBy:
+                    column: department
+                  preset: list
+                  order: asc
+
+          With Aggregation:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    Group summaries with **aggregation** — showing count, average score,
+                    and min/max per department.
+              - type: grouped-view
+                properties:
+                  lookup:
+                    uuid: team-data
+                  groupBy:
+                    column: department
+                  preset: sectioned
+                  defaultExpanded: false
+                  showGroupSummary: true
+                  aggregations:
+                    - column: score
+                      fn: AVG
+                    - column: score
+                      fn: MIN
+                    - column: score
+                      fn: MAX
+                    - column: name
+                      fn: COUNT

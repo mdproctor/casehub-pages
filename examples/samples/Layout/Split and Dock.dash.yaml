@@ -1,0 +1,128 @@
+datasets:
+  - uuid: inventory
+    content: >
+      [
+        ["Widgets", "Widget A", "142", "In Stock"],
+        ["Widgets", "Widget B", "38", "Low Stock"],
+        ["Widgets", "Widget C", "210", "In Stock"],
+        ["Gadgets", "Gadget X", "0", "Out of Stock"],
+        ["Gadgets", "Gadget Y", "85", "In Stock"],
+        ["Gadgets", "Gadget Z", "12", "Low Stock"],
+        ["Parts", "Part Alpha", "500", "In Stock"],
+        ["Parts", "Part Beta", "67", "In Stock"],
+        ["Parts", "Part Gamma", "3", "Low Stock"]
+      ]
+    columns:
+      - id: category
+        type: LABEL
+      - id: product
+        type: TEXT
+      - id: quantity
+        type: NUMBER
+      - id: status
+        type: LABEL
+
+pages:
+  - name: Split and Dock
+    components:
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Horizontal Split:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Split** — resizable panes with a draggable divider. Horizontal
+                    split places children side by side. Drag the handle to resize.
+              - split:
+                  direction: horizontal
+                  ratio: [60, 40]
+                  children:
+                    - type: table
+                      properties:
+                        lookup:
+                          uuid: inventory
+                        sortable: true
+                    - type: bar-chart
+                      properties:
+                        lookup:
+                          uuid: inventory
+
+          Vertical Split:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Vertical split** — top and bottom panes.
+              - split:
+                  direction: vertical
+                  ratio: [40, 60]
+                  children:
+                    - type: metric
+                      properties:
+                        lookup:
+                          uuid: inventory
+                          operations:
+                            - type: group
+                              columnGroup: category
+                    - type: table
+                      properties:
+                        lookup:
+                          uuid: inventory
+                        sortable: true
+
+          Nested Split:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Nested splits** — a horizontal split where the right pane
+                    contains a vertical split, creating a three-panel layout.
+              - split:
+                  direction: horizontal
+                  ratio: [30, 70]
+                  children:
+                    - type: markdown
+                      properties:
+                        content: |
+                          **Navigation**
+
+                          - Widgets
+                          - Gadgets
+                          - Parts
+                    - split:
+                        direction: vertical
+                        ratio: [50, 50]
+                        children:
+                          - type: bar-chart
+                            properties:
+                              lookup:
+                                uuid: inventory
+                          - type: table
+                            properties:
+                              lookup:
+                                uuid: inventory
+
+          Dock Bar:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Dock bar** — icon buttons that toggle associated panels.
+                    Each item has an `icon`, `label`, and `panelId`. The dock
+                    emits toggle events that panels can listen to.
+              - dock-bar:
+                  orientation: horizontal
+                  items:
+                    - icon: "\U0001F4CA"
+                      label: Charts
+                      panelId: charts
+                      defaultOpen: true
+                    - icon: "\U0001F4CB"
+                      label: Data
+                      panelId: data
+                    - icon: "\U00002699"
+                      label: Settings
+                      panelId: settings

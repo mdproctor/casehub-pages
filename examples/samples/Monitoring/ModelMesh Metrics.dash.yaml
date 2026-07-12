@@ -1,0 +1,157 @@
+global:
+  mode: dark
+properties:
+  modelMeshMetricsUrl: metrics
+  titleFontSize: 40px
+datasets:
+- uuid: metrics
+  url: ${modelMeshMetricsUrl}
+  columns:
+  - id: metric
+    type: LABEL
+  - id: labels
+    type: LABEL
+  - id: value
+    type: number
+- uuid: request_response_size
+  url: ${modelMeshMetricsUrl}
+  expression: >-
+    (
+        $requestSize := $number($[$[0] = "modelmesh_request_size_bytes_sum"][0][2]);
+        $requestCount := $number($[$[0] = "modelmesh_request_size_bytes_count"][0][2]);
+        $responseSize := $number($[$[0] = "modelmesh_response_size_bytes_sum"][0][2]);
+        $responseCount := $number($[$[0] = "modelmesh_response_size_bytes_count"][0][2]);
+
+        [ "Size", $requestSize / $requestCount,  $responseSize / $responseCount]
+    )
+  columns:
+  - id: Metric
+    type: LABEL
+  - id: Request
+    type: number
+  - id: Response
+    type: number
+- uuid: jvm_memory
+  url: ${modelMeshMetricsUrl}
+  expression: "(\n    $metrics := $[$[0] in [\"jvm_memory_pool_bytes_used\", \"jvm_memory_pool_bytes_committed\"]].[\n   \
+    \     {\n                \"metric\": $[0],\n                \"label\": $[1],\n                \"value\": $[2]\n      \
+    \      }\n    ];\n    $map($distinct($metrics.label), function($l) {\n        (\n            $used := $metrics[label =\
+    \ $l and metric = \"jvm_memory_pool_bytes_used\"].value;\n            $committed := $metrics[label = $l and metric = \"\
+    jvm_memory_pool_bytes_committed\"].value;\n            [\n              $l,\n              $used ?  $used : \"-1\",\n\
+    \              $committed ?  $committed : -1\n            ] \n      )\n    })\n)"
+  columns:
+  - id: Pool
+    type: LABEL
+  - id: Used
+    type: number
+  - id: Committed
+    type: number
+pages:
+- properties:
+    padding: 10px
+  rows:
+  - columns:
+    - components:
+      - html: <p>Model Mesh Metrics</p> <hr />
+        properties:
+          font-size: ${titleFontSize}
+  - columns:
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Managed Models
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - modelmesh_models_managed_total
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Models with Failure
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - modelmesh_models_with_failure_total
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Load Model (ms)
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - modelmesh_loadmodel_milliseconds_sum
+            group:
+            - functions:
+              - source: value
+            uuid: metrics
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Models Size (kb)
+          lookup:
+            filter:
+            - column: metric
+              function: EQUALS_TO
+              args:
+              - modelmesh_loaded_model_size_bytes_sum
+            group:
+            - functions:
+              - source: value
+                column: value_kb
+            uuid: metrics
+          columns:
+          - id: value_kb
+            pattern: '#'
+            expression: value / 1024
+  - columns:
+    - components:
+      - html: <hr />
+  - columns:
+    - components:
+      - html: '<p style="font-size: 25px; font-weight: 600"> JVM Memory </p>'
+      - type: bar-chart
+        properties:
+          chart:
+            resizable: true
+            height: 400
+            grid:
+              x: false
+          lookup:
+            uuid: jvm_memory
+            group:
+            - columnGroup:
+                source: Pool
+              functions:
+              - source: Pool
+              - source: Used
+              - source: Committed
+          columns:
+          - id: Pool
+            expression: value.replace("pool=\"", "").replace("\",", "")
+          extraConfiguration: >-
+            {
+                "color": [
+                "#007090",
+                "#009040",
+                "#e0a000",
+                "#a02020"
+                ]
+            }

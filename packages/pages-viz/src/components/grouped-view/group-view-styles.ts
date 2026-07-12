@@ -52,7 +52,17 @@ export const GROUPED_VIEW_CSS = `
 
 .column-header-bar {
   display: grid;
-  padding: 0 var(--pages-space-3, 12px);
+  border-bottom: 2px solid var(--pages-neutral-5, #ddd);
+}
+
+.column-header-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.column-header-table th {
+  text-align: left;
+  padding: 0;
   border-bottom: 2px solid var(--pages-neutral-5, #ddd);
 }
 
@@ -61,16 +71,17 @@ export const GROUPED_VIEW_CSS = `
   border: none;
   cursor: pointer;
   text-align: left;
-  padding: var(--pages-space-2, 8px) 0;
+  padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
   font-weight: var(--pages-font-weight-semibold, 600);
   font-size: var(--pages-font-size-sm, 12px);
   color: var(--pages-neutral-9, #666);
   white-space: nowrap;
+  width: 100%;
 }
 
 .col-label {
   text-align: left;
-  padding: var(--pages-space-2, 8px) 0;
+  padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
   font-weight: var(--pages-font-weight-semibold, 600);
   font-size: var(--pages-font-size-sm, 12px);
   color: var(--pages-neutral-9, #666);

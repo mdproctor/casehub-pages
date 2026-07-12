@@ -1,0 +1,74 @@
+datasets:
+  - uuid: sales
+    content: >-
+      [
+        ["Alice Chen", "Engineering", 142000, 15, "2024-03-15T00:00:00Z"],
+        ["Bob Kim", "Marketing", 98000, 8, "2023-11-01T00:00:00Z"],
+        ["Carlos Ruiz", "Engineering", 128000, 22, "2022-06-20T00:00:00Z"],
+        ["Diana Park", "Sales", 115000, -5, "2024-01-10T00:00:00Z"],
+        ["Eve Johnson", "Marketing", 87000, 12, "2023-08-15T00:00:00Z"],
+        ["Frank Lee", "Sales", 135000, 18, "2021-04-01T00:00:00Z"],
+        ["Grace Wu", "Engineering", 155000, 25, "2020-09-15T00:00:00Z"],
+        ["Henry Zhang", "Sales", 105000, -3, "2024-06-01T00:00:00Z"]
+      ]
+    columns:
+      - id: name
+        type: TEXT
+      - id: department
+        type: LABEL
+      - id: salary
+        type: NUMBER
+      - id: growth
+        type: NUMBER
+      - id: startDate
+        type: DATE
+
+pages:
+  - name: Column Settings
+    components:
+      - type: title
+        properties:
+          text: Column Expressions & Cross-Filtering
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            **Column expressions** transform how values display. The `columns`
+            property applies an `expression` per column — a formula that
+            receives the raw `value` and returns formatted text:
+
+            - `salary` expression: `"$" & value` — prepends a dollar sign
+            - `growth` expression: `value & "%"` — appends a percent sign
+
+            **Cross-filtering** is enabled by default on tables. Click any
+            **department** cell to filter — the bar chart below responds.
+            Click again to clear.
+
+      - type: table
+        properties:
+          lookup:
+            uuid: sales
+          sortable: true
+          filter:
+            notification: true
+          columns:
+            - id: salary
+              expression: "'$' & value"
+            - id: growth
+              expression: "value & '%'"
+
+      - type: bar-chart
+        properties:
+          title: Salary by Department
+          filter:
+            listening: true
+          lookup:
+            uuid: sales
+            group:
+              - columnGroup:
+                    source: department
+                functions:
+                  - source: department
+                  - source: salary
+                    function: SUM

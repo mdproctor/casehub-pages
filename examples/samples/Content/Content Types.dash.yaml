@@ -1,0 +1,65 @@
+pages:
+  - name: Content Types
+    components:
+      - type: title
+        properties:
+          text: Content Components
+          size: h1
+
+      - type: markdown
+        properties:
+          content: |
+            ## Markdown
+
+            Rich text content rendered from **Markdown** syntax. Supports:
+
+            - **Bold**, *italic*, and `inline code`
+            - [Links](https://casehub.io)
+            - Lists (ordered and unordered)
+            - Code blocks with syntax highlighting
+
+            ```yaml
+            type: markdown
+            properties:
+              content: "Your markdown here"
+            ```
+
+      - type: html
+        properties:
+          content: |
+            <div style="padding: 16px; border: 1px solid var(--pages-neutral-6, #e0e0e0); border-radius: 8px; background: var(--pages-neutral-2, #f8f8f8);">
+              <h3 style="margin: 0 0 8px 0;">HTML Content</h3>
+              <p style="margin: 0; color: var(--pages-neutral-11, #666);">
+                Raw HTML for custom layouts, embedded widgets, or styled content
+                that goes beyond what Markdown offers.
+              </p>
+            </div>
+
+      - type: columns
+        properties:
+          span: "4,4,4"
+        columns:
+          - components:
+              - type: title
+                properties:
+                  text: "Heading h2"
+                  size: h2
+              - type: markdown
+                properties:
+                  content: "Titles render as semantic HTML headings at the specified level."
+          - components:
+              - type: title
+                properties:
+                  text: "Heading h3"
+                  size: h3
+              - type: markdown
+                properties:
+                  content: "Use `size: h1` through `size: h6` to control the heading level."
+          - components:
+              - type: title
+                properties:
+                  text: "Heading h4"
+                  size: h4
+              - type: markdown
+                properties:
+                  content: "Smaller headings for subsections and labels."

@@ -1,0 +1,59 @@
+datasets:
+  - uuid: products
+    content: >-
+      [
+        ["Laptop Pro", "Electronics", 1299, 45, true],
+        ["Wireless Mouse", "Electronics", 29, 230, true],
+        ["USB-C Hub", "Electronics", 49, 12, false],
+        ["Standing Desk", "Furniture", 599, 18, true],
+        ["Ergonomic Chair", "Furniture", 449, 7, false],
+        ["Monitor Arm", "Furniture", 89, 52, true],
+        ["Merino Hoodie", "Clothing", 79, 95, true],
+        ["Running Shoes", "Clothing", 129, 33, false],
+        ["Rain Jacket", "Clothing", 199, 61, true]
+      ]
+    columns:
+      - id: product
+        type: TEXT
+      - id: category
+        type: LABEL
+      - id: price
+        type: NUMBER
+      - id: stock
+        type: NUMBER
+      - id: active
+        type: LABEL
+
+pages:
+  - name: Inline Dataset
+    components:
+      - type: title
+        properties:
+          text: Inline Dataset
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Data defined directly in YAML using the `content` property —
+            a JSON array of rows. Each row is an array matching the `columns`
+            definition. No external URL needed.
+
+      - type: table
+        properties:
+          lookup:
+            uuid: products
+          sortable: true
+
+      - type: bar-chart
+        properties:
+          title: Stock by Category
+          lookup:
+            uuid: products
+            group:
+              - columnGroup:
+                    source: category
+                functions:
+                  - source: category
+                  - source: stock
+                    function: SUM

@@ -1,0 +1,129 @@
+datasets:
+  - uuid: layout-data
+    content: >
+      [
+        ["Dashboard", "Overview metrics and charts", "12", "Active"],
+        ["Reports", "Generated analysis reports", "8", "Active"],
+        ["Settings", "Configuration and preferences", "3", "Draft"],
+        ["Users", "Team member management", "24", "Active"]
+      ]
+    columns:
+      - id: section
+        type: LABEL
+      - id: description
+        type: TEXT
+      - id: items
+        type: NUMBER
+      - id: status
+        type: LABEL
+
+pages:
+  - name: Layout Patterns
+    components:
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Tabs:
+            components:
+              - type: markdown
+                properties:
+                  content: "**Tabs** — horizontal tab navigation. Each tab holds independent content."
+              - type: tabs
+                tabs:
+                  Overview:
+                    components:
+                      - type: metric
+                        properties:
+                          lookup:
+                            uuid: layout-data
+                            operations:
+                              - type: group
+                                columnGroup:
+                  Details:
+                    components:
+                      - type: table
+                        properties:
+                          lookup:
+                            uuid: layout-data
+
+          Sidebar:
+            components:
+              - type: markdown
+                properties:
+                  content: "**Sidebar** — collapsible side navigation with a main content area."
+              - type: sidebar
+                properties:
+                  width: 200px
+                sidebar:
+                  - type: markdown
+                    properties:
+                      content: |
+                        **Navigation**
+
+                        - Dashboard
+                        - Reports
+                        - Settings
+                content:
+                  - type: table
+                    properties:
+                      lookup:
+                        uuid: layout-data
+
+          Columns:
+            components:
+              - type: markdown
+                properties:
+                  content: "**Columns** — side-by-side layout. Each column is independent."
+              - type: columns
+                properties:
+                  span: "6,6"
+                columns:
+                  - components:
+                      - type: bar-chart
+                        properties:
+                          lookup:
+                            uuid: layout-data
+                  - components:
+                      - type: table
+                        properties:
+                          lookup:
+                            uuid: layout-data
+
+          Rows:
+            components:
+              - type: markdown
+                properties:
+                  content: "**Rows** — stacked vertical layout."
+              - type: rows
+                rows:
+                  - components:
+                      - type: metric
+                        properties:
+                          lookup:
+                            uuid: layout-data
+                  - components:
+                      - type: table
+                        properties:
+                          lookup:
+                            uuid: layout-data
+
+          Accordion:
+            components:
+              - type: markdown
+                properties:
+                  content: "**Accordion** — collapsible sections. Only one section open at a time."
+              - type: accordion
+                sections:
+                  "Section Overview":
+                    components:
+                      - type: table
+                        properties:
+                          lookup:
+                            uuid: layout-data
+                  "Chart View":
+                    components:
+                      - type: bar-chart
+                        properties:
+                          lookup:
+                            uuid: layout-data

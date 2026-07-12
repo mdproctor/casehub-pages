@@ -1,0 +1,222 @@
+properties:
+  prometheusUrl: http://localhost:9090
+  refreshInterval: 2
+datasets:
+- uuid: recent_http_requests
+  type: prometheus
+  url: ${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total[1m:1s]
+- uuid: http_requests
+  type: prometheus
+  url: ${prometheusUrl}/api/v1/query?query=prometheus_http_requests_total
+pages:
+- rows:
+  - columns:
+    - components:
+      - properties:
+          background-color: '#1a1a2e'
+          color: white
+          padding: 16px 24px
+          border-radius: 8px
+          margin-bottom: 16px
+        html: '<strong style="font-size: 20px; font-family: sans-serif;">Prometheus HTTP Requests</strong> <br/><span style="opacity:
+          0.7; font-size: 13px;">Real-time HTTP endpoint monitoring</span>'
+  - properties:
+      margin-bottom: 12px
+    columns:
+    - span: '3'
+      components:
+      - html: Filter by Handler
+        properties:
+          font-weight: bolder
+          font-size: 13px
+          margin-bottom: 4px
+      - type: selector
+        properties:
+          filter:
+            notification: 'true'
+          lookup:
+            uuid: http_requests
+            group:
+            - columnGroup:
+                source: handler
+              functions:
+              - source: handler
+  - properties:
+      margin-bottom: 24px
+    columns:
+    - span: '3'
+      components:
+      - type: metric
+        properties:
+          title: Total Requests
+          chart:
+            height: '90'
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests
+            group:
+            - functions:
+              - source: value
+                function: SUM
+          columns:
+          - id: value
+            pattern: '#,000'
+    - span: '3'
+      properties:
+        color: '#2e7d32'
+      components:
+      - type: metric
+        properties:
+          title: Success (2xx)
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests
+            filter:
+            - column: code
+              function: EQUALS_TO
+              args:
+              - 200
+            group:
+            - functions:
+              - source: value
+                function: SUM
+          columns:
+          - id: value
+            pattern: '#,000'
+    - span: '3'
+      properties:
+        color: '#d32f2f'
+      components:
+      - type: metric
+        properties:
+          title: Errors (4xx/5xx)
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests
+            filter:
+            - column: code
+              function: GREATER_THAN
+              args:
+              - 399
+            group:
+            - functions:
+              - source: value
+                function: SUM
+          columns:
+          - id: value
+            pattern: '#,000'
+    - span: '3'
+      properties:
+        color: '#1565c0'
+      components:
+      - type: metric
+        properties:
+          title: Endpoints
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests
+            group:
+            - columnGroup:
+                source: handler
+              functions:
+              - source: handler
+                function: COUNT
+  - properties:
+      margin-bottom: 24px
+    columns:
+    - span: '8'
+      components:
+      - type: timeseries
+        properties:
+          title: Request Volume Over Time
+          chart:
+            height: 350
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: recent_http_requests
+            filter:
+            - column: value
+              function: GREATER_THAN
+              args:
+              - 0
+            group:
+            - functions:
+              - source: handler
+              - source: timestamp
+              - source: value
+    - span: '4'
+      components:
+      - type: DONUT
+        properties:
+          title: Requests by Endpoint
+          chart:
+            height: 350
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests
+            group:
+            - columnGroup:
+                source: handler
+              functions:
+              - source: handler
+              - source: value
+                function: SUM
+  - properties:
+      margin-bottom: 24px
+    columns:
+    - span: '6'
+      components:
+      - type: bar-chart
+        properties:
+          title: Requests by Handler
+          chart:
+            height: 300
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests
+            group:
+            - columnGroup:
+                source: handler
+              functions:
+              - source: handler
+              - source: value
+                function: SUM
+    - span: '6'
+      components:
+      - type: bar-chart
+        properties:
+          subtype: bar
+          title: Requests by Status Code
+          chart:
+            height: 300
+            margin:
+              left: 80
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests
+            group:
+            - columnGroup:
+                source: code
+              functions:
+              - source: code
+              - source: value
+                function: SUM
+  - columns:
+    - components:
+      - type: table
+        properties:
+          title: Request Details
+          sortable: true
+          show_column_picker: true
+          filter:
+            listening: 'true'
+          lookup:
+            uuid: http_requests

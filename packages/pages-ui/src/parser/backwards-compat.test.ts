@@ -76,16 +76,19 @@ describe("backwards compatibility — existing samples", () => {
     });
   });
 
-  describe("Column with rows — nested layout", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Column with rows.dash.yaml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
+  describe("Column with rows — nested layout (legacy displayer syntax)", () => {
+    const root = parsePage({
+      pages: [{ rows: [{ columns: [
+        { span: "6", components: [{ displayer: { type: "BARCHART", chart: { height: 300 } } }] },
+        { span: "6", rows: [
+          { columns: [{ components: [{ displayer: { type: "PIECHART", chart: { height: 150 } } }] }] },
+          { columns: [{ components: [{ displayer: { type: "METERCHART", chart: { height: 150 } } }] }] },
+        ] },
+      ] }] }],
+    });
 
     it("parses nested rows inside columns", () => {
       const page = root.slots!["content"]![0]!;
-      // Should have items from both the regular column and the nested rows
       expect(page.items!.length).toBeGreaterThan(1);
     });
 
@@ -104,12 +107,15 @@ describe("backwards compatibility — existing samples", () => {
     });
   });
 
-  describe("Developers Registration — legacy layoutTemplates format", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Developers Registration.yaml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
+  describe("legacy layoutTemplates format (inline fixture)", () => {
+    const root = parsePage({
+      layoutTemplates: [{ name: "Test", rows: [
+        { layoutColumns: [{ layoutComponents: [
+          { type: "HTML", properties: { HTML_CODE: "Hello" } },
+          { displayer: { type: "BARCHART", lookup: { uuid: "test" } } },
+        ] }] },
+      ] }],
+    });
 
     it("accepts layoutTemplates key", () => {
       expect(root.type).toBe("page");
@@ -127,12 +133,12 @@ describe("backwards compatibility — existing samples", () => {
     });
   });
 
-  describe("DarkMode — lowercase displayer types", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/DarkMode.dash.yaml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
+  describe("legacy lowercase displayer types (inline fixture)", () => {
+    const root = parsePage({
+      global: { displayer: { chart: { resizable: true } }, mode: "dark" },
+      pages: [{ components: [{ displayer: { type: "barchart", lookup: { uuid: "test" } } }] }],
+      datasets: [{ uuid: "test", content: '[["A", 1]]' }],
+    });
 
     it("parses lowercase type: barchart as bar-chart", () => {
       const page = root.slots!["content"]![0]!;
@@ -149,26 +155,27 @@ describe("backwards compatibility — existing samples", () => {
     });
   });
 
-  describe("Global Column settings — empty displayer and global defaults", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/Global Column settings.dash.yaml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
+  describe("legacy empty displayer and global defaults (inline fixture)", () => {
+    const root = parsePage({
+      global: { displayer: { chart: { resizable: true } } },
+      pages: [{ components: [{ displayer: null }, { displayer: { type: "TABLE", lookup: { uuid: "t" } } }] }],
+      datasets: [{ uuid: "t", content: '[["A", 1]]' }],
+    });
 
     it("handles empty displayer (null value)", () => {
       const page = root.slots!["content"]![0]!;
-      // Should not throw, and should have items
       expect(page.items!.length).toBeGreaterThan(0);
     });
   });
 
-  describe("Prometheus Basic — property substitution and lowercase timeseries", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Prometheus/Prometheus Basic.yml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
+  describe("legacy property substitution and lowercase timeseries (inline fixture)", () => {
+    const root = parsePage({
+      properties: { prometheusUrl: "http://localhost:9090" },
+      pages: [{ rows: [{ columns: [{ components: [
+        { displayer: { type: "timeseries", lookup: { uuid: "metrics" } } },
+      ] }] }] }],
+      datasets: [{ uuid: "metrics", url: "${prometheusUrl}/api/v1/query" }],
+    });
 
     it("substitutes properties in URLs", () => {
       expect(root.type).toBe("page");
@@ -191,12 +198,11 @@ describe("backwards compatibility — existing samples", () => {
     });
   });
 
-  describe("InlineDataset — inline dataSet field", () => {
-    const content = readFileSync(
-      join(EXAMPLES_DIR, "Basic Usage/InlineDataset.dash.yaml"),
-      "utf-8",
-    );
-    const root = parsePage(load(content));
+  describe("legacy inline dataSet field (inline fixture)", () => {
+    const root = parsePage({
+      pages: [{ components: [{ displayer: { type: "TABLE", lookup: { uuid: "inline" } } }] }],
+      datasets: [{ uuid: "inline", content: '[["A", 1], ["B", 2]]' }],
+    });
 
     it("parses dashboard with inline dataSet", () => {
       expect(root.type).toBe("page");
