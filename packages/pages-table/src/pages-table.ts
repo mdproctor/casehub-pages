@@ -1,9 +1,9 @@
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data/dist/dataset/types.js';
 import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
 import type { SortColumn } from '@casehubio/pages-data/dist/dataset/sort.js';
-import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig } from './types.js';
+import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
@@ -33,6 +33,9 @@ export class PagesTable extends LitElement {
   @property({ attribute: false }) getRowKey?: (row: TypedRow) => string;
   @property({ attribute: false }) getRowClass?: (row: TypedRow) => string;
   @property({ attribute: false }) getChildren?: (row: TypedRow) => readonly TypedRow[];
+  @property({ attribute: false }) getRowDetail?: (row: TypedRow) => TemplateResult | undefined;
+  @property({ type: String, attribute: 'detail-mode' }) detailMode: DetailMode = 'single';
+  @property({ type: Array, attribute: false }) expandedDetailKeys?: readonly string[];
   @property({ type: Boolean }) loading = false;
   @property({ type: String }) error = '';
 
@@ -111,6 +114,9 @@ export class PagesTable extends LitElement {
   private _treeExpandStateInitialized = false;
   private _treeNodeByRow = new Map<TypedRow, TreeNode>();
   private _csvExportEnabled = false;
+  private _rowDetailConfig?: { mode?: string; columns?: readonly { id: string; label?: string }[] };
+  @state() private _internalExpandedDetailKeys = new Set<string>();
+  private _instanceId = '';
 
   set props(p: Record<string, unknown>) {
     this._pipelineMode = true;
@@ -150,6 +156,14 @@ export class PagesTable extends LitElement {
     const rowStyle = p.rowStyle as readonly RowStyleRule[] | undefined;
     if (rowStyle) {
       this._rowStyleRules = rowStyle;
+    }
+
+    const rowDetail = p.rowDetail as { mode?: string; columns?: readonly { id: string; label?: string }[] } | undefined;
+    if (rowDetail) {
+      this._rowDetailConfig = rowDetail;
+      if (rowDetail.mode === 'multi') {
+        this.detailMode = 'multi';
+      }
     }
 
     if (p.csvExport === true) {
@@ -206,6 +220,44 @@ export class PagesTable extends LitElement {
       if (renderers.size > 0) {
         this.columnRenderers = renderers;
       }
+    }
+
+    if (this._rowDetailConfig?.columns && this._rowDetailConfig.columns.length > 0) {
+      const allCols = this.dataSet.columns;
+      const detailColIds = this._rowDetailConfig.columns.map(c => ({
+        id: c.id as ColumnId,
+        label: c.label,
+      }));
+      if (!this.getRowKey) {
+        const firstCol = cols[0];
+        if (firstCol) {
+          this.getRowKey = (row: TypedRow) => {
+            const cell = row.cell(firstCol.id);
+            return cell.type === 'NULL' ? '' : String(cell.value);
+          };
+        }
+      }
+      this.getRowDetail = (row: TypedRow) => {
+        const pairs = detailColIds.map(dc => {
+          const col = allCols.find(c => String(c.id) === String(dc.id));
+          const label = dc.label ?? col?.name ?? String(dc.id);
+          try {
+            const cell = row.cell(dc.id);
+            const value = cell.type === 'NULL' ? '—' : String(cell.value);
+            return { label, value };
+          } catch {
+            return { label, value: '—' };
+          }
+        });
+        return html`
+          <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; padding: 12px 0;">
+            ${pairs.map(p => html`
+              <span style="font-weight: var(--pages-font-weight-semibold, 600); font-size: var(--pages-font-size-sm, 12px); color: var(--pages-neutral-9, #737373);">${p.label}</span>
+              <span style="font-size: var(--pages-font-size-base, 14px); color: var(--pages-neutral-11, #404040);">${p.value}</span>
+            `)}
+          </div>
+        `;
+      };
     }
   }
 
@@ -685,6 +737,114 @@ export class PagesTable extends LitElement {
       background: var(--pages-neutral-12, #171717);
       color: var(--pages-neutral-1, #ffffff);
     }
+
+    .expand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--pages-space-3, 12px) var(--pages-space-2, 8px);
+    }
+
+    .expand-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--pages-space-3, 12px) var(--pages-space-2, 8px);
+    }
+
+    .expand-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+      border-radius: var(--pages-radius-sm, 4px);
+      color: var(--pages-neutral-9, #737373);
+    }
+
+    .expand-toggle:hover {
+      background: var(--pages-neutral-3, #f5f5f5);
+      color: var(--pages-neutral-12, #171717);
+    }
+
+    .expand-toggle:focus-visible {
+      outline: 2px solid var(--pages-primary-9, #3b82f6);
+      outline-offset: -2px;
+    }
+
+    .expand-chevron {
+      display: inline-block;
+      font-size: 10px;
+      transition: transform var(--pages-duration-fast, 120ms) var(--pages-ease-out, ease-out);
+    }
+
+    .expand-chevron.expanded {
+      transform: rotate(90deg);
+    }
+
+    .expand-all-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+      border-radius: var(--pages-radius-sm, 4px);
+      color: var(--pages-neutral-9, #737373);
+      font-size: 10px;
+    }
+
+    .expand-all-toggle:hover {
+      background: var(--pages-neutral-3, #f5f5f5);
+      color: var(--pages-neutral-12, #171717);
+    }
+
+    .row.detail-expanded {
+      background: var(--pages-surface-1);
+      border-bottom: none;
+    }
+
+    .detail-panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--pages-duration-normal, 200ms) var(--pages-ease-out, ease-out);
+    }
+
+    .detail-panel[hidden] {
+      display: none !important;
+    }
+
+    .detail-panel.expanded {
+      grid-template-rows: 1fr;
+    }
+
+    .detail-panel > .detail-content {
+      overflow: hidden;
+      min-height: 0;
+      background: var(--pages-surface-2);
+      padding-left: 40px;
+      opacity: 0;
+      transition: opacity var(--pages-duration-fast, 120ms) var(--pages-ease-out, ease-out);
+    }
+
+    .detail-panel.expanded > .detail-content {
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .detail-panel,
+      .detail-panel > .detail-content,
+      .expand-chevron {
+        transition: none !important;
+      }
+    }
   `;
 
   private _onScroll = (e: Event): void => {
@@ -762,6 +922,7 @@ export class PagesTable extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
+    if (!this._instanceId) this._instanceId = crypto.randomUUID();
     this._updateContainerHeight();
     if (this._dataRequestPending) {
       this._dataRequestPending = false;
@@ -814,6 +975,18 @@ export class PagesTable extends LitElement {
 
     if (this.selection !== 'none' && !this.getRowKey) {
       throw new Error('getRowKey is required when selection is enabled');
+    }
+
+    if (this.getRowDetail && !this.getRowKey) {
+      throw new Error('getRowKey is required when getRowDetail is set');
+    }
+
+    if (this.getRowDetail && this.mode === 'scroll') {
+      throw new Error("getRowDetail is incompatible with mode='scroll' — virtual scrolling requires fixed row heights");
+    }
+
+    if (changed.has('expandedDetailKeys') && this.expandedDetailKeys !== undefined) {
+      this._internalExpandedDetailKeys = new Set(this.expandedDetailKeys);
     }
 
     if (changed.has('selectedKeys') && this.selectedKeys !== undefined) {
@@ -919,6 +1092,105 @@ export class PagesTable extends LitElement {
       composed: true,
     }));
   }
+
+  private get _expandedDetails(): Set<string> {
+    if (this.expandedDetailKeys !== undefined) {
+      return new Set(this.expandedDetailKeys);
+    }
+    return this._internalExpandedDetailKeys;
+  }
+
+  private _isDetailExpanded(key: string): boolean {
+    return this._expandedDetails.has(key);
+  }
+
+  private _emitDetailChange(key: string, row: TypedRow, expanded: boolean): void {
+    const detail: DetailChangeDetail = { key, row, expanded };
+    this.dispatchEvent(new CustomEvent('detail-change', {
+      detail,
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  private _toggleDetail(row: TypedRow): void {
+    if (!this.getRowKey) return;
+    const key = this.getRowKey(row);
+    const isExpanded = this._isDetailExpanded(key);
+
+    if (isExpanded) {
+      const panelId = `${this._instanceId}-detail-${key}`;
+      const panel = this.shadowRoot?.getElementById(panelId);
+      const btnId = `${this._instanceId}-detail-btn-${key}`;
+      const btn = this.shadowRoot?.getElementById(btnId);
+      if (panel && btn && panel.contains(this.shadowRoot?.activeElement ?? document.activeElement)) {
+        (btn as HTMLElement).focus();
+      }
+    }
+
+    if (this.expandedDetailKeys === undefined) {
+      if (isExpanded) {
+        const next = new Set(this._internalExpandedDetailKeys);
+        next.delete(key);
+        this._internalExpandedDetailKeys = next;
+      } else {
+        if (this.detailMode === 'single') {
+          for (const prevKey of this._internalExpandedDetailKeys) {
+            const prevRow = this._visibleRows.find(r => this.getRowKey!(r) === prevKey);
+            if (prevRow) this._emitDetailChange(prevKey, prevRow, false);
+          }
+          this._internalExpandedDetailKeys = new Set([key]);
+        } else {
+          const next = new Set(this._internalExpandedDetailKeys);
+          next.add(key);
+          this._internalExpandedDetailKeys = next;
+        }
+      }
+    }
+
+    this._emitDetailChange(key, row, !isExpanded);
+  }
+
+  private _handleExpandAll = (): void => {
+    if (!this.getRowDetail || !this.getRowKey) return;
+    const anyExpanded = this._expandedDetails.size > 0;
+
+    if (anyExpanded) {
+      if (this.expandedDetailKeys === undefined) {
+        for (const key of this._internalExpandedDetailKeys) {
+          const row = this._visibleRows.find(r => this.getRowKey!(r) === key);
+          if (row) this._emitDetailChange(key, row, false);
+        }
+        this._internalExpandedDetailKeys = new Set();
+      } else {
+        for (const key of this.expandedDetailKeys) {
+          const row = this._visibleRows.find(r => this.getRowKey!(r) === key);
+          if (row) this._emitDetailChange(key, row, false);
+        }
+      }
+    } else {
+      const toExpand = new Set<string>();
+      for (const row of this._visibleRows) {
+        const detail = this.getRowDetail(row);
+        if (detail !== undefined) {
+          const key = this.getRowKey(row);
+          toExpand.add(key);
+          this._emitDetailChange(key, row, true);
+        }
+      }
+      if (this.expandedDetailKeys === undefined) {
+        this._internalExpandedDetailKeys = toExpand;
+      }
+    }
+  };
+
+  private _handleDetailTransitionEnd = (e: TransitionEvent, key: string): void => {
+    if (e.propertyName !== 'grid-template-rows') return;
+    const panel = e.currentTarget as HTMLElement;
+    if (!panel.classList.contains('expanded')) {
+      panel.hidden = true;
+    }
+  };
 
   private _toggleRowSelection(row: TypedRow): void {
     if (!this.getRowKey) return;
@@ -1329,6 +1601,9 @@ export class PagesTable extends LitElement {
   private get _visibleColumns(): readonly Column[] {
     return this._dataColumns.filter(c => {
       if (this._hiddenColumnIds.has(String(c.id))) return false;
+      if (this._pipelineMode && this._propsColumns && this._propsColumns.length > 0) {
+        if (!this._propsColumns.some(pc => String(pc.id) === String(c.id))) return false;
+      }
       const config = this._configFor(c);
       return config?.visible !== false;
     });
@@ -1340,10 +1615,15 @@ export class PagesTable extends LitElement {
       const config = this._configFor(c);
       return config?.width ?? '1fr';
     }).join(' ');
-    return this.selection === 'multi' ? `40px ${columns}` : columns;
+    const prefix = [
+      this.getRowDetail ? '40px' : '',
+      this.selection === 'multi' ? '40px' : '',
+    ].filter(Boolean).join(' ');
+    return prefix ? `${prefix} ${columns}` : columns;
   }
 
   private get _useVirtualScroll(): boolean {
+    if (this.getRowDetail) return false;
     if (this.mode === 'scroll') return true;
     return this.mode === 'auto' && this._dataRows.length > AUTO_THRESHOLD;
   }
@@ -1742,6 +2022,75 @@ export class PagesTable extends LitElement {
     } catch { return false; }
   }
 
+  private _renderExpandHeader() {
+    if (!this.getRowDetail) return nothing;
+    if (this.detailMode === 'multi') {
+      const anyExpanded = this._expandedDetails.size > 0;
+      return html`
+        <div class="expand-header">
+          <button
+            class="expand-all-toggle"
+            aria-label="${anyExpanded ? 'Collapse all details' : 'Expand all details'}"
+            @click="${this._handleExpandAll}"
+          >
+            ${anyExpanded ? '▼' : '▶'}
+          </button>
+        </div>
+      `;
+    }
+    return html`<div class="expand-header"></div>`;
+  }
+
+  private _renderExpandCell(row: TypedRow) {
+    if (!this.getRowDetail) return nothing;
+    const detail = this.getRowDetail(row);
+    if (detail === undefined) {
+      return html`<div class="expand-cell"></div>`;
+    }
+    const key = this.getRowKey!(row);
+    const isExpanded = this._isDetailExpanded(key);
+    const panelId = `${this._instanceId}-detail-${key}`;
+    const btnId = `${this._instanceId}-detail-btn-${key}`;
+    return html`
+      <div class="expand-cell">
+        <button
+          id="${btnId}"
+          class="expand-toggle"
+          aria-expanded="${isExpanded ? 'true' : 'false'}"
+          aria-controls="${panelId}"
+          aria-label="${isExpanded ? 'Hide details' : 'Show details'} for row ${key}"
+          @click="${(e: MouseEvent) => { e.stopPropagation(); this._toggleDetail(row); }}"
+        >
+          <span class="expand-chevron ${isExpanded ? 'expanded' : ''}">▶</span>
+        </button>
+      </div>
+    `;
+  }
+
+  private _renderDetailPanel(row: TypedRow) {
+    if (!this.getRowDetail) return nothing;
+    const detail = this.getRowDetail(row);
+    if (detail === undefined) return nothing;
+    const key = this.getRowKey!(row);
+    const isExpanded = this._isDetailExpanded(key);
+    const panelId = `${this._instanceId}-detail-${key}`;
+    const btnId = `${this._instanceId}-detail-btn-${key}`;
+    return html`
+      <div
+        id="${panelId}"
+        class="detail-panel ${isExpanded ? 'expanded' : ''}"
+        role="region"
+        aria-labelledby="${btnId}"
+        ?hidden="${!isExpanded}"
+        @transitionend="${(e: TransitionEvent) => this._handleDetailTransitionEnd(e, key)}"
+      >
+        <div class="detail-content">
+          ${isExpanded ? detail : nothing}
+        </div>
+      </div>
+    `;
+  }
+
   private _renderRow(row: TypedRow, actualIndex: number, displayIndex: number) {
     const rowClass = this.getRowClass?.(row) ?? '';
     const part = rowClass ? `row ${rowClass}` : 'row';
@@ -1762,9 +2111,13 @@ export class PagesTable extends LitElement {
 
     const stripe = actualIndex % 2 === 0 ? 'row-even' : 'row-odd';
 
+    const isDetailExpanded = this.getRowDetail && this.getRowKey
+      ? this._isDetailExpanded(this.getRowKey(row))
+      : false;
+
     return html`
       <div
-        class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''} ${rowStyleClass}"
+        class="row ${stripe} ${isClickable ? 'clickable' : ''} ${isFilterSelected ? 'selected' : ''} ${rowStyleClass} ${isDetailExpanded ? 'detail-expanded' : ''}"
         style="grid-template-columns: ${this._gridTemplateColumns}; ${rowInlineStyle}"
         role="row"
         part="${part}"
@@ -1778,9 +2131,11 @@ export class PagesTable extends LitElement {
         @click="${(e: MouseEvent) => this._handleRowClick(row, e)}"
         @dblclick="${(e: MouseEvent) => this._handleRowDoubleClick(row, e)}"
       >
+        ${this._renderExpandCell(row)}
         ${this._renderCheckbox(row)}
         ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode))}
       </div>
+      ${this._renderDetailPanel(row)}
     `;
   }
 
@@ -1871,6 +2226,7 @@ export class PagesTable extends LitElement {
               part="header-row"
               style="grid-template-columns: ${this._gridTemplateColumns}"
             >
+              ${this._renderExpandHeader()}
               ${this.selection === 'multi' ? html`<div class="header-cell"></div>` : nothing}
               ${visibleCols.map(col => this._renderHeaderCell(col))}
             </div>
@@ -1892,6 +2248,7 @@ export class PagesTable extends LitElement {
             part="header-row"
             style="grid-template-columns: ${this._gridTemplateColumns}"
           >
+            ${this._renderExpandHeader()}
             ${this._renderCheckbox(this._dataRows[0]!, true)}
             ${visibleCols.map(col => this._renderHeaderCell(col))}
           </div>

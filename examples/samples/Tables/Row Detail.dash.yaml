@@ -1,0 +1,113 @@
+datasets:
+  - uuid: employees
+    content: >-
+      [
+        ["EMP-001", "Alice Johnson", "Engineering", "Senior Developer", 2018, 92000, "Python, Go, Kubernetes", "Platform team lead, owns deployment pipeline"],
+        ["EMP-002", "Bob Smith", "Marketing", "Marketing Manager", 2019, 78000, "SEO, Analytics, Figma", "Manages brand campaigns and content calendar"],
+        ["EMP-003", "Charlie Brown", "Engineering", "Staff Engineer", 2016, 115000, "Java, Rust, Distributed Systems", "Architecture council member, mentors juniors"],
+        ["EMP-004", "Diana Ross", "Sales", "Account Executive", 2021, 65000, "Salesforce, HubSpot", "Handles enterprise accounts, EMEA region"],
+        ["EMP-005", "Eve Wilson", "Engineering", "Junior Developer", 2023, 58000, "TypeScript, React", "Onboarding — paired with Charlie for first quarter"],
+        ["EMP-006", "Frank Miller", "Marketing", "Content Writer", 2020, 52000, "Copywriting, WordPress", "Blog and newsletter, 3 posts per week cadence"],
+        ["EMP-007", "Grace Lee", "Sales", "Sales Director", 2017, 105000, "Strategy, Negotiation", "Leads APAC expansion, reports to VP Sales"],
+        ["EMP-008", "Henry Davis", "Engineering", "DevOps Engineer", 2019, 88000, "Terraform, AWS, GitHub Actions", "On-call rotation lead, SLA owner"]
+      ]
+    columns:
+      - id: id
+        type: TEXT
+      - id: name
+        type: TEXT
+      - id: department
+        type: LABEL
+      - id: role
+        type: TEXT
+      - id: joined
+        type: NUMBER
+      - id: salary
+        type: NUMBER
+      - id: skills
+        type: TEXT
+      - id: notes
+        type: TEXT
+
+pages:
+  - name: Row Detail
+    components:
+      - type: title
+        properties:
+          text: Row Detail Expansion
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            Click the **▶** chevron to expand a row and see additional detail
+            columns below it. In **multi** mode, several rows can be open at
+            once and the header chevron toggles all.
+
+            The main table shows ID, Name, Department, and Role. The detail
+            panel reveals Skills and Notes — columns that would clutter the
+            main grid but are useful on demand.
+
+      - type: tabs
+        properties:
+          targetPage: true
+        tabs:
+          Multi Mode:
+            components:
+              - type: table
+                properties:
+                  lookup:
+                    uuid: employees
+                  sortable: true
+                  columns:
+                    - id: id
+                      name: ID
+                    - id: name
+                      name: Name
+                    - id: department
+                      name: Dept
+                    - id: role
+                      name: Role
+                  rowDetail:
+                    mode: multi
+                    columns:
+                      - id: joined
+                        label: Joined
+                      - id: salary
+                        label: Salary
+                      - id: skills
+                        label: Skills
+                      - id: notes
+                        label: Notes
+
+          Single Mode:
+            components:
+              - type: markdown
+                properties:
+                  content: >
+                    **Single mode** (default) — expanding one row automatically
+                    collapses the previously open row.
+              - type: table
+                properties:
+                  lookup:
+                    uuid: employees
+                  sortable: true
+                  columns:
+                    - id: id
+                      name: ID
+                    - id: name
+                      name: Name
+                    - id: department
+                      name: Dept
+                    - id: role
+                      name: Role
+                  rowDetail:
+                    columns:
+                      - id: joined
+                        label: Joined
+                      - id: salary
+                        label: Salary
+                      - id: skills
+                        label: Skills
+                      - id: notes
+                        label: Notes

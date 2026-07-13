@@ -14,6 +14,8 @@ export type {
   RowActivateDetail,
   FilterChangeDetail,
   LoadMoreDetail,
+  DetailMode,
+  DetailChangeDetail,
 } from './types.js';
 export { computeScrollWindow, type ScrollWindow } from './virtual-scroll-engine.js';
 export { createComparator, createMultiComparator } from './sort.js';

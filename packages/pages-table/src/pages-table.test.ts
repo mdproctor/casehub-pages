@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { html } from 'lit';
 import type { TypedDataSet, TypedRow, ColumnId } from '@casehubio/pages-data/dist/dataset/types.js';
 import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
@@ -15,6 +16,9 @@ type TableEl = HTMLElement & {
   getRowKey?: (row: TypedRow) => string;
   getRowClass?: (row: TypedRow) => string;
   getChildren?: (row: TypedRow) => readonly TypedRow[];
+  getRowDetail?: (row: TypedRow) => unknown;
+  detailMode?: string;
+  expandedDetailKeys?: readonly string[];
   selectedKeys?: readonly string[];
   clientSort: boolean;
   clientFilter: boolean;
@@ -743,6 +747,321 @@ describe('pages-table', () => {
 
       const input = el.shadowRoot!.querySelector('.filter-input');
       expect(input).not.toBeNull();
+    });
+  });
+
+  describe('row detail expansion', () => {
+    describe('validation', () => {
+      it('throws when getRowDetail set without getRowKey', async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowDetail = () => html`<div>detail</div>`;
+        await expect(el.updateComplete).rejects.toThrow('getRowKey is required');
+      });
+
+      it('throws when getRowDetail set with mode=scroll', async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div>detail</div>`;
+        el.mode = 'scroll';
+        await expect(el.updateComplete).rejects.toThrow("mode='scroll'");
+      });
+
+      it('throws Error for getRowKey validation consistent with selection', async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowDetail = () => html`<div>detail</div>`;
+        await expect(el.updateComplete).rejects.toThrow('getRowKey is required');
+      });
+    });
+
+    describe('single mode (default)', () => {
+      beforeEach(async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div>Detail</div>`;
+        await el.updateComplete;
+      });
+
+      it('emits detail-change on toggle', async () => {
+        const events: Array<{key: string; expanded: boolean}> = [];
+        el.addEventListener('detail-change', ((e: CustomEvent) => {
+          events.push(e.detail);
+        }) as EventListener);
+
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        expect(events).toHaveLength(1);
+        expect(events[0]!.key).toBe('Alice');
+        expect(events[0]!.expanded).toBe(true);
+      });
+
+      it('collapses previous when expanding another in single mode', async () => {
+        const events: Array<{key: string; expanded: boolean}> = [];
+        el.addEventListener('detail-change', ((e: CustomEvent) => {
+          events.push(e.detail);
+        }) as EventListener);
+
+        const btns = el.shadowRoot!.querySelectorAll('.expand-toggle');
+        (btns[0] as HTMLElement).click();
+        await el.updateComplete;
+
+        (btns[1] as HTMLElement).click();
+        await el.updateComplete;
+
+        expect(events).toHaveLength(3);
+        expect(events[1]!.key).toBe('Alice');
+        expect(events[1]!.expanded).toBe(false);
+        expect(events[2]!.key).toBe('Bob');
+        expect(events[2]!.expanded).toBe(true);
+      });
+    });
+
+    describe('multi mode', () => {
+      beforeEach(async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div>Detail</div>`;
+        el.detailMode = 'multi';
+        await el.updateComplete;
+      });
+
+      it('allows multiple panels open simultaneously', async () => {
+        const btns = el.shadowRoot!.querySelectorAll('.expand-toggle');
+        (btns[0] as HTMLElement).click();
+        await el.updateComplete;
+        (btns[1] as HTMLElement).click();
+        await el.updateComplete;
+
+        const panels = el.shadowRoot!.querySelectorAll('.detail-panel:not([hidden])');
+        expect(panels.length).toBe(2);
+      });
+    });
+
+    describe('controlled mode', () => {
+      it('does not manage internal state when expandedDetailKeys is set', async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div>Detail</div>`;
+        el.expandedDetailKeys = ['Alice'];
+        await el.updateComplete;
+
+        const panels = el.shadowRoot!.querySelectorAll('.detail-panel:not([hidden])');
+        expect(panels.length).toBe(1);
+
+        const events: unknown[] = [];
+        el.addEventListener('detail-change', ((e: CustomEvent) => {
+          events.push(e.detail);
+        }) as EventListener);
+
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        expect(events).toHaveLength(1);
+        const panelsAfter = el.shadowRoot!.querySelectorAll('.detail-panel:not([hidden])');
+        expect(panelsAfter.length).toBe(1);
+      });
+    });
+
+    describe('rendering', () => {
+      beforeEach(async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = (row: TypedRow) => {
+          const name = row.text(nameCol);
+          return name === 'Bob' ? undefined : html`<div class="test-detail">Detail for ${name}</div>`;
+        };
+        await el.updateComplete;
+      });
+
+      it('renders expand column when getRowDetail is set', async () => {
+        const expandCells = el.shadowRoot!.querySelectorAll('.expand-cell');
+        expect(expandCells.length).toBe(3);
+      });
+
+      it('renders expand button only for rows with detail content', async () => {
+        const toggles = el.shadowRoot!.querySelectorAll('.expand-toggle');
+        expect(toggles.length).toBe(2);
+      });
+
+      it('renders detail panel with correct ARIA when expanded', async () => {
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        const panel = el.shadowRoot!.querySelector('.detail-panel:not([hidden])');
+        expect(panel).toBeTruthy();
+        expect(panel!.getAttribute('role')).toBe('region');
+
+        const btnAriaControls = btn.getAttribute('aria-controls');
+        expect(btnAriaControls).toBe(panel!.id);
+        expect(btn.getAttribute('aria-expanded')).toBe('true');
+      });
+
+      it('does not include detail panels in aria-rowcount', async () => {
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        const grid = el.shadowRoot!.querySelector('[role="grid"]');
+        const rowCount = parseInt(grid!.getAttribute('aria-rowcount')!, 10);
+        expect(rowCount).toBe(4);
+      });
+
+      it('expand button click does not fire row-activate', async () => {
+        const activates: unknown[] = [];
+        el.addEventListener('row-activate', () => activates.push(true));
+
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        expect(activates).toHaveLength(0);
+      });
+    });
+
+    describe('expand all (multi mode)', () => {
+      beforeEach(async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = (row: TypedRow) => {
+          const name = row.text(nameCol);
+          return name === 'Bob' ? undefined : html`<div>Detail</div>`;
+        };
+        el.detailMode = 'multi';
+        await el.updateComplete;
+      });
+
+      it('expands all rows with detail content', async () => {
+        const expandAll = el.shadowRoot!.querySelector('.expand-all-toggle') as HTMLElement;
+        expandAll.click();
+        await el.updateComplete;
+
+        const panels = el.shadowRoot!.querySelectorAll('.detail-panel:not([hidden])');
+        expect(panels.length).toBe(2);
+      });
+
+      it('collapses all when any are expanded', async () => {
+        const btns = el.shadowRoot!.querySelectorAll('.expand-toggle');
+        (btns[0] as HTMLElement).click();
+        await el.updateComplete;
+
+        const expandAll = el.shadowRoot!.querySelector('.expand-all-toggle') as HTMLElement;
+        expandAll.click();
+        await el.updateComplete;
+
+        const panels = el.shadowRoot!.querySelectorAll('.detail-panel:not([hidden])');
+        expect(panels.length).toBe(0);
+      });
+    });
+
+    describe('CSS classes', () => {
+      beforeEach(async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div>Detail</div>`;
+        await el.updateComplete;
+      });
+
+      it('expanded row has detail-expanded class', async () => {
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]');
+        expect(rows[0]!.classList.contains('detail-expanded')).toBe(true);
+      });
+
+      it('detail panel has hidden attribute when collapsed', async () => {
+        const panels = el.shadowRoot!.querySelectorAll('.detail-panel');
+        for (const panel of panels) {
+          expect(panel.hasAttribute('hidden')).toBe(true);
+        }
+      });
+
+      it('expanded panel has expanded class and no hidden attribute', async () => {
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        const expandedPanel = el.shadowRoot!.querySelector('.detail-panel.expanded');
+        expect(expandedPanel).toBeTruthy();
+        expect(expandedPanel!.hasAttribute('hidden')).toBe(false);
+      });
+    });
+
+    describe('keyboard navigation', () => {
+      beforeEach(async () => {
+        el.dataSet = testDataSet;
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div><button class="inner-btn">Action</button></div>`;
+        await el.updateComplete;
+      });
+
+      it('arrow keys skip detail panels', async () => {
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]');
+        (rows[0] as HTMLElement).focus();
+        const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true });
+        rows[0]!.dispatchEvent(event);
+        await el.updateComplete;
+
+        const activeEl = el.shadowRoot!.activeElement;
+        expect(activeEl?.getAttribute('role')).toBe('row');
+      });
+    });
+
+    describe('virtual scroll interaction', () => {
+      it('disables virtual scroll when getRowDetail is set in auto mode', async () => {
+        el.dataSet = makeLargeDataSet(100);
+        el.columnConfig = testConfig;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div>Detail</div>`;
+        el.mode = 'auto';
+        await el.updateComplete;
+
+        const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]');
+        expect(rows.length).toBe(100);
+      });
+    });
+
+    describe('pagination interaction', () => {
+      it('expand state persists across page changes', async () => {
+        const ds = makeLargeDataSet(10);
+        el.dataSet = ds;
+        el.columnConfig = testConfig;
+        el.mode = 'paginated';
+        el.pageSize = 3;
+        el.getRowKey = (row: TypedRow) => row.text(nameCol);
+        el.getRowDetail = () => html`<div>Detail</div>`;
+        await el.updateComplete;
+
+        const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+        btn.click();
+        await el.updateComplete;
+
+        el.currentPage = 1;
+        await el.updateComplete;
+        el.currentPage = 0;
+        await el.updateComplete;
+
+        const panel = el.shadowRoot!.querySelector('.detail-panel:not([hidden])');
+        expect(panel).toBeTruthy();
+      });
     });
   });
 });

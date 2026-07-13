@@ -697,7 +697,7 @@ describe('pipeline integration', () => {
       await el.updateComplete;
 
       const cells = el.shadowRoot!.querySelectorAll('[role="gridcell"]');
-      expect(cells[1]!.textContent).toContain('$100000');
+      expect(cells[0]!.textContent).toContain('$100000');
     });
   });
 
@@ -720,6 +720,59 @@ describe('pipeline integration', () => {
 
       const downloadBtn = el.shadowRoot!.querySelector('[aria-label="Download CSV"]');
       expect(downloadBtn).toBeNull();
+    });
+  });
+
+  describe('rowDetail (YAML mode)', () => {
+    it('generates getRowDetail from rowDetail.columns config', async () => {
+      el.props = { rowDetail: { columns: [{ id: 'age', label: 'Age' }] } };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const toggles = el.shadowRoot!.querySelectorAll('.expand-toggle');
+      expect(toggles.length).toBe(3);
+    });
+
+    it('renders detail panel with column values on expand', async () => {
+      el.props = { rowDetail: { columns: [{ id: 'age', label: 'Years Old' }] } };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+      btn.click();
+      await el.updateComplete;
+
+      const panel = el.shadowRoot!.querySelector('.detail-panel:not([hidden])');
+      expect(panel).toBeTruthy();
+      expect(panel!.textContent).toContain('Years Old');
+      expect(panel!.textContent).toContain('30');
+    });
+
+    it('sets detailMode from rowDetail.mode', async () => {
+      el.props = { rowDetail: { mode: 'multi', columns: [{ id: 'age' }] } };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const expandAll = el.shadowRoot!.querySelector('.expand-all-toggle');
+      expect(expandAll).toBeTruthy();
+    });
+
+    it('auto-generates getRowKey from first column when not set', async () => {
+      el.props = { rowDetail: { columns: [{ id: 'age' }] } };
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const events: Array<{ key: string }> = [];
+      el.addEventListener('detail-change', ((e: CustomEvent) => {
+        events.push(e.detail);
+      }) as EventListener);
+
+      const btn = el.shadowRoot!.querySelector('.expand-toggle') as HTMLElement;
+      btn.click();
+      await el.updateComplete;
+
+      expect(events).toHaveLength(1);
+      expect(events[0]!.key).toBe('Alice');
     });
   });
 });

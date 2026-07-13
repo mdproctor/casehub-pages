@@ -1,0 +1,433 @@
+{
+  "version": "2.0.0",
+  "description": "CaseHub Pages Examples Gallery",
+  "totalSamples": 60,
+  "categories": [
+    {
+      "category": "Charts",
+      "samples": [
+        {
+          "name": "Charts",
+          "path": "Charts/Charts.dash.yaml",
+          "category": "Charts",
+          "file": "Charts.dash.yaml"
+        },
+        {
+          "name": "Decal Pattern",
+          "path": "Charts/Decal Pattern.dash.yaml",
+          "category": "Charts",
+          "file": "Decal Pattern.dash.yaml"
+        },
+        {
+          "name": "ECharts Custom",
+          "path": "Charts/ECharts Custom.dash.yaml",
+          "category": "Charts",
+          "file": "ECharts Custom.dash.yaml"
+        },
+        {
+          "name": "Histogram",
+          "path": "Charts/Histogram.dash.yaml",
+          "category": "Charts",
+          "file": "Histogram.dash.yaml"
+        },
+        {
+          "name": "Timeline and Graph",
+          "path": "Charts/Timeline and Graph.dash.yaml",
+          "category": "Charts",
+          "file": "Timeline and Graph.dash.yaml"
+        },
+        {
+          "name": "TimeSeries",
+          "path": "Charts/TimeSeries.dash.yaml",
+          "category": "Charts",
+          "file": "TimeSeries.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Tables",
+      "samples": [
+        {
+          "name": "Accumulate Flag",
+          "path": "Tables/Accumulate Flag.dash.yaml",
+          "category": "Tables",
+          "file": "Accumulate Flag.dash.yaml"
+        },
+        {
+          "name": "Column Settings",
+          "path": "Tables/Column Settings.dash.yaml",
+          "category": "Tables",
+          "file": "Column Settings.dash.yaml"
+        },
+        {
+          "name": "GitHub Repos",
+          "path": "Tables/GitHub Repos.dash.yaml",
+          "category": "Tables",
+          "file": "GitHub Repos.dash.yaml"
+        },
+        {
+          "name": "Google Spreadsheet",
+          "path": "Tables/Google Spreadsheet.dash.yaml",
+          "category": "Tables",
+          "file": "Google Spreadsheet.dash.yaml"
+        },
+        {
+          "name": "Grouped View",
+          "path": "Tables/Grouped View.dash.yaml",
+          "category": "Tables",
+          "file": "Grouped View.dash.yaml"
+        },
+        {
+          "name": "Inline Dataset",
+          "path": "Tables/Inline Dataset.dash.yaml",
+          "category": "Tables",
+          "file": "Inline Dataset.dash.yaml"
+        },
+        {
+          "name": "Lookup Operations",
+          "path": "Tables/Lookup Operations.dash.yaml",
+          "category": "Tables",
+          "file": "Lookup Operations.dash.yaml"
+        },
+        {
+          "name": "Row Detail",
+          "path": "Tables/Row Detail.dash.yaml",
+          "category": "Tables",
+          "file": "Row Detail.dash.yaml",
+          "tsPath": "Tables/Row Detail.ts"
+        },
+        {
+          "name": "Row Styles",
+          "path": "Tables/Row Styles.dash.yaml",
+          "category": "Tables",
+          "file": "Row Styles.dash.yaml"
+        },
+        {
+          "name": "Table",
+          "path": "Tables/Table.dash.yaml",
+          "category": "Tables",
+          "file": "Table.dash.yaml"
+        },
+        {
+          "name": "Tree Table",
+          "path": "Tables/Tree Table.dash.yaml",
+          "category": "Tables",
+          "file": "Tree Table.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Metrics",
+      "samples": [
+        {
+          "name": "Badges and Countdown",
+          "path": "Metrics/Badges and Countdown.dash.yaml",
+          "category": "Metrics",
+          "file": "Badges and Countdown.dash.yaml"
+        },
+        {
+          "name": "Metrics and Gauges",
+          "path": "Metrics/Metrics and Gauges.dash.yaml",
+          "category": "Metrics",
+          "file": "Metrics and Gauges.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Maps",
+      "samples": [
+        {
+          "name": "Maps",
+          "path": "Maps/Maps.dash.yaml",
+          "category": "Maps",
+          "file": "Maps.dash.yaml"
+        },
+        {
+          "name": "SVG Heatmap",
+          "path": "Maps/SVG Heatmap.dash.yaml",
+          "category": "Maps",
+          "file": "SVG Heatmap.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Forms",
+      "samples": [
+        {
+          "name": "Contact Manager",
+          "path": "Forms/Contact Manager.dash.yaml",
+          "category": "Forms",
+          "file": "Contact Manager.dash.yaml"
+        },
+        {
+          "name": "Developer Registration",
+          "path": "Forms/Developer Registration.dash.yaml",
+          "category": "Forms",
+          "file": "Developer Registration.dash.yaml"
+        },
+        {
+          "name": "Form Components",
+          "path": "Forms/Form Components.dash.yaml",
+          "category": "Forms",
+          "file": "Form Components.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Layout",
+      "samples": [
+        {
+          "name": "Carousel and Stack",
+          "path": "Layout/Carousel and Stack.dash.yaml",
+          "category": "Layout",
+          "file": "Carousel and Stack.dash.yaml"
+        },
+        {
+          "name": "Column with Rows",
+          "path": "Layout/Column with Rows.dash.yaml",
+          "category": "Layout",
+          "file": "Column with Rows.dash.yaml"
+        },
+        {
+          "name": "Layout Patterns",
+          "path": "Layout/Layout Patterns.dash.yaml",
+          "category": "Layout",
+          "file": "Layout Patterns.dash.yaml"
+        },
+        {
+          "name": "Split and Dock",
+          "path": "Layout/Split and Dock.dash.yaml",
+          "category": "Layout",
+          "file": "Split and Dock.dash.yaml"
+        },
+        {
+          "name": "Team Management",
+          "path": "Layout/Team Management.dash.yaml",
+          "category": "Layout",
+          "file": "Team Management.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Interactivity",
+      "samples": [
+        {
+          "name": "Action Button",
+          "path": "Interactivity/Action Button.dash.yaml",
+          "category": "Interactivity",
+          "file": "Action Button.dash.yaml"
+        },
+        {
+          "name": "Dynamic Visibility",
+          "path": "Interactivity/Dynamic Visibility.dash.yaml",
+          "category": "Interactivity",
+          "file": "Dynamic Visibility.dash.yaml"
+        },
+        {
+          "name": "Navigation Rebinding",
+          "path": "Interactivity/Navigation Rebinding.dash.yml",
+          "category": "Interactivity",
+          "file": "Navigation Rebinding.dash.yml"
+        },
+        {
+          "name": "Selectors and Filters",
+          "path": "Interactivity/Selectors and Filters.dash.yaml",
+          "category": "Interactivity",
+          "file": "Selectors and Filters.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Live Data",
+      "samples": [
+        {
+          "name": "Polling",
+          "path": "Live Data/Polling.dash.yaml",
+          "category": "Live Data",
+          "file": "Polling.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Content",
+      "samples": [
+        {
+          "name": "Alerts",
+          "path": "Content/Alerts.dash.yaml",
+          "category": "Content",
+          "file": "Alerts.dash.yaml"
+        },
+        {
+          "name": "Content Types",
+          "path": "Content/Content Types.dash.yaml",
+          "category": "Content",
+          "file": "Content Types.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Custom Components",
+      "samples": [
+        {
+          "name": "Iframe Components",
+          "path": "Custom Components/Iframe Components.dash.yaml",
+          "category": "Custom Components",
+          "file": "Iframe Components.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Theming",
+      "samples": [
+        {
+          "name": "DarkMode",
+          "path": "Theming/DarkMode.dash.yaml",
+          "category": "Theming",
+          "file": "DarkMode.dash.yaml"
+        },
+        {
+          "name": "Token Showcase",
+          "path": "Theming/Token Showcase.dash.yaml",
+          "category": "Theming",
+          "file": "Token Showcase.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Monitoring",
+      "samples": [
+        {
+          "name": "Ansible Metrics",
+          "path": "Monitoring/Ansible Metrics.dash.yaml",
+          "category": "Monitoring",
+          "file": "Ansible Metrics.dash.yaml"
+        },
+        {
+          "name": "Backstage Metrics",
+          "path": "Monitoring/Backstage Metrics.dash.yaml",
+          "category": "Monitoring",
+          "file": "Backstage Metrics.dash.yaml"
+        },
+        {
+          "name": "Jupyter Hub Metrics",
+          "path": "Monitoring/Jupyter Hub Metrics.dash.yaml",
+          "category": "Monitoring",
+          "file": "Jupyter Hub Metrics.dash.yaml"
+        },
+        {
+          "name": "Jupyter Metrics Summary",
+          "path": "Monitoring/Jupyter Metrics Summary.dash.yaml",
+          "category": "Monitoring",
+          "file": "Jupyter Metrics Summary.dash.yaml"
+        },
+        {
+          "name": "JVM Monitoring",
+          "path": "Monitoring/JVM Monitoring.yml",
+          "category": "Monitoring",
+          "file": "JVM Monitoring.yml"
+        },
+        {
+          "name": "Kepler Metrics",
+          "path": "Monitoring/Kepler Metrics.yaml",
+          "category": "Monitoring",
+          "file": "Kepler Metrics.yaml"
+        },
+        {
+          "name": "ModelMesh Metrics",
+          "path": "Monitoring/ModelMesh Metrics.dash.yaml",
+          "category": "Monitoring",
+          "file": "ModelMesh Metrics.dash.yaml"
+        },
+        {
+          "name": "OpenTelemetry Basic",
+          "path": "Monitoring/OpenTelemetry Basic.yaml",
+          "category": "Monitoring",
+          "file": "OpenTelemetry Basic.yaml"
+        },
+        {
+          "name": "Prometheus Basic",
+          "path": "Monitoring/Prometheus Basic.yml",
+          "category": "Monitoring",
+          "file": "Prometheus Basic.yml"
+        },
+        {
+          "name": "Prometheus HTTP Requests",
+          "path": "Monitoring/Prometheus HTTP Requests.yml",
+          "category": "Monitoring",
+          "file": "Prometheus HTTP Requests.yml"
+        },
+        {
+          "name": "Quarkus Monitoring",
+          "path": "Monitoring/Quarkus Monitoring.dash.yaml",
+          "category": "Monitoring",
+          "file": "Quarkus Monitoring.dash.yaml"
+        },
+        {
+          "name": "Real Time JVM Monitoring",
+          "path": "Monitoring/Real Time JVM Monitoring.dash.yaml",
+          "category": "Monitoring",
+          "file": "Real Time JVM Monitoring.dash.yaml"
+        },
+        {
+          "name": "Triton Inference Server",
+          "path": "Monitoring/Triton Inference Server.dash.yaml",
+          "category": "Monitoring",
+          "file": "Triton Inference Server.dash.yaml"
+        }
+      ]
+    },
+    {
+      "category": "Domain Showcases",
+      "samples": [
+        {
+          "name": "FIFA 2022 Goals",
+          "path": "Domain Showcases/FIFA 2022 Goals.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "FIFA 2022 Goals.dash.yaml"
+        },
+        {
+          "name": "Fleet Monitor",
+          "path": "Domain Showcases/Fleet Monitor.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "Fleet Monitor.dash.yaml"
+        },
+        {
+          "name": "Github Repositories",
+          "path": "Domain Showcases/Github Repositories.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "Github Repositories.dash.yaml"
+        },
+        {
+          "name": "Most Spoken Languages",
+          "path": "Domain Showcases/Most Spoken Languages.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "Most Spoken Languages.dash.yaml"
+        },
+        {
+          "name": "Patient Tracker",
+          "path": "Domain Showcases/Patient Tracker.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "Patient Tracker.dash.yaml"
+        },
+        {
+          "name": "Podman Stats",
+          "path": "Domain Showcases/Podman Stats.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "Podman Stats.dash.yaml"
+        },
+        {
+          "name": "Sales Dashboard",
+          "path": "Domain Showcases/Sales Dashboard.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "Sales Dashboard.dash.yaml"
+        },
+        {
+          "name": "Workforce Analytics",
+          "path": "Domain Showcases/Workforce Analytics.dash.yaml",
+          "category": "Domain Showcases",
+          "file": "Workforce Analytics.dash.yaml"
+        }
+      ]
+    }
+  ]
+}

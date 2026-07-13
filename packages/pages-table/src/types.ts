@@ -80,3 +80,11 @@ export interface FilterConfig {
     readonly group?: string | undefined;
 }
 
+export type DetailMode = 'single' | 'multi';
+
+export interface DetailChangeDetail {
+  readonly key: string;
+  readonly row: TypedRow;
+  readonly expanded: boolean;
+}
+
