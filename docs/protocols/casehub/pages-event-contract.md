@@ -74,6 +74,8 @@ by the runtime event delegation layer:
 | `pages-dock-toggle` | Panel visibility toggle | Dock controls |
 | `pages-split-resize` | Split panel ratio changes | Split drag handles |
 | `pages-save-error` | Save operation failure | Runtime save pipeline |
+| `pages-modal-close` | Modal closed (with returnValue) | `PagesModal` component |
+| `pages-modal-cancel` | Modal close requested (cancelable) | `PagesModal` component |
 
 Do not use these names as `pages-event` topics or as custom event names in
 application code — they will collide with the framework's event delegation.

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>pages-modal test fixture</title>
+  <script src="/casehub-bundle.js"></script>
+  <style>
+    body { margin: 0; padding: 2rem; font-family: system-ui, sans-serif; min-height: 200vh; }
+  </style>
+</head>
+<body>
+  <button id="trigger">Open Modal</button>
+  <button id="trigger-alert">Open Alert</button>
+
+  <pages-modal id="modal">
+    <span slot="header">Test Dialog</span>
+    <p>Body content</p>
+    <input id="inner-input" type="text" placeholder="Type here" />
+    <div slot="actions">
+      <button id="ok-btn">OK</button>
+      <button id="cancel-btn">Cancel</button>
+    </div>
+  </pages-modal>
+
+  <pages-modal id="alert-modal" variant="alertdialog">
+    <span slot="header">Confirm Action</span>
+    <p>Are you sure?</p>
+    <div slot="actions">
+      <button id="confirm-btn">Confirm</button>
+      <button id="deny-btn">Deny</button>
+    </div>
+  </pages-modal>
+
+  <script>
+    const modal = document.getElementById('modal');
+    const alertModal = document.getElementById('alert-modal');
+
+    document.getElementById('trigger').addEventListener('click', () => { modal.open = true; });
+    document.getElementById('trigger-alert').addEventListener('click', () => { alertModal.open = true; });
+    document.getElementById('ok-btn').addEventListener('click', () => { modal.requestClose('ok'); });
+    document.getElementById('cancel-btn').addEventListener('click', () => { modal.requestClose('cancel'); });
+    document.getElementById('confirm-btn').addEventListener('click', () => { alertModal.requestClose('confirm'); });
+    document.getElementById('deny-btn').addEventListener('click', () => { alertModal.requestClose('deny'); });
+  </script>
+</body>
+</html>

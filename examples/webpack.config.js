@@ -54,6 +54,7 @@ module.exports = (env = {}) => {
         "@casehubio/pages-ui": path.resolve(__dirname, "../packages/pages-ui"),
         "@casehubio/pages-component": path.resolve(__dirname, "../packages/pages-component"),
         "@casehubio/pages-data": path.resolve(__dirname, "../packages/pages-data"),
+        "@casehubio/pages-primitives": path.resolve(__dirname, "../packages/pages-primitives"),
       },
     },
   };
