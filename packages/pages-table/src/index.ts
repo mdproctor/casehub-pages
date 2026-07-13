@@ -14,6 +14,7 @@ export type {
   RowActivateDetail,
   FilterChangeDetail,
   LoadMoreDetail,
+  PageSizeChangeDetail,
   DetailMode,
   DetailChangeDetail,
 } from './types.js';

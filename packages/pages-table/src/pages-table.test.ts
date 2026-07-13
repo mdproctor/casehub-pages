@@ -24,6 +24,7 @@ type TableEl = HTMLElement & {
   clientFilter: boolean;
   filterText: string;
   pageSize: number;
+  pageSizeOptions: readonly number[];
   currentPage: number;
   totalRows?: number;
   hasMore: boolean;
@@ -1062,6 +1063,277 @@ describe('pages-table', () => {
         const panel = el.shadowRoot!.querySelector('.detail-panel:not([hidden])');
         expect(panel).toBeTruthy();
       });
+    });
+  });
+
+  describe('jump to page', () => {
+    it('renders page-jump input in paginated mode', async () => {
+      el.dataSet = makeLargeDataSet(30);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+
+      const input = el.shadowRoot!.querySelector('.page-jump-input') as HTMLInputElement;
+      expect(input).not.toBeNull();
+      expect(input.value).toBe('1');
+    });
+
+    it('navigates to typed page on Enter', async () => {
+      el.dataSet = makeLargeDataSet(50);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener('page-change', (e) => events.push(e as CustomEvent));
+
+      const input = el.shadowRoot!.querySelector('.page-jump-input') as HTMLInputElement;
+      input.value = '3';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await el.updateComplete;
+
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.page).toBe(2);
+      expect(el.currentPage).toBe(2);
+    });
+
+    it('clamps out-of-range page numbers', async () => {
+      el.dataSet = makeLargeDataSet(30);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+
+      const input = el.shadowRoot!.querySelector('.page-jump-input') as HTMLInputElement;
+      input.value = '99';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await el.updateComplete;
+
+      expect(el.currentPage).toBe(2);
+    });
+
+    it('clamps negative page to first page', async () => {
+      el.dataSet = makeLargeDataSet(30);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+
+      const input = el.shadowRoot!.querySelector('.page-jump-input') as HTMLInputElement;
+      input.value = '-5';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await el.updateComplete;
+
+      expect(el.currentPage).toBe(0);
+    });
+
+    it('does not navigate on non-Enter keys', async () => {
+      el.dataSet = makeLargeDataSet(30);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+
+      const input = el.shadowRoot!.querySelector('.page-jump-input') as HTMLInputElement;
+      input.value = '3';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+      await el.updateComplete;
+
+      expect(el.currentPage).toBe(0);
+    });
+  });
+
+  describe('page size selector', () => {
+    it('renders page size select in paginated mode', async () => {
+      el.dataSet = makeLargeDataSet(100);
+      el.mode = 'paginated';
+      el.pageSize = 25;
+      await el.updateComplete;
+
+      const select = el.shadowRoot!.querySelector('.page-size-select') as HTMLSelectElement;
+      expect(select).not.toBeNull();
+      expect(select.value).toBe('25');
+    });
+
+    it('renders default page size options', async () => {
+      el.dataSet = makeLargeDataSet(100);
+      el.mode = 'paginated';
+      await el.updateComplete;
+
+      const options = el.shadowRoot!.querySelectorAll('.page-size-select option');
+      expect(options.length).toBe(4);
+      expect(options[0]!.textContent).toContain('10');
+      expect(options[1]!.textContent).toContain('25');
+      expect(options[2]!.textContent).toContain('50');
+      expect(options[3]!.textContent).toContain('100');
+    });
+
+    it('uses custom pageSizeOptions', async () => {
+      el.dataSet = makeLargeDataSet(100);
+      el.mode = 'paginated';
+      el.pageSize = 5;
+      el.pageSizeOptions = [5, 20, 50];
+      await el.updateComplete;
+
+      const options = el.shadowRoot!.querySelectorAll('.page-size-select option');
+      expect(options.length).toBe(3);
+      expect(options[0]!.textContent).toContain('5');
+    });
+
+    it('emits page-size-change on selection', async () => {
+      el.dataSet = makeLargeDataSet(100);
+      el.mode = 'paginated';
+      el.pageSize = 25;
+      await el.updateComplete;
+
+      const events: CustomEvent[] = [];
+      el.addEventListener('page-size-change', (e) => events.push(e as CustomEvent));
+
+      const select = el.shadowRoot!.querySelector('.page-size-select') as HTMLSelectElement;
+      select.value = '50';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await el.updateComplete;
+
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.pageSize).toBe(50);
+      expect(events[0]!.detail.previousPageSize).toBe(25);
+    });
+
+    it('resets to page 0 on page size change', async () => {
+      el.dataSet = makeLargeDataSet(100);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      el.currentPage = 5;
+      await el.updateComplete;
+
+      const select = el.shadowRoot!.querySelector('.page-size-select') as HTMLSelectElement;
+      select.value = '25';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await el.updateComplete;
+
+      expect(el.currentPage).toBe(0);
+      expect(el.pageSize).toBe(25);
+    });
+  });
+
+  describe('column picker close behavior', () => {
+    it('closes on click outside', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      trigger.click();
+      await el.updateComplete;
+      await new Promise(r => setTimeout(r, 10));
+      expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).not.toBeNull();
+
+      const outside = document.createElement('div');
+      document.body.appendChild(outside);
+      outside.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).toBeNull();
+      outside.remove();
+    });
+
+    it('toolbar is above header, not beside it', async () => {
+      el.dataSet = testDataSet;
+      el.clientFilter = true;
+      await el.updateComplete;
+
+      const dataTable = el.shadowRoot!.querySelector('.data-table')!;
+      const toolbar = dataTable.querySelector('.toolbar');
+      const headerContainer = dataTable.querySelector('.header-container');
+      expect(toolbar).not.toBeNull();
+      expect(headerContainer).not.toBeNull();
+      const children = Array.from(dataTable.children);
+      expect(children.indexOf(toolbar!)).toBeLessThan(children.indexOf(headerContainer!));
+    });
+
+    it('mouseleave closes picker after 400ms delay', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      trigger.click();
+      await el.updateComplete;
+      await new Promise(r => setTimeout(r, 10));
+      expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).not.toBeNull();
+
+      const wrapper = el.shadowRoot!.querySelector('.column-picker-wrapper') as HTMLElement;
+      wrapper.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+
+      await new Promise(r => setTimeout(r, 100));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).not.toBeNull();
+
+      await new Promise(r => setTimeout(r, 400));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).toBeNull();
+    });
+
+    it('mouseenter cancels pending close', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      trigger.click();
+      await el.updateComplete;
+      await new Promise(r => setTimeout(r, 10));
+
+      const wrapper = el.shadowRoot!.querySelector('.column-picker-wrapper') as HTMLElement;
+      wrapper.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 200));
+      wrapper.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 400));
+      await el.updateComplete;
+
+      expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).not.toBeNull();
+    });
+
+    it('toolbar arrow keys do not propagate to mixin', async () => {
+      el.dataSet = testDataSet;
+      el.clientFilter = true;
+      await el.updateComplete;
+
+      const input = el.shadowRoot!.querySelector('.filter-input') as HTMLInputElement;
+      const propagated: string[] = [];
+      el.addEventListener('keydown', (e: Event) => propagated.push((e as KeyboardEvent).key));
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+
+      expect(propagated).toEqual([]);
+    });
+
+    it('includes current pageSize in options even when not in pageSizeOptions', async () => {
+      el.dataSet = makeLargeDataSet(100);
+      el.mode = 'paginated';
+      el.pageSize = 8;
+      await el.updateComplete;
+
+      const options = el.shadowRoot!.querySelectorAll('.page-size-select option');
+      const values = Array.from(options).map(o => (o as HTMLOptionElement).value);
+      expect(values).toContain('8');
+      const selected = el.shadowRoot!.querySelector('.page-size-select option[selected]') as HTMLOptionElement;
+      expect(selected?.value).toBe('8');
+    });
+  });
+
+  describe('RovingTabindexMixin integration', () => {
+    it('has rovingSelector and rovingDirection set', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      expect((el as any).rovingSelector).toBe('.row[role="row"]:not(.header)');
+      expect((el as any).rovingDirection).toBe('both');
+    });
+
+    it('sets tabindex=0 on first row and -1 on others', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.getAttribute('tabindex')).toBe('0');
+      expect(rows[1]!.getAttribute('tabindex')).toBe('-1');
+      expect(rows[2]!.getAttribute('tabindex')).toBe('-1');
     });
   });
 });

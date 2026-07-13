@@ -22,6 +22,7 @@
   "dependencies": {
     "@casehubio/pages-component": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-primitives": "workspace:*",
     "lit": "^3.0.0"
   },
   "devDependencies": {

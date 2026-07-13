@@ -1,9 +1,10 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
+import { RovingTabindexMixin, type RovingDirection } from '@casehubio/pages-primitives';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings } from '@casehubio/pages-data/dist/dataset/types.js';
 import { ColumnType } from '@casehubio/pages-data/dist/dataset/types.js';
 import type { SortColumn } from '@casehubio/pages-data/dist/dataset/sort.js';
-import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail } from './types.js';
+import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail } from './types.js';
 import { computeScrollWindow } from './virtual-scroll-engine.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
@@ -23,7 +24,10 @@ interface RowStyleRule {
 }
 
 @customElement('pages-table')
-export class PagesTable extends LitElement {
+export class PagesTable extends RovingTabindexMixin(LitElement) {
+  override rovingSelector = '.row[role="row"]:not(.header)';
+  override rovingDirection: RovingDirection = 'both';
+
   @property({ attribute: false }) dataSet?: TypedDataSet;
   @property({ attribute: false }) columnRenderers?: ReadonlyMap<ColumnId, ColumnRenderer>;
   @property({ attribute: false }) columnConfig?: readonly TableColumnConfig[];
@@ -57,6 +61,7 @@ export class PagesTable extends LitElement {
   @property({ type: Number, attribute: 'row-height' }) rowHeight = 48;
   @property({ type: Number, attribute: 'buffer-size' }) bufferSize = 5;
   @property({ type: Number, attribute: 'page-size' }) pageSize = 25;
+  @property({ type: Array, attribute: false }) pageSizeOptions: readonly number[] = [10, 25, 50, 100];
   @property({ type: Number, attribute: 'current-page' }) currentPage = 0;
   @property({ type: Number, attribute: 'total-rows' }) totalRows?: number;
   @property({ type: Boolean, attribute: 'has-more' }) hasMore = false;
@@ -93,11 +98,11 @@ export class PagesTable extends LitElement {
   @state() private _internalSelectedKeys = new Set<string>();
   @state() private _lastClickedKey: string | null = null;
   @state() private _columnPickerOpen = false;
-  @state() private _focusRowIndex = 0;
   @state() private _focusColIndex = 0;
   @state() private _hiddenColumnIds = new Set<string>();
 
   private _filterDebounceTimer?: number;
+  private _pickerCloseTimer: number | undefined = undefined;
   private _selectedColumnId: ColumnId | undefined;
   private _selectedValue: string | undefined;
   private _pipelineMode = false;
@@ -130,6 +135,11 @@ export class PagesTable extends LitElement {
     if (typeof p.pageSize === 'number') {
       this.pageSize = p.pageSize;
       this.mode = 'paginated';
+    }
+
+    const pso = p.pageSizeOptions as readonly number[] | undefined;
+    if (pso && Array.isArray(pso)) {
+      this.pageSizeOptions = pso;
     }
 
     this._sortableFromProps = p.sortable === true;
@@ -354,14 +364,10 @@ export class PagesTable extends LitElement {
       border-bottom: 1px solid var(--pages-neutral-6, #d4d4d4);
       background: var(--pages-neutral-2, #fafafa);
       flex-shrink: 0;
-      display: flex;
-      align-items: center;
     }
 
     .header {
       display: grid;
-      flex: 1;
-      min-width: 0;
     }
 
     .header-cell {
@@ -432,7 +438,6 @@ export class PagesTable extends LitElement {
     .row {
       display: grid;
       border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
-      padding-right: 36px;
     }
 
     .row-odd {
@@ -544,6 +549,65 @@ export class PagesTable extends LitElement {
       cursor: not-allowed;
     }
 
+    .page-jump {
+      display: flex;
+      align-items: center;
+      gap: var(--pages-space-1, 4px);
+      font-size: var(--pages-font-size-sm, 12px);
+      color: var(--pages-neutral-11, #404040);
+    }
+
+    .page-jump-input {
+      width: 48px;
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      border: 1px solid var(--pages-neutral-6, #d4d4d4);
+      border-radius: 4px;
+      font-size: var(--pages-font-size-sm, 12px);
+      text-align: center;
+      color: var(--pages-neutral-12, #171717);
+      background: var(--pages-neutral-1, #ffffff);
+    }
+
+    .page-jump-input:focus {
+      outline: 2px solid var(--pages-primary-9, #3b82f6);
+      outline-offset: 0;
+      border-color: var(--pages-primary-9, #3b82f6);
+    }
+
+    .page-jump-input::-webkit-inner-spin-button,
+    .page-jump-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .page-jump-input {
+      -moz-appearance: textfield;
+    }
+
+    .page-size-label {
+      display: flex;
+      align-items: center;
+      gap: var(--pages-space-1, 4px);
+      font-size: var(--pages-font-size-sm, 12px);
+      color: var(--pages-neutral-11, #404040);
+    }
+
+    .page-size-select {
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      border: 1px solid var(--pages-neutral-6, #d4d4d4);
+      border-radius: 4px;
+      font-size: var(--pages-font-size-sm, 12px);
+      color: var(--pages-neutral-12, #171717);
+      background: var(--pages-neutral-1, #ffffff);
+      cursor: pointer;
+    }
+
+    .page-size-select:focus {
+      outline: 2px solid var(--pages-primary-9, #3b82f6);
+      outline-offset: 0;
+      border-color: var(--pages-primary-9, #3b82f6);
+    }
+
     .sortable-header {
       cursor: pointer;
       user-select: none;
@@ -611,9 +675,12 @@ export class PagesTable extends LitElement {
     .toolbar {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       gap: var(--pages-space-2, 8px);
-      padding: 0 var(--pages-space-2, 8px);
+      padding: var(--pages-space-2, 8px);
       flex-shrink: 0;
+      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+      background: var(--pages-neutral-1, #ffffff);
     }
 
     .filter-input {
@@ -891,14 +958,14 @@ export class PagesTable extends LitElement {
 
   private _goToFirstPage = (): void => {
     this.currentPage = 0;
-    this._focusRowIndex = 0;
+    this.rovingIndex = 0;
     this._emitPageChange(0);
   };
 
   private _goToPrevPage = (): void => {
     if (this.currentPage > 0) {
       this.currentPage = this.currentPage - 1;
-      this._focusRowIndex = 0;
+      this.rovingIndex = 0;
       this._emitPageChange(this.currentPage);
     }
   };
@@ -906,7 +973,7 @@ export class PagesTable extends LitElement {
   private _goToNextPage = (): void => {
     if (this.currentPage < this._totalPageCount - 1) {
       this.currentPage = this.currentPage + 1;
-      this._focusRowIndex = 0;
+      this.rovingIndex = 0;
       this._emitPageChange(this.currentPage);
     }
   };
@@ -914,14 +981,44 @@ export class PagesTable extends LitElement {
   private _goToLastPage = (): void => {
     const lastPage = this._totalPageCount - 1;
     this.currentPage = lastPage;
-    this._focusRowIndex = 0;
+    this.rovingIndex = 0;
     this._emitPageChange(lastPage);
+  };
+
+  private _handleJumpToPage = (e: KeyboardEvent): void => {
+    if (e.key !== 'Enter') return;
+    const input = e.target as HTMLInputElement;
+    const pageNum = parseInt(input.value, 10);
+    if (isNaN(pageNum)) return;
+    const clamped = Math.max(0, Math.min(pageNum - 1, this._totalPageCount - 1));
+    this.currentPage = clamped;
+    this.rovingIndex = 0;
+    this._emitPageChange(clamped);
+    input.value = String(clamped + 1);
+  };
+
+  private _handlePageSizeChange = (e: Event): void => {
+    const select = e.target as HTMLSelectElement;
+    const newSize = parseInt(select.value, 10);
+    if (isNaN(newSize) || newSize === this.pageSize) return;
+    const previousPageSize = this.pageSize;
+    this.pageSize = newSize;
+    this.currentPage = 0;
+    this.rovingIndex = 0;
+    this._emitPageChange(0);
+    const detail: PageSizeChangeDetail = { pageSize: newSize, previousPageSize };
+    this.dispatchEvent(new CustomEvent('page-size-change', {
+      detail,
+      bubbles: true,
+      composed: true,
+    }));
   };
 
   private _resizeObserver?: ResizeObserver;
 
   override connectedCallback(): void {
     super.connectedCallback();
+    if (this.rovingIndex === -1) this.rovingIndex = 0;
     if (!this._instanceId) this._instanceId = crypto.randomUUID();
     this._updateContainerHeight();
     if (this._dataRequestPending) {
@@ -933,6 +1030,8 @@ export class PagesTable extends LitElement {
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this._resizeObserver?.disconnect();
+    document.removeEventListener('click', this._handleClickOutsidePicker, true);
+    this._cancelPickerClose();
   }
 
   override firstUpdated(): void {
@@ -1377,7 +1476,42 @@ export class PagesTable extends LitElement {
 
   private _toggleColumnPicker = (): void => {
     this._columnPickerOpen = !this._columnPickerOpen;
+    if (this._columnPickerOpen) {
+      setTimeout(() => {
+        document.addEventListener('click', this._handleClickOutsidePicker, true);
+      }, 0);
+    } else {
+      document.removeEventListener('click', this._handleClickOutsidePicker, true);
+      this._cancelPickerClose();
+    }
   };
+
+  private _handleClickOutsidePicker = (e: MouseEvent): void => {
+    if (!this.contains(e.target as Node)) {
+      this._columnPickerOpen = false;
+      document.removeEventListener('click', this._handleClickOutsidePicker, true);
+      this._cancelPickerClose();
+    }
+  };
+
+  private _handlePickerMouseLeave = (): void => {
+    this._cancelPickerClose();
+    this._pickerCloseTimer = window.setTimeout(() => {
+      this._columnPickerOpen = false;
+      document.removeEventListener('click', this._handleClickOutsidePicker, true);
+    }, 400);
+  };
+
+  private _handlePickerMouseEnter = (): void => {
+    this._cancelPickerClose();
+  };
+
+  private _cancelPickerClose(): void {
+    if (this._pickerCloseTimer !== undefined) {
+      clearTimeout(this._pickerCloseTimer);
+      this._pickerCloseTimer = undefined;
+    }
+  }
 
   private _toggleColumnVisibility = (columnId: string): void => {
     const visibleCount = this._visibleColumns.length;
@@ -1450,28 +1584,28 @@ export class PagesTable extends LitElement {
     switch (key) {
       case 'ArrowDown':
         event.preventDefault();
-        if (this._focusRowIndex < totalRows - 1) {
-          this._focusRowIndex++;
+        if (this.rovingIndex < totalRows - 1) {
+          this.rovingIndex++;
           if (event.shiftKey && this.selection === 'multi') {
-            const row = this._dataRows[this._focusRowIndex];
+            const row = this._dataRows[this.rovingIndex];
             if (row) this._toggleRowSelection(row);
           }
-          this._scrollToRowIfNeeded(this._focusRowIndex);
-          void this._focusRow(this._focusRowIndex);
+          this._scrollToRowIfNeeded(this.rovingIndex);
+          void this._focusRow(this.rovingIndex);
           handled = true;
         }
         break;
 
       case 'ArrowUp':
         event.preventDefault();
-        if (this._focusRowIndex > 0) {
-          this._focusRowIndex--;
+        if (this.rovingIndex > 0) {
+          this.rovingIndex--;
           if (event.shiftKey && this.selection === 'multi') {
-            const row = this._dataRows[this._focusRowIndex];
+            const row = this._dataRows[this.rovingIndex];
             if (row) this._toggleRowSelection(row);
           }
-          this._scrollToRowIfNeeded(this._focusRowIndex);
-          void this._focusRow(this._focusRowIndex);
+          this._scrollToRowIfNeeded(this.rovingIndex);
+          void this._focusRow(this.rovingIndex);
           handled = true;
         }
         break;
@@ -1497,28 +1631,28 @@ export class PagesTable extends LitElement {
 
       case 'Home':
         if (event.ctrlKey || event.metaKey) {
-          this._focusRowIndex = 0;
+          this.rovingIndex = 0;
           this._focusColIndex = 0;
-          this._scrollToRowIfNeeded(this._focusRowIndex);
-          void this._focusRow(this._focusRowIndex);
+          this._scrollToRowIfNeeded(this.rovingIndex);
+          void this._focusRow(this.rovingIndex);
         } else {
-          this._focusRowIndex = 0;
-          this._scrollToRowIfNeeded(this._focusRowIndex);
-          void this._focusRow(this._focusRowIndex);
+          this.rovingIndex = 0;
+          this._scrollToRowIfNeeded(this.rovingIndex);
+          void this._focusRow(this.rovingIndex);
         }
         handled = true;
         break;
 
       case 'End':
         if (event.ctrlKey || event.metaKey) {
-          this._focusRowIndex = totalRows - 1;
+          this.rovingIndex = totalRows - 1;
           this._focusColIndex = this._visibleColumns.length - 1;
-          this._scrollToRowIfNeeded(this._focusRowIndex);
-          void this._focusRow(this._focusRowIndex);
+          this._scrollToRowIfNeeded(this.rovingIndex);
+          void this._focusRow(this.rovingIndex);
         } else {
-          this._focusRowIndex = totalRows - 1;
-          this._scrollToRowIfNeeded(this._focusRowIndex);
-          void this._focusRow(this._focusRowIndex);
+          this.rovingIndex = totalRows - 1;
+          this._scrollToRowIfNeeded(this.rovingIndex);
+          void this._focusRow(this.rovingIndex);
         }
         handled = true;
         break;
@@ -1786,7 +1920,7 @@ export class PagesTable extends LitElement {
     const showFilter = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
 
     return html`
-      <div class="toolbar">
+      <div class="toolbar" @keydown="${this._onToolbarKeydown}">
         ${this._csvExportEnabled && this.dataSet ? html`
           <button class="pagination-button" aria-label="Download CSV" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">⬇</button>
           <button class="pagination-button" aria-label="Copy CSV" @click="${this._handleCopyToClipboard}">📋</button>
@@ -1802,7 +1936,11 @@ export class PagesTable extends LitElement {
             }}"
           />
         ` : nothing}
-        <div class="column-picker-wrapper">
+        <div
+          class="column-picker-wrapper"
+          @mouseleave="${this._handlePickerMouseLeave}"
+          @mouseenter="${this._handlePickerMouseEnter}"
+        >
           <button
             class="column-picker-trigger"
             @click="${this._toggleColumnPicker}"
@@ -1849,6 +1987,12 @@ export class PagesTable extends LitElement {
     `;
   }
 
+  private _onToolbarKeydown = (e: KeyboardEvent): void => {
+    if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+      e.stopPropagation();
+    }
+  };
+
   private _clearFilterSelection(): void {
     if (this._selectedColumnId === undefined) return;
     const group = this._filterConfig.group;
@@ -1860,10 +2004,6 @@ export class PagesTable extends LitElement {
       detail: { columnId, reset: true, group },
     }));
     if (this._pipelineMode) this._requestData();
-  }
-
-  private _renderColumnPicker() {
-    return this._renderToolbar();
   }
 
   private _handleCellFilterClick(row: TypedRow, columnId: ColumnId): void {
@@ -2096,7 +2236,7 @@ export class PagesTable extends LitElement {
     const part = rowClass ? `row ${rowClass}` : 'row';
     const ariaRowIndex = actualIndex + 2;
     const isSelected = this._isRowSelected(row);
-    const tabindex = actualIndex === this._focusRowIndex ? '0' : '-1';
+    const tabindex = actualIndex === this.rovingIndex ? '0' : '-1';
     const isClickable = this._filterConfig.enabled;
     const isFilterSelected = this._isFilterSelected(row);
     const treeNode = this._treeNodeByRow.get(row);
@@ -2151,11 +2291,26 @@ export class PagesTable extends LitElement {
     const start = this.currentPage * this.pageSize + 1;
     const end = Math.min((this.currentPage + 1) * this.pageSize, total);
 
+    const opts = this.pageSizeOptions.includes(this.pageSize)
+      ? this.pageSizeOptions
+      : [...this.pageSizeOptions, this.pageSize].sort((a, b) => a - b);
+
     return html`
-      <div class="pagination" role="navigation" aria-label="Table pagination">
+      <div class="pagination" role="navigation" aria-label="Table pagination" @keydown="${this._onToolbarKeydown}">
         <div class="pagination-info">
-          <span>Page ${currentPageNum} of ${totalPages}</span>
           <span>Showing ${start}-${end} of ${total}</span>
+          <label class="page-size-label">
+            Rows
+            <select
+              class="page-size-select"
+              aria-label="Rows per page"
+              @change="${this._handlePageSizeChange}"
+            >
+              ${opts.map(size => html`
+                <option value="${size}" ?selected="${size === this.pageSize}">${size}</option>
+              `)}
+            </select>
+          </label>
         </div>
         <div class="pagination-controls">
           <button
@@ -2174,6 +2329,18 @@ export class PagesTable extends LitElement {
           >
             Prev
           </button>
+          <span class="page-jump">
+            <input
+              type="number"
+              class="page-jump-input"
+              aria-label="Jump to page"
+              min="1"
+              max="${totalPages}"
+              .value="${String(currentPageNum)}"
+              @keydown="${this._handleJumpToPage}"
+            />
+            <span>of ${totalPages}</span>
+          </span>
           <button
             class="pagination-button"
             aria-label="Next page"
@@ -2219,6 +2386,7 @@ export class PagesTable extends LitElement {
     if (this._dataRows.length === 0) {
       return html`
         <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}">
+          ${this._renderToolbar()}
           <div class="header-container">
             <div
               class="header"
@@ -2230,7 +2398,6 @@ export class PagesTable extends LitElement {
               ${this.selection === 'multi' ? html`<div class="header-cell"></div>` : nothing}
               ${visibleCols.map(col => this._renderHeaderCell(col))}
             </div>
-            ${this._renderColumnPicker()}
           </div>
           <div class="empty-state">${this.emptyMessage}</div>
         </div>
@@ -2241,6 +2408,7 @@ export class PagesTable extends LitElement {
 
     return html`
       <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}" aria-label="Data table" @keydown="${this._handleKeyDown}">
+        ${this._renderToolbar()}
         <div class="header-container">
           <div
             class="header"
@@ -2252,7 +2420,6 @@ export class PagesTable extends LitElement {
             ${this._renderCheckbox(this._dataRows[0]!, true)}
             ${visibleCols.map(col => this._renderHeaderCell(col))}
           </div>
-          ${this._renderColumnPicker()}
         </div>
         <div class="body" @scroll="${this._onScroll}">
           ${this._useVirtualScroll && window

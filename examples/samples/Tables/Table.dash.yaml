@@ -46,10 +46,14 @@ pages:
       - type: markdown
         properties:
           content: |
-            Tables include a **filter box** (top-left), **pagination** (top-right),
-            and **sortable columns** (click headers). The `pageSize` property controls
-            rows per page. Click any **LABEL** cell to cross-filter — try clicking a
-            Department value.
+            Tables include a **filter box** (top-left), **pagination** (bottom),
+            and **sortable columns** (click headers). The pagination footer includes:
+
+            - **Page size selector** — choose rows per page from the dropdown
+            - **Jump to page** — type a page number and press Enter
+            - **First / Prev / Next / Last** navigation buttons
+
+            Click any **LABEL** cell to cross-filter — try clicking a Department value.
 
       - type: selector
         properties:
@@ -68,7 +72,8 @@ pages:
         properties:
           lookup:
             uuid: employees
-          pageSize: 8
+          pageSize: 5
+          pageSizeOptions: [5, 10, 20]
           sortable: true
           filter:
             notification: true

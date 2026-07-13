@@ -59,6 +59,11 @@ export interface FilterChangeDetail {
 
 export interface LoadMoreDetail {}
 
+export interface PageSizeChangeDetail {
+  readonly pageSize: number;
+  readonly previousPageSize: number;
+}
+
 export interface PagesFilterApply {
     readonly columnId: string;
     readonly value: string;

@@ -56,6 +56,12 @@ describe('pipeline integration', () => {
       expect(el.mode).toBe('paginated');
     });
 
+    it('sets pageSizeOptions from props', async () => {
+      el.props = { pageSize: 5, pageSizeOptions: [5, 15, 30], lookup: { dataSetId: 'test', operations: [] } };
+      await el.updateComplete;
+      expect((el as any).pageSizeOptions).toEqual([5, 15, 30]);
+    });
+
     it('marks all columns sortable when sortable=true', async () => {
       el.props = { sortable: true, lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = testDataSet;
