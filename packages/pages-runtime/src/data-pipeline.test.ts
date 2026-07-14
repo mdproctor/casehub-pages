@@ -1385,3 +1385,136 @@ describe("refreshDataSet (re-fetch)", () => {
     expect(target.dataSet).toBeDefined();
   });
 });
+
+describe("stale-while-revalidate (Layer 3)", () => {
+  it("triggers background refresh when data is stale", () => {
+    let connectCount = 0;
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        connectCount++;
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Fresh-" + String(connectCount)]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(1);
+
+    (manager as any).timestamps?.set("ds" as DataSetId, Date.now() - 61000);
+
+    const target2 = makeTarget();
+    registry.set("comp-2", {
+      element: document.createElement("div"),
+      vizElement: target2,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+    pipeline.handleDataRequest(target2, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-2");
+
+    expect(target2.dataSet).toBeDefined();
+    expect(connectCount).toBe(2);
+  });
+
+  it("does not trigger refresh when data is within TTL", () => {
+    let connectCount = 0;
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        connectCount++;
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Data"]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(1);
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(1);
+  });
+
+  it("dedup guard prevents multiple concurrent refreshes for same stale dataset", () => {
+    let connectCount = 0;
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        connectCount++;
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Data"]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target1 = makeTarget();
+    const target2 = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target1,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+    registry.set("comp-2", {
+      element: document.createElement("div"),
+      vizElement: target2,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    pipeline.handleDataRequest(target1, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(1);
+
+    (manager as any).timestamps?.set("ds" as DataSetId, Date.now() - 61000);
+
+    pipeline.handleDataRequest(target1, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    pipeline.handleDataRequest(target2, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-2");
+
+    expect(connectCount).toBe(2);
+  });
+});

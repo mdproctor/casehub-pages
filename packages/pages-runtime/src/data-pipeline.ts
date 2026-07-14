@@ -86,6 +86,8 @@ export function createDataPipeline(
 
   // --- Refresh state ---
   const reFetchCallbacks = new Map<DataSetId, () => void>();
+  const pendingRefreshes = new Set<DataSetId>();
+  const DEFAULT_TTL_MS = 60_000;
 
   let observer: MutationObserver | undefined;
   let resolverCtx: ResolverContext | undefined;
@@ -640,6 +642,16 @@ export function createDataPipeline(
           }
           scheduleRefresh(def, lookup.dataSetId);
         }
+
+        if (!pendingRefreshes.has(lookup.dataSetId) && !pushSubscriptions.has(lookup.dataSetId)) {
+          const age = manager.age(lookup.dataSetId);
+          const ttl = def?.refreshTime ? parseRefreshTime(def.refreshTime) : DEFAULT_TTL_MS;
+          if (age !== undefined && age > ttl) {
+            pendingRefreshes.add(lookup.dataSetId);
+            this.refreshDataSet(lookup.dataSetId);
+          }
+        }
+
         return;
       }
 
@@ -666,12 +678,14 @@ export function createDataPipeline(
         connectedSource.disconnect();
         connectedSources.delete(dataSetId);
         connectSource(dataSetId, connectedSource);
+        pendingRefreshes.delete(dataSetId);
         return;
       }
 
       const reFetch = reFetchCallbacks.get(dataSetId);
       if (reFetch) {
         reFetch();
+        pendingRefreshes.delete(dataSetId);
         return;
       }
 
@@ -711,6 +725,9 @@ export function createDataPipeline(
           abortControllers.delete(dataSetId);
           if (err instanceof DOMException && err.name === "AbortError") return;
           console.warn(`[DataPipeline] Re-fetch failed for ${String(dataSetId)}:`, err);
+        })
+        .finally(() => {
+          pendingRefreshes.delete(dataSetId);
         });
     },
 
