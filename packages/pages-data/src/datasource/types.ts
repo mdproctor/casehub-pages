@@ -1,5 +1,6 @@
 import type { DataSetEvent } from "../dataset/events.js";
 import type { DataSetId } from "../dataset/types.js";
+import type { ExternalColumnDef } from "../dataset/external/types.js";
 
 export interface Disposable {
   dispose(): void;
@@ -34,3 +35,14 @@ export interface DataSourceBinding {
   readonly source: DataSource;
   readonly keyColumn?: string;
 }
+
+export interface SourceFactoryOptions {
+  readonly columns?: readonly ExternalColumnDef[] | undefined;
+  readonly dataPath?: string | undefined;
+}
+
+export type SourceFactory = (
+  url: string,
+  id: DataSetId,
+  options?: SourceFactoryOptions,
+) => DataSource;

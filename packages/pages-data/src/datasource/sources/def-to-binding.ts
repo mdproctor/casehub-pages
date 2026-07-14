@@ -111,6 +111,6 @@ export function defToBinding(
       ...(deps.fetchFn !== undefined && { fetchFn: deps.fetchFn }),
       ...(deps.presets !== undefined && { presets: deps.presets }),
     };
-    return { ...base, source: restSource(url, opts) };
+    return { ...base, source: restSource(url, def.uuid, opts) };
   }
 }

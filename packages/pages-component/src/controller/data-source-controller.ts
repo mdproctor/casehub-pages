@@ -4,15 +4,8 @@ import type {SortColumn} from "@casehubio/pages-data";
 import type {DataSetId, TypedDataSet} from "@casehubio/pages-data";
 import {dataSetId} from "@casehubio/pages-data";
 import type {ExternalColumnDef} from "@casehubio/pages-data";
+import type {SourceFactory, SourceFactoryOptions} from "@casehubio/pages-data";
 import type {VizTarget} from "../model/hosting.js";
-
-export interface SourceFactoryOptions {
-  readonly columns?: readonly ExternalColumnDef[] | undefined;
-  readonly dataPath?: string | undefined;
-  readonly totalPath?: string | undefined;
-}
-
-export type SourceFactory = (url: string, id: DataSetId, options?: SourceFactoryOptions) => DataSource;
 
 export interface DataSourceControllerOptions {
   onChange?: () => void;
@@ -213,7 +206,6 @@ export class DataSourceController implements VizTarget {
       return this._sourceFactory(url, this._dataSetId, {
         columns: this._columns,
         dataPath: this._dataPath,
-        totalPath: this._totalPath,
       });
     }
     return {

@@ -1,4 +1,5 @@
 import type { DataSource, DataSink } from "../types.js";
+import type { DataSetId } from "../../dataset/types.js";
 import type { ExternalColumnDef, ExtractionDef } from "../../dataset/external/types.js";
 import type { PresetRegistry } from "../../dataset/external/types.js";
 import { HttpMethod, parseRefreshTime } from "../../dataset/external/types.js";
@@ -25,6 +26,7 @@ export interface RestSourceOptions {
 
 export function restSource(
   url: string,
+  _id: DataSetId,
   options?: RestSourceOptions,
 ): DataSource {
   let refreshTimer: ReturnType<typeof setInterval> | null = null;

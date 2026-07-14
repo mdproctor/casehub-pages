@@ -6,6 +6,8 @@ export type {
   MutableDataSource,
   DataAction,
   DataSourceBinding,
+  SourceFactory,
+  SourceFactoryOptions,
 } from "./types.js";
 
 export type {
@@ -62,6 +64,8 @@ export { postMessageSource } from "./sources/post-message-source.js";
 export type { PostMessageSourceOptions } from "./sources/post-message-source.js";
 export { serverQuerySource } from "./sources/server-query-source.js";
 export type { ServerQuerySourceOptions } from "./sources/server-query-source.js";
+export { createSourceFactory } from "./sources/source-factory.js";
+export type { SourceFactoryDeps } from "./sources/source-factory.js";
 export { defToBinding } from "./sources/def-to-binding.js";
 export type { DefToBindingDeps } from "./sources/def-to-binding.js";
 export { defaultSsePushPool, defaultWsPushPool } from "./sources/default-pools.js";

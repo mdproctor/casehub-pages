@@ -5,6 +5,7 @@ import type { TypedDataSet } from "@casehubio/pages-data";
 import { ColumnType, columnId } from "@casehubio/pages-data";
 import { toTypedDataSet } from "@casehubio/pages-data";
 import type { DataSetEvent } from "@casehubio/pages-data";
+import { createSourceFactory } from "@casehubio/pages-data";
 
 function makeDataSet(values: string[][]): TypedDataSet {
   return toTypedDataSet({
@@ -524,5 +525,56 @@ describe("DataSourceController", () => {
       ctrl.refresh();
       expect(onRefresh).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe("DataSourceController with createSourceFactory", () => {
+  it("endpoint with relative URL creates restSource and delivers data", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(new Response(
+      JSON.stringify([["alice"]]),
+      { headers: { "content-type": "application/json" } },
+    ));
+    const ctrl = new DataSourceController({
+      sourceFactory: createSourceFactory({ fetchFn }),
+    });
+    ctrl.connect();
+    ctrl.endpoint = "/api/items";
+    await vi.waitFor(() => { expect(ctrl.dataSet).toBeDefined(); });
+    expect(ctrl.dataSet!.rows).toHaveLength(1);
+    ctrl.dispose();
+  });
+
+  it("endpoint with ws:// URL creates wsSource", () => {
+    const mockPool = {
+      acquire: vi.fn().mockReturnValue({
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+      }),
+      releaseAll: vi.fn(),
+    };
+    const ctrl = new DataSourceController({
+      sourceFactory: createSourceFactory({ wsPool: mockPool }),
+    });
+    ctrl.connect();
+    ctrl.endpoint = "ws://host/events";
+    expect(mockPool.acquire).toHaveBeenCalled();
+    ctrl.dispose();
+  });
+
+  it("endpoint with sse:// URL creates sseSource", () => {
+    const mockPool = {
+      acquire: vi.fn().mockReturnValue({
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+      }),
+      releaseAll: vi.fn(),
+    };
+    const ctrl = new DataSourceController({
+      sourceFactory: createSourceFactory({ ssePool: mockPool }),
+    });
+    ctrl.connect();
+    ctrl.endpoint = "sse://host/topic";
+    expect(mockPool.acquire).toHaveBeenCalled();
+    ctrl.dispose();
   });
 });

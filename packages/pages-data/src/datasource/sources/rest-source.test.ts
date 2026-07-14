@@ -2,8 +2,11 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { restSource } from "./rest-source.js";
 import type { DataSink, SourceError } from "../types.js";
 import type { DataSetEvent } from "../../dataset/events.js";
+import type { DataSetId } from "../../dataset/types.js";
 import { ColumnType, col } from "./test-helpers.js";
 import { HttpMethod } from "../../dataset/external/types.js";
+
+const TEST_ID = "test-ds" as DataSetId;
 
 function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -36,7 +39,7 @@ describe("restSource (standalone)", () => {
 
   it("emits snapshot on connect", async () => {
     const fetchFn = mockFetch([["alice"], ["bob"]]);
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       columns: [col("name", ColumnType.TEXT)],
       fetchFn,
     });
@@ -52,7 +55,7 @@ describe("restSource (standalone)", () => {
 
   it("emits error when fetch fails", async () => {
     const fetchFn = vi.fn().mockRejectedValue(new Error("network error"));
-    const source = restSource("https://api.example.com/fail", {
+    const source = restSource("https://api.example.com/fail", TEST_ID, {
       columns: [col("x", ColumnType.TEXT)],
       fetchFn,
     });
@@ -70,7 +73,7 @@ describe("restSource (standalone)", () => {
       jsonResponse([["x"]]),
     );
 
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       columns: [col("val", ColumnType.TEXT)],
     });
 
@@ -91,7 +94,7 @@ describe("restSource (standalone)", () => {
       return jsonResponse([["row-" + String(fetchCount)]]);
     });
 
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       columns: [col("val", ColumnType.TEXT)],
       refreshTime: "5second",
       fetchFn,
@@ -118,7 +121,7 @@ describe("restSource (standalone)", () => {
       }),
     );
 
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       columns: [col("val", ColumnType.TEXT)],
       fetchFn,
     });
@@ -134,7 +137,7 @@ describe("restSource (standalone)", () => {
 
   it("passes method, headers, and body to fetch", async () => {
     const fetchFn = mockFetch([["ok"]]);
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       method: HttpMethod.POST,
       headers: { "Authorization": "Bearer token" },
       body: '{"q": "test"}',
@@ -159,7 +162,7 @@ describe("restSource (standalone)", () => {
 
   it("appends query params to URL", async () => {
     const fetchFn = mockFetch([["ok"]]);
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       query: { page: "1", size: "10" },
       columns: [col("name", ColumnType.TEXT)],
       fetchFn,
@@ -177,7 +180,7 @@ describe("restSource (standalone)", () => {
 
   it("sends form data as URL-encoded body", async () => {
     const fetchFn = mockFetch([["ok"]]);
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       form: { username: "alice", action: "login" },
       columns: [col("name", ColumnType.TEXT)],
       fetchFn,
@@ -195,7 +198,7 @@ describe("restSource (standalone)", () => {
 
   it("error is non-permanent (transient)", async () => {
     const fetchFn = vi.fn().mockRejectedValue(new Error("timeout"));
-    const source = restSource("https://api.example.com/data", {
+    const source = restSource("https://api.example.com/data", TEST_ID, {
       fetchFn,
     });
 
