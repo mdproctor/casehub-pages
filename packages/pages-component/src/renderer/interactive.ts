@@ -526,6 +526,7 @@ function wireCarousel(
   const prevButton = doc.createElement("button");
   prevButton.textContent = "‹";
   prevButton.setAttribute("aria-label", "Previous slide");
+  prevButton.setAttribute("data-carousel-prev", "");
 
   const dotsContainer = doc.createElement("div");
   dotsContainer.className = "pages-carousel-dots";
@@ -545,6 +546,7 @@ function wireCarousel(
   const nextButton = doc.createElement("button");
   nextButton.textContent = "›";
   nextButton.setAttribute("aria-label", "Next slide");
+  nextButton.setAttribute("data-carousel-next", "");
 
   nav.appendChild(prevButton);
   nav.appendChild(dotsContainer);
