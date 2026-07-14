@@ -279,7 +279,7 @@ describe("pipeline — sort from ComponentViewState", () => {
     const target = makeTarget();
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
 
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows[0]!.cells[0]!.value).toBe("A");
     expect(rows[1]!.cells[0]!.value).toBe("B");
     expect(rows[2]!.cells[0]!.value).toBe("C");
@@ -344,7 +344,7 @@ describe("pipeline — sort from ComponentViewState", () => {
     const target = makeTarget();
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [sortOp] }, "t1");
 
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows[0]!.cells[0]!.value).toBe("A");
   });
 
@@ -377,7 +377,7 @@ describe("pipeline — sort from ComponentViewState", () => {
     const target = makeTarget();
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [sortOp] }, "t1");
 
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows[0]!.cells[0]!.value).toBe("C");
   });
 });
@@ -410,7 +410,7 @@ describe("pipeline — pagination from ComponentViewState", () => {
     const target = makeTarget();
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
 
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows).toHaveLength(2);
     expect(rows[0]!.cells[0]!.value).toBe("C");
     expect(rows[1]!.cells[0]!.value).toBe("D");
@@ -444,7 +444,7 @@ describe("pipeline — pagination from ComponentViewState", () => {
     const target = makeTarget();
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
 
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows).toHaveLength(1); // last page: row C
     expect(rows[0]!.cells[0]!.value).toBe("C");
     expect(target.activePage).toBe(1); // clamped to last page
@@ -480,7 +480,7 @@ describe("pipeline — text filter from ComponentViewState", () => {
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
 
     expect(target.totalRows).toBe(2);
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows).toHaveLength(2);
     expect(rows[0]!.cells[0]!.value).toBe("Alice");
     expect(rows[1]!.cells[0]!.value).toBe("Charlie");
@@ -546,7 +546,7 @@ describe("pipeline — text filter from ComponentViewState", () => {
 
     // "B" matches: AB, ABC, B, BC = 4 rows. Page 0 with pageSize 2 → first 2
     expect(target.totalRows).toBe(4);
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows).toHaveLength(2);
     expect(rows[0]!.cells[0]!.value).toBe("AB");
     expect(rows[1]!.cells[0]!.value).toBe("ABC");
@@ -591,7 +591,7 @@ describe("pipeline — expandable bypass", () => {
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
 
     // All 5 rows delivered — pagination and text filter bypassed
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows).toHaveLength(5);
     expect(target.totalRows).toBe(5);
     expect(target.activePage).toBeUndefined();
@@ -628,7 +628,7 @@ describe("pipeline — expandable bypass", () => {
     pipeline.handleDataRequest(target, { dataSetId: "test" as DataSetId, operations: [] }, "t1");
 
     // Normal pagination: page 0, pageSize 2 → 2 rows
-    const rows = (target.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows).toHaveLength(2);
     expect(target.activePage).toBe(0);
   });
@@ -689,7 +689,7 @@ describe("pipeline — expression generator with scheduleRefresh", () => {
     const target2 = makeTarget();
     pipeline.handleDataRequest(target2, { dataSetId: "generated" as DataSetId, operations: [] }, "chart-1");
     expect(target2.dataSet).toBeDefined();
-    const rows = (target2.dataSet as { rows: { cells: { value: unknown }[] }[] }).rows;
+    const rows = (target2.dataSet as unknown as { rows: { cells: { value: unknown }[] }[] }).rows;
     expect(rows.length).toBeGreaterThan(0);
   });
 
@@ -1109,7 +1109,7 @@ describe("pipeline — DataSourceBinding path", () => {
 
     expect(target.totalRows).toBe(3);
     expect(target.activeSort).toEqual({ columnId: "name", order: "ASCENDING" });
-    const rows = (target.dataSet as { rows: Array<{ text(id: ColumnId): string }> }).rows;
+    const rows = (target.dataSet as unknown as { rows: Array<{ text(id: ColumnId): string }> }).rows;
     expect(rows[0]!.text("name" as ColumnId)).toBe("A");
     expect(rows[1]!.text("name" as ColumnId)).toBe("B");
     expect(rows[2]!.text("name" as ColumnId)).toBe("C");
@@ -1154,7 +1154,7 @@ describe("pipeline — DataSourceBinding path", () => {
 
     expect(target.totalRows).toBe(5);
     expect(target.activePage).toBe(1);
-    const rows = (target.dataSet as { rows: unknown[] }).rows;
+    const rows = (target.dataSet as unknown as { rows: unknown[] }).rows;
     expect(rows).toHaveLength(2);
   });
 });

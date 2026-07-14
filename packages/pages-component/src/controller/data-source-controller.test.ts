@@ -63,14 +63,14 @@ describe("DataSourceController", () => {
       const ctrl = new DataSourceController();
       ctrl.error = "fail";
       ctrl.loading = true;
-      ctrl.dataSet = [1, 2, 3];
+      ctrl.dataSet = makeDataSet([["a"]]);
       expect(ctrl.error).toBe("");
       expect(ctrl.loading).toBe(false);
     });
 
     it("setting error clears dataSet and loading", () => {
       const ctrl = new DataSourceController();
-      ctrl.dataSet = [1, 2, 3];
+      ctrl.dataSet = makeDataSet([["a"]]);
       ctrl.loading = true;
       ctrl.error = "fail";
       expect(ctrl.dataSet).toBeUndefined();
@@ -86,9 +86,10 @@ describe("DataSourceController", () => {
 
     it("setting loading = true preserves stale dataSet", () => {
       const ctrl = new DataSourceController();
-      ctrl.dataSet = [1, 2, 3];
+      const ds = makeDataSet([["a"]]);
+      ctrl.dataSet = ds;
       ctrl.loading = true;
-      expect(ctrl.dataSet).toEqual([1, 2, 3]);
+      expect(ctrl.dataSet).toBe(ds);
     });
   });
 
@@ -96,7 +97,7 @@ describe("DataSourceController", () => {
     it("fires on dataSet change", () => {
       const onChange = vi.fn();
       const ctrl = new DataSourceController({ onChange });
-      ctrl.dataSet = "test";
+      ctrl.dataSet = makeDataSet([["test"]]);
       expect(onChange).toHaveBeenCalledOnce();
     });
 
@@ -484,7 +485,7 @@ describe("DataSourceController", () => {
     it("calls onRefresh callback when refresh is called in hosted mode", () => {
       const onRefresh = vi.fn();
       const ctrl = new DataSourceController({ onRefresh });
-      ctrl.dataSet = "some data";
+      ctrl.dataSet = makeDataSet([["some data"]]);
       ctrl.refresh();
 
       expect(onRefresh).toHaveBeenCalledOnce();
@@ -512,7 +513,7 @@ describe("DataSourceController", () => {
     it("calls onRefresh when no source is connected and data exists", () => {
       const onRefresh = vi.fn();
       const ctrl = new DataSourceController({ onRefresh });
-      ctrl.dataSet = [1, 2, 3];
+      ctrl.dataSet = makeDataSet([["a"]]);
       ctrl.refresh();
       expect(onRefresh).toHaveBeenCalledOnce();
     });

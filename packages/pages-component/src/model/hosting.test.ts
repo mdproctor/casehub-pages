@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import type { ConfigurablePanel, DataReceiver } from "./hosting.js";
 import type { HostPanelProps } from "./component-props.js";
+import type { TypedDataSet } from "@casehubio/pages-data";
+import { ColumnType, columnId } from "@casehubio/pages-data";
+import { toTypedDataSet } from "@casehubio/pages-data";
+
+const STUB_DS: TypedDataSet = toTypedDataSet({
+  columns: [{ id: columnId("x"), name: "x", type: ColumnType.TEXT }],
+  data: [["a"]],
+});
 
 describe("ConfigurablePanel", () => {
   it("accepts a default Record<string, unknown> implementation", () => {
@@ -30,18 +38,18 @@ describe("ConfigurablePanel", () => {
 
 describe("DataReceiver", () => {
   it("accepts an implementation with the mutual-clearing invariant", () => {
-    let _data: unknown;
+    let _data: TypedDataSet | undefined;
     let _error = "";
     let _loading = false;
     const receiver: DataReceiver = {
       get dataSet() { return _data; },
-      set dataSet(v: unknown) { _data = v; _error = ""; _loading = false; },
+      set dataSet(v: TypedDataSet | undefined) { _data = v; _error = ""; _loading = false; },
       get error() { return _error; },
       set error(v: string) { _error = v; _data = undefined; _loading = false; },
       get loading() { return _loading; },
       set loading(v: boolean) { _loading = v; if (v) _error = ""; },
     };
-    receiver.dataSet = [1, 2, 3];
+    receiver.dataSet = STUB_DS;
     expect(receiver.error).toBe("");
     expect(receiver.loading).toBe(false);
     receiver.error = "fail";
@@ -50,37 +58,37 @@ describe("DataReceiver", () => {
   });
 
   it("loading = true clears error but preserves stale dataSet", () => {
-    let _data: unknown;
+    let _data: TypedDataSet | undefined;
     let _error = "";
     let _loading = false;
     const receiver: DataReceiver = {
       get dataSet() { return _data; },
-      set dataSet(v: unknown) { _data = v; _error = ""; _loading = false; },
+      set dataSet(v: TypedDataSet | undefined) { _data = v; _error = ""; _loading = false; },
       get error() { return _error; },
       set error(v: string) { _error = v; _data = undefined; _loading = false; },
       get loading() { return _loading; },
       set loading(v: boolean) { _loading = v; if (v) _error = ""; },
     };
-    receiver.dataSet = [1, 2, 3];
+    receiver.dataSet = STUB_DS;
     receiver.loading = true;
     expect(receiver.loading).toBe(true);
     expect(receiver.error).toBe("");
-    expect(receiver.dataSet).toEqual([1, 2, 3]);
+    expect(receiver.dataSet).toBe(STUB_DS);
   });
 
   it("setting dataSet clears loading", () => {
-    let _data: unknown;
+    let _data: TypedDataSet | undefined;
     let _error = "";
     let _loading = true;
     const receiver: DataReceiver = {
       get dataSet() { return _data; },
-      set dataSet(v: unknown) { _data = v; _error = ""; _loading = false; },
+      set dataSet(v: TypedDataSet | undefined) { _data = v; _error = ""; _loading = false; },
       get error() { return _error; },
       set error(v: string) { _error = v; _data = undefined; _loading = false; },
       get loading() { return _loading; },
       set loading(v: boolean) { _loading = v; if (v) _error = ""; },
     };
-    receiver.dataSet = "data";
+    receiver.dataSet = STUB_DS;
     expect(receiver.loading).toBe(false);
   });
 });

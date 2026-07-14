@@ -134,7 +134,7 @@ describe("desugarGroupedView", () => {
       aggregations: [{ column: "salary", fn: "AVG" }],
     });
     const aggs = (result.props as Record<string, unknown>).aggregations as Array<{ fn: { fn: string } }>;
-    expect(aggs[0].fn).toEqual({ fn: "AVERAGE" });
+    expect(aggs[0]!.fn).toEqual({ fn: "AVERAGE" });
   });
 
   it("preserves preset and display options", () => {
