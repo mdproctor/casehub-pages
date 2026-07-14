@@ -89,6 +89,9 @@ export function createDataPipeline(
   const pendingRefreshes = new Set<DataSetId>();
   const DEFAULT_TTL_MS = 60_000;
 
+  // --- Consumer tracking for eviction (#181) ---
+  const datasetConsumers = new Map<DataSetId, Set<string>>();
+
   let observer: MutationObserver | undefined;
   let resolverCtx: ResolverContext | undefined;
 
@@ -135,6 +138,44 @@ export function createDataPipeline(
         pushSubscribers.delete(dsId);
       }
     }
+
+    for (const [dsId, consumers] of datasetConsumers) {
+      if (!consumers.has(componentId)) continue;
+      consumers.delete(componentId);
+      if (consumers.size === 0) {
+        evictDataset(dsId);
+      }
+    }
+  }
+
+  function evictDataset(dsId: DataSetId): void {
+    manager.remove(dsId);
+    datasetConsumers.delete(dsId);
+
+    const source = connectedSources.get(dsId);
+    if (source) {
+      source.disconnect();
+      connectedSources.delete(dsId);
+    }
+
+    const timer = refreshTimers.get(dsId);
+    if (timer !== undefined) {
+      clearInterval(timer);
+      refreshTimers.delete(dsId);
+    }
+
+    const controller = abortControllers.get(dsId);
+    if (controller) {
+      controller.abort();
+      abortControllers.delete(dsId);
+    }
+
+    pendingResolutions.delete(dsId);
+    pendingRefreshes.delete(dsId);
+    reFetchCallbacks.delete(dsId);
+    serverQueryDatasets.delete(dsId);
+    serverQueryLookups.delete(dsId);
+    parameterisedConsumers.delete(dsId);
   }
 
   // --- DataSource connect/disconnect ---
@@ -618,6 +659,13 @@ export function createDataPipeline(
       const entry = registry.get(componentId);
       if (!entry) return;
 
+      let consumers = datasetConsumers.get(lookup.dataSetId);
+      if (!consumers) {
+        consumers = new Set();
+        datasetConsumers.set(lookup.dataSetId, consumers);
+      }
+      consumers.add(componentId);
+
       const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
         ?.filter as { group?: string } | undefined;
 
@@ -645,7 +693,7 @@ export function createDataPipeline(
 
         if (!pendingRefreshes.has(lookup.dataSetId) && !pushSubscriptions.has(lookup.dataSetId)) {
           const age = manager.age(lookup.dataSetId);
-          const ttl = def?.refreshTime ? parseRefreshTime(def.refreshTime) : DEFAULT_TTL_MS;
+          const ttl = def?.cacheTtl ? parseRefreshTime(def.cacheTtl) : def?.refreshTime ? parseRefreshTime(def.refreshTime) : DEFAULT_TTL_MS;
           if (age !== undefined && age > ttl) {
             pendingRefreshes.add(lookup.dataSetId);
             this.refreshDataSet(lookup.dataSetId);

@@ -579,4 +579,21 @@ describe("DataSourceController with createSourceFactory", () => {
     expect(mockPool.acquire).toHaveBeenCalled();
     ctrl.dispose();
   });
+
+  it("passes totalPath through sourceFactory and sets totalRows (#185)", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ _meta: { total: 200 }, items: [["alice"]] }),
+      { headers: { "content-type": "application/json" } },
+    ));
+    const ctrl = new DataSourceController({
+      sourceFactory: createSourceFactory({ fetchFn }),
+      totalPath: "_meta.total",
+      dataPath: "items",
+    });
+    ctrl.connect();
+    ctrl.endpoint = "/api/items";
+    await vi.waitFor(() => { expect(ctrl.dataSet).toBeDefined(); });
+    expect(ctrl.totalRows).toBe(200);
+    ctrl.dispose();
+  });
 });

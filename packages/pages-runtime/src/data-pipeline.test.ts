@@ -1517,4 +1517,357 @@ describe("stale-while-revalidate (Layer 3)", () => {
 
     expect(connectCount).toBe(2);
   });
+
+  it("uses cacheTtl instead of refreshTime when both are set (#182)", () => {
+    let connectCount = 0;
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        connectCount++;
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Data-" + String(connectCount)]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const def: ExternalDataSetDef = {
+      uuid: "ds" as DataSetId,
+      url: "https://api.example.com/data",
+      refreshTime: "120second",
+      cacheTtl: "10second",
+    };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, def as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    manager.apply("ds" as DataSetId, { type: "snapshot", dataset: regionDataSet([["Initial"]]) });
+
+    (manager as any).timestamps?.set("ds" as DataSetId, Date.now() - 11000);
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+
+    expect(target.dataSet).toBeDefined();
+  });
+
+  it("uses refreshTime as TTL when cacheTtl is not set (#182)", () => {
+    let resolveCount = 0;
+    const manager = createDataSetManager();
+    const resolverCtx: ResolverContext = {
+      manager,
+      providerFactory: {
+        create: () => ({
+          fetch: async () => {
+            resolveCount++;
+            return { data: [["r-" + String(resolveCount)]] };
+          },
+        }),
+      },
+      providerConfig: {},
+      presetRegistry: { get: () => undefined, has: () => false },
+      capabilities: LOCAL_CAPABILITIES,
+    };
+
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const def: ExternalDataSetDef = {
+      uuid: "ds" as DataSetId,
+      url: "https://api.example.com/data",
+      refreshTime: "30second",
+    };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, def as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+    pipeline.setResolverCtx(resolverCtx);
+
+    manager.apply("ds" as DataSetId, { type: "snapshot", dataset: regionDataSet([["Initial"]]) });
+
+    (manager as any).timestamps?.set("ds" as DataSetId, Date.now() - 20000);
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(resolveCount).toBe(0);
+
+    (manager as any).timestamps?.set("ds" as DataSetId, Date.now() - 31000);
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(resolveCount).toBe(1);
+  });
+
+  it("falls back to DEFAULT_TTL when neither cacheTtl nor refreshTime is set (#182)", () => {
+    let connectCount = 0;
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        connectCount++;
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Data"]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(1);
+
+    (manager as any).timestamps?.set("ds" as DataSetId, Date.now() - 59000);
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(1);
+
+    (manager as any).timestamps?.set("ds" as DataSetId, Date.now() - 61000);
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(2);
+  });
+});
+
+describe("manager-level eviction (#181)", () => {
+  it("evicts dataset from manager when last consumer is removed from DOM", async () => {
+    const disconnectSpy = { called: false };
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Data"]]) });
+      },
+      disconnect() { disconnectSpy.called = true; },
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const domTarget = document.createElement("div");
+    document.body.appendChild(domTarget);
+
+    const wrapper = document.createElement("div");
+    domTarget.appendChild(wrapper);
+    const vizTarget = makeTarget();
+
+    registry.set("comp-1", {
+      element: wrapper,
+      vizElement: vizTarget,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState(), undefined, domTarget);
+
+    pipeline.handleDataRequest(vizTarget, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(manager.has("ds" as DataSetId)).toBe(true);
+
+    wrapper.remove();
+    await new Promise<void>(resolve => { queueMicrotask(resolve); });
+
+    expect(manager.has("ds" as DataSetId)).toBe(false);
+    expect(disconnectSpy.called).toBe(true);
+
+    pipeline.dispose();
+    document.body.removeChild(domTarget);
+  });
+
+  it("does not evict when other consumers still reference the dataset", async () => {
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Data"]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const domTarget = document.createElement("div");
+    document.body.appendChild(domTarget);
+
+    const wrapper1 = document.createElement("div");
+    const wrapper2 = document.createElement("div");
+    domTarget.appendChild(wrapper1);
+    domTarget.appendChild(wrapper2);
+    const vizTarget1 = makeTarget();
+    const vizTarget2 = makeTarget();
+
+    registry.set("comp-1", {
+      element: wrapper1,
+      vizElement: vizTarget1,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+    registry.set("comp-2", {
+      element: wrapper2,
+      vizElement: vizTarget2,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState(), undefined, domTarget);
+
+    pipeline.handleDataRequest(vizTarget1, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    pipeline.handleDataRequest(vizTarget2, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-2");
+    expect(manager.has("ds" as DataSetId)).toBe(true);
+
+    wrapper1.remove();
+    await new Promise<void>(resolve => { queueMicrotask(resolve); });
+
+    expect(manager.has("ds" as DataSetId)).toBe(true);
+
+    wrapper2.remove();
+    await new Promise<void>(resolve => { queueMicrotask(resolve); });
+
+    expect(manager.has("ds" as DataSetId)).toBe(false);
+
+    pipeline.dispose();
+    document.body.removeChild(domTarget);
+  });
+
+  it("clears refresh timer when dataset is evicted", async () => {
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const domTarget = document.createElement("div");
+    document.body.appendChild(domTarget);
+
+    const wrapper = document.createElement("div");
+    domTarget.appendChild(wrapper);
+    const vizTarget = makeTarget();
+
+    registry.set("comp-1", {
+      element: wrapper,
+      vizElement: vizTarget,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const def: ExternalDataSetDef = {
+      uuid: "ds" as DataSetId,
+      url: "https://api.example.com/data",
+      refreshTime: "5second",
+    };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, def as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState(), undefined, domTarget);
+
+    manager.apply("ds" as DataSetId, { type: "snapshot", dataset: regionDataSet([["Initial"]]) });
+
+    pipeline.handleDataRequest(vizTarget, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(manager.has("ds" as DataSetId)).toBe(true);
+
+    wrapper.remove();
+    await new Promise<void>(resolve => { queueMicrotask(resolve); });
+
+    expect(manager.has("ds" as DataSetId)).toBe(false);
+
+    pipeline.dispose();
+    document.body.removeChild(domTarget);
+  });
+
+  it("evicts each dataset independently when components reference different datasets", async () => {
+    const mockSource1: DataSource = {
+      connect(sink: DataSink) {
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["A"]]) });
+      },
+      disconnect() {},
+    };
+    const mockSource2: DataSource = {
+      connect(sink: DataSink) {
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["B"]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const domTarget = document.createElement("div");
+    document.body.appendChild(domTarget);
+
+    const wrapper1 = document.createElement("div");
+    const wrapper2 = document.createElement("div");
+    domTarget.appendChild(wrapper1);
+    domTarget.appendChild(wrapper2);
+    const vizTarget1 = makeTarget();
+    const vizTarget2 = makeTarget();
+
+    registry.set("comp-1", {
+      element: wrapper1,
+      vizElement: vizTarget1,
+      originalLookup: { dataSetId: "ds1" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+    registry.set("comp-2", {
+      element: wrapper2,
+      vizElement: vizTarget2,
+      originalLookup: { dataSetId: "ds2" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding1: DataSourceBinding = { id: "ds1" as DataSetId, source: mockSource1 };
+    const binding2: DataSourceBinding = { id: "ds2" as DataSetId, source: mockSource2 };
+    const scope: DataSetScope = new Map([["", new Map([
+      ["ds1" as DataSetId, binding1 as DataSetEntry],
+      ["ds2" as DataSetId, binding2 as DataSetEntry],
+    ])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState(), undefined, domTarget);
+
+    pipeline.handleDataRequest(vizTarget1, { dataSetId: "ds1" as DataSetId, operations: [] }, "comp-1");
+    pipeline.handleDataRequest(vizTarget2, { dataSetId: "ds2" as DataSetId, operations: [] }, "comp-2");
+    expect(manager.has("ds1" as DataSetId)).toBe(true);
+    expect(manager.has("ds2" as DataSetId)).toBe(true);
+
+    wrapper1.remove();
+    await new Promise<void>(resolve => { queueMicrotask(resolve); });
+
+    expect(manager.has("ds1" as DataSetId)).toBe(false);
+    expect(manager.has("ds2" as DataSetId)).toBe(true);
+
+    pipeline.dispose();
+    document.body.removeChild(domTarget);
+  });
 });

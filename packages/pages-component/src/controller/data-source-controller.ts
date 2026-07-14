@@ -206,6 +206,7 @@ export class DataSourceController implements VizTarget {
       return this._sourceFactory(url, this._dataSetId, {
         columns: this._columns,
         dataPath: this._dataPath,
+        totalPath: this._totalPath,
       });
     }
     return {

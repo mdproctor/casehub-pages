@@ -39,6 +39,7 @@ export interface DataSourceBinding {
 export interface SourceFactoryOptions {
   readonly columns?: readonly ExternalColumnDef[] | undefined;
   readonly dataPath?: string | undefined;
+  readonly totalPath?: string | undefined;
 }
 
 export type SourceFactory = (

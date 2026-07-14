@@ -146,4 +146,22 @@ describe("createSourceFactory", () => {
     expect(source).toBeDefined();
     expect(typeof source.connect).toBe("function");
   });
+
+  it("forwards totalPath to restSource and extracts totalRows (#185)", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ meta: { count: 50 }, items: [["a"]] }),
+      { headers: { "content-type": "application/json" } },
+    ));
+    const factory = createSourceFactory({ fetchFn });
+    const source = factory("/api/data", TEST_ID, {
+      columns: [col("col1", ColumnType.TEXT)],
+      dataPath: "items",
+      totalPath: "meta.count",
+    });
+    const { sink, events } = collectSink();
+    source.connect(sink);
+    await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
+    expect((events[0] as { totalRows?: number }).totalRows).toBe(50);
+    source.disconnect();
+  });
 });

@@ -17,6 +17,7 @@ export function createSourceFactory(deps?: SourceFactoryDeps): SourceFactory {
   return (url: string, id: DataSetId, options?: SourceFactoryOptions) => {
     const columns = options?.columns;
     const dataPath = options?.dataPath;
+    const totalPath = options?.totalPath;
 
     if (url.startsWith("ws://") || url.startsWith("wss://")) {
       return wsSource(url, id, {
@@ -37,6 +38,7 @@ export function createSourceFactory(deps?: SourceFactoryDeps): SourceFactory {
     return restSource(url, id, {
       ...(columns !== undefined && { columns }),
       ...(dataPath !== undefined && { dataPath }),
+      ...(totalPath !== undefined && { totalPath }),
       ...(deps?.fetchFn !== undefined && { fetchFn: deps.fetchFn }),
       ...(deps?.presets !== undefined && { presets: deps.presets }),
     });

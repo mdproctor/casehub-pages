@@ -40,6 +40,7 @@ export interface ExternalDataSetDef extends ExtractionDef {
   readonly cacheEnabled?: boolean;
   readonly cacheMaxRows?: number;
   readonly refreshTime?: string;
+  readonly cacheTtl?: string;
   readonly keyColumn?: string;
 }
 

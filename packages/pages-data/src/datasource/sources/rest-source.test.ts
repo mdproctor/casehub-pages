@@ -209,4 +209,118 @@ describe("restSource (standalone)", () => {
     expect(errors[0]!.permanent).toBe(false);
     source.disconnect();
   });
+
+  describe("totalPath (#185)", () => {
+    it("extracts totalRows from nested response via dot-path", async () => {
+      const fetchFn = mockFetch({ _meta: { total: 42 }, items: [["alice"], ["bob"]] });
+      const source = restSource("https://api.example.com/data", TEST_ID, {
+        columns: [col("name", ColumnType.TEXT)],
+        dataPath: "items",
+        totalPath: "_meta.total",
+        fetchFn,
+      });
+
+      const { sink, events } = collectSink();
+      source.connect(sink);
+      await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
+
+      expect(events[0]!.type).toBe("snapshot");
+      expect((events[0] as { totalRows?: number }).totalRows).toBe(42);
+      source.disconnect();
+    });
+
+    it("extracts totalRows from top-level field", async () => {
+      const fetchFn = mockFetch({ total: 100, data: [["x"]] });
+      const source = restSource("https://api.example.com/data", TEST_ID, {
+        columns: [col("name", ColumnType.TEXT)],
+        dataPath: "data",
+        totalPath: "total",
+        fetchFn,
+      });
+
+      const { sink, events } = collectSink();
+      source.connect(sink);
+      await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
+
+      expect((events[0] as { totalRows?: number }).totalRows).toBe(100);
+      source.disconnect();
+    });
+
+    it("omits totalRows when totalPath is not set", async () => {
+      const fetchFn = mockFetch({ total: 99, data: [["x"]] });
+      const source = restSource("https://api.example.com/data", TEST_ID, {
+        columns: [col("name", ColumnType.TEXT)],
+        dataPath: "data",
+        fetchFn,
+      });
+
+      const { sink, events } = collectSink();
+      source.connect(sink);
+      await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
+
+      expect((events[0] as { totalRows?: number }).totalRows).toBeUndefined();
+      source.disconnect();
+    });
+
+    it("omits totalRows when path resolves to non-numeric value", async () => {
+      const fetchFn = mockFetch({ _meta: { total: "not-a-number" }, items: [["a"]] });
+      const source = restSource("https://api.example.com/data", TEST_ID, {
+        columns: [col("name", ColumnType.TEXT)],
+        dataPath: "items",
+        totalPath: "_meta.total",
+        fetchFn,
+      });
+
+      const { sink, events } = collectSink();
+      source.connect(sink);
+      await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
+
+      expect((events[0] as { totalRows?: number }).totalRows).toBeUndefined();
+      source.disconnect();
+    });
+
+    it("omits totalRows when path does not exist in response", async () => {
+      const fetchFn = mockFetch({ items: [["a"]] });
+      const source = restSource("https://api.example.com/data", TEST_ID, {
+        columns: [col("name", ColumnType.TEXT)],
+        dataPath: "items",
+        totalPath: "_meta.total",
+        fetchFn,
+      });
+
+      const { sink, events } = collectSink();
+      source.connect(sink);
+      await vi.waitFor(() => { expect(events.length).toBeGreaterThan(0); });
+
+      expect((events[0] as { totalRows?: number }).totalRows).toBeUndefined();
+      source.disconnect();
+    });
+
+    it("includes totalRows on refresh polls too", async () => {
+      vi.useFakeTimers();
+      let fetchCount = 0;
+      const fetchFn = vi.fn().mockImplementation(async () => {
+        fetchCount++;
+        return jsonResponse({ _meta: { total: fetchCount * 10 }, items: [["row-" + String(fetchCount)]] });
+      });
+
+      const source = restSource("https://api.example.com/data", TEST_ID, {
+        columns: [col("name", ColumnType.TEXT)],
+        dataPath: "items",
+        totalPath: "_meta.total",
+        refreshTime: "5second",
+        fetchFn,
+      });
+
+      const { sink, events } = collectSink();
+      source.connect(sink);
+      await vi.advanceTimersByTimeAsync(0);
+      expect((events[0] as { totalRows?: number }).totalRows).toBe(10);
+
+      await vi.advanceTimersByTimeAsync(5000);
+      expect((events[1] as { totalRows?: number }).totalRows).toBe(20);
+
+      source.disconnect();
+    });
+  });
 });

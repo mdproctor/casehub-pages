@@ -18,6 +18,7 @@ export interface RestSourceOptions {
   readonly columns?: readonly ExternalColumnDef[];
   readonly refreshTime?: string;
   readonly accumulate?: boolean;
+  readonly totalPath?: string;
 
   readonly cacheEnabled?: boolean;
   readonly fetchFn?: typeof globalThis.fetch;
@@ -72,6 +73,15 @@ export function restSource(
     };
   }
 
+  function extractByPath(data: unknown, path: string): number | undefined {
+    let current: unknown = data;
+    for (const key of path.split(".")) {
+      if (current === null || current === undefined || typeof current !== "object") return undefined;
+      current = (current as Record<string, unknown>)[key];
+    }
+    return typeof current === "number" && Number.isFinite(current) ? current : undefined;
+  }
+
   async function doFetch(sink: DataSink): Promise<void> {
     const fetchFn = options?.fetchFn ?? globalThis.fetch.bind(globalThis);
     try {
@@ -86,13 +96,15 @@ export function restSource(
         data = await response.text();
       }
 
+      const totalRows = options?.totalPath ? extractByPath(data, options.totalPath) : undefined;
+
       const { dataset } = await extractDataSet(
         { data, ...(contentType ? { contentType } : {}) },
         buildDef(),
         presets,
       );
       if (connected) {
-        sink.apply({ type: "snapshot", dataset });
+        sink.apply({ type: "snapshot", dataset, ...(totalRows !== undefined && { totalRows }) });
       }
     } catch (err) {
       if (connected) {
