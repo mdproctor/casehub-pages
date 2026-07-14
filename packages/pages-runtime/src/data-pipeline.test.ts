@@ -220,7 +220,7 @@ describe("data pipeline deduplication", () => {
 
     const manager = createDataSetManager({
       onChanged: (id) => {
-        pipeline.refreshDataSet(id);
+        pipeline.deliverDataSet(id);
       },
     });
 
@@ -791,7 +791,7 @@ describe("refreshDataSet", () => {
 
     manager.apply(dsId, { type: "snapshot", dataset: regionDataSet([["North"], ["South"]]) });
 
-    pipeline.refreshDataSet(dsId);
+    pipeline.deliverDataSet(dsId);
 
     expect(target1.dataSet).toBeDefined();
     expect(target2.dataSet).toBeDefined();
@@ -799,7 +799,7 @@ describe("refreshDataSet", () => {
   });
 });
 
-describe("refreshAll", () => {
+describe("deliverAll", () => {
   it("pushes data to all registered components", () => {
     const dsId1 = dataSetId("ds-1");
     const dsId2 = dataSetId("ds-2");
@@ -816,7 +816,7 @@ describe("refreshAll", () => {
     manager.apply(dsId1, { type: "snapshot", dataset: regionDataSet([["North"]]) });
     manager.apply(dsId2, { type: "snapshot", dataset: regionDataSet([["South"]]) });
 
-    pipeline.refreshAll();
+    pipeline.deliverAll();
 
     expect(target1.dataSet).toBeDefined();
     expect(target2.dataSet).toBeDefined();
@@ -826,7 +826,7 @@ describe("refreshAll", () => {
 describe("pipeline — DataSourceBinding path", () => {
   it("connects a DataSourceBinding and delivers data via manager", () => {
     const manager = createDataSetManager({
-      onChanged: (id) => { pipeline.refreshDataSet(id); },
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
     });
     const registry: ComponentRegistry = new Map();
     const target1 = makeTarget();
@@ -867,7 +867,7 @@ describe("pipeline — DataSourceBinding path", () => {
 
   it("serves from cache on subsequent requests after binding connected", () => {
     const manager = createDataSetManager({
-      onChanged: (id) => { pipeline.refreshDataSet(id); },
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
     });
     const registry: ComponentRegistry = new Map();
     const target1 = makeTarget();
@@ -1026,7 +1026,7 @@ describe("pipeline — DataSourceBinding path", () => {
 
   it("applies filters to DataSourceBinding data", () => {
     const manager = createDataSetManager({
-      onChanged: (id) => { pipeline.refreshDataSet(id); },
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
     });
     const registry: ComponentRegistry = new Map();
     const target = makeTarget();
@@ -1069,7 +1069,7 @@ describe("pipeline — DataSourceBinding path", () => {
 
   it("applies sort from ComponentViewState to DataSourceBinding data", () => {
     const manager = createDataSetManager({
-      onChanged: (id) => { pipeline.refreshDataSet(id); },
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
     });
     const registry: ComponentRegistry = new Map();
     const target = makeTarget();
@@ -1117,7 +1117,7 @@ describe("pipeline — DataSourceBinding path", () => {
 
   it("applies pagination to DataSourceBinding data", () => {
     const manager = createDataSetManager({
-      onChanged: (id) => { pipeline.refreshDataSet(id); },
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
     });
     const registry: ComponentRegistry = new Map();
     const target = makeTarget();
@@ -1205,7 +1205,7 @@ describe("pipeline — join dependency resolution", () => {
 
     const manager = createDataSetManager({
       onChanged: (id) => {
-        pipeline.refreshDataSet(id);
+        pipeline.deliverDataSet(id);
       },
     });
 
@@ -1273,5 +1273,115 @@ describe("pipeline — join dependency resolution", () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     expect(target.error).toContain("missing1");
+  });
+});
+
+describe("deliverDataSet", () => {
+  it("re-delivers cached data to all subscribers", () => {
+    const dsId = dataSetId("ds-1");
+    const manager = createDataSetManager();
+    const registry: ComponentRegistry = new Map();
+    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    const target = makeTarget();
+    registry.set("comp-1", {
+      vizElement: target,
+      originalLookup: { dataSetId: dsId, operations: [] },
+      pagePath: "",
+      component: { type: "test", props: {} },
+      hasExplicitId: false,
+    } as any);
+
+    manager.apply(dsId, { type: "snapshot", dataset: regionDataSet([["North"]]) });
+    pipeline.deliverDataSet(dsId);
+
+    expect(target.dataSet).toBeDefined();
+    expect(target.totalRows).toBe(1);
+  });
+});
+
+describe("refreshDataSet (re-fetch)", () => {
+  it("disconnects and reconnects DataSource on refresh", () => {
+    let connectCount = 0;
+    let disconnectCount = 0;
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        connectCount++;
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["Fresh-" + String(connectCount)]]) });
+      },
+      disconnect() { disconnectCount++; },
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => { pipeline.deliverDataSet(id); },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+    expect(connectCount).toBe(1);
+
+    pipeline.refreshDataSet("ds" as DataSetId);
+    expect(disconnectCount).toBe(1);
+    expect(connectCount).toBe(2);
+  });
+
+  it("is a no-op for unknown datasets", () => {
+    const manager = createDataSetManager();
+    const registry: ComponentRegistry = new Map();
+    const pipeline = createDataPipeline(manager, new Map() as DataSetScope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    expect(() => pipeline.refreshDataSet("unknown" as DataSetId)).not.toThrow();
+  });
+
+  it("onChanged calls deliverDataSet not refreshDataSet — no infinite recursion", () => {
+    let deliverCount = 0;
+    const mockSource: DataSource = {
+      connect(sink: DataSink) {
+        sink.apply({ type: "snapshot", dataset: regionDataSet([["A"]]) });
+      },
+      disconnect() {},
+    };
+
+    const manager = createDataSetManager({
+      onChanged: (id) => {
+        deliverCount++;
+        pipeline.deliverDataSet(id);
+      },
+    });
+    const registry: ComponentRegistry = new Map();
+    const target = makeTarget();
+    registry.set("comp-1", {
+      element: document.createElement("div"),
+      vizElement: target,
+      originalLookup: { dataSetId: "ds" as DataSetId, operations: [] },
+      component: { type: "test" },
+      pagePath: "",
+      hasExplicitId: false,
+    });
+
+    const binding: DataSourceBinding = { id: "ds" as DataSetId, source: mockSource };
+    const scope: DataSetScope = new Map([["", new Map([["ds" as DataSetId, binding as DataSetEntry]])]]);
+    const pipeline = createDataPipeline(manager, scope, registry, createFilterState(), createDataScopeRegistry(), createComponentViewState());
+
+    pipeline.handleDataRequest(target, { dataSetId: "ds" as DataSetId, operations: [] }, "comp-1");
+
+    deliverCount = 0;
+    pipeline.refreshDataSet("ds" as DataSetId);
+
+    expect(deliverCount).toBe(1);
+    expect(target.dataSet).toBeDefined();
   });
 });

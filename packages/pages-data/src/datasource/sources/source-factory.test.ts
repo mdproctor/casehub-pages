@@ -57,6 +57,7 @@ describe("createSourceFactory", () => {
 
   it("routes ws:// URL to wsSource", () => {
     const mockPool = {
+      configure: vi.fn(),
       acquire: vi.fn().mockReturnValue({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
@@ -73,6 +74,7 @@ describe("createSourceFactory", () => {
 
   it("routes wss:// URL to wsSource", () => {
     const mockPool = {
+      configure: vi.fn(),
       acquire: vi.fn().mockReturnValue({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
@@ -89,6 +91,7 @@ describe("createSourceFactory", () => {
 
   it("routes sse:// URL to sseSource", () => {
     const mockPool = {
+      configure: vi.fn(),
       acquire: vi.fn().mockReturnValue({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
@@ -105,6 +108,7 @@ describe("createSourceFactory", () => {
 
   it("routes sses:// URL to sseSource", () => {
     const mockPool = {
+      configure: vi.fn(),
       acquire: vi.fn().mockReturnValue({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),

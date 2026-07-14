@@ -546,6 +546,7 @@ describe("DataSourceController with createSourceFactory", () => {
 
   it("endpoint with ws:// URL creates wsSource", () => {
     const mockPool = {
+      configure: vi.fn(),
       acquire: vi.fn().mockReturnValue({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
@@ -563,6 +564,7 @@ describe("DataSourceController with createSourceFactory", () => {
 
   it("endpoint with sse:// URL creates sseSource", () => {
     const mockPool = {
+      configure: vi.fn(),
       acquire: vi.fn().mockReturnValue({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),

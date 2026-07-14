@@ -76,6 +76,7 @@ by the runtime event delegation layer:
 | `pages-save-error` | Save operation failure | Runtime save pipeline |
 | `pages-modal-close` | Modal closed (with returnValue) | `PagesModal` component |
 | `pages-modal-cancel` | Modal close requested (cancelable) | `PagesModal` component |
+| `pages-refresh-request` | Panel requests data re-fetch from source | Host panels, any component needing fresh data |
 
 Do not use these names as `pages-event` topics or as custom event names in
 application code — they will collide with the framework's event delegation.

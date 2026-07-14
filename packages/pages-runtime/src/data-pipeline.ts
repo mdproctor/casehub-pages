@@ -45,7 +45,8 @@ export interface DataPipeline {
   setResolverCtx(ctx: ResolverContext): void;
   dispose(): void;
   refreshDataSet(dataSetId: DataSetId): void;
-  refreshAll(): void;
+  deliverDataSet(dataSetId: DataSetId): void;
+  deliverAll(): void;
 }
 
 function applyTextFilter(ds: TypedDataSet, term: string): TypedDataSet {
@@ -82,6 +83,9 @@ export function createDataPipeline(
 
   // --- DataSource path state ---
   const connectedSources = new Map<DataSetId, DataSource>();
+
+  // --- Refresh state ---
+  const reFetchCallbacks = new Map<DataSetId, () => void>();
 
   let observer: MutationObserver | undefined;
   let resolverCtx: ResolverContext | undefined;
@@ -215,6 +219,13 @@ export function createDataPipeline(
         }
       },
     );
+  }
+
+  function findFirstEntry(dataSetId: DataSetId) {
+    for (const [, entry] of registry) {
+      if (entry.originalLookup?.dataSetId === dataSetId) return entry;
+    }
+    return undefined;
   }
 
   function pushData(
@@ -468,6 +479,15 @@ export function createDataPipeline(
 
       contextManager.registerConsumer(consumer);
 
+      reFetchCallbacks.set(lookup.dataSetId, () => {
+        const existingCtrl = abortControllers.get(lookup.dataSetId);
+        if (existingCtrl) existingCtrl.abort();
+        lastResolvedUrl = "";
+        if (!allTemplateVarsResolved(urlTemplate, contextManager.getContext())) return;
+        const resolved = resolveTemplate(urlTemplate, contextManager.getContext(), "url");
+        consumer.templates.get("url")!.apply(resolved);
+      });
+
       // Check if URL can be resolved right now
       if (allTemplateVarsResolved(urlTemplate, contextManager.getContext())) {
         const resolvedUrl = resolveTemplate(urlTemplate, contextManager.getContext(), "url");
@@ -639,6 +659,62 @@ export function createDataPipeline(
     },
 
     refreshDataSet(dataSetId: DataSetId): void {
+      if (pushSubscriptions.has(dataSetId)) return;
+
+      const connectedSource = connectedSources.get(dataSetId);
+      if (connectedSource) {
+        connectedSource.disconnect();
+        connectedSources.delete(dataSetId);
+        connectSource(dataSetId, connectedSource);
+        return;
+      }
+
+      const reFetch = reFetchCallbacks.get(dataSetId);
+      if (reFetch) {
+        reFetch();
+        return;
+      }
+
+      if (!resolverCtx) return;
+      const firstEntry = findFirstEntry(dataSetId);
+      if (!firstEntry) return;
+      const def = resolveDataSetDef(dataSetId, firstEntry.pagePath, scope);
+      if (!def) return;
+
+      const existingController = abortControllers.get(dataSetId);
+      if (existingController) existingController.abort();
+      const controller = new AbortController();
+      abortControllers.set(dataSetId, controller);
+
+      const lookup = serverQueryLookups.get(dataSetId)
+        ?? firstEntry.originalLookup
+        ?? { dataSetId, operations: [] as readonly DataSetOp[] };
+
+      const wrappedCtx: ResolverContext = {
+        ...resolverCtx,
+        providerFactory: {
+          create: (d, c) => {
+            const provider = resolverCtx!.providerFactory.create(d, c);
+            if (!provider) return undefined;
+            return {
+              fetch: (req) => provider.fetch({ ...req, signal: controller.signal }),
+            };
+          },
+        },
+      };
+
+      resolveExternalDataSet(def, wrappedCtx, lookup)
+        .then(() => {
+          abortControllers.delete(dataSetId);
+        })
+        .catch((err: unknown) => {
+          abortControllers.delete(dataSetId);
+          if (err instanceof DOMException && err.name === "AbortError") return;
+          console.warn(`[DataPipeline] Re-fetch failed for ${String(dataSetId)}:`, err);
+        });
+    },
+
+    deliverDataSet(dataSetId: DataSetId): void {
       for (const [compId, entry] of registry) {
         if (entry.originalLookup?.dataSetId === dataSetId && entry.vizElement) {
           const filterGroup = (entry.component.props as Record<string, unknown> | undefined)
@@ -648,7 +724,7 @@ export function createDataPipeline(
       }
     },
 
-    refreshAll(): void {
+    deliverAll(): void {
       for (const [compId, entry] of registry) {
         if (entry.vizElement && entry.originalLookup) {
           const filterGroup = (entry.component.props as Record<string, unknown> | undefined)

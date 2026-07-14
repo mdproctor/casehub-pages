@@ -39,6 +39,7 @@ describe("local-adapter", () => {
       remove: vi.fn(),
       has: vi.fn(() => true),
       lookup: vi.fn(),
+      age: vi.fn(() => undefined),
     };
 
     const adapter = createLocalAdapter(manager);
@@ -68,6 +69,7 @@ describe("local-adapter", () => {
       remove: vi.fn(),
       has: vi.fn(() => false),
       lookup: vi.fn(),
+      age: vi.fn(() => undefined),
     };
 
     const adapter = createLocalAdapter(manager);
@@ -103,6 +105,7 @@ describe("local-adapter", () => {
       remove: vi.fn(),
       has: vi.fn(() => true),
       lookup: vi.fn(),
+      age: vi.fn(() => undefined),
     };
 
     const adapter = createLocalAdapter(manager);
@@ -145,6 +148,7 @@ describe("local-adapter", () => {
       remove: vi.fn(),
       has: vi.fn(() => true),
       lookup: vi.fn(),
+      age: vi.fn(() => undefined),
     };
 
     const adapter = createLocalAdapter(manager);
@@ -191,6 +195,7 @@ describe("local-adapter", () => {
       remove: vi.fn(),
       has: vi.fn(() => true),
       lookup: vi.fn(),
+      age: vi.fn(() => undefined),
     };
 
     const adapter = createLocalAdapter(manager);
@@ -225,6 +230,7 @@ describe("local-adapter", () => {
       remove: vi.fn(),
       has: vi.fn(() => true),
       lookup: vi.fn(),
+      age: vi.fn(() => undefined),
     };
 
     const adapter = createLocalAdapter(manager);
@@ -242,6 +248,7 @@ describe("local-adapter", () => {
       remove: vi.fn(),
       has: vi.fn(() => false),
       lookup: vi.fn(),
+      age: vi.fn(() => undefined),
     };
 
     const adapter = createLocalAdapter(manager);

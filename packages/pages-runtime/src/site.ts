@@ -159,7 +159,7 @@ export async function loadSite(
   const manager = createDataSetManager({
     onChanged: (id, dataset) => {
       contextManager.updateDataset(id, dataset);
-      pipeline.refreshDataSet(id);
+      pipeline.deliverDataSet(id);
     },
   });
   const dataScopeRegistry = createDataScopeRegistry();
@@ -715,7 +715,7 @@ export async function loadSite(
       }
       updateFilter(filterState, scopePath, undefined, scope.idColumn, [newIdValue], false);
 
-      pipeline.refreshAll();
+      pipeline.deliverAll();
       break;
     }
   }), { signal: abortController.signal });
@@ -820,6 +820,14 @@ export async function loadSite(
     for (const dsId of refresh) {
       pipeline.refreshDataSet(dsId as DataSetId);
     }
+  }), { signal: abortController.signal });
+
+  target.addEventListener("pages-refresh-request", ((e: Event) => {
+    const componentId = findComponentId(e);
+    if (!componentId) return;
+    const entry = registry.get(componentId);
+    if (!entry?.originalLookup) return;
+    pipeline.refreshDataSet(entry.originalLookup.dataSetId);
   }), { signal: abortController.signal });
 
   target.addEventListener("pages-dock-toggle", ((e: Event) => {
@@ -1000,7 +1008,7 @@ export async function loadSite(
       restoreFromUrl(location.hash, filterState, componentViewState);
 
       // Re-push all registered components
-      pipeline.refreshAll();
+      pipeline.deliverAll();
     }, { signal: abortController.signal });
   }
 

@@ -14,6 +14,7 @@ function stubManager(datasets: Record<string, TypedDataSet>): DataSetManager {
     remove(id: DataSetId) { return store.delete(id); },
     apply() {},
     lookup() { return { dataset: { columns: [], rows: [] }, totalRows: 0 }; },
+    age() { return undefined; },
   };
 }
 
