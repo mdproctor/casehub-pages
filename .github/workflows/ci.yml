@@ -71,6 +71,8 @@ jobs:
           yarn workspace @casehubio/pages-ui run test
 
       - name: Run pages-runtime tests (sharded — vitest #9425 DOM memory leak)
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
         run: |
           yarn workspace @casehubio/pages-runtime exec vitest run --shard=1/3
           yarn workspace @casehubio/pages-runtime exec vitest run --shard=2/3
