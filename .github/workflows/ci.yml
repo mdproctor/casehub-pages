@@ -63,17 +63,7 @@ jobs:
       - name: Lint (ESLint strict-type-checked)
         run: yarn lint
 
-      - name: Run unit tests
-        run: |
-          yarn workspace @casehubio/pages-viz run test
-          yarn workspace @casehubio/pages-data run test
-          yarn workspace @casehubio/pages-component run test
-          yarn workspace @casehubio/pages-ui run test
-
-      - name: Run pages-runtime tests (sharded — vitest #9425 DOM memory leak)
+      - name: Run unit tests (packages + runtime)
         env:
           NODE_OPTIONS: '--max-old-space-size=5120'
-        run: |
-          for shard in 1 2 3 4 5; do
-            yarn workspace @casehubio/pages-runtime exec vitest run --shard=$shard/5 --passWithNoTests
-          done
+        run: yarn workspace @casehubio/pages-viz run test && yarn workspace @casehubio/pages-runtime run test && yarn workspace @casehubio/pages-data run test && yarn workspace @casehubio/pages-component run test && yarn workspace @casehubio/pages-ui run test
