@@ -4,7 +4,7 @@ import type {SortColumn} from "@casehubio/pages-data";
 import type {DataSetId, TypedDataSet} from "@casehubio/pages-data";
 import {dataSetId} from "@casehubio/pages-data";
 import type {ExternalColumnDef} from "@casehubio/pages-data";
-import type {SourceFactory, SourceFactoryOptions} from "@casehubio/pages-data";
+import type {SourceFactory} from "@casehubio/pages-data";
 import type {VizTarget} from "../model/hosting.js";
 
 export interface DataSourceControllerOptions {

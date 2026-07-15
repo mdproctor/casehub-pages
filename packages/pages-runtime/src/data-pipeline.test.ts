@@ -1520,7 +1520,7 @@ describe("stale-while-revalidate (Layer 3)", () => {
 
   it("uses cacheTtl instead of refreshTime when both are set (#182)", () => {
     let connectCount = 0;
-    const mockSource: DataSource = {
+    const _mockSource: DataSource = {
       connect(sink: DataSink) {
         connectCount++;
         sink.apply({ type: "snapshot", dataset: regionDataSet([["Data-" + String(connectCount)]]) });
