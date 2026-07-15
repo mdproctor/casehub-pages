@@ -72,7 +72,7 @@ jobs:
 
       - name: Run pages-runtime tests (sharded — workaround for vitest #9425)
         env:
-          NODE_OPTIONS: '--max-old-space-size=4608'
+          NODE_OPTIONS: '--max-old-space-size=5120'
         run: |
           for i in 1 2 3 4 5 6 7 8 9 10; do
             yarn workspace @casehubio/pages-runtime exec vitest run --shard=$i/10 --passWithNoTests

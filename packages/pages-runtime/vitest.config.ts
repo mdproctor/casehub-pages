@@ -5,6 +5,11 @@ export default defineConfig({
     globals: true,
     environment: "happy-dom",
     include: ["src/**/*.test.ts"],
+    poolOptions: {
+      forks: {
+        execArgv: ["--max-old-space-size=1024"],
+      },
+    },
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
