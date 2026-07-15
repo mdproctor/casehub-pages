@@ -1,0 +1,68 @@
+name: Maven Build and Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/maven-publish.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/maven-publish.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('backend/**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build and test
+        run: cd backend && mvn --batch-mode verify
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to GitHub Packages
+        if: github.event_name != 'pull_request'
+        run: cd backend && mvn --batch-mode deploy -DskipTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger downstream CI
+        if: github.event_name != 'pull_request' && success()
+        run: |
+          for repo in drafthouse; do
+            gh api repos/casehubio/$repo/dispatches \
+              -f event_type=upstream-published \
+              -f client_payload[source]="${GITHUB_REPOSITORY}" \
+              2>/dev/null && echo "  ✅ $repo triggered" || echo "  ⚠️  $repo trigger failed"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}

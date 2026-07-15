@@ -43,7 +43,7 @@ class SqlDataProviderTest {
 
     @Test
     void queryWithNoOperationsReturnsAllRows() {
-        DataSetLookup lookup = new DataSetLookup("test-sales", List.of());
+        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(), null);
 
         DataSetResult result = provider.query(lookup);
 
@@ -62,7 +62,7 @@ class SqlDataProviderTest {
         FilterOp filter = new FilterOp(List.of(
             new FilterExpression.Unresolved("REGION", "EQUALS_TO", List.of("North"))
         ));
-        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(filter));
+        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(filter), null);
 
         DataSetResult result = provider.query(lookup);
 
@@ -79,7 +79,7 @@ class SqlDataProviderTest {
     @Test
     void queryWithSortOnAmountAsc() {
         SortOp sort = new SortOp(List.of(new SortColumn("AMOUNT", true)));
-        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(sort));
+        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(sort), null);
 
         DataSetResult result = provider.query(lookup);
 
@@ -100,7 +100,7 @@ class SqlDataProviderTest {
             List.of(new ResultColumn.Aggregate("AMOUNT", "TOTAL_AMOUNT", new Aggregation("SUM", null))),
             null, null
         );
-        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(group));
+        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(group), null);
 
         DataSetResult result = provider.query(lookup);
 
@@ -119,7 +119,7 @@ class SqlDataProviderTest {
         FilterOp filter = new FilterOp(List.of(
             new FilterExpression.Unresolved("NONEXISTENT", "EQUALS_TO", List.of("x"))
         ));
-        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(filter));
+        DataSetLookup lookup = new DataSetLookup("test-sales", List.of(filter), null);
 
         assertThatThrownBy(() -> provider.query(lookup))
             .isInstanceOf(IllegalArgumentException.class)
