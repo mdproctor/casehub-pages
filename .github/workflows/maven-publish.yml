@@ -51,7 +51,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         if: github.event_name != 'pull_request'
-        run: cd backend && mvn --batch-mode deploy -DskipTests
+        run: cd backend && mvn --batch-mode deploy -DskipTests -pl auth,layout,layout-sqlite,data,data-sql,push,push-runtime
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
