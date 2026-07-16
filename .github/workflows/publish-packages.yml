@@ -65,10 +65,23 @@ jobs:
             else
               echo "📦 Publishing: $NAME@$VERSION"
               cd "$dir"
-              yarn npm publish --access restricted
+              yarn npm publish --access public
               cd -
             fi
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           YARN_NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify all org packages are public
+        run: |
+          PRIVATE=$(gh api "/orgs/casehubio/packages?package_type=npm" --paginate --jq '[.[] | select(.visibility == "private") | .name] | join(", ")')
+          if [ -n "$PRIVATE" ]; then
+            echo "::error::Private packages detected: $PRIVATE"
+            echo "All @casehubio packages must be public for fork PRs to build."
+            echo "Fix: change --access restricted to --access public in publish workflow."
+            exit 1
+          fi
+          echo "✅ All org packages are public"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
