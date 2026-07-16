@@ -111,5 +111,9 @@
             <id>github</id>
             <url>https://maven.pkg.github.com/casehubio/casehub-pages</url>
         </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/casehubio/casehub-pages</url>
+        </snapshotRepository>
     </distributionManagement>
 </project>
