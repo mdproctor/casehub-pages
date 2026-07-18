@@ -59,7 +59,7 @@ const CSS = `
 `;
 
 class SchemaFormDemo extends HTMLElement {
-  private _mode: 'display' | 'edit' = 'display';
+  private _mode: 'display' | 'edit' = 'edit';
 
   connectedCallback() {
     const shadow = this.attachShadow({ mode: 'open' });
