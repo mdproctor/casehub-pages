@@ -1,19 +1,107 @@
+datasets:
+  - uuid: transaction
+    content: >-
+      [
+        [1, "TXN-2026-04521", 125000, "USD", "true", "2026-07-06", "2026-07-06T14:30:00Z", "Multiple rapid transfers to high-risk jurisdictions.", "Acme Holdings Ltd", "Shell Corp 42 LLC"]
+      ]
+    columns:
+      - id: id
+        type: NUMBER
+      - id: transactionId
+        type: TEXT
+      - id: amount
+        type: NUMBER
+      - id: currency
+        type: LABEL
+      - id: flagged
+        type: LABEL
+      - id: reportDate
+        type: DATE
+      - id: detectedAt
+        type: DATE
+      - id: notes
+        type: TEXT
+      - id: sender
+        type: TEXT
+      - id: receiver
+        type: TEXT
+
 pages:
   - name: Schema Form
+    dataScope:
+      dataset: transaction
+      idColumn: id
+    save:
+      trigger: auto
+      delay: 1000
+      adapter: local
     components:
       - type: title
         properties:
-          text: "pages-schema-form"
+          text: "Form Inputs"
           size: h2
 
       - type: markdown
         properties:
           content: |
-            Pass a JSON Schema and data — get a complete form. Toggle between
-            **display** (read-only) and **edit** (interactive) modes. Supports
-            nested objects, arrays with add/remove, required field validation,
-            and a pluggable field renderer registry.
+            Same AML transaction payload, two approaches. **Schema-driven** passes
+            a JSON Schema and gets a complete form with display/edit modes, nested
+            objects, arrays, and submit. **Manual** wires each field individually.
 
-      - type: html
+      - type: tabs
         properties:
-          content: <schema-form-demo></schema-form-demo>
+          targetPage: true
+        tabs:
+          Schema-Driven:
+            components:
+              - type: html
+                properties:
+                  content: <schema-form-demo></schema-form-demo>
+
+          Manual:
+            components:
+              - type: markdown
+                properties:
+                  content: |
+                    Each field wired individually via the YAML DSL. Compare with
+                    the schema-driven tab — same data, more YAML.
+
+              - text-input:
+                  field: transactionId
+                  label: Transaction ID
+                  required: true
+
+              - number-input:
+                  field: amount
+                  label: Amount
+                  min: 0
+
+              - dropdown:
+                  field: currency
+                  label: Currency
+                  options:
+                    values:
+                      - USD
+                      - EUR
+                      - GBP
+
+              - checkbox:
+                  field: flagged
+                  label: Flagged
+
+              - date-picker:
+                  field: reportDate
+                  label: Report Date
+
+              - textarea:
+                  field: notes
+                  label: Notes
+                  rows: 4
+
+              - text-input:
+                  field: sender
+                  label: Sender
+
+              - text-input:
+                  field: receiver
+                  label: Receiver

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 63,
+  "totalSamples": 62,
   "categories": [
     {
       "category": "Charts",
@@ -176,12 +176,6 @@
           "path": "Forms/Developer Registration.dash.yaml",
           "category": "Forms",
           "file": "Developer Registration.dash.yaml"
-        },
-        {
-          "name": "Form Components",
-          "path": "Forms/Form Components.dash.yaml",
-          "category": "Forms",
-          "file": "Form Components.dash.yaml"
         },
         {
           "name": "Schema Form",
