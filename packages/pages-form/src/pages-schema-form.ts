@@ -13,16 +13,17 @@ export class PagesSchemaForm extends LitElement {
   @state() private _editData: Record<string, unknown> = {};
 
   static override styles = css`
-    :host { display: block; font-family: var(--pages-font-family, system-ui); font-size: var(--pages-font-size-base, 14px); }
-    .field { display: flex; gap: var(--pages-space-2, 8px); padding: var(--pages-space-1, 4px) 0; align-items: baseline; }
-    .label { color: var(--pages-neutral-11, #666); font-size: var(--pages-font-size-sm, 12px); font-weight: var(--pages-font-weight-medium, 500); min-width: 120px; text-transform: capitalize; }
-    .value { color: var(--pages-neutral-12, #111); }
+    :host { display: block; font-family: var(--pages-font-family, system-ui, sans-serif); font-size: var(--pages-font-size-base, 14px); }
+    .field { display: flex; flex-direction: column; gap: 6px; padding: var(--pages-space-1, 4px) 0; }
+    .label { font-size: var(--pages-font-size-base, 14px); font-weight: 500; color: var(--pages-neutral-12, #333); text-transform: capitalize; }
+    .value { color: var(--pages-neutral-12, #333); }
     .muted { color: var(--pages-neutral-8, #999); }
     .nested { flex-direction: column; }
     .nested-content { padding-left: var(--pages-space-4, 16px); border-left: 2px solid var(--pages-neutral-5, #e0e0e0); }
-    label { display: block; font-size: var(--pages-font-size-sm, 12px); font-weight: var(--pages-font-weight-medium, 500); margin-bottom: var(--pages-space-0-5, 2px); text-transform: capitalize; color: var(--pages-neutral-11, #666); }
-    input, select, textarea { width: 100%; padding: var(--pages-space-1-5, 6px) var(--pages-space-2, 8px); border: 1px solid var(--pages-neutral-6, #ccc); border-radius: var(--pages-radius-sm, 4px); font-family: inherit; font-size: inherit; background: var(--pages-neutral-1, #fff); color: var(--pages-neutral-12, #111); }
-    input:focus, select:focus, textarea:focus { outline: 2px solid var(--pages-accent-9, #2563eb); outline-offset: -1px; border-color: var(--pages-accent-9, #2563eb); }
+    label { display: block; font-size: var(--pages-font-size-base, 14px); font-weight: 500; margin-bottom: 6px; text-transform: capitalize; color: var(--pages-neutral-12, #333); }
+    input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--pages-neutral-6, #e0e0e0); border-radius: var(--pages-radius-sm, 4px); font-family: inherit; font-size: var(--pages-font-size-base, 14px); background: var(--pages-neutral-1, #fff); color: var(--pages-neutral-12, #333); box-sizing: border-box; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--pages-accent-9, #5470c6); }
+    input:read-only { background: var(--pages-neutral-3, #f5f5f5); cursor: not-allowed; }
     textarea { min-height: 80px; resize: vertical; }
     .error { color: var(--pages-danger-9, #dc2626); font-size: var(--pages-font-size-xs, 11px); margin-top: var(--pages-space-0-5, 2px); }
     .array-item { margin-bottom: var(--pages-space-3, 12px); padding-bottom: var(--pages-space-3, 12px); border-bottom: 1px solid var(--pages-neutral-4, #eee); }
