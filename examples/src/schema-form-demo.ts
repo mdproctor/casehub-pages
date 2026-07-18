@@ -8,26 +8,9 @@ const SCHEMA = {
     currency: { type: 'string', enum: ['USD', 'EUR', 'GBP'] },
     flagged: { type: 'boolean' },
     reportDate: { type: 'string', format: 'date' },
-    detectedAt: { type: 'string', format: 'date-time' },
     notes: { type: 'string', maxLength: 500 },
-    parties: {
-      type: 'object',
-      properties: {
-        sender: { type: 'string' },
-        receiver: { type: 'string' },
-      },
-    },
-    tags: { type: 'array', items: { type: 'string' } },
-    linkedTransactions: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          amount: { type: 'number' },
-        },
-      },
-    },
+    sender: { type: 'string' },
+    receiver: { type: 'string' },
   },
   required: ['transactionId', 'amount'],
 };
@@ -38,14 +21,9 @@ const DATA = {
   currency: 'USD',
   flagged: true,
   reportDate: '2026-07-06',
-  detectedAt: '2026-07-06T14:30:00Z',
   notes: 'Multiple rapid transfers to high-risk jurisdictions.',
-  parties: { sender: 'Acme Holdings Ltd', receiver: 'Shell Corp 42 LLC' },
-  tags: ['high-risk', 'cross-border', 'layering'],
-  linkedTransactions: [
-    { id: 'TXN-2026-04519', amount: 50000 },
-    { id: 'TXN-2026-04520', amount: 75000 },
-  ],
+  sender: 'Acme Holdings Ltd',
+  receiver: 'Shell Corp 42 LLC',
 };
 
 const CSS = `
