@@ -1,6 +1,14 @@
 import type { TypedDataSet, ColumnId, CellValue } from "./dataset/types.js";
 import type { GroupingKey } from "./dataset/group.js";
-import type { GroupNode } from "@casehubio/pages-component";
+
+export interface GroupNode {
+  readonly name: string;
+  readonly depth: number;
+  readonly startRow: number;
+  readonly rowCount: number;
+  readonly children: readonly GroupNode[];
+  readonly aggregates?: ReadonlyMap<ColumnId, unknown>;
+}
 
 export interface GroupBoundary {
   readonly name: string;

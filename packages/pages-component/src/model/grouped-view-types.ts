@@ -1,6 +1,8 @@
 import type { ColumnId } from "@casehubio/pages-data";
-import type { Aggregation, GroupingKey } from "@casehubio/pages-data";
+import type { Aggregation, GroupingKey, GroupNode } from "@casehubio/pages-data";
 import type { DataComponentCommon, TableColumnConfig, RowStyleRule, SelectionMode } from "./displayer-types.js";
+
+export type { GroupNode };
 
 export type GroupDisplayMode = "table-row" | "section-heading";
 export type ContentDisplayMode = "table" | "list";
@@ -14,15 +16,6 @@ export type GroupedViewMode =
 export interface AggregationBinding {
   readonly column: ColumnId;
   readonly fn: Aggregation;
-}
-
-export interface GroupNode {
-  readonly name: string;
-  readonly depth: number;
-  readonly startRow: number;
-  readonly rowCount: number;
-  readonly children: readonly GroupNode[];
-  readonly aggregates?: ReadonlyMap<ColumnId, unknown>;
 }
 
 export interface RowAccentConfig {
