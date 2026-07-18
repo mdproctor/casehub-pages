@@ -39,12 +39,19 @@ function findSamples(dir, baseDir = dir) {
       const name = file.replace(/\.(dash\.yaml|dash\.yml|yml|yaml)$/, '');
       const category = path.dirname(relativePath).split(path.sep)[0];
 
-      samples.push({
+      const entry = {
         name: name,
-        path: relativePath.replace(/\\/g, '/'),
+        path: relativePath.split(path.sep).join('/'),
         category: category === '.' ? 'General' : category,
         file: file
-      });
+      };
+
+      const tsCompanion = path.join(dir, name + '.ts');
+      if (fs.existsSync(tsCompanion)) {
+        entry.tsPath = path.relative(baseDir, tsCompanion).split(path.sep).join('/');
+      }
+
+      samples.push(entry);
     }
   }
 

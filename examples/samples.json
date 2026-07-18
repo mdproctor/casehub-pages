@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 62,
+  "totalSamples": 63,
   "categories": [
     {
       "category": "Charts",
@@ -105,7 +105,8 @@
           "name": "Row Detail",
           "path": "Tables/Row Detail.dash.yaml",
           "category": "Tables",
-          "file": "Row Detail.dash.yaml"
+          "file": "Row Detail.dash.yaml",
+          "tsPath": "Tables/Row Detail.ts"
         },
         {
           "name": "Row Styles",
@@ -181,6 +182,13 @@
           "path": "Forms/Form Components.dash.yaml",
           "category": "Forms",
           "file": "Form Components.dash.yaml"
+        },
+        {
+          "name": "Schema Form",
+          "path": "Forms/Schema Form.dash.yaml",
+          "category": "Forms",
+          "file": "Schema Form.dash.yaml",
+          "tsPath": "Forms/Schema Form.ts"
         }
       ]
     },
