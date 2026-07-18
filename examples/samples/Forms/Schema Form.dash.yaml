@@ -2,7 +2,7 @@ datasets:
   - uuid: transaction
     content: >-
       [
-        [1, "TXN-2026-04521", 125000, "USD", "true", "2026-07-06", "Multiple rapid transfers to high-risk jurisdictions.", "Acme Holdings Ltd", "Shell Corp 42 LLC"]
+        [1, "TXN-2026-04521", 125000, "USD", "true", "2026-07-06", "2026-07-06T14:30:00Z", "Multiple rapid transfers to high-risk jurisdictions.", "Acme Holdings Ltd", "Shell Corp 42 LLC"]
       ]
     columns:
       - id: id
@@ -16,6 +16,8 @@ datasets:
       - id: flagged
         type: LABEL
       - id: reportDate
+        type: DATE
+      - id: detectedAt
         type: DATE
       - id: notes
         type: TEXT
