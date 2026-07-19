@@ -1504,4 +1504,109 @@ describe('pages-table', () => {
       expect(caught).toBe(true);
     });
   });
+
+  describe('cell spanning', () => {
+    it('renders rowspan via mergeRows: true', async () => {
+      const items: TestItem[] = [
+        { id: '1', name: 'Alice', age: 30, created: new Date('2024-01-01') },
+        { id: '2', name: 'Alice', age: 25, created: new Date('2024-01-01') },
+        { id: '3', name: 'Bob', age: 35, created: new Date('2024-01-01') },
+      ];
+      el.dataSet = makeDataSet(items);
+      el.columnConfig = [
+        { id: nameCol, width: '1fr', mergeRows: true },
+        { id: ageCol, width: '80px' },
+      ];
+      await el.updateComplete;
+
+      const cells = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')];
+      const nameCells = cells.filter(c =>
+        (c.getAttribute('style') ?? '').includes('grid-column: 1'));
+      expect(nameCells.length).toBe(2);
+
+      const aliceCell = nameCells[0]!;
+      expect(aliceCell.getAttribute('style')).toContain('span 2');
+      expect(aliceCell.getAttribute('aria-rowspan')).toBe('2');
+    });
+
+    it('renders colspan via cellSpan', async () => {
+      el.dataSet = makeDataSet(testItems);
+      el.columnConfig = [
+        { id: nameCol, width: '1fr',
+          cellSpan: (_row: any, i: number) => i === 0 ? { colSpan: 2 } : undefined },
+        { id: ageCol, width: '80px' },
+      ];
+      await el.updateComplete;
+
+      const cells = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')];
+      const row1Cells = cells.filter(c =>
+        (c.getAttribute('style') ?? '').includes('grid-row: 1'));
+      expect(row1Cells.length).toBe(1);
+      expect(row1Cells[0]!.getAttribute('style')).toContain('grid-column: 1 / span 2');
+    });
+
+    it('suppressed cells are not rendered', async () => {
+      const items: TestItem[] = [
+        { id: '1', name: 'Alice', age: 30, created: new Date('2024-01-01') },
+        { id: '2', name: 'Alice', age: 25, created: new Date('2024-01-01') },
+        { id: '3', name: 'Bob', age: 35, created: new Date('2024-01-01') },
+      ];
+      el.dataSet = makeDataSet(items);
+      el.columnConfig = [
+        { id: nameCol, width: '1fr', mergeRows: true },
+        { id: ageCol, width: '80px' },
+      ];
+      await el.updateComplete;
+
+      const allCells = el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]');
+      expect(allCells.length).toBe(5);
+    });
+
+    it('throws when spanning combined with tree rows', async () => {
+      el.dataSet = makeDataSet(testItems);
+      el.columnConfig = [{ id: nameCol, mergeRows: true }, { id: ageCol }];
+      el.getChildren = () => [];
+      el.getRowKey = (r: any) => { const c = r.cell(nameCol); return c.type === 'NULL' ? '' : String(c.value); };
+      let caught = false;
+      try {
+        await el.updateComplete;
+      } catch (e: any) {
+        caught = true;
+        expect(e.message).toContain('mutually exclusive');
+      }
+      expect(caught).toBe(true);
+    });
+
+    it('throws when spanning combined with groupBy', async () => {
+      el.dataSet = makeDataSet(testItems);
+      el.columnConfig = [{ id: nameCol, mergeRows: true }, { id: ageCol }];
+      el.groupBy = nameCol;
+      let caught = false;
+      try {
+        await el.updateComplete;
+      } catch (e: any) {
+        caught = true;
+        expect(e.message).toContain('mutually exclusive');
+      }
+      expect(caught).toBe(true);
+    });
+
+    it('origin cells have aria-rowspan and aria-colspan', async () => {
+      el.dataSet = makeDataSet(testItems);
+      el.columnConfig = [
+        { id: nameCol, width: '1fr',
+          cellSpan: (_row: any, i: number) => i === 0 ? { colSpan: 2, rowSpan: 2 } : undefined },
+        { id: ageCol, width: '80px' },
+      ];
+      await el.updateComplete;
+
+      const cells = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')];
+      const originCell = cells.find(c =>
+        (c.getAttribute('style') ?? '').includes('grid-row: 1') &&
+        (c.getAttribute('style') ?? '').includes('grid-column: 1'));
+      expect(originCell).toBeTruthy();
+      expect(originCell!.getAttribute('aria-rowspan')).toBe('2');
+      expect(originCell!.getAttribute('aria-colspan')).toBe('2');
+    });
+  });
 });

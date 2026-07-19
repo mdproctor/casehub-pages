@@ -5,7 +5,8 @@ import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSetting
 import { ColumnType, extractGroupBoundaries } from '@casehubio/pages-data';
 import type { SortColumn } from '@casehubio/pages-data';
 import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail, RowAccentConfig } from './types.js';
-import { computeScrollWindow } from './virtual-scroll-engine.js';
+import { computeScrollWindow, extendWindowForSpans } from './virtual-scroll-engine.js';
+import { computeSpanMap, isSuppressed, isOrigin, type SpanMap, type SpanEntry } from './span-map.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
 import { cellToRaw, applyCellExpression } from './cell-utils.js';
@@ -98,6 +99,8 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @state() private _containerHeight = 0;
   @state() private _loadingMore = false;
   @state() private _hoverRowIndex = -1;
+  private _spanMap: SpanMap = new Map();
+  private _spanColumns: Set<string> = new Set();
   @state() private _internalSelectedKeys = new Set<string>();
   @state() private _lastClickedKey: string | null = null;
   @state() private _columnPickerOpen = false;
@@ -1192,6 +1195,23 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     if (changed.has('sortable') && this.sortable) {
       this._sortableFromProps = true;
     }
+
+    const hasSpanConfig = this.columnConfig?.some(c => c.cellSpan || c.mergeRows) ?? false;
+    if (hasSpanConfig && this.getChildren) {
+      throw new Error('Cell spanning and tree rows are mutually exclusive');
+    }
+    if (hasSpanConfig && this.groupBy) {
+      throw new Error('Cell spanning and groupBy are mutually exclusive — use mergeRows as an alternative');
+    }
+
+    if (hasSpanConfig && (changed.has('dataSet') || changed.has('columnConfig') || changed.has('hiddenColumns'))) {
+      const visibleColIds = new Set(this._visibleColumns.map(c => String(c.id)));
+      this._spanMap = computeSpanMap(this._dataRows, this._dataColumns, this.columnConfig ?? [], visibleColIds);
+      this._spanColumns = new Set([...(this.columnConfig ?? [])].filter(c => c.cellSpan || c.mergeRows).map(c => String(c.id)));
+    } else if (!hasSpanConfig) {
+      this._spanMap = new Map();
+      this._spanColumns = new Set();
+    }
   }
 
   private _updateContainerHeight(): void {
@@ -1922,13 +1942,16 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     }
 
     const containerH = this._containerHeight > 0 ? this._containerHeight : 500;
-    const window = computeScrollWindow(
+    const baseWindow = computeScrollWindow(
       this._scrollTop,
       containerH,
       this.rowHeight,
       rows.length,
       this.bufferSize,
     );
+    const window = this._spanColumns.size > 0
+      ? extendWindowForSpans(baseWindow, this._spanMap, this._spanColumns)
+      : baseWindow;
 
     return rows.slice(window.startIndex, window.endIndex);
   }
@@ -1939,13 +1962,16 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     }
 
     const containerH = this._containerHeight > 0 ? this._containerHeight : 500;
-    return computeScrollWindow(
+    const baseWindow = computeScrollWindow(
       this._scrollTop,
       containerH,
       this.rowHeight,
       this._dataRows.length,
       this.bufferSize,
     );
+    return this._spanColumns.size > 0
+      ? extendWindowForSpans(baseWindow, this._spanMap, this._spanColumns)
+      : baseWindow;
   }
 
   private _formatCell(cell: CellValue): string {
@@ -2137,7 +2163,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     this.requestUpdate();
   }
 
-  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode, cellAccent?: string, gridRow = 1, gridCol = 1, cellStateClasses = '', cellInlineStyle = '', rowAccentStyle = '', hoverHandler?: () => void) {
+  private _renderCell(row: TypedRow, column: Column, isFirstColumn = false, treeNode?: TreeNode, cellAccent?: string, gridRow = 1, gridCol = 1, cellStateClasses = '', cellInlineStyle = '', rowAccentStyle = '', hoverHandler?: () => void, spanStyle?: { rowSpan: number; colSpan: number }) {
     const cell = row.cell(column.id);
     const renderer = this.columnRenderers?.get(column.id);
     const content = renderer
@@ -2155,7 +2181,11 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     const accentBorder = showAccent ? `border-left: 3px solid ${cellAccent}` : '';
     const firstCellAccent = isFirstColumn && rowAccentStyle ? rowAccentStyle : '';
 
-    const gridStyle = `grid-row: ${gridRow}; grid-column: ${gridCol}`;
+    const rowSpanPart = spanStyle && spanStyle.rowSpan > 1 ? ` / span ${spanStyle.rowSpan}` : '';
+    const colSpanPart = spanStyle && spanStyle.colSpan > 1 ? ` / span ${spanStyle.colSpan}` : '';
+    const gridStyle = `grid-row: ${gridRow}${rowSpanPart}; grid-column: ${gridCol}${colSpanPart}`;
+    const ariaRowSpan = spanStyle && spanStyle.rowSpan > 1 ? String(spanStyle.rowSpan) : undefined;
+    const ariaColSpan = spanStyle && spanStyle.colSpan > 1 ? String(spanStyle.colSpan) : undefined;
     const extraStyles = [gridStyle, `text-align: ${align}`, cellInlineStyle, accentBorder, firstCellAccent].filter(Boolean).join('; ');
 
     if (isFirstColumn && treeMeta) {
@@ -2173,7 +2203,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         : html`<span class="tree-spacer"></span>`;
 
       return html`
-        <div class="cell tree-cell ${cellStateClasses}" role="gridcell" style="${gridStyle}; text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)${cellInlineStyle ? `; ${cellInlineStyle}` : ''}${accentBorder ? `; ${accentBorder}` : ''}${firstCellAccent ? `; ${firstCellAccent}` : ''}"
+        <div class="cell tree-cell ${cellStateClasses}" role="gridcell" aria-rowspan="${ariaRowSpan ?? nothing}" aria-colspan="${ariaColSpan ?? nothing}" style="${gridStyle}; text-align: ${align}; padding-left: calc(var(--pages-space-2, 8px) + ${indent}px)${cellInlineStyle ? `; ${cellInlineStyle}` : ''}${accentBorder ? `; ${accentBorder}` : ''}${firstCellAccent ? `; ${firstCellAccent}` : ''}"
           @click="${filterClickHandler ?? nothing}"
           @mouseenter="${hoverHandler ?? nothing}">
           ${toggle}${content}
@@ -2185,6 +2215,8 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       <div
         class="cell ${cellStateClasses}"
         role="gridcell"
+        aria-rowspan="${ariaRowSpan ?? nothing}"
+        aria-colspan="${ariaColSpan ?? nothing}"
         style="${extraStyles}"
         @click="${filterClickHandler ?? nothing}"
         @mouseenter="${hoverHandler ?? nothing}"
@@ -2410,7 +2442,16 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       >
         ${this._renderExpandCell(row, gridRow, expandCol, cellStateClasses, cellInlineStyle, hoverHandler)}
         ${this._renderCheckbox(row, false, gridRow, checkboxCol, cellStateClasses, cellInlineStyle, hoverHandler)}
-        ${this._visibleColumns.map((col, i) => this._renderCell(row, col, i === 0, treeNode, perCellAccent ? accent : undefined, gridRow, this._prefixColCount + i + 1, cellStateClasses, cellInlineStyle, rowAccentStyle, hoverHandler))}
+        ${this._visibleColumns.map((col, i) => {
+          const colId = String(col.id);
+          const spanEntry = this._spanMap.get(actualIndex)?.get(colId);
+          if (spanEntry && isSuppressed(spanEntry)) return nothing;
+          const gridCol = this._prefixColCount + i + 1;
+          const spanStyle = spanEntry && isOrigin(spanEntry)
+            ? { rowSpan: spanEntry.rowSpan, colSpan: spanEntry.colSpan }
+            : undefined;
+          return this._renderCell(row, col, i === 0, treeNode, perCellAccent ? accent : undefined, gridRow, gridCol, cellStateClasses, cellInlineStyle, rowAccentStyle, hoverHandler, spanStyle);
+        })}
       </div>
       ${this._renderDetailPanel(row, gridRow)}
     `;
