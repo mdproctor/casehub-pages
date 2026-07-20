@@ -1,11 +1,10 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import { FocusTrapMixin } from '../a11y/focus-trap.js';
 
 type ModalVariant = 'dialog' | 'alertdialog';
 type ModalSize = 'sm' | 'md' | 'lg' | 'full';
 
-@customElement('pages-modal')
 export class PagesModal extends FocusTrapMixin(LitElement) {
   @property({ type: Boolean, reflect: true }) open = false;
   @property() variant: ModalVariant = 'dialog';
@@ -311,6 +310,10 @@ export class PagesModal extends FocusTrapMixin(LitElement) {
       </dialog>
     `;
   }
+}
+
+if (!customElements.get('pages-modal')) {
+  customElements.define('pages-modal', PagesModal);
 }
 
 declare global {

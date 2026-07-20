@@ -37,6 +37,13 @@ function createModal(innerHtml = ''): PagesModal {
   return el;
 }
 
+describe('pages-modal — registration', () => {
+  it('is registered in the custom element registry', () => {
+    expect(customElements.get('pages-modal')).toBeDefined();
+    expect(customElements.get('pages-modal')!.name).toBe('PagesModal');
+  });
+});
+
 describe('pages-modal — open/close', () => {
   let el: PagesModal;
 
