@@ -76,7 +76,7 @@ describe("PagesGraph", () => {
   });
 
   describe("buildOption", () => {
-    it("produces ECharts option with type: 'graph' series", () => {
+    it("produces ECharts option with type: 'graph' series", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [
@@ -92,7 +92,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -102,7 +104,7 @@ describe("PagesGraph", () => {
       expect(series[0]!.type).toBe("graph");
     });
 
-    it("derives nodes from distinct source/target values", () => {
+    it("derives nodes from distinct source/target values", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [
@@ -119,7 +121,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -130,7 +134,7 @@ describe("PagesGraph", () => {
       expect(data.map(d => d.name).sort()).toEqual(["A", "B", "C"]);
     });
 
-    it("builds links from edge rows", () => {
+    it("builds links from edge rows", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [
@@ -146,7 +150,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -157,7 +163,7 @@ describe("PagesGraph", () => {
       expect(links[1]).toMatchObject({ source: "B", target: "C" });
     });
 
-    it("layout prop maps to ECharts layout type", () => {
+    it("layout prop maps to ECharts layout type", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [["A", "B"]],
@@ -172,7 +178,9 @@ describe("PagesGraph", () => {
 
       el.props = forceProps;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       let option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       let series = option.series as Array<Record<string, unknown>>;
@@ -193,7 +201,9 @@ describe("PagesGraph", () => {
 
       el.props = circularProps;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       series = option.series as Array<Record<string, unknown>>;
@@ -201,7 +211,7 @@ describe("PagesGraph", () => {
       expect(series[0]!.force).toBeUndefined();
     });
 
-    it("directed: true adds arrow markers on links", () => {
+    it("directed: true adds arrow markers on links", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [["A", "B"]],
@@ -215,14 +225,16 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
       expect(series[0]!.edgeSymbol).toEqual(["none", "arrow"]);
     });
 
-    it("nodeLabelColumn provides display names", () => {
+    it("nodeLabelColumn provides display names", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"], ["label", "LABEL"]],
         [
@@ -240,7 +252,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -251,7 +265,7 @@ describe("PagesGraph", () => {
       expect(nodeA?.label).toMatchObject({ show: true, formatter: "Node A" });
     });
 
-    it("nodeColorColumn + nodeColorMap provides per-node coloring", () => {
+    it("nodeColorColumn + nodeColorMap provides per-node coloring", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"], ["category", "LABEL"]],
         [
@@ -273,7 +287,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -288,7 +304,7 @@ describe("PagesGraph", () => {
       expect(nodeB?.itemStyle).toMatchObject({ color: "#00ff00" });
     });
 
-    it("nodeSizeColumn provides proportional sizing", () => {
+    it("nodeSizeColumn provides proportional sizing", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"], ["size", "NUMBER"]],
         [
@@ -306,7 +322,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -321,7 +339,7 @@ describe("PagesGraph", () => {
       expect(nodeB?.symbolSize).toBe(20);
     });
 
-    it("valueColumn provides link weights", () => {
+    it("valueColumn provides link weights", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"], ["weight", "NUMBER"]],
         [
@@ -338,7 +356,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -348,7 +368,7 @@ describe("PagesGraph", () => {
       expect(links[1]!.value).toBe(10);
     });
 
-    it("standard ChartSettings (legend, margin) apply", () => {
+    it("standard ChartSettings (legend, margin) apply", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [["A", "B"]],
@@ -363,7 +383,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -371,7 +393,7 @@ describe("PagesGraph", () => {
       expect(option.grid).toMatchObject({ top: 20, right: 30, bottom: 40, left: 50 });
     });
 
-    it("extra settings deep merge onto option", () => {
+    it("extra settings deep merge onto option", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [["A", "B"]],
@@ -388,7 +410,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -396,7 +420,7 @@ describe("PagesGraph", () => {
       expect(option.tooltip).toMatchObject({ formatter: "custom" });
     });
 
-    it("defaults to force layout when layout not specified", () => {
+    it("defaults to force layout when layout not specified", async () => {
       const ds = makeDataSet(
         [["source", "LABEL"], ["target", "LABEL"]],
         [["A", "B"]],
@@ -409,7 +433,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -417,7 +443,7 @@ describe("PagesGraph", () => {
       expect(series[0]!.force).toMatchObject({ repulsion: 100 });
     });
 
-    it("defaults sourceColumn/targetColumn to first two columns when not specified", () => {
+    it("defaults sourceColumn/targetColumn to first two columns when not specified", async () => {
       const ds = makeDataSet(
         [["from", "LABEL"], ["to", "LABEL"]],
         [["A", "B"]],
@@ -428,7 +454,9 @@ describe("PagesGraph", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;

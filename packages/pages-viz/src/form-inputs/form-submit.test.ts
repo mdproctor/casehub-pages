@@ -64,10 +64,12 @@ describe("Form Submit", () => {
     el.props = { field: "query", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     // Wait for MutationObserver to set up listener
-    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
 
     const eventPromise = new Promise<PagesActionRequestDetail>((resolve) => {
       el.addEventListener("pages-action-request", (e: Event) => {
@@ -76,7 +78,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "test search";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -102,10 +104,12 @@ describe("Form Submit", () => {
     el.props = { field: "input", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     // Wait for MutationObserver to set up listener
-    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
 
     const eventPromise = new Promise<PagesActionRequestDetail>((resolve) => {
       el.addEventListener("pages-action-request", (e: Event) => {
@@ -114,7 +118,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "my value";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -136,10 +140,12 @@ describe("Form Submit", () => {
     el.props = { field: "username", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     // Wait for MutationObserver to set up listener
-    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
 
     const eventPromise = new Promise<PagesActionRequestDetail>((resolve) => {
       el.addEventListener("pages-action-request", (e: Event) => {
@@ -148,7 +154,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "alice";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -171,12 +177,14 @@ describe("Form Submit", () => {
     el.props = { field: "message", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     // Wait for MutationObserver to set up listener
-    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "hello world";
 
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
@@ -194,7 +202,7 @@ describe("Form Submit", () => {
     await actionPromise;
 
     // Wait for field to be cleared
-    await new Promise(r => setTimeout(r, 10));
+    await el.updateComplete;
 
     expect(input.value).toBe("");
   });
@@ -210,12 +218,14 @@ describe("Form Submit", () => {
     el.props = { field: "message", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     // Wait for MutationObserver to set up listener
-    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "hello world";
 
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
@@ -233,7 +243,7 @@ describe("Form Submit", () => {
     await actionPromise;
 
     // Wait for any potential clearing
-    await new Promise(r => setTimeout(r, 10));
+    await el.updateComplete;
 
     // Value should be preserved on error
     expect(input.value).toBe("hello world");
@@ -248,17 +258,19 @@ describe("Form Submit", () => {
     el.props = { field: "query", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     // Wait for MutationObserver to set up listener
-    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
 
     const fieldChangeEvents: Event[] = [];
     el.addEventListener("pages-field-change", (e: Event) => {
       fieldChangeEvents.push(e);
     });
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "test search";
 
     const actionPromise = new Promise<void>((resolve) => {
@@ -280,20 +292,22 @@ describe("Form Submit", () => {
     expect(fieldChangeEvents.length).toBe(0);
   });
 
-  it("does not trigger submit when submit config is not present", () => {
+  it("does not trigger submit when submit config is not present", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [[""]]);
 
     el.props = { field: "name", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const actionEvents: Event[] = [];
     el.addEventListener("pages-action-request", (e: Event) => {
       actionEvents.push(e);
     });
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "test";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);
@@ -311,10 +325,12 @@ describe("Form Submit", () => {
     el.props = { field: "data", submit, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     // Wait for MutationObserver to set up listener
-    await new Promise(r => setTimeout(r, 50));
+    await el.updateComplete;
 
     const eventPromise = new Promise<PagesActionRequestDetail>((resolve) => {
       el.addEventListener("pages-action-request", (e: Event) => {
@@ -323,7 +339,7 @@ describe("Form Submit", () => {
       }, { once: true });
     });
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "updated";
     const enterEvent = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
     input.dispatchEvent(enterEvent);

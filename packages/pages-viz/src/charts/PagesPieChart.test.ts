@@ -81,8 +81,11 @@ describe("PagesPieChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -110,8 +113,11 @@ describe("PagesPieChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -128,8 +134,11 @@ describe("PagesPieChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -149,8 +158,11 @@ describe("PagesPieChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, bottom: 0 });
@@ -165,8 +177,11 @@ describe("PagesPieChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.tooltip).toEqual({ trigger: "item" });
@@ -187,8 +202,11 @@ describe("PagesPieChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Distribution" });

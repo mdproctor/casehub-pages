@@ -75,25 +75,30 @@ describe("PagesMetric async expressions", () => {
 
     el.props = props;
     document.body.appendChild(el);
+    await el.updateComplete;
 
     // First dataset — triggers async expression
     el.dataSet = ds1;
+    await el.updateComplete;
     expect(applyCellResolvers).toHaveLength(1);
 
     // Second dataset — triggers another async expression
     el.dataSet = ds2;
+    await el.updateComplete;
     expect(applyCellResolvers).toHaveLength(2);
 
     // Resolve second (fresh) first
     applyCellResolvers[1]!("40");
     await Promise.resolve();
+    await el.updateComplete;
 
-    const value = el.shadowRoot.querySelector(".card .value");
+    const value = el.shadowRoot!.querySelector(".card .value");
     expect(value?.textContent).toBe("40");
 
     // Resolve first (stale) — should NOT overwrite
     applyCellResolvers[0]!("20");
     await Promise.resolve();
+    await el.updateComplete;
 
     expect(value?.textContent).toBe("40");
   });
@@ -107,14 +112,17 @@ describe("PagesMetric async expressions", () => {
 
     el.props = props;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     expect(applyCellRejecters).toHaveLength(1);
     applyCellRejecters[0]!(new Error("callback boom"));
     await Promise.resolve();
     await Promise.resolve();
+    await el.updateComplete;
 
-    const errorEl = el.shadowRoot.querySelector("[data-pages-error]");
+    const errorEl = el.shadowRoot!.querySelector("[data-pages-error]");
     expect(errorEl).not.toBeNull();
     expect(errorEl!.textContent).toContain("callback boom");
   });

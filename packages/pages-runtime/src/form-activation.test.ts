@@ -248,7 +248,7 @@ describe("form input activation", () => {
 
     // Select "Sales" (row index 0 in the grouped output)
     const selectorViz = target.querySelector("pages-selector")!;
-    const selectEl = selectorViz.shadowRoot.querySelector("select")!;
+    const selectEl = selectorViz.shadowRoot!.querySelector("select")!;
     selectEl.value = "0";
     selectEl.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 50));

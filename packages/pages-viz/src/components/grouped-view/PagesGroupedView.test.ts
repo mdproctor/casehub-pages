@@ -99,7 +99,7 @@ describe("PagesGroupedView", () => {
     it("sectioned mode creates pages-table per group", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       expect(tables.length).toBe(2);
     });
@@ -107,7 +107,7 @@ describe("PagesGroupedView", () => {
     it("spreadsheet mode creates pages-table per group", async () => {
       element.props = makeProps({ preset: "spreadsheet" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       expect(tables.length).toBe(2);
     });
@@ -115,7 +115,7 @@ describe("PagesGroupedView", () => {
     it("list mode renders dl elements, no pages-table", async () => {
       element.props = makeProps({ preset: "list" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       expect(tables.length).toBe(0);
       const dls = element.shadowRoot!.querySelectorAll("dl");
@@ -125,7 +125,7 @@ describe("PagesGroupedView", () => {
     it("each table receives correct data subset", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       const t0 = tables[0] as MockTable;
       const t1 = tables[1] as MockTable;
@@ -136,7 +136,7 @@ describe("PagesGroupedView", () => {
     it("per-group tables have embedded=true and headerVisible=false", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       for (const table of tables) {
         expect((table as MockTable).embedded).toBe(true);
@@ -149,7 +149,7 @@ describe("PagesGroupedView", () => {
     it("renders shared column header bar once at top", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const bars = element.shadowRoot!.querySelectorAll(".column-header-bar");
       expect(bars.length).toBe(1);
     });
@@ -157,7 +157,7 @@ describe("PagesGroupedView", () => {
     it("header bar is outside any group-section", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const bar = element.shadowRoot!.querySelector(".column-header-bar");
       expect(bar!.closest(".group-section")).toBeNull();
     });
@@ -165,7 +165,7 @@ describe("PagesGroupedView", () => {
     it("header bar shows column names", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const labels = element.shadowRoot!.querySelectorAll(".column-header-bar .col-label, .column-header-bar .col-header");
       expect(labels.length).toBe(2);
       expect(labels[0]!.textContent).toContain("Name");
@@ -177,7 +177,7 @@ describe("PagesGroupedView", () => {
     it("all tables receive identical columnConfig widths", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       const configs = Array.from(tables).map((t) => (t as MockTable).columnConfig);
       expect(configs[0]).toEqual(configs[1]);
@@ -194,7 +194,7 @@ describe("PagesGroupedView", () => {
         columnConfig: [{ id: "name" as ColumnId, width: "200px" }],
       });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       const cfg = (tables[0] as MockTable).columnConfig;
       const nameCol = cfg.find((c: TableColumnConfig) => c.id === "name");
@@ -206,7 +206,7 @@ describe("PagesGroupedView", () => {
     it("toggles hidden attribute on section content", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const toggle = element.shadowRoot!.querySelector("[data-group='Critical']") as HTMLButtonElement;
       expect(toggle.getAttribute("aria-expanded")).toBe("true");
       const contentId = toggle.getAttribute("aria-controls")!;
@@ -214,7 +214,7 @@ describe("PagesGroupedView", () => {
       expect(content.hidden).toBe(false);
 
       toggle.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       expect(toggle.getAttribute("aria-expanded")).toBe("false");
       expect(content.hidden).toBe(true);
     });
@@ -222,13 +222,13 @@ describe("PagesGroupedView", () => {
     it("preserves table DOM reference after toggle", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tableBefore = element.shadowRoot!.querySelector("pages-table");
       const toggle = element.shadowRoot!.querySelector("[data-group='Critical']") as HTMLButtonElement;
       toggle.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       toggle.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tableAfter = element.shadowRoot!.querySelector("pages-table");
       expect(tableAfter).toBe(tableBefore);
     });
@@ -236,12 +236,12 @@ describe("PagesGroupedView", () => {
     it("emits pages-event on group toggle", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const events: CustomEvent[] = [];
       element.addEventListener("pages-event", (e: Event) => events.push(e as CustomEvent));
       const toggle = element.shadowRoot!.querySelector(".section-toggle") as HTMLButtonElement;
       toggle.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       expect(events.length).toBe(1);
       expect(events[0]!.detail.topic).toBe("group-toggle");
     });
@@ -249,7 +249,7 @@ describe("PagesGroupedView", () => {
     it("hides content when defaultExpanded is false", async () => {
       element.props = makeProps({ preset: "sectioned", defaultExpanded: false });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const contents = element.shadowRoot!.querySelectorAll(".section-content");
       for (const content of contents) {
         expect((content as HTMLElement).hidden).toBe(true);
@@ -259,7 +259,7 @@ describe("PagesGroupedView", () => {
     it("has unique aria-controls IDs", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const toggles = element.shadowRoot!.querySelectorAll("[data-group]");
       const ids = Array.from(toggles).map((t) => t.getAttribute("aria-controls"));
       expect(new Set(ids).size).toBe(ids.length);
@@ -274,8 +274,9 @@ describe("PagesGroupedView", () => {
       const renderers = new Map([["name" as ColumnId, (() => "custom") as unknown as ColumnRenderer]]);
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       (element as any).setColumnRenderers(renderers);
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       for (const table of tables) {
         expect((table as MockTable).columnRenderers).toBe(renderers);
@@ -286,7 +287,7 @@ describe("PagesGroupedView", () => {
       const rules: readonly RowStyleRule[] = [{ condition: "true", className: "highlight" }];
       element.props = makeProps({ preset: "sectioned", rowStyle: rules });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       for (const table of tables) {
         expect((table as MockTable).rowStyle).toEqual(rules);
@@ -296,7 +297,7 @@ describe("PagesGroupedView", () => {
     it("forwards selection from props to all tables", async () => {
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       for (const table of tables) {
         expect((table as MockTable).selection).toBe("multi");
@@ -308,10 +309,10 @@ describe("PagesGroupedView", () => {
     it("reuses table DOM elements when data refreshes with same groups", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tableBefore = element.shadowRoot!.querySelector("pages-table");
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tableAfter = element.shadowRoot!.querySelector("pages-table");
       expect(tableAfter).toBe(tableBefore);
     });
@@ -319,7 +320,7 @@ describe("PagesGroupedView", () => {
     it("rebuilds tables when group structure changes", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tableBefore = element.shadowRoot!.querySelector("pages-table");
 
       const newDs: DataSet = {
@@ -333,7 +334,7 @@ describe("PagesGroupedView", () => {
         ],
       };
       element.dataSet = toTypedDataSet(newDs);
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tableAfter = element.shadowRoot!.querySelector("pages-table");
       expect(tableAfter).not.toBe(tableBefore);
     });
@@ -348,7 +349,7 @@ describe("PagesGroupedView", () => {
       };
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = toTypedDataSet(ds);
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       expect(tables.length).toBe(0);
     });
@@ -358,7 +359,7 @@ describe("PagesGroupedView", () => {
     it("sort buttons dispatch pages-sort from grouped view", async () => {
       element.props = makeProps({ preset: "sectioned", sortable: true });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const events: CustomEvent[] = [];
       element.addEventListener("pages-sort", (e: Event) => events.push(e as CustomEvent));
       const sortBtn = element.shadowRoot!.querySelector(".col-header") as HTMLButtonElement;
@@ -370,7 +371,7 @@ describe("PagesGroupedView", () => {
     it("renders static labels when sortable is false", async () => {
       element.props = makeProps({ preset: "sectioned", sortable: false });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const buttons = element.shadowRoot!.querySelectorAll(".col-header");
       expect(buttons.length).toBe(0);
       const labels = element.shadowRoot!.querySelectorAll(".column-header-bar .col-label");
@@ -380,8 +381,10 @@ describe("PagesGroupedView", () => {
     it("updates sort indicators when activeSort changes", async () => {
       element.props = makeProps({ preset: "sectioned", sortable: true });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       element.activeSort = { columnId: "name" as ColumnId, order: "ASCENDING" } as SortColumn;
+      element.requestUpdate();
+      await element.updateComplete;
       const active = element.shadowRoot!.querySelector(".col-header[data-column='name']");
       expect(active!.getAttribute("aria-sort")).toBe("ascending");
       expect(active!.classList.contains("sort-asc")).toBe(true);
@@ -392,7 +395,7 @@ describe("PagesGroupedView", () => {
     it("shows col-label spans in list mode", async () => {
       element.props = makeProps({ preset: "list" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const headerBar = element.shadowRoot!.querySelector(".column-header-bar");
       expect(headerBar).not.toBeNull();
       const labels = headerBar!.querySelectorAll(".col-label");
@@ -415,7 +418,7 @@ describe("PagesGroupedView", () => {
         },
       });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const gateMarker = element.shadowRoot!.querySelector(".gate-marker");
       expect(gateMarker).not.toBeNull();
       expect(gateMarker!.textContent).toBe("GATE: blocks-ui#41");
@@ -434,7 +437,7 @@ describe("PagesGroupedView", () => {
         },
       });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const gateMarker = element.shadowRoot!.querySelector(".gate-marker");
       expect(gateMarker).toBeNull();
     });
@@ -477,7 +480,7 @@ describe("PagesGroupedView", () => {
         defaultExpanded: true,
       });
       element.dataSet = makeMultiLevelDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const topSections = element.shadowRoot!.querySelectorAll(".section-toggle");
       expect(topSections.length).toBe(2);
@@ -495,7 +498,7 @@ describe("PagesGroupedView", () => {
         defaultExpanded: true,
       });
       element.dataSet = makeMultiLevelDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       expect(tables.length).toBe(4);
@@ -508,7 +511,7 @@ describe("PagesGroupedView", () => {
         defaultExpanded: true,
       });
       element.dataSet = makeMultiLevelDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const tables = element.shadowRoot!.querySelectorAll("pages-table") as NodeListOf<MockTable>;
       expect(tables[0]!.dataSet.rows.length).toBe(2);
@@ -524,7 +527,7 @@ describe("PagesGroupedView", () => {
         defaultExpanded: true,
       });
       element.dataSet = makeMultiLevelDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const headerBar = element.shadowRoot!.querySelector(".column-header-bar");
       expect(headerBar).not.toBeNull();
@@ -542,7 +545,7 @@ describe("PagesGroupedView", () => {
         defaultExpanded: true,
       });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const sections = element.shadowRoot!.querySelectorAll(".section-toggle");
       expect(sections.length).toBe(2);
@@ -557,7 +560,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "list" });
       (element as any).setColumnRenderers(renderers);
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const dds = element.shadowRoot!.querySelectorAll("dd");
       const nameValues = Array.from(dds).filter((_, i) => i % 2 === 0).map((dd) => dd.textContent);
       expect(nameValues[0]).toBe("[Server outage]");
@@ -575,7 +578,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "list" });
       (element as any).setColumnRenderers(renderers);
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const customSpans = element.shadowRoot!.querySelectorAll(".custom-render");
       expect(customSpans.length).toBeGreaterThan(0);
       expect(customSpans[0]!.textContent).toBe("Server outage");
@@ -588,7 +591,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "list" });
       element.dataSet = makeGroupedDataset();
       (element as any).setColumnRenderers(renderers);
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const dds = element.shadowRoot!.querySelectorAll("dd");
       expect(dds[0]!.textContent).toBe("Server outage");
       expect(dds[0]!.children.length).toBe(0);
@@ -599,7 +602,7 @@ describe("PagesGroupedView", () => {
     it("renders column picker button in header bar", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       const picker = element.shadowRoot!.querySelector(".column-picker-trigger");
       expect(picker).not.toBeNull();
     });
@@ -607,16 +610,16 @@ describe("PagesGroupedView", () => {
     it("toggling column visibility hides column from all tables", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
       trigger.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
       expect(checkboxes.length).toBeGreaterThan(0);
       (checkboxes[0] as HTMLInputElement).click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const tables = element.shadowRoot!.querySelectorAll("pages-table");
       for (const table of tables) {
@@ -629,18 +632,18 @@ describe("PagesGroupedView", () => {
     it("emits column-change event from grouped view", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const events: CustomEvent[] = [];
       element.addEventListener("column-change", (e: Event) => events.push(e as CustomEvent));
 
       const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
       trigger.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
       (checkboxes[0] as HTMLInputElement).click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       expect(events.length).toBe(1);
       expect(events[0]!.detail.visibleColumns).toBeDefined();
@@ -649,15 +652,15 @@ describe("PagesGroupedView", () => {
     it("hides column header in shared header bar when column is toggled", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
       trigger.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
       (checkboxes[0] as HTMLInputElement).click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const visibleHeaders = element.shadowRoot!.querySelectorAll("[data-column]:not([hidden])");
       expect(visibleHeaders.length).toBe(1);
@@ -666,22 +669,22 @@ describe("PagesGroupedView", () => {
     it("prevents hiding the last visible column", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const trigger = element.shadowRoot!.querySelector(".column-picker-trigger") as HTMLButtonElement;
       trigger.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       // Hide first column
       const checkboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
       (checkboxes[0] as HTMLInputElement).click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       // Re-open picker — the remaining visible column should be disabled
       trigger.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
       trigger.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const updatedCheckboxes = element.shadowRoot!.querySelectorAll(".column-picker-item input[type='checkbox']");
       const checkedEnabled = Array.from(updatedCheckboxes).filter(
@@ -697,7 +700,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const tables = element.shadowRoot!.querySelectorAll("pages-table") as NodeListOf<MockTable>;
       expect(tables.length).toBe(2);
@@ -707,7 +710,7 @@ describe("PagesGroupedView", () => {
         bubbles: true,
         composed: true,
       }));
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       for (const table of tables) {
         expect((table as MockTable).selectedKeys).toBeDefined();
@@ -719,7 +722,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const events: CustomEvent[] = [];
       element.addEventListener("selection-change", (e: Event) => events.push(e as CustomEvent));
@@ -730,7 +733,7 @@ describe("PagesGroupedView", () => {
         bubbles: true,
         composed: true,
       }));
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       expect(events.length).toBe(1);
       expect(events[0]!.detail.selectedKeys).toContain("Server outage");
@@ -741,7 +744,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const selectAll = element.shadowRoot!.querySelector(".select-all-checkbox");
       expect(selectAll).not.toBeNull();
@@ -752,14 +755,14 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       (element as any).setGetRowKey(getRowKey);
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const events: CustomEvent[] = [];
       element.addEventListener("selection-change", (e: Event) => events.push(e as CustomEvent));
 
       const selectAll = element.shadowRoot!.querySelector(".select-all-checkbox") as HTMLInputElement;
       selectAll.click();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       expect(events.length).toBe(1);
       expect(events[0]!.detail.selectedKeys.length).toBe(3);
@@ -768,7 +771,7 @@ describe("PagesGroupedView", () => {
     it("no select-all when selection is not multi", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
-      await new Promise((r) => setTimeout(r, 0));
+      await element.updateComplete;
 
       const selectAll = element.shadowRoot!.querySelector(".select-all-checkbox");
       expect(selectAll).toBeNull();

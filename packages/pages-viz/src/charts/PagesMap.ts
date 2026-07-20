@@ -12,6 +12,7 @@ import type { MapProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
+import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([MapChart, ScatterChart, GeoComponent, VisualMapComponent, TooltipComponent, LegendComponent, DatasetComponent]);
@@ -43,33 +44,19 @@ function ensureMapRegistered(mapName: string): Promise<void> {
   return promise;
 }
 
+@customElement("pages-map")
 export class PagesMap extends PagesChartElement<MapProps> {
-  protected override render(
-    container: HTMLDivElement,
-    props: MapProps,
-    dataset: TypedDataSet,
-  ): void {
-    const mapName = props.mapName ?? "world";
-    if (!getMap(mapName)) {
-      this.renderLoading(container);
-      ensureMapRegistered(mapName)
-        .then(() => { super.render(container, props, dataset); })
-        .catch((err: unknown) => { this.error = err instanceof Error ? err.message : String(err); });
-      return;
-    }
-    super.render(container, props, dataset);
-  }
-
   override async buildOption(
     props: MapProps,
     dataSet: TypedDataSet,
   ): Promise<Record<string, unknown>> {
-    // Stage 1: Convert dataset to source
+    const mapName = props.mapName ?? "world";
+    await ensureMapRegistered(mapName);
+
     const source = await datasetToSource(dataSet, props.columns);
 
     // Stage 2: Build base option based on subtype
     const subtype = props.subtype || "regions";
-    const mapName = props.mapName ?? "world";
 
     let option: Record<string, unknown>;
 
@@ -148,4 +135,3 @@ export class PagesMap extends PagesChartElement<MapProps> {
   }
 }
 
-customElements.define("pages-map", PagesMap);

@@ -82,8 +82,11 @@ describe("PagesBubbleChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataset).toEqual({
@@ -112,8 +115,11 @@ describe("PagesBubbleChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -140,8 +146,11 @@ describe("PagesBubbleChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -162,8 +171,11 @@ describe("PagesBubbleChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -184,8 +196,11 @@ describe("PagesBubbleChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: false });
@@ -206,8 +221,11 @@ describe("PagesBubbleChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Bubble Chart" });
@@ -222,8 +240,11 @@ describe("PagesBubbleChart", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = (option.series as Record<string, unknown>[])[0]!;
       const symbolSizeFn = series.symbolSize as (value: unknown[]) => number;
@@ -243,8 +264,11 @@ describe("PagesBubbleChart", () => {
       );
       el.props = { lookup: mockLookup("test") };
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       expect((option.xAxis as Record<string, unknown>).type).toBe("category");
     });
@@ -256,8 +280,11 @@ describe("PagesBubbleChart", () => {
       );
       el.props = { lookup: mockLookup("test") };
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       expect((option.xAxis as Record<string, unknown>).type).toBe("value");
     });

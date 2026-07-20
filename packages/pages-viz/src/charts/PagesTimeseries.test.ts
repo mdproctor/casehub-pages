@@ -83,8 +83,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.xAxis).toEqual({ type: "time" });
@@ -99,8 +102,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.yAxis).toEqual({ type: "value" });
@@ -115,8 +121,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.series).toEqual([
@@ -135,8 +144,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.tooltip).toEqual({ trigger: "axis" });
@@ -151,8 +163,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       // DATE columns are converted to Date objects by toTypedDataSet
@@ -179,8 +194,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, top: 0 });
@@ -198,8 +216,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.grid).toMatchObject({ top: 20, right: 30, bottom: 40, left: 50 });
@@ -217,8 +238,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.dataZoom).toEqual([{ type: "inside" }, { type: "slider" }]);
@@ -241,8 +265,11 @@ describe("PagesTimeseries", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "Time Series Report" });
@@ -259,8 +286,11 @@ describe("PagesTimeseries", () => {
       );
       el.props = { lookup: mockLookup("ts") };
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Record<string, unknown>[];
 
@@ -275,8 +305,11 @@ describe("PagesTimeseries", () => {
       );
       el.props = { lookup: mockLookup("ts") };
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Record<string, unknown>[];
 

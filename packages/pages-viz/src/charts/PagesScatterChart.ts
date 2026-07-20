@@ -11,10 +11,12 @@ import type { ScatterChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
+import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([ScatterChart, GridComponent, TooltipComponent, LegendComponent, DatasetComponent]);
 
+@customElement("pages-scatter-chart")
 export class PagesScatterChart extends PagesChartElement<ScatterChartProps> {
   override async buildOption(
     props: ScatterChartProps,
@@ -57,4 +59,3 @@ export class PagesScatterChart extends PagesChartElement<ScatterChartProps> {
   }
 }
 
-customElements.define("pages-scatter-chart", PagesScatterChart);

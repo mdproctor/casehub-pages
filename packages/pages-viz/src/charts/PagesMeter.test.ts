@@ -54,9 +54,11 @@ function makeDataSet(columns: [string, string][], rows: (string | number | null)
   return toTypedDataSet(ds);
 }
 
-function getOption(el: PagesMeter, ds: TypedDataSet): Record<string, unknown> {
+async function getOption(el: PagesMeter, ds: TypedDataSet): Promise<Record<string, unknown>> {
   document.body.appendChild(el);
+  await el.updateComplete;
   el.dataSet = ds;
+  await el.updateComplete;
   return mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 }
 
@@ -79,13 +81,13 @@ describe("PagesMeter", () => {
   });
 
   describe("arc-based gauge (no needle)", () => {
-    it("renders semicircle with progress arcs, legend off by default", () => {
+    it("renders semicircle with progress arcs, legend off by default", async () => {
       const ds = makeDataSet(
         [["metric", "LABEL"], ["value", "NUMBER"]],
         [["CPU", 75]],
       );
       el.props = { lookup: mockLookup("test") };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const series = getSeries(option);
 
       expect(series.type).toBe("gauge");
@@ -98,13 +100,13 @@ describe("PagesMeter", () => {
       expect(series.radius).toBe("85%");
     });
 
-    it("renders one data entry per row", () => {
+    it("renders one data entry per row", async () => {
       const ds = makeDataSet(
         [["name", "LABEL"], ["value", "NUMBER"]],
         [["A", 1], ["B", 2], ["C", 3]],
       );
       el.props = { lookup: mockLookup("test") };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const series = getSeries(option);
       const data = series.data as { value: number; name: string }[];
 
@@ -117,26 +119,26 @@ describe("PagesMeter", () => {
       expect(data[2]!.name).toBe("C");
     });
 
-    it("uses last column for values when multiple columns", () => {
+    it("uses last column for values when multiple columns", async () => {
       const ds = makeDataSet(
         [["label", "LABEL"], ["count", "NUMBER"], ["extra", "NUMBER"]],
         [["Item A", 123, 456]],
       );
       el.props = { lookup: mockLookup("test") };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const series = getSeries(option);
       const data = series.data as { value: number }[];
 
       expect(data[0]!.value).toBe(456);
     });
 
-    it("generates Series N names for single-column datasets", () => {
+    it("generates Series N names for single-column datasets", async () => {
       const ds = makeDataSet(
         [["value", "NUMBER"]],
         [[10], [20]],
       );
       el.props = { lookup: mockLookup("test") };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const series = getSeries(option);
       const data = series.data as { name: string }[];
 
@@ -146,7 +148,7 @@ describe("PagesMeter", () => {
   });
 
   describe("visualMap color pieces", () => {
-    it("uses green/orange/red with warning and critical", () => {
+    it("uses green/orange/red with warning and critical", async () => {
       const ds = makeDataSet(
         [["metric", "LABEL"], ["value", "NUMBER"]],
         [["CPU", 85]],
@@ -157,7 +159,7 @@ describe("PagesMeter", () => {
         warning: 60,
         critical: 80,
       };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const vm = option.visualMap as Record<string, unknown>;
 
       expect(vm.type).toBe("piecewise");
@@ -169,13 +171,13 @@ describe("PagesMeter", () => {
       ]);
     });
 
-    it("defaults warning and critical to max when not set", () => {
+    it("defaults warning and critical to max when not set", async () => {
       const ds = makeDataSet(
         [["metric", "LABEL"], ["value", "NUMBER"]],
         [["Score", 42]],
       );
       el.props = { lookup: mockLookup("test"), end: 100 };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const vm = option.visualMap as Record<string, unknown>;
 
       expect(vm.pieces).toEqual([
@@ -187,26 +189,26 @@ describe("PagesMeter", () => {
   });
 
   describe("max and min", () => {
-    it("defaults max to 100", () => {
+    it("defaults max to 100", async () => {
       const ds = makeDataSet(
         [["value", "NUMBER"]],
         [[50]],
       );
       el.props = { lookup: mockLookup("test") };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const series = getSeries(option);
 
       expect(series.min).toBe(0);
       expect(series.max).toBe(100);
     });
 
-    it("uses custom end as max", () => {
+    it("uses custom end as max", async () => {
       const ds = makeDataSet(
         [["value", "NUMBER"]],
         [[150]],
       );
       el.props = { lookup: mockLookup("test"), end: 200 };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const series = getSeries(option);
 
       expect(series.max).toBe(200);
@@ -214,13 +216,13 @@ describe("PagesMeter", () => {
   });
 
   describe("legend positioning", () => {
-    it("each data point has title and detail with offset positions", () => {
+    it("each data point has title and detail with offset positions", async () => {
       const ds = makeDataSet(
         [["name", "LABEL"], ["value", "NUMBER"]],
         [["A", 1], ["B", 2]],
       );
       el.props = { lookup: mockLookup("test") };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
       const series = getSeries(option);
       const data = series.data as { title: { offsetCenter: string[] }; detail: { offsetCenter: string[] } }[];
 
@@ -232,7 +234,7 @@ describe("PagesMeter", () => {
   });
 
   describe("extra merge", () => {
-    it("deep merges extra settings onto option", () => {
+    it("deep merges extra settings onto option", async () => {
       const ds = makeDataSet(
         [["metric", "LABEL"], ["value", "NUMBER"]],
         [["Status", 88]],
@@ -244,7 +246,7 @@ describe("PagesMeter", () => {
           series: [{ detail: { formatter: "{value}%" } }],
         },
       };
-      const option = getOption(el, ds);
+      const option = await getOption(el, ds);
 
       expect(option.title).toEqual({ text: "System Status" });
       const series = getSeries(option);

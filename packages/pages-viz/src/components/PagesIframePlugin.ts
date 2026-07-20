@@ -1,3 +1,5 @@
+import { html, css, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { IframePluginProps } from "@casehubio/pages-component";
 import { toWireDataSet } from "@casehubio/pages-data";
@@ -5,67 +7,96 @@ import { PagesElement } from "../base/PagesElement.js";
 import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";
 import { cellToRaw } from "../base/cell-extract.js";
 
-const IFRAME_CSS = `
-:host {
-  display: block;
-}
-iframe {
-  border: none;
-  width: 100%;
-  height: 100%;
-}
-`;
-
+@customElement("pages-iframe-plugin")
 export class PagesIframePlugin extends PagesElement<IframePluginProps> {
   private _iframe: HTMLIFrameElement | undefined;
   private _messageHandler: ((e: MessageEvent) => void) | undefined;
   private _loaded = false;
   private _pendingProps: IframePluginProps | undefined;
   private _pendingDataset: TypedDataSet | undefined;
+  private _currentSrc: string | undefined;
 
-  protected override render(
-    container: HTMLDivElement,
+  static override styles = css`
+      :host {
+        display: block;
+      }
+      iframe {
+        border: none;
+        width: 100%;
+        height: 100%;
+      }
+    `;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this._messageHandler = (e: MessageEvent) => {
+      this.handleMessage(e);
+    };
+    window.addEventListener("message", this._messageHandler);
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._messageHandler) {
+      window.removeEventListener("message", this._messageHandler);
+      this._messageHandler = undefined;
+    }
+  }
+
+  protected override renderContent(
     props: IframePluginProps,
     dataset: TypedDataSet,
-  ): void {
+  ): TemplateResult {
+    const expectedSrc = `/pages/component/${props.componentId}/index.html`;
+
+    // Track if src changed (componentId changed)
+    if (this._currentSrc !== expectedSrc) {
+      this._currentSrc = expectedSrc;
+      this._iframe = undefined;
+      this._loaded = false;
+    }
+
+    // Store latest data for sending after iframe is ready
+    this._pendingProps = props;
+    this._pendingDataset = dataset;
+
+    return html`<div id="iframe-host"></div>`;
+  }
+
+  override updated(): void {
+    const host = this.renderRoot.querySelector("#iframe-host");
+    if (!host || !this.props) return;
+
+    const props = this.props;
     const expectedSrc = `/pages/component/${props.componentId}/index.html`;
 
     // Check if iframe exists with wrong src (componentId changed)
     if (this._iframe && this._iframe.src && !this._iframe.src.endsWith(expectedSrc)) {
-      // Remove old iframe
       this._iframe.remove();
       this._iframe = undefined;
       this._loaded = false;
     }
 
     if (!this._iframe) {
-      this.createIframe(container, props);
+      this.createIframe(host as HTMLElement, props);
     }
 
-    // If loaded, send immediately; otherwise store pending
-    if (this._loaded) {
-      this.sendMessages(props, dataset);
-    } else {
-      this._pendingProps = props;
-      this._pendingDataset = dataset;
+    // If loaded, send pending messages
+    if (this._loaded && this._pendingProps && this._pendingDataset) {
+      this.sendMessages(this._pendingProps, this._pendingDataset);
+      this._pendingProps = undefined;
+      this._pendingDataset = undefined;
     }
   }
 
-  private createIframe(container: HTMLDivElement, props: IframePluginProps): void {
-    container.textContent = "";
+  private createIframe(host: HTMLElement, props: IframePluginProps): void {
+    host.textContent = "";
 
-    // Style
-    const style = document.createElement("style");
-    style.textContent = IFRAME_CSS;
-    container.appendChild(style);
-
-    // Iframe
     this._iframe = document.createElement("iframe");
     this._iframe.src = `/pages/component/${props.componentId}/index.html`;
     this._iframe.style.width = props.width ?? "100%";
     this._iframe.style.height = props.height ?? "100%";
 
-    // Load event listener
     this._iframe.addEventListener("load", () => {
       this._loaded = true;
       if (this._pendingProps && this._pendingDataset) {
@@ -75,13 +106,7 @@ export class PagesIframePlugin extends PagesElement<IframePluginProps> {
       }
     });
 
-    container.appendChild(this._iframe);
-
-    // Message listener
-    this._messageHandler = (e: MessageEvent) => {
-      this.handleMessage(e);
-    };
-    window.addEventListener("message", this._messageHandler);
+    host.appendChild(this._iframe);
   }
 
   private sendMessages(props: IframePluginProps, dataset: TypedDataSet): void {
@@ -178,15 +203,4 @@ export class PagesIframePlugin extends PagesElement<IframePluginProps> {
       }),
     );
   }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-
-    if (this._messageHandler) {
-      window.removeEventListener("message", this._messageHandler);
-      this._messageHandler = undefined;
-    }
-  }
 }
-
-customElements.define("pages-iframe-plugin", PagesIframePlugin);

@@ -10,10 +10,12 @@ import type { PieChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
+import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([PieChart, TooltipComponent, LegendComponent, DatasetComponent]);
 
+@customElement("pages-pie-chart")
 export class PagesPieChart extends PagesChartElement<PieChartProps> {
   override async buildOption(
     props: PieChartProps,
@@ -51,4 +53,3 @@ export class PagesPieChart extends PagesChartElement<PieChartProps> {
   }
 }
 
-customElements.define("pages-pie-chart", PagesPieChart);

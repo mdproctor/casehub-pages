@@ -1,20 +1,22 @@
-import type { TypedDataSet, ColumnId, SortColumn } from "@casehubio/pages-data";
+import { html, nothing, unsafeCSS, type TemplateResult } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { repeat } from "lit/directives/repeat.js";
+import { ifDefined } from "lit/directives/if-defined.js";
+import type { TypedDataSet, TypedRow, ColumnId, SortColumn, GroupingKey } from "@casehubio/pages-data";
 import type {
   GroupedViewProps,
   TableColumnConfig,
   ColumnRenderer,
   RowStyleRule,
   SelectionMode,
+  AggregationBinding,
+  GroupNode,
 } from "@casehubio/pages-component";
 import { PagesElement } from "../../base/PagesElement.js";
 import { resolvePreset } from "./presets.js";
 import { extractGroupBoundaries, extractGroupTree } from "./group-extraction.js";
 import type { GroupBoundary } from "./group-extraction.js";
-import type { GroupNode, AggregationBinding } from "@casehubio/pages-component";
 import { computeColumnWidths } from "./column-widths.js";
-import { renderGroupTableRowHeader } from "./render-group-table-row.js";
-import { renderGroupSectionHeader } from "./render-group-section.js";
-import { renderContentList } from "./render-content-list.js";
 import { GROUPED_VIEW_CSS } from "./group-view-styles.js";
 
 interface PagesTableHost extends HTMLElement {
@@ -23,9 +25,9 @@ interface PagesTableHost extends HTMLElement {
   columnRenderers?: ReadonlyMap<ColumnId, ColumnRenderer> | undefined;
   rowStyle?: readonly RowStyleRule[] | undefined;
   selection?: SelectionMode | undefined;
-  getRowKey?: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined;
-  getRowDetail?: ((row: import("@casehubio/pages-data").TypedRow) => unknown) | undefined;
-  getRowClass?: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined;
+  getRowKey?: ((row: TypedRow) => string) | undefined;
+  getRowDetail?: ((row: TypedRow) => unknown) | undefined;
+  getRowClass?: ((row: TypedRow) => string) | undefined;
   mode?: string | undefined;
   loading?: boolean | undefined;
   error?: string | undefined;
@@ -34,191 +36,51 @@ interface PagesTableHost extends HTMLElement {
   embedded?: boolean | undefined;
   headerVisible?: boolean | undefined;
   activeSort?: SortColumn | undefined;
-  getRowAccent?: ((row: import("@casehubio/pages-data").TypedRow) => string | undefined) | undefined;
+  hiddenColumns?: string[] | undefined;
+  selectedKeys?: string[] | undefined;
+  getRowAccent?: ((row: TypedRow) => string | undefined) | undefined;
 }
 
+@customElement("pages-grouped-view")
 export class PagesGroupedView extends PagesElement<GroupedViewProps> {
-  private _expandState = new Map<string, boolean>();
-  private _instanceId = "";
-  private _styleEl: HTMLStyleElement;
-  private _groupTables = new Map<string, PagesTableHost>();
-  private _lastBoundaries: readonly GroupBoundary[] = [];
-  private _hiddenColumnIds = new Set<string>();
-  private _pickerOpen = false;
-  private _selectedKeys = new Set<string>();
-  private _selectionListeners = new Map<PagesTableHost, (e: Event) => void>();
+  static override styles = unsafeCSS(GROUPED_VIEW_CSS);
 
-  private _columnRenderers: ReadonlyMap<ColumnId, ColumnRenderer> | undefined = undefined;
-  private _getRowKey: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined = undefined;
-  private _getRowDetail: ((row: import("@casehubio/pages-data").TypedRow) => unknown) | undefined = undefined;
-  private _getRowClass: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined = undefined;
-  private _getRowAccent: ((row: import("@casehubio/pages-data").TypedRow) => string | undefined) | undefined = undefined;
+  // ── Reactive state ────────────────────────────────────────────────
+
+  @state() private _expandState = new Map<string, boolean>();
+  @state() private _selectedKeys = new Set<string>();
+  @state() private _hiddenColumnIds = new Set<string>();
+  @state() private _pickerOpen = false;
+
+  @state() private _columnRenderers: ReadonlyMap<ColumnId, ColumnRenderer> | undefined = undefined;
+  @state() private _getRowKey: ((row: TypedRow) => string) | undefined = undefined;
+  @state() private _getRowDetail: ((row: TypedRow) => unknown) | undefined = undefined;
+  @state() private _getRowClass: ((row: TypedRow) => string) | undefined = undefined;
+
+  // ── Non-reactive private fields ───────────────────────────────────
+
+  private _instanceId = "";
+  private _getRowAccent: ((row: TypedRow) => string | undefined) | undefined = undefined;
+
+  // ── Public setters ────────────────────────────────────────────────
 
   setColumnRenderers(value: ReadonlyMap<ColumnId, ColumnRenderer> | undefined): void {
     this._columnRenderers = value;
-    this._forwardToTables("columnRenderers", value);
   }
 
-  setGetRowKey(value: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined): void {
+  setGetRowKey(value: ((row: TypedRow) => string) | undefined): void {
     this._getRowKey = value;
-    this._forwardToTables("getRowKey", value);
   }
 
-  setGetRowDetail(value: ((row: import("@casehubio/pages-data").TypedRow) => unknown) | undefined): void {
+  setGetRowDetail(value: ((row: TypedRow) => unknown) | undefined): void {
     this._getRowDetail = value;
-    this._forwardToTables("getRowDetail", value);
   }
 
-  setGetRowClass(value: ((row: import("@casehubio/pages-data").TypedRow) => string) | undefined): void {
+  setGetRowClass(value: ((row: TypedRow) => string) | undefined): void {
     this._getRowClass = value;
-    this._forwardToTables("getRowClass", value);
   }
 
-  private _forwardToTables(prop: string, value: unknown): void {
-    for (const table of this._groupTables.values()) {
-      (table as unknown as Record<string, unknown>)[prop] = value;
-    }
-  }
-
-  private _toggleColumnVisibility(columnId: string, contentColumnIds: readonly ColumnId[]): void {
-    const visibleCount = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id))).length;
-    const isHidden = this._hiddenColumnIds.has(columnId);
-
-    if (!isHidden && visibleCount <= 1) return;
-
-    const newHidden = new Set(this._hiddenColumnIds);
-    if (isHidden) {
-      newHidden.delete(columnId);
-    } else {
-      newHidden.add(columnId);
-    }
-    this._hiddenColumnIds = newHidden;
-
-    const hiddenArray = Array.from(newHidden);
-    for (const table of this._groupTables.values()) {
-      (table as unknown as Record<string, unknown>).hiddenColumns = hiddenArray;
-    }
-
-    const visibleColumns = contentColumnIds
-      .filter((id) => !newHidden.has(String(id)))
-      .map(String);
-
-    this.dispatchEvent(new CustomEvent("column-change", {
-      detail: { visibleColumns },
-      bubbles: true,
-      composed: true,
-    }));
-
-    this._updateHeaderBarVisibility(contentColumnIds);
-  }
-
-  private _updateHeaderBarVisibility(contentColumnIds: readonly ColumnId[]): void {
-    const bar = this.shadowRoot.querySelector(".column-header-bar");
-    if (!bar) return;
-    const headers = bar.querySelectorAll("[data-column]");
-    for (const header of headers) {
-      const colId = header.getAttribute("data-column")!;
-      (header as HTMLElement).hidden = this._hiddenColumnIds.has(colId);
-    }
-
-    const prefix: string[] = [];
-    if (this._getRowDetail) prefix.push("40px");
-    if (bar.querySelector(".select-all-wrapper")) prefix.push("40px");
-
-    const visibleCount = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id))).length;
-    const widths = Array.from({ length: visibleCount }, () => "1fr");
-
-    const pickerWidth = bar.querySelector(".column-picker-wrapper") ? ["auto"] : [];
-    bar.setAttribute("style", `grid-template-columns: ${[...prefix, ...widths, ...pickerWidth].join(" ")}`);
-  }
-
-  private _handleChildSelectionChange(e: CustomEvent): void {
-    e.stopPropagation();
-    const childKeys: readonly string[] = e.detail.selectedKeys ?? [];
-    const table = e.target as PagesTableHost;
-    const tableRows = table.dataSet?.rows ?? [];
-    const getRowKey = this._getRowKey;
-    if (!getRowKey) return;
-
-    const tableKeys = new Set(tableRows.map((row) => getRowKey(row)));
-    const newSelected = new Set(this._selectedKeys);
-    for (const key of tableKeys) {
-      newSelected.delete(key);
-    }
-    for (const key of childKeys) {
-      newSelected.add(key);
-    }
-
-    this._selectedKeys = newSelected;
-    const selectedArray = Array.from(newSelected);
-
-    for (const t of this._groupTables.values()) {
-      (t as unknown as Record<string, unknown>).selectedKeys = selectedArray;
-    }
-
-    this.dispatchEvent(new CustomEvent("selection-change", {
-      detail: { selectedKeys: selectedArray, selectedRows: [] },
-      bubbles: true,
-      composed: true,
-    }));
-
-    this._updateSelectAllCheckbox();
-  }
-
-  private _handleSelectAll(dataset: import("@casehubio/pages-data").TypedDataSet): void {
-    const getRowKey = this._getRowKey;
-    if (!getRowKey) return;
-
-    const allKeys = dataset.rows.map((row) => getRowKey(row));
-    const allSelected = allKeys.length > 0 && allKeys.every((k) => this._selectedKeys.has(k));
-
-    if (allSelected) {
-      this._selectedKeys = new Set();
-    } else {
-      this._selectedKeys = new Set(allKeys);
-    }
-
-    const selectedArray = Array.from(this._selectedKeys);
-    for (const t of this._groupTables.values()) {
-      (t as unknown as Record<string, unknown>).selectedKeys = selectedArray;
-    }
-
-    this.dispatchEvent(new CustomEvent("selection-change", {
-      detail: { selectedKeys: selectedArray, selectedRows: [] },
-      bubbles: true,
-      composed: true,
-    }));
-
-    this._updateSelectAllCheckbox();
-  }
-
-  private _updateSelectAllCheckbox(): void {
-    const cb = this.shadowRoot.querySelector(".select-all-checkbox") as HTMLInputElement | null;
-    if (!cb) return;
-    const totalRows = Array.from(this._groupTables.values())
-      .reduce((sum, t) => sum + (t.dataSet?.rows.length ?? 0), 0);
-    cb.checked = this._selectedKeys.size > 0 && this._selectedKeys.size >= totalRows;
-    cb.indeterminate = this._selectedKeys.size > 0 && this._selectedKeys.size < totalRows;
-  }
-
-  override set activeSort(value: SortColumn | undefined) {
-    super.activeSort = value;
-    for (const table of this._groupTables.values()) {
-      table.activeSort = value;
-    }
-    this._updateHeaderBarSort(value);
-  }
-
-  override get activeSort(): SortColumn | undefined {
-    return super.activeSort;
-  }
-
-  constructor() {
-    super();
-    this._styleEl = document.createElement("style");
-    this._styleEl.textContent = GROUPED_VIEW_CSS;
-    this.shadowRoot.insertBefore(this._styleEl, this.container);
-  }
+  // ── Lifecycle ─────────────────────────────────────────────────────
 
   override connectedCallback(): void {
     this._instanceId = typeof crypto !== "undefined" && crypto.randomUUID
@@ -227,17 +89,19 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     super.connectedCallback();
   }
 
-  protected override render(
-    container: HTMLDivElement,
+  // ── Main render ───────────────────────────────────────────────────
+
+  protected override renderContent(
     props: GroupedViewProps,
     dataset: TypedDataSet,
-  ): void {
+  ): TemplateResult {
+    // Lazy-init rowAccent function from props (one-time derivation)
     if (props.rowAccent && !this._getRowAccent) {
       const ra = props.rowAccent as { column: string; colorMap: Record<string, string>; default?: string };
       const accentColId = ra.column as ColumnId;
       const colorLookup = new Map<string, string>(Object.entries(ra.colorMap));
       const defaultColor: string | undefined = ra.default;
-      this._getRowAccent = (row: import("@casehubio/pages-data").TypedRow): string | undefined => {
+      this._getRowAccent = (row: TypedRow): string | undefined => {
         const cell = row.cell(accentColId);
         if (cell.type === "NULL") return defaultColor;
         return colorLookup.get(String(cell.value)) ?? defaultColor;
@@ -245,21 +109,22 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     }
 
     const mode = resolvePreset(props);
-    const groupByKeys: readonly import("@casehubio/pages-data").GroupingKey[] = Array.isArray(props.groupBy) ? props.groupBy as readonly import("@casehubio/pages-data").GroupingKey[] : [props.groupBy as import("@casehubio/pages-data").GroupingKey];
+    const groupByKeys: readonly GroupingKey[] = Array.isArray(props.groupBy)
+      ? props.groupBy as readonly GroupingKey[]
+      : [props.groupBy as GroupingKey];
     const isMultiLevel = groupByKeys.length > 1;
     const primaryKey = groupByKeys[0]!;
     const keyColumnId = primaryKey.columnId;
     const aggColumnIds = (props.aggregations ?? []).map((a) => a.column);
     const aggBindings = (props.aggregations ?? []) as readonly AggregationBinding[];
-
     const allGroupColumnIds = groupByKeys.map((k) => k.columnId);
     const contentColumnIds = dataset.columns
       .filter((c) => !allGroupColumnIds.includes(c.id))
       .map((c) => c.id);
-
     const isListMode = mode.contentDisplay === "list";
     const isSpreadsheet = mode.groupDisplay === "table-row";
     const showSummary = props.showGroupSummary ?? false;
+    const defaultExpanded = props.defaultExpanded ?? true;
 
     if (isMultiLevel && !isListMode) {
       const tree = extractGroupTree(
@@ -267,228 +132,47 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
         groupByKeys,
         aggBindings.map((a) => ({ column: a.column, fn: a.fn as { fn: string } })),
       );
-
-      this._cleanupSelectionListeners();
-      this._groupTables.clear();
-      container.textContent = "";
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "pages-grouped-view sectioned";
-
       const columnConfig = this._buildColumnConfig(dataset, contentColumnIds, props);
-      const headerBar = this._buildHeaderBar(dataset, contentColumnIds, props, columnConfig);
-      wrapper.appendChild(headerBar);
-
-      for (const node of tree) {
-        this._renderNode(node, wrapper, columnConfig, props, dataset, contentColumnIds, "", showSummary);
-      }
-
-      container.appendChild(wrapper);
-      return;
+      return html`
+        <div class="pages-grouped-view sectioned">
+          ${this._renderHeaderBar(dataset, contentColumnIds, props, columnConfig)}
+          ${tree.map((node) =>
+            this._renderTreeNode(node, columnConfig, props, dataset, contentColumnIds, "", showSummary, defaultExpanded)
+          )}
+        </div>
+      `;
     }
 
     const boundaries = extractGroupBoundaries(dataset, keyColumnId, aggColumnIds);
-
-    const defaultExpanded = props.defaultExpanded ?? true;
-    for (const b of boundaries) {
-      if (!this._expandState.has(b.name)) {
-        this._expandState.set(b.name, b.rowCount === 0 ? false : defaultExpanded);
-      }
-    }
-
-    if (this._canReconcile(boundaries)) {
-      this._updateExistingTables(dataset, boundaries, contentColumnIds, props);
-      this._lastBoundaries = boundaries;
-      return;
-    }
-
-    this._cleanupSelectionListeners();
-    this._groupTables.clear();
-    container.textContent = "";
-
-    const wrapper = document.createElement("div");
-    wrapper.className = `pages-grouped-view ${isSpreadsheet ? "spreadsheet" : isListMode ? "list-mode" : "sectioned"}`;
-
     const columnConfig = isListMode ? undefined : this._buildColumnConfig(dataset, contentColumnIds, props);
+    const wrapperClass = isSpreadsheet ? "spreadsheet" : isListMode ? "list-mode" : "sectioned";
 
-    if (!isListMode) {
-      const headerBar = this._buildHeaderBar(dataset, contentColumnIds, props, columnConfig!);
-      wrapper.appendChild(headerBar);
-    } else {
-      const colWidths = computeColumnWidths(dataset, contentColumnIds, "14px sans-serif");
-      const colWidthsCss = colWidths.map((w) => `${w}px`).join(" ");
-      const headerBar = document.createElement("div");
-      headerBar.className = "column-header-bar";
-      headerBar.style.gridTemplateColumns = colWidthsCss;
-      for (const id of contentColumnIds) {
-        const col = dataset.columns.find((c) => c.id === id);
-        const label = document.createElement("span");
-        label.className = "col-label";
-        label.textContent = col?.name ?? String(id);
-        headerBar.appendChild(label);
-      }
-      wrapper.appendChild(headerBar);
-    }
-
-    for (let gi = 0; gi < boundaries.length; gi++) {
-      const b = boundaries[gi]!;
-      const expanded = this._expandState.get(b.name) ?? true;
-
-      const section = isSpreadsheet
-        ? renderGroupTableRowHeader(b, expanded, this._instanceId, gi, showSummary)
-        : renderGroupSectionHeader(b, expanded, this._instanceId, gi, showSummary);
-
-      if (props.renderAfterHeader) {
-        const node: GroupNode = {
-          name: b.name,
-          depth: 0,
-          startRow: b.startRow,
-          rowCount: b.rowCount,
-          children: [],
-          aggregates: b.aggregates,
-        };
-        const interstitial = props.renderAfterHeader(node);
-        if (interstitial) {
-          section.appendChild(interstitial);
-        }
-      }
-
-      const contentWrapper = document.createElement("div");
-      contentWrapper.className = "section-content";
-      contentWrapper.id = `${this._instanceId}-group-${gi}`;
-      if (!expanded) contentWrapper.hidden = true;
-
-      if (isListMode) {
-        const colWidths = computeColumnWidths(dataset, contentColumnIds, "14px sans-serif");
-        const colWidthsCss = colWidths.map((w) => `${w}px`).join(" ");
-        const listEl = renderContentList(dataset, b, contentColumnIds, colWidthsCss, this._columnRenderers);
-        contentWrapper.appendChild(listEl);
-      } else {
-        const table = this._createGroupTable(dataset, b, columnConfig!, props);
-        this._groupTables.set(b.name, table);
-        contentWrapper.appendChild(table);
-      }
-
-      section.appendChild(contentWrapper);
-
-      const toggleBtn = section.querySelector("[data-group]") as HTMLButtonElement;
-      if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-          this._handleToggle(toggleBtn, b.name, contentWrapper);
-        });
-      }
-
-      wrapper.appendChild(section);
-    }
-
-    container.appendChild(wrapper);
-    this._lastBoundaries = boundaries;
+    return html`
+      <div class="pages-grouped-view ${wrapperClass}">
+        ${isListMode
+          ? this._renderListHeader(dataset, contentColumnIds)
+          : this._renderHeaderBar(dataset, contentColumnIds, props, columnConfig!)}
+        ${repeat(boundaries, (b) => b.name, (b, gi) =>
+          this._renderBoundarySection(
+            b, gi, props, dataset, contentColumnIds, columnConfig,
+            isSpreadsheet, isListMode, showSummary, defaultExpanded,
+          )
+        )}
+      </div>
+    `;
   }
 
-  private _forwardPropsToTable(table: PagesTableHost, props: GroupedViewProps): void {
-    if (this._columnRenderers) table.columnRenderers = this._columnRenderers;
-    if (props.rowStyle) table.rowStyle = props.rowStyle;
-    if (this._getRowAccent) table.getRowAccent = this._getRowAccent;
-    if (props.selection) table.selection = props.selection;
-    if (this._getRowKey) table.getRowKey = this._getRowKey;
-    if (this._getRowDetail) table.getRowDetail = this._getRowDetail;
-    if (this._getRowClass) table.getRowClass = this._getRowClass;
-    table.sortable = props.sortable ?? false;
-    table.clientSort = props.clientSort ?? false;
-    table.activeSort = this.activeSort;
-    if (this._hiddenColumnIds.size > 0) {
-      (table as unknown as Record<string, unknown>).hiddenColumns = Array.from(this._hiddenColumnIds);
-    }
-    if (this._selectedKeys.size > 0) {
-      (table as unknown as Record<string, unknown>).selectedKeys = Array.from(this._selectedKeys);
-    }
-  }
+  // ── Template helpers ──────────────────────────────────────────────
 
-  private _createGroupTable(
-    dataset: TypedDataSet,
-    boundary: GroupBoundary,
-    columnConfig: readonly TableColumnConfig[],
-    props: GroupedViewProps,
-  ): PagesTableHost {
-    const table = document.createElement("pages-table") as PagesTableHost;
-    table.embedded = true;
-    table.headerVisible = false;
-    table.dataSet = this._sliceDataset(dataset, boundary);
-    table.columnConfig = columnConfig;
-    this._forwardPropsToTable(table, props);
-    this._wireSelectionListener(table, props);
-    return table;
-  }
-
-  private _canReconcile(newBoundaries: readonly GroupBoundary[]): boolean {
-    if (this._lastBoundaries.length === 0) return false;
-    if (this._lastBoundaries.length !== newBoundaries.length) return false;
-    const oldNames = this._lastBoundaries.map((b) => b.name);
-    const newNames = newBoundaries.map((b) => b.name);
-    return oldNames.every((name, i) => name === newNames[i]);
-  }
-
-  private _updateExistingTables(
-    dataset: TypedDataSet,
-    boundaries: readonly GroupBoundary[],
-    contentColumnIds: readonly ColumnId[],
-    props: GroupedViewProps,
-  ): void {
-    const columnConfig = this._buildColumnConfig(dataset, contentColumnIds, props);
-    for (const b of boundaries) {
-      const table = this._groupTables.get(b.name);
-      if (table) {
-        table.dataSet = this._sliceDataset(dataset, b);
-        table.columnConfig = columnConfig;
-      }
-    }
-  }
-
-  private _handleToggle(
-    btn: HTMLButtonElement,
-    groupName: string,
-    content: HTMLElement,
-  ): void {
-    const wasExpanded = this._expandState.get(groupName) ?? true;
-    this._expandState.set(groupName, !wasExpanded);
-
-    btn.setAttribute("aria-expanded", String(!wasExpanded));
-    content.hidden = wasExpanded;
-
-    const chevron = btn.querySelector(".section-chevron, .group-chevron");
-    if (chevron) {
-      if (chevron.classList.contains("group-chevron")) {
-        chevron.textContent = wasExpanded ? "▶" : "▼";
-      } else {
-        if (!wasExpanded) {
-          chevron.classList.add("expanded");
-        } else {
-          chevron.classList.remove("expanded");
-        }
-      }
-    }
-
-    this.dispatchEvent(new CustomEvent("pages-event", {
-      bubbles: true,
-      composed: true,
-      detail: {
-        topic: "group-toggle",
-        payload: { group: groupName, expanded: !wasExpanded },
-      },
-    }));
-  }
-
-  private _buildHeaderBar(
+  private _renderHeaderBar(
     dataset: TypedDataSet,
     contentColumnIds: readonly ColumnId[],
     props: GroupedViewProps,
     columnConfig: readonly TableColumnConfig[],
-  ): HTMLElement {
-    const bar = document.createElement("div");
-    bar.className = "column-header-bar";
-
-    const visibleColumnIds = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id)));
-
+  ): TemplateResult {
+    const visibleColumnIds = contentColumnIds.filter(
+      (id) => !this._hiddenColumnIds.has(String(id)),
+    );
     const contentWidths = columnConfig
       .filter((c) => c.visible !== false && !this._hiddenColumnIds.has(String(c.id)))
       .map((c) => c.width ?? "1fr");
@@ -497,105 +181,276 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     if (this._getRowDetail) prefix.push("40px");
     if (props.selection === "multi") prefix.push("40px");
 
-    const gridCols = [...prefix, ...contentWidths].join(" ");
-    bar.style.gridTemplateColumns = gridCols;
-
-    if (this._getRowDetail) {
-      const spacer = document.createElement("div");
-      bar.appendChild(spacer);
-    }
-    if (props.selection === "multi") {
-      const selectAllWrapper = document.createElement("div");
-      selectAllWrapper.className = "select-all-wrapper";
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.className = "select-all-checkbox";
-      cb.setAttribute("aria-label", "Select all rows");
-      cb.addEventListener("click", () => this._handleSelectAll(dataset));
-      selectAllWrapper.appendChild(cb);
-      bar.appendChild(selectAllWrapper);
-    }
-
+    const gridCols = [...prefix, ...contentWidths, "auto"].join(" ");
     const sortable = props.sortable === true;
-    for (let i = 0; i < visibleColumnIds.length; i++) {
-      const id = visibleColumnIds[i]!;
-      const col = dataset.columns.find((c) => c.id === id);
-      const colConfig = props.columnConfig?.find((c) => c.id === id);
-      const colSortable = sortable && colConfig?.sortable !== false;
 
-      if (colSortable) {
-        const btn = document.createElement("button");
-        btn.className = "col-header";
-        btn.setAttribute("data-column", String(id));
-        btn.textContent = colConfig?.label ?? col?.name ?? String(id);
-        btn.addEventListener("click", () => this._handleHeaderSort(id));
-        bar.appendChild(btn);
-      } else {
-        const span = document.createElement("span");
-        span.className = "col-label";
-        span.setAttribute("data-column", String(id));
-        span.textContent = colConfig?.label ?? col?.name ?? String(id);
-        bar.appendChild(span);
-      }
-    }
+    return html`
+      <div class="column-header-bar" style="grid-template-columns: ${gridCols}">
+        ${this._getRowDetail ? html`<div></div>` : nothing}
+        ${props.selection === "multi" ? html`
+          <div class="select-all-wrapper">
+            <input type="checkbox" class="select-all-checkbox"
+              aria-label="Select all rows"
+              .checked=${this._selectAllChecked(dataset)}
+              .indeterminate=${this._selectAllIndeterminate(dataset)}
+              @click=${() => this._handleSelectAll(dataset)}
+            >
+          </div>
+        ` : nothing}
+        ${visibleColumnIds.map((id) => {
+          const col = dataset.columns.find((c) => c.id === id);
+          const colConfig = props.columnConfig?.find((c) => c.id === id);
+          const colSortable = sortable && colConfig?.sortable !== false;
+          const label = colConfig?.label ?? col?.name ?? String(id);
+          if (colSortable) {
+            return html`
+              <button class="${this._sortClass(id)}"
+                data-column="${String(id)}"
+                aria-sort="${ifDefined(this._ariaSort(id))}"
+                @click=${() => this._handleHeaderSort(id)}
+              >${label}</button>
+            `;
+          }
+          return html`
+            <span class="col-label" data-column="${String(id)}">${label}</span>
+          `;
+        })}
+        ${this._renderColumnPicker(dataset, contentColumnIds)}
+      </div>
+    `;
+  }
 
-    if (this.activeSort) {
-      this._updateHeaderBarSortOnElement(bar, this.activeSort);
-    }
+  private _renderListHeader(
+    dataset: TypedDataSet,
+    contentColumnIds: readonly ColumnId[],
+  ): TemplateResult {
+    const colWidths = computeColumnWidths(dataset, contentColumnIds, "14px sans-serif");
+    const colWidthsCss = colWidths.map((w) => `${w}px`).join(" ");
+    return html`
+      <div class="column-header-bar" style="grid-template-columns: ${colWidthsCss}">
+        ${contentColumnIds.map((id) => {
+          const col = dataset.columns.find((c) => c.id === id);
+          return html`<span class="col-label">${col?.name ?? String(id)}</span>`;
+        })}
+      </div>
+    `;
+  }
 
-    const pickerWrapper = document.createElement("div");
-    pickerWrapper.className = "column-picker-wrapper";
+  private _renderColumnPicker(
+    dataset: TypedDataSet,
+    contentColumnIds: readonly ColumnId[],
+  ): TemplateResult {
+    const visibleCount = contentColumnIds.filter(
+      (id) => !this._hiddenColumnIds.has(String(id)),
+    ).length;
 
-    const trigger = document.createElement("button");
-    trigger.className = "column-picker-trigger";
-    trigger.setAttribute("aria-label", "Column options");
-    trigger.textContent = "⋮";
-    const dropdown = document.createElement("div");
-    dropdown.className = "column-picker-dropdown";
-    dropdown.hidden = true;
+    return html`
+      <div class="column-picker-wrapper">
+        <button class="column-picker-trigger"
+          aria-label="Column options"
+          @click=${this._togglePicker}
+        >${"⋮"}</button>
+        ${this._pickerOpen ? html`
+          <div class="column-picker-dropdown">
+            <div class="picker-section-label">Columns</div>
+            ${contentColumnIds.map((id) => {
+              const col = dataset.columns.find((c) => c.id === id);
+              const isHidden = this._hiddenColumnIds.has(String(id));
+              const isLastVisible = !isHidden && visibleCount === 1;
+              return html`
+                <label class="column-picker-item">
+                  <input type="checkbox"
+                    .checked=${!isHidden}
+                    .disabled=${isLastVisible}
+                    @change=${() => this._toggleColumnVisibility(String(id), contentColumnIds)}
+                  >
+                  <span>${col?.name ?? String(id)}</span>
+                </label>
+              `;
+            })}
+          </div>
+        ` : nothing}
+      </div>
+    `;
+  }
 
-    const rebuildDropdown = (): void => {
-      dropdown.textContent = "";
-      const lbl = document.createElement("div");
-      lbl.className = "picker-section-label";
-      lbl.textContent = "Columns";
-      dropdown.appendChild(lbl);
+  private _renderBoundarySection(
+    boundary: GroupBoundary,
+    gi: number,
+    props: GroupedViewProps,
+    dataset: TypedDataSet,
+    contentColumnIds: readonly ColumnId[],
+    columnConfig: readonly TableColumnConfig[] | undefined,
+    isSpreadsheet: boolean,
+    isListMode: boolean,
+    showSummary: boolean,
+    defaultExpanded: boolean,
+  ): TemplateResult {
+    const expanded = this._isExpanded(boundary.name, defaultExpanded, boundary.rowCount);
 
-      const visibleCount = contentColumnIds.filter((cid) => !this._hiddenColumnIds.has(String(cid))).length;
-
-      for (const id of contentColumnIds) {
-        const col = dataset.columns.find((c) => c.id === id);
-        const isHidden = this._hiddenColumnIds.has(String(id));
-        const isLastVisible = !isHidden && visibleCount === 1;
-
-        const item = document.createElement("label");
-        item.className = "column-picker-item";
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = !isHidden;
-        cb.disabled = isLastVisible;
-        cb.addEventListener("change", () => {
-          this._toggleColumnVisibility(String(id), contentColumnIds);
-          rebuildDropdown();
-        });
-        const span = document.createElement("span");
-        span.textContent = col?.name ?? String(id);
-        item.append(cb, span);
-        dropdown.appendChild(item);
-      }
-    };
-
-    trigger.addEventListener("click", () => {
-      this._pickerOpen = !this._pickerOpen;
-      dropdown.hidden = !this._pickerOpen;
-      if (this._pickerOpen) rebuildDropdown();
+    const afterHeader = props.renderAfterHeader?.({
+      name: boundary.name,
+      depth: 0,
+      startRow: boundary.startRow,
+      rowCount: boundary.rowCount,
+      children: [],
+      aggregates: boundary.aggregates,
     });
 
-    rebuildDropdown();
-    pickerWrapper.append(trigger, dropdown);
-    bar.appendChild(pickerWrapper);
+    const sectionClass = isSpreadsheet ? "group-section spreadsheet-group" : "group-section";
+    const toggleClass = isSpreadsheet ? "group-toggle" : "section-toggle";
 
-    return bar;
+    return html`
+      <div class="${sectionClass}">
+        <button class="${toggleClass}"
+          aria-expanded="${String(expanded)}"
+          aria-controls="${this._instanceId}-group-${gi}"
+          data-group="${boundary.name}"
+          @click=${() => this._handleToggle(boundary.name, expanded)}
+        >
+          ${isSpreadsheet ? html`
+            <span class="group-chevron">${expanded ? "▼" : "▶"}</span>
+            <span>${this._spreadsheetLabel(boundary, showSummary)}</span>
+          ` : html`
+            <span class="${expanded ? "section-chevron expanded" : "section-chevron"}">${"▶"}</span>
+            <span class="section-title">${boundary.name}</span>
+            <span class="section-summary">${this._summaryText(boundary, showSummary)}</span>
+          `}
+        </button>
+        ${afterHeader}
+        <div class="section-content"
+          id="${this._instanceId}-group-${gi}"
+          ?hidden=${!expanded}
+        >
+          ${isListMode
+            ? this._renderContentList(dataset, boundary, contentColumnIds)
+            : this._renderGroupTable(dataset, boundary, columnConfig!, props)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderTreeNode(
+    node: GroupNode,
+    columnConfig: readonly TableColumnConfig[],
+    props: GroupedViewProps,
+    dataset: TypedDataSet,
+    contentColumnIds: readonly ColumnId[],
+    parentPath: string,
+    showSummary: boolean,
+    defaultExpanded: boolean,
+  ): TemplateResult {
+    const path = this._nodeKey(parentPath, node.name);
+    const expanded = this._isExpanded(path, defaultExpanded, node.rowCount);
+    const isSubLevel = node.depth > 0;
+
+    let summaryText = `${node.rowCount} items`;
+    if (showSummary && node.aggregates && node.aggregates.size > 0) {
+      summaryText += " · " + Array.from(node.aggregates.values())
+        .map((v) => String(v))
+        .join(", ");
+    }
+
+    return html`
+      <div class="group-section">
+        <button class="${isSubLevel ? "sub-section-toggle" : "section-toggle"}"
+          aria-expanded="${String(expanded)}"
+          data-group="${path}"
+          style="${ifDefined(isSubLevel ? `padding-left: ${node.depth * 16}px` : undefined)}"
+          @click=${() => this._handleToggle(path, expanded)}
+        >
+          <span class="${expanded ? "section-chevron expanded" : "section-chevron"}">${"▶"}</span>
+          <span class="section-title">${node.name}</span>
+          <span class="section-summary">${summaryText}</span>
+        </button>
+        ${props.renderAfterHeader?.(node)}
+        <div class="section-content" ?hidden=${!expanded}>
+          ${node.children.length > 0
+            ? node.children.map((child) =>
+                this._renderTreeNode(child, columnConfig, props, dataset, contentColumnIds, path, showSummary, defaultExpanded)
+              )
+            : this._renderGroupTable(dataset, node, columnConfig, props)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderGroupTable(
+    dataset: TypedDataSet,
+    slice: { startRow: number; rowCount: number },
+    columnConfig: readonly TableColumnConfig[],
+    props: GroupedViewProps,
+  ): TemplateResult {
+    return html`
+      <pages-table
+        .embedded=${true}
+        .headerVisible=${false}
+        .dataSet=${this._sliceDataset(dataset, slice)}
+        .columnConfig=${columnConfig}
+        .columnRenderers=${this._columnRenderers}
+        .rowStyle=${props.rowStyle}
+        .getRowAccent=${this._getRowAccent}
+        .selection=${props.selection}
+        .getRowKey=${this._getRowKey}
+        .getRowDetail=${this._getRowDetail}
+        .getRowClass=${this._getRowClass}
+        .sortable=${props.sortable ?? false}
+        .clientSort=${props.clientSort ?? false}
+        .activeSort=${this.activeSort}
+        .hiddenColumns=${this._hiddenColumnIds.size > 0 ? Array.from(this._hiddenColumnIds) : undefined}
+        .selectedKeys=${this._selectedKeys.size > 0 ? Array.from(this._selectedKeys) : undefined}
+        @selection-change=${this._handleChildSelectionChange}
+      ></pages-table>
+    `;
+  }
+
+  private _renderContentList(
+    dataset: TypedDataSet,
+    boundary: GroupBoundary,
+    contentColumnIds: readonly ColumnId[],
+  ): TemplateResult {
+    const colWidths = computeColumnWidths(dataset, contentColumnIds, "14px sans-serif");
+    const colWidthsCss = colWidths.map((w) => `${w}px`).join(" ");
+    const rows = dataset.rows.slice(boundary.startRow, boundary.startRow + boundary.rowCount);
+
+    return html`
+      <dl class="aligned-list" style="grid-template-columns: ${colWidthsCss}">
+        ${rows.map((row) => html`
+          <div class="list-item">
+            ${contentColumnIds.map((id) => {
+              const col = dataset.columns.find((c) => c.id === id);
+              const renderer = this._columnRenderers?.get(id);
+              if (renderer && col) {
+                const result = renderer(row.cell(id), row, col);
+                return html`
+                  <dt class="visually-hidden">${col.name ?? String(id)}</dt>
+                  <dd>${result instanceof HTMLElement ? result : String(result)}</dd>
+                `;
+              }
+              const cell = row.cell(id);
+              return html`
+                <dt class="visually-hidden">${col?.name ?? String(id)}</dt>
+                <dd>${cell.type === "NULL" ? "" : String(cell.value)}</dd>
+              `;
+            })}
+          </div>
+        `)}
+      </dl>
+    `;
+  }
+
+  // ── Event handlers ────────────────────────────────────────────────
+
+  private _handleToggle(groupKey: string, wasExpanded: boolean): void {
+    this._expandState = new Map([...this._expandState, [groupKey, !wasExpanded]]);
+    this.dispatchEvent(new CustomEvent("pages-event", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        topic: "group-toggle",
+        payload: { group: groupKey, expanded: !wasExpanded },
+      },
+    }));
   }
 
   private _handleHeaderSort(columnId: ColumnId): void {
@@ -613,24 +468,126 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     }));
   }
 
-  private _updateHeaderBarSort(sort: SortColumn | undefined): void {
-    const bar = this.shadowRoot.querySelector(".column-header-bar");
-    if (!bar) return;
-    this._updateHeaderBarSortOnElement(bar, sort);
+  private _handleChildSelectionChange(e: Event): void {
+    const ce = e as CustomEvent;
+    ce.stopPropagation();
+    const childKeys: readonly string[] = ce.detail.selectedKeys ?? [];
+    const table = ce.target as PagesTableHost;
+    const tableRows = table.dataSet?.rows ?? [];
+    const getRowKey = this._getRowKey;
+    if (!getRowKey) return;
+
+    const tableKeys = new Set(tableRows.map((row) => getRowKey(row)));
+    const newSelected = new Set(this._selectedKeys);
+    for (const key of tableKeys) {
+      newSelected.delete(key);
+    }
+    for (const key of childKeys) {
+      newSelected.add(key);
+    }
+    this._selectedKeys = newSelected;
+
+    this.dispatchEvent(new CustomEvent("selection-change", {
+      detail: { selectedKeys: Array.from(newSelected), selectedRows: [] },
+      bubbles: true,
+      composed: true,
+    }));
   }
 
-  private _updateHeaderBarSortOnElement(bar: Element, sort: SortColumn | undefined): void {
-    const buttons = bar.querySelectorAll(".col-header");
-    for (const btn of buttons) {
-      btn.removeAttribute("aria-sort");
-      btn.classList.remove("sort-asc", "sort-desc");
+  private _handleSelectAll(dataset: TypedDataSet): void {
+    const getRowKey = this._getRowKey;
+    if (!getRowKey) return;
+
+    const allKeys = dataset.rows.map((row) => getRowKey(row));
+    const allSelected = allKeys.length > 0 && allKeys.every((k) => this._selectedKeys.has(k));
+
+    this._selectedKeys = allSelected ? new Set() : new Set(allKeys);
+
+    this.dispatchEvent(new CustomEvent("selection-change", {
+      detail: { selectedKeys: Array.from(this._selectedKeys), selectedRows: [] },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  private _togglePicker(): void {
+    this._pickerOpen = !this._pickerOpen;
+  }
+
+  private _toggleColumnVisibility(columnId: string, contentColumnIds: readonly ColumnId[]): void {
+    const visibleCount = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id))).length;
+    const isHidden = this._hiddenColumnIds.has(columnId);
+
+    if (!isHidden && visibleCount <= 1) return;
+
+    const newHidden = new Set(this._hiddenColumnIds);
+    if (isHidden) {
+      newHidden.delete(columnId);
+    } else {
+      newHidden.add(columnId);
     }
-    if (!sort) return;
-    const active = bar.querySelector(`.col-header[data-column="${String(sort.columnId)}"]`);
-    if (!active) return;
-    const dir = sort.order === "ASCENDING" ? "ascending" : "descending";
-    active.setAttribute("aria-sort", dir);
-    active.classList.add(sort.order === "ASCENDING" ? "sort-asc" : "sort-desc");
+    this._hiddenColumnIds = newHidden;
+
+    const visibleColumns = contentColumnIds
+      .filter((id) => !newHidden.has(String(id)))
+      .map(String);
+
+    this.dispatchEvent(new CustomEvent("column-change", {
+      detail: { visibleColumns },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  // ── Pure computation helpers ──────────────────────────────────────
+
+  private _isExpanded(key: string, defaultExpanded: boolean, rowCount: number): boolean {
+    if (this._expandState.has(key)) return this._expandState.get(key)!;
+    return rowCount === 0 ? false : defaultExpanded;
+  }
+
+  private _summaryText(boundary: GroupBoundary, showSummary: boolean): string {
+    let text = `${boundary.rowCount} items`;
+    if (showSummary && boundary.aggregates.size > 0) {
+      text += " · " + Array.from(boundary.aggregates.values())
+        .map((v) => String(v))
+        .join(", ");
+    }
+    return text;
+  }
+
+  private _spreadsheetLabel(boundary: GroupBoundary, showSummary: boolean): string {
+    let text = `${boundary.name} (${boundary.rowCount})`;
+    if (showSummary && boundary.aggregates.size > 0) {
+      text += " · " + Array.from(boundary.aggregates.values())
+        .map((v) => String(v))
+        .join(", ");
+    }
+    return text;
+  }
+
+  private _sortClass(columnId: ColumnId): string {
+    if (!this.activeSort || String(this.activeSort.columnId) !== String(columnId)) {
+      return "col-header";
+    }
+    return this.activeSort.order === "ASCENDING" ? "col-header sort-asc" : "col-header sort-desc";
+  }
+
+  private _ariaSort(columnId: ColumnId): string | undefined {
+    if (!this.activeSort || String(this.activeSort.columnId) !== String(columnId)) {
+      return undefined;
+    }
+    return this.activeSort.order === "ASCENDING" ? "ascending" : "descending";
+  }
+
+  private _selectAllChecked(dataset: TypedDataSet): boolean {
+    const total = dataset.rows.length;
+    return this._selectedKeys.size > 0 && this._selectedKeys.size >= total;
+  }
+
+  private _selectAllIndeterminate(dataset: TypedDataSet): boolean {
+    const total = dataset.rows.length;
+    return this._selectedKeys.size > 0 && this._selectedKeys.size < total;
   }
 
   private _buildColumnConfig(
@@ -666,117 +623,4 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
   private _nodeKey(parentPath: string, name: string): string {
     return parentPath ? `${parentPath}\x1F${name}` : name;
   }
-
-  private _renderNode(
-    node: GroupNode,
-    wrapper: HTMLElement,
-    columnConfig: readonly TableColumnConfig[],
-    props: GroupedViewProps,
-    dataset: TypedDataSet,
-    contentColumnIds: readonly ColumnId[],
-    parentPath: string,
-    showSummary: boolean,
-  ): void {
-    const path = this._nodeKey(parentPath, node.name);
-    const defaultExpanded = props.defaultExpanded ?? true;
-    if (!this._expandState.has(path)) {
-      this._expandState.set(path, node.rowCount === 0 ? false : defaultExpanded);
-    }
-    const expanded = this._expandState.get(path) ?? true;
-
-    const section = document.createElement("div");
-    section.className = "group-section";
-
-    const isSubLevel = node.depth > 0;
-    const btn = document.createElement("button");
-    btn.className = isSubLevel ? "sub-section-toggle" : "section-toggle";
-    btn.setAttribute("aria-expanded", String(expanded));
-    btn.setAttribute("data-group", path);
-    if (isSubLevel) {
-      btn.style.paddingLeft = `${node.depth * 16}px`;
-    }
-
-    const chevron = document.createElement("span");
-    chevron.className = expanded ? "section-chevron expanded" : "section-chevron";
-    chevron.textContent = "▶";
-
-    const title = document.createElement("span");
-    title.className = "section-title";
-    title.textContent = node.name;
-
-    const summary = document.createElement("span");
-    summary.className = "section-summary";
-    let summaryText = `${node.rowCount} items`;
-    if (showSummary && node.aggregates && node.aggregates.size > 0) {
-      summaryText += " · " + Array.from(node.aggregates.values())
-        .map((v) => String(v))
-        .join(", ");
-    }
-    summary.textContent = summaryText;
-
-    btn.append(chevron, title, summary);
-    section.appendChild(btn);
-
-    if (props.renderAfterHeader) {
-      const interstitial = props.renderAfterHeader(node);
-      if (interstitial) {
-        section.appendChild(interstitial);
-      }
-    }
-
-    const contentWrapper = document.createElement("div");
-    contentWrapper.className = "section-content";
-    if (!expanded) contentWrapper.hidden = true;
-
-    if (node.children.length > 0) {
-      for (const child of node.children) {
-        this._renderNode(child, contentWrapper, columnConfig, props, dataset, contentColumnIds, path, showSummary);
-      }
-    } else {
-      const table = this._createGroupTableFromNode(dataset, node, columnConfig, props);
-      this._groupTables.set(path, table);
-      contentWrapper.appendChild(table);
-    }
-
-    section.appendChild(contentWrapper);
-
-    btn.addEventListener("click", () => {
-      this._handleToggle(btn, path, contentWrapper);
-    });
-
-    wrapper.appendChild(section);
-  }
-
-  private _createGroupTableFromNode(
-    dataset: TypedDataSet,
-    node: GroupNode,
-    columnConfig: readonly TableColumnConfig[],
-    props: GroupedViewProps,
-  ): PagesTableHost {
-    const table = document.createElement("pages-table") as PagesTableHost;
-    table.embedded = true;
-    table.headerVisible = false;
-    table.dataSet = this._sliceDataset(dataset, node);
-    table.columnConfig = columnConfig;
-    this._forwardPropsToTable(table, props);
-    this._wireSelectionListener(table, props);
-    return table;
-  }
-
-  private _cleanupSelectionListeners(): void {
-    for (const [table, listener] of this._selectionListeners) {
-      table.removeEventListener("selection-change", listener);
-    }
-    this._selectionListeners.clear();
-  }
-
-  private _wireSelectionListener(table: PagesTableHost, props: GroupedViewProps): void {
-    if (props.selection && props.selection !== "none") {
-      const listener = (e: Event) => this._handleChildSelectionChange(e as CustomEvent);
-      table.addEventListener("selection-change", listener);
-      this._selectionListeners.set(table, listener);
-    }
-  }
 }
-
-customElements.define("pages-grouped-view", PagesGroupedView);

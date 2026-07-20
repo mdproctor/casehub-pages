@@ -1,42 +1,10 @@
+import { html, css, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { CountdownProps } from "@casehubio/pages-component";
 import { parseRefreshTime } from "@casehubio/pages-data";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
-
-const COUNTDOWN_CSS = `
-:host {
-  display: block;
-  font-family: var(--pages-font-family, system-ui, sans-serif);
-  color: var(--pages-neutral-12, #333);
-}
-
-.countdown-container {
-  background: var(--pages-neutral-1, #fff);
-  border: 1px solid var(--pages-neutral-6, #e0e0e0);
-  border-radius: var(--pages-radius-sm, 4px);
-  padding: 20px 16px;
-  text-align: center;
-  min-height: 80px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.countdown-display {
-  font-size: var(--pages-countdown-font-size, 2em);
-  font-weight: var(--pages-countdown-font-weight, 600);
-  color: var(--pages-countdown-color, var(--pages-neutral-12, #333));
-}
-
-.countdown-display.countdown-warning {
-  color: var(--pages-countdown-warning-color, #ff9800);
-}
-
-.countdown-display.countdown-critical {
-  color: var(--pages-countdown-critical-color, #f44336);
-}
-`;
 
 interface ThresholdState {
   readonly isWarning: boolean;
@@ -49,25 +17,59 @@ interface ThresholdState {
  * Displays time remaining until a deadline from the dataset.
  * Updates every second with threshold-based color transitions.
  */
+@customElement("pages-countdown")
 export class PagesCountdown extends PagesElement<CountdownProps> {
   private _countdownTimer: ReturnType<typeof setInterval> | undefined;
   private _deadlineMs: number | null = null;
   private _warningThresholdMs: number | null = null;
   private _criticalThresholdMs: number | null = null;
   private _lastThresholdState: ThresholdState = { isWarning: false, isCritical: false };
+  private _displayText = "—";
+  private _thresholdClass = "";
 
-  protected override render(
-    container: HTMLDivElement,
+  static override styles = css`
+      :host {
+        display: block;
+        font-family: var(--pages-font-family, system-ui, sans-serif);
+        color: var(--pages-neutral-12, #333);
+      }
+
+      .countdown-container {
+        background: var(--pages-neutral-1, #fff);
+        border: 1px solid var(--pages-neutral-6, #e0e0e0);
+        border-radius: var(--pages-radius-sm, 4px);
+        padding: 20px 16px;
+        text-align: center;
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .countdown-display {
+        font-size: var(--pages-countdown-font-size, 2em);
+        font-weight: var(--pages-countdown-font-weight, 600);
+        color: var(--pages-countdown-color, var(--pages-neutral-12, #333));
+      }
+
+      .countdown-display.countdown-warning {
+        color: var(--pages-countdown-warning-color, #ff9800);
+      }
+
+      .countdown-display.countdown-critical {
+        color: var(--pages-countdown-critical-color, #f44336);
+      }
+    `;
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.stopCountdownTimer();
+  }
+
+  protected override renderContent(
     props: CountdownProps,
     dataset: TypedDataSet,
-  ): void {
-    container.textContent = "";
-
-    // Add styles
-    const style = document.createElement("style");
-    style.textContent = COUNTDOWN_CSS;
-    container.appendChild(style);
-
+  ): TemplateResult {
     // Parse thresholds
     this._warningThresholdMs = props.warningThreshold
       ? parseRefreshTime(props.warningThreshold)
@@ -79,64 +81,58 @@ export class PagesCountdown extends PagesElement<CountdownProps> {
     // Extract deadline from dataset
     const deadlineColumn = props.deadlineColumn ?? dataset.columns[0]?.id;
     if (!deadlineColumn || dataset.rows.length === 0) {
-      this.renderPlaceholder(container);
-      return;
+      this._deadlineMs = null;
+      this.stopCountdownTimer();
+      this._displayText = "—";
+      this._thresholdClass = "";
+      return this.renderCountdownDisplay();
     }
 
     const firstRow = dataset.rows[0];
     if (!firstRow) {
-      this.renderPlaceholder(container);
-      return;
+      this._deadlineMs = null;
+      this.stopCountdownTimer();
+      this._displayText = "—";
+      this._thresholdClass = "";
+      return this.renderCountdownDisplay();
     }
 
     const deadlineRaw = cellToRaw(firstRow.cell(deadlineColumn));
     if (deadlineRaw === null || !(deadlineRaw instanceof Date)) {
-      this.renderPlaceholder(container);
-      return;
+      this._deadlineMs = null;
+      this.stopCountdownTimer();
+      this._displayText = "—";
+      this._thresholdClass = "";
+      return this.renderCountdownDisplay();
     }
 
     this._deadlineMs = deadlineRaw.getTime();
 
-    // Create countdown display
-    this.renderCountdownDisplay(container, props.format ?? "full");
+    // Compute current display
+    this.updateDisplayState(props.format ?? "full");
 
-    // Start timer
-    this.startCountdownTimer();
+    // Start timer if not already running
+    if (this._countdownTimer === undefined) {
+      this.startCountdownTimer();
+    }
+
+    return this.renderCountdownDisplay();
   }
 
-  private renderPlaceholder(container: HTMLDivElement): void {
-    const wrapper = document.createElement("div");
-    wrapper.className = "countdown-container";
-
-    const display = document.createElement("div");
-    display.className = "countdown-display";
-    display.setAttribute("data-countdown-display", "");
-    display.setAttribute("aria-live", "polite");
-    display.textContent = "—";
-
-    wrapper.appendChild(display);
-    container.appendChild(wrapper);
+  private renderCountdownDisplay(): TemplateResult {
+    return html`
+      <div class="countdown-container">
+        <div class="countdown-display ${this._thresholdClass}" data-countdown-display aria-live="polite">
+          ${this._displayText}
+        </div>
+      </div>
+    `;
   }
 
-  private renderCountdownDisplay(container: HTMLDivElement, format: string): void {
-    const wrapper = document.createElement("div");
-    wrapper.className = "countdown-container";
-
-    const display = document.createElement("div");
-    display.className = "countdown-display";
-    display.setAttribute("data-countdown-display", "");
-    display.setAttribute("aria-live", "polite");
-
-    // Initial render
-    this.updateDisplay(display, format);
-
-    wrapper.appendChild(display);
-    container.appendChild(wrapper);
-  }
-
-  private updateDisplay(display: HTMLElement, format: string): void {
+  private updateDisplayState(format: string): void {
     if (this._deadlineMs === null) {
-      display.textContent = "—";
+      this._displayText = "—";
+      this._thresholdClass = "";
       return;
     }
 
@@ -144,8 +140,8 @@ export class PagesCountdown extends PagesElement<CountdownProps> {
     const remainingMs = this._deadlineMs - now;
 
     if (remainingMs <= 0) {
-      display.textContent = "EXPIRED";
-      display.className = "countdown-display countdown-critical";
+      this._displayText = "EXPIRED";
+      this._thresholdClass = "countdown-critical";
       this.stopCountdownTimer();
       return;
     }
@@ -153,21 +149,20 @@ export class PagesCountdown extends PagesElement<CountdownProps> {
     // Determine threshold state
     const newState = this.getThresholdState(remainingMs);
 
-    // Update classes
-    display.className = "countdown-display";
+    // Update class
     if (newState.isCritical) {
-      display.className += " countdown-critical";
+      this._thresholdClass = "countdown-critical";
     } else if (newState.isWarning) {
-      display.className += " countdown-warning";
+      this._thresholdClass = "countdown-warning";
+    } else {
+      this._thresholdClass = "";
     }
 
     // Update text content
-    display.textContent = this.formatRemaining(remainingMs, format);
+    this._displayText = this.formatRemaining(remainingMs, format);
 
     // Check if threshold state changed (for screen reader announcements)
     if (this.hasThresholdChanged(newState)) {
-      // Trigger screen reader announcement by updating aria-live region
-      // This happens automatically when textContent changes
       this._lastThresholdState = newState;
     }
   }
@@ -232,9 +227,9 @@ export class PagesCountdown extends PagesElement<CountdownProps> {
     if (!this.isConnected || this._deadlineMs === null) return;
 
     this._countdownTimer = setInterval(() => {
-      const display = this.container.querySelector<HTMLElement>("[data-countdown-display]");
-      if (display && this.props) {
-        this.updateDisplay(display, this.props.format ?? "full");
+      if (this.props) {
+        this.updateDisplayState(this.props.format ?? "full");
+        this.requestUpdate();
       }
     }, 1000);
   }
@@ -245,11 +240,4 @@ export class PagesCountdown extends PagesElement<CountdownProps> {
       this._countdownTimer = undefined;
     }
   }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.stopCountdownTimer();
-  }
 }
-
-customElements.define("pages-countdown", PagesCountdown);

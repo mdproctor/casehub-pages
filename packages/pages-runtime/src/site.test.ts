@@ -427,7 +427,7 @@ describe("loadSite — cross-filter: selector updates listening component", () =
     const selectorViz = selectorContainer.querySelector("pages-selector");
     expect(selectorViz).toBeTruthy();
 
-    const selectEl = selectorViz!.shadowRoot.querySelector("select");
+    const selectEl = selectorViz!.shadowRoot!.querySelector("select");
     expect(selectEl).toBeTruthy();
 
     // The dropdown should have "All" + distinct values
@@ -551,7 +551,7 @@ describe("loadSite — cross-filter: selector updates listening component", () =
 
     // Select "A" in the selector dropdown
     const selViz = selContainer.querySelector("pages-selector")!;
-    const select = selViz.shadowRoot.querySelector("select")!;
+    const select = selViz.shadowRoot!.querySelector("select")!;
     select.value = "0";
     select.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 50));

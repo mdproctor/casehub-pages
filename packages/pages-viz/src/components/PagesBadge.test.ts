@@ -39,12 +39,12 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(1);
-    expect(badges[0]!.textContent).toBe("PENDING");
+    expect(badges[0]!.textContent!.trim()).toBe("PENDING");
   });
 
   it("renders multiple badges for multi-row dataset", async () => {
@@ -56,14 +56,14 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(3);
-    expect(badges[0]!.textContent).toBe("PENDING");
-    expect(badges[1]!.textContent).toBe("ACTIVE");
-    expect(badges[2]!.textContent).toBe("DONE");
+    expect(badges[0]!.textContent!.trim()).toBe("PENDING");
+    expect(badges[1]!.textContent!.trim()).toBe("ACTIVE");
+    expect(badges[2]!.textContent!.trim()).toBe("DONE");
   });
 
   it("applies colorMap for matching values", async () => {
@@ -79,10 +79,10 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll<HTMLSpanElement>(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll<HTMLSpanElement>(".pages-badge");
     expect(badges.length).toBe(2);
     expect(badges[0]!.style.backgroundColor).toBe("rgb(255, 167, 38)"); // #ffa726
     expect(badges[1]!.style.backgroundColor).toBe("rgb(102, 187, 106)"); // #66bb6a
@@ -100,10 +100,10 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll<HTMLSpanElement>(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll<HTMLSpanElement>(".pages-badge");
     expect(badges.length).toBe(1);
     // Should have a background color (auto-generated)
     expect(badges[0]!.style.backgroundColor).toBeTruthy();
@@ -118,14 +118,14 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
     // Should render from first column (id), not second (status)
-    expect(badges[0]!.textContent).toBe("1");
-    expect(badges[1]!.textContent).toBe("2");
+    expect(badges[0]!.textContent!.trim()).toBe("1");
+    expect(badges[1]!.textContent!.trim()).toBe("2");
   });
 
   it("uses specified column when column prop present", async () => {
@@ -138,13 +138,13 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
-    expect(badges[0]!.textContent).toBe("PENDING");
-    expect(badges[1]!.textContent).toBe("ACTIVE");
+    expect(badges[0]!.textContent!.trim()).toBe("PENDING");
+    expect(badges[1]!.textContent!.trim()).toBe("ACTIVE");
   });
 
   it("includes role=status for ARIA", async () => {
@@ -156,10 +156,10 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badge = shadowRoot.querySelector(".pages-badge");
+    const badge = shadowRoot!.querySelector(".pages-badge");
     expect(badge!.getAttribute("role")).toBe("status");
   });
 
@@ -172,10 +172,10 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(0);
   });
 
@@ -188,12 +188,12 @@ describe("PagesBadge", () => {
     element.props = props;
     element.dataSet = dataset;
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await element.updateComplete;
 
     const shadowRoot = element.shadowRoot;
-    const badges = shadowRoot.querySelectorAll(".pages-badge");
+    const badges = shadowRoot!.querySelectorAll(".pages-badge");
     expect(badges.length).toBe(2);
-    expect(badges[0]!.textContent).toBe(""); // NULL renders as empty
-    expect(badges[1]!.textContent).toBe("ACTIVE");
+    expect(badges[0]!.textContent!.trim()).toBe(""); // NULL renders as empty
+    expect(badges[1]!.textContent!.trim()).toBe("ACTIVE");
   });
 });

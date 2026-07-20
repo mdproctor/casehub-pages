@@ -265,34 +265,9 @@ export function createActivationCallback(
     }
 
     if (component.type === "legend" && component.props) {
-      const props = component.props as Record<string, unknown>;
-      const entries = (props.entries ?? []) as readonly { label: string; color: string }[];
-      const layout = (props.layout as string) ?? "linear";
-      const shape = (props.swatchShape as string) ?? "square";
-
-      const wrapper = document.createElement("div");
-      const style = document.createElement("style");
-      style.textContent = `.pages-legend{display:flex;flex-wrap:wrap;gap:var(--pages-space-3,12px);list-style:none;margin:0;padding:0;font-size:var(--pages-font-size-sm,12px);color:var(--pages-neutral-11,#404040)}.pages-legend.horizontal{flex-wrap:nowrap;overflow-x:auto}.pages-legend.vertical{flex-direction:column;flex-wrap:nowrap}.pages-legend.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.legend-entry{display:flex;align-items:center;gap:var(--pages-space-1,4px)}.legend-swatch{width:12px;height:12px;border-radius:var(--pages-radius-sm,4px);flex-shrink:0}.legend-swatch.circle{border-radius:50%}`;
-      wrapper.appendChild(style);
-      const ul = document.createElement("ul");
-      ul.className = "pages-legend";
-      if (layout === "horizontal") { ul.style.flexWrap = "nowrap"; ul.style.overflowX = "auto"; }
-      else if (layout === "vertical") { ul.style.flexDirection = "column"; ul.style.flexWrap = "nowrap"; }
-      else if (layout === "grid") { ul.style.display = "grid"; ul.style.gridTemplateColumns = "repeat(auto-fill, minmax(120px, 1fr))"; }
-      for (const entry of entries) {
-        const li = document.createElement("li");
-        li.className = "legend-entry";
-        const swatch = document.createElement("span");
-        swatch.className = `legend-swatch${shape === "circle" ? " circle" : ""}`;
-        swatch.style.background = entry.color;
-        swatch.setAttribute("aria-hidden", "true");
-        const label = document.createElement("span");
-        label.textContent = entry.label;
-        li.append(swatch, label);
-        ul.appendChild(li);
-      }
-      wrapper.appendChild(ul);
-      el.appendChild(wrapper);
+      const legendEl = document.createElement("pages-legend");
+      (legendEl as unknown as PagesContentElement<Record<string, unknown>>).props = component.props;
+      el.appendChild(legendEl);
       if (component.visibleWhen && contextManager) {
         registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
       }

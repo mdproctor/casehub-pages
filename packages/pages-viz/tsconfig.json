@@ -3,7 +3,9 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": ".typecheck",
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
   },
   "include": [
     "src"

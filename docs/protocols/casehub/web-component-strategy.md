@@ -1,30 +1,26 @@
 ---
 id: PP-20260705-c7687d
-title: "Web Components use Lit for interactive UI, vanilla HTMLElement for simple display"
+title: "All Web Components use Lit — pages-viz base classes extend LitElement"
 type: rule
 scope: repo
 applies_to: "all Web Component authoring in casehub-pages"
 cross_repo_consumers: []
 severity: important
 refs: []
-violation_hint: "Web Component uses Lit for a static display-only widget, or uses vanilla HTMLElement for a component with reactive state and child property bindings"
+violation_hint: "Web Component extends raw HTMLElement instead of PagesElement/PagesContentElement/LitElement"
 created: 2026-07-05
 ---
 
-Two approaches coexist, selected by component purpose:
+All visualization and UI Web Components use Lit. The pages-viz base classes
+(`PagesElement`, `PagesContentElement`) extend `LitElement`, as do pages-table
+and pages-primitives.
 
-| Approach | When | Examples |
-|----------|------|---------|
-| **Lit** | Interactive UI with reactive state, user input, a11y | pages-primitives, pages-ui forms |
-| **Vanilla** | Simple display, auth gates, pipeline components | pages-ui auth, pages-viz bases |
-
-## Decision criteria
-
-**Use Lit when any apply:** reactive properties triggering re-renders,
-scoped CSS needed, composition mixins used, user input beyond simple clicks.
-
-**Use vanilla when all apply:** no Lit dependency needed, no mixin
-composition, no scoped CSS via `css` tagged literals.
+| Package | Base class | Examples |
+|---------|-----------|---------|
+| **pages-viz** | `PagesElement` (data-bound), `PagesContentElement` (props-only) | charts, metrics, selectors, form inputs, badges |
+| **pages-table** | `LitElement` + `RovingTabindexMixin` | pages-table |
+| **pages-primitives** | `LitElement` | modal, a11y mixins |
+| **pages-ui** | Vanilla `HTMLElement` | auth gates (pages-identity, pages-dev-auth) — legacy, not yet migrated |
 
 ## Lit conventions
 
@@ -44,31 +40,31 @@ composition, no scoped CSS via `css` tagged literals.
   `RovingTabindexMixin(LitElement)`, not deep class hierarchies
 - Template via `html` tagged literal, styles via `css` tagged literal
 
-## Vanilla conventions
+## Vanilla conventions (legacy — pages-ui auth only)
 
 - `customElements.define('pages-<name>', ClassName)` at module level
 - `static get observedAttributes()` for reactive attributes
 - Shadow DOM attached in `connectedCallback()`
 - Manual event listener cleanup in `disconnectedCallback()`
 
-## Vanilla base class hierarchy
+## Lit base class hierarchy
 
-The `pages-viz` package provides abstract base classes for vanilla components
-with framework lifecycle management:
+The `pages-viz` package provides abstract Lit base classes for data-bound
+visualization components:
 
 ```
-HTMLElement
-  → PagesElement<P>           (data requests, refresh timer, resize observer, render pipeline)
-    → PagesChartElement<P>    (ECharts init/dispose, option pipeline, click-to-filter)
-    → PagesFormInput<P>       (field value extraction, change events, submit-on-Enter)
-  → PagesContentElement<P>   (simple content: props + render, no data binding)
+LitElement
+  ├── PagesElement<P>           (data requests, refresh timer, resize observer, render dispatch with cache())
+  │     ├── PagesChartElement<P>    (ECharts init/dispose, option pipeline, click-to-filter)
+  │     └── PagesFormInput<P>       (field value extraction, change events, submit-on-Enter)
+  └── PagesContentElement<P>   (simple content: props + render, no data binding)
 ```
 
-`PagesElement` and its subtypes have reactive property bindings (`props` and
-`dataSet` setters trigger re-render) and observer patterns (ResizeObserver,
-MutationObserver). `PagesContentElement` is genuinely one-shot — props trigger
-render, no data machinery. New viz components should extend the appropriate
-base class rather than raw `HTMLElement`.
+`PagesElement` uses `@property({ attribute: false })` for reactive props and
+delegates data state to `DataSourceController` (which stays framework-agnostic
+in `pages-component`). `PagesContentElement` is genuinely one-shot — props
+trigger render, no data machinery. New viz components should extend the
+appropriate base class rather than raw `LitElement`.
 
 ## Sub-path exports for side-effect isolation
 

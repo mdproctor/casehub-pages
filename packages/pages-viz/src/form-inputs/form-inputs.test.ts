@@ -52,42 +52,48 @@ describe("PagesTextInput", () => {
     }
   });
 
-  it("renders input with field value from dataset", () => {
+  it("renders input with field value from dataset", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
     el.props = { field: "name", label: "Name", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input).not.toBeNull();
     expect(input.value).toBe("Alice");
   });
 
-  it("renders label when provided", () => {
+  it("renders label when provided", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
     el.props = { field: "name", label: "Full Name", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const label = el.shadowRoot.querySelector("label")!;
+    const label = el.shadowRoot!.querySelector("label")!;
     expect(label.textContent).toBe("Full Name");
   });
 
-  it("emits pages-field-change on input when editable", () => {
+  it("emits pages-field-change on input when editable", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [[""]]);
     el.props = { field: "name", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "Bob";
     input.dispatchEvent(new Event("input"));
 
@@ -97,19 +103,21 @@ describe("PagesTextInput", () => {
     expect(events[0]!.committed).toBe(false);
   });
 
-  it("emits committed event on blur", () => {
+  it("emits committed event on blur", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [[""]]);
     el.props = { field: "name", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "Charlie";
     input.dispatchEvent(new Event("blur"));
 
@@ -117,42 +125,48 @@ describe("PagesTextInput", () => {
     expect(events[0]!.committed).toBe(true);
   });
 
-  it("does not emit events when not editable", () => {
+  it("does not emit events when not editable", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [[""]]);
     el.props = { field: "name", lookup: mockLookup("test") };
     el.editable = false;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: Event[] = [];
     el.addEventListener("pages-field-change", (e: Event) => events.push(e));
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "test";
     input.dispatchEvent(new Event("input"));
 
     expect(events).toHaveLength(0);
   });
 
-  it("sets input to readonly when not editable", () => {
+  it("sets input to readonly when not editable", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
     el.props = { field: "name", lookup: mockLookup("test") };
     el.editable = false;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.readOnly).toBe(true);
   });
 
-  it("respects maxLength prop", () => {
+  it("respects maxLength prop", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [[""]]);
     el.props = { field: "name", maxLength: 10, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.maxLength).toBe(10);
   });
 });
@@ -172,31 +186,35 @@ describe("PagesNumberInput", () => {
     }
   });
 
-  it("renders number input with field value", () => {
+  it("renders number input with field value", async () => {
     const ds = makeDataSet([["age", "NUMBER"]], [[42]]);
     el.props = { field: "age", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.type).toBe("number");
     expect(input.value).toBe("42");
   });
 
-  it("emits numeric value on input", () => {
+  it("emits numeric value on input", async () => {
     const ds = makeDataSet([["age", "NUMBER"]], [[0]]);
     el.props = { field: "age", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "25";
     input.dispatchEvent(new Event("input"));
 
@@ -205,19 +223,21 @@ describe("PagesNumberInput", () => {
     expect(events[0]!.committed).toBe(false);
   });
 
-  it("emits null for invalid number", () => {
+  it("emits null for invalid number", async () => {
     const ds = makeDataSet([["age", "NUMBER"]], [[0]]);
     el.props = { field: "age", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "abc";
     input.dispatchEvent(new Event("input"));
 
@@ -225,7 +245,7 @@ describe("PagesNumberInput", () => {
     expect(events[0]!.value).toBe(null);
   });
 
-  it("sets min/max/step attributes", () => {
+  it("sets min/max/step attributes", async () => {
     const ds = makeDataSet([["score", "NUMBER"]], [[50]]);
     el.props = {
       field: "score",
@@ -236,9 +256,11 @@ describe("PagesNumberInput", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.min).toBe("0");
     expect(input.max).toBe("100");
     expect(input.step).toBe("5");
@@ -260,52 +282,60 @@ describe("PagesCheckbox", () => {
     }
   });
 
-  it("coerces 'true' string to checked", () => {
+  it("coerces 'true' string to checked", async () => {
     const ds = makeDataSet([["active", "LABEL"]], [["true"]]);
     el.props = { field: "active", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.checked).toBe(true);
   });
 
-  it("coerces 'TRUE' (uppercase) to checked", () => {
+  it("coerces 'TRUE' (uppercase) to checked", async () => {
     const ds = makeDataSet([["active", "LABEL"]], [["TRUE"]]);
     el.props = { field: "active", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.checked).toBe(true);
   });
 
-  it("coerces 'false' string to unchecked", () => {
+  it("coerces 'false' string to unchecked", async () => {
     const ds = makeDataSet([["active", "LABEL"]], [["false"]]);
     el.props = { field: "active", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.checked).toBe(false);
   });
 
-  it("emits 'true' or 'false' string on change", () => {
+  it("emits 'true' or 'false' string on change", async () => {
     const ds = makeDataSet([["active", "LABEL"]], [["false"]]);
     el.props = { field: "active", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.checked = true;
     input.dispatchEvent(new Event("change"));
 
@@ -314,14 +344,16 @@ describe("PagesCheckbox", () => {
     expect(events[0]!.committed).toBe(true);
   });
 
-  it("renders label", () => {
+  it("renders label", async () => {
     const ds = makeDataSet([["active", "LABEL"]], [["false"]]);
     el.props = { field: "active", label: "Is Active", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const label = el.shadowRoot.querySelector("label")!;
+    const label = el.shadowRoot!.querySelector("label")!;
     expect(label.textContent).toBe("Is Active");
   });
 });
@@ -341,42 +373,48 @@ describe("PagesTextarea", () => {
     }
   });
 
-  it("renders textarea with field value", () => {
+  it("renders textarea with field value", async () => {
     const ds = makeDataSet([["notes", "TEXT"]], [["Hello\nWorld"]]);
     el.props = { field: "notes", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const textarea = el.shadowRoot.querySelector("textarea")!;
+    const textarea = el.shadowRoot!.querySelector("textarea")!;
     expect(textarea).not.toBeNull();
     expect(textarea.value).toBe("Hello\nWorld");
   });
 
-  it("sets rows attribute", () => {
+  it("sets rows attribute", async () => {
     const ds = makeDataSet([["notes", "TEXT"]], [[""]]);
     el.props = { field: "notes", rows: 5, lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const textarea = el.shadowRoot.querySelector("textarea")!;
+    const textarea = el.shadowRoot!.querySelector("textarea")!;
     expect(textarea.rows).toBe(5);
   });
 
-  it("emits on input and blur", () => {
+  it("emits on input and blur", async () => {
     const ds = makeDataSet([["notes", "TEXT"]], [[""]]);
     el.props = { field: "notes", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const textarea = el.shadowRoot.querySelector("textarea")!;
+    const textarea = el.shadowRoot!.querySelector("textarea")!;
     textarea.value = "Updated text";
     textarea.dispatchEvent(new Event("input"));
 
@@ -405,43 +443,49 @@ describe("PagesDatePicker", () => {
     }
   });
 
-  it("renders date input with ISO 8601 value from Date object", () => {
+  it("renders date input with ISO 8601 value from Date object", async () => {
     const date = new Date("2024-01-15T00:00:00Z");
     const ds = makeDataSet([["birthday", "DATE"]], [[date]]);
     el.props = { field: "birthday", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.type).toBe("date");
     expect(input.value).toBe("2024-01-15");
   });
 
-  it("renders date input with ISO 8601 value from string", () => {
+  it("renders date input with ISO 8601 value from string", async () => {
     const ds = makeDataSet([["birthday", "TEXT"]], [["2024-01-15"]]);
     el.props = { field: "birthday", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.value).toBe("2024-01-15");
   });
 
-  it("emits ISO 8601 date string on change", () => {
+  it("emits ISO 8601 date string on change", async () => {
     const ds = makeDataSet([["birthday", "DATE"]], [[new Date()]]);
     el.props = { field: "birthday", lookup: mockLookup("test") };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     input.value = "2025-12-31";
     input.dispatchEvent(new Event("change"));
 
@@ -450,7 +494,7 @@ describe("PagesDatePicker", () => {
     expect(events[0]!.committed).toBe(true);
   });
 
-  it("sets min/max attributes", () => {
+  it("sets min/max attributes", async () => {
     const ds = makeDataSet([["birthday", "DATE"]], [[new Date()]]);
     el.props = {
       field: "birthday",
@@ -460,9 +504,11 @@ describe("PagesDatePicker", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const input = el.shadowRoot.querySelector("input")!;
+    const input = el.shadowRoot!.querySelector("input")!;
     expect(input.min).toBe("2000-01-01");
     expect(input.max).toBe("2030-12-31");
   });
@@ -483,7 +529,7 @@ describe("PagesDropdown", () => {
     }
   });
 
-  it("renders select with fixed options", () => {
+  it("renders select with fixed options", async () => {
     const ds = makeDataSet([["status", "LABEL"]], [["active"]]);
     el.props = {
       field: "status",
@@ -492,17 +538,19 @@ describe("PagesDropdown", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const select = el.shadowRoot.querySelector("select")!;
+    const select = el.shadowRoot!.querySelector("select")!;
     const options = Array.from(select.querySelectorAll("option"));
     expect(options).toHaveLength(3);
-    expect(options[0]!.textContent).toBe("active");
-    expect(options[1]!.textContent).toBe("inactive");
-    expect(options[2]!.textContent).toBe("pending");
+    expect(options[0]!.textContent!.trim()).toBe("active");
+    expect(options[1]!.textContent!.trim()).toBe("inactive");
+    expect(options[2]!.textContent!.trim()).toBe("pending");
   });
 
-  it("selects current field value", () => {
+  it("selects current field value", async () => {
     const ds = makeDataSet([["status", "LABEL"]], [["inactive"]]);
     el.props = {
       field: "status",
@@ -511,13 +559,15 @@ describe("PagesDropdown", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const select = el.shadowRoot.querySelector("select")!;
+    const select = el.shadowRoot!.querySelector("select")!;
     expect(select.value).toBe("inactive");
   });
 
-  it("emits on change", () => {
+  it("emits on change", async () => {
     const ds = makeDataSet([["status", "LABEL"]], [["active"]]);
     el.props = {
       field: "status",
@@ -526,14 +576,16 @@ describe("PagesDropdown", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const events: PagesFieldChangeDetail[] = [];
     el.addEventListener("pages-field-change", (e: Event) =>
       events.push((e as CustomEvent).detail),
     );
 
-    const select = el.shadowRoot.querySelector("select")!;
+    const select = el.shadowRoot!.querySelector("select")!;
     select.value = "inactive";
     select.dispatchEvent(new Event("change"));
 
@@ -542,7 +594,7 @@ describe("PagesDropdown", () => {
     expect(events[0]!.committed).toBe(true);
   });
 
-  it("DataSetOptions renders empty until optionsDataSet is provided", () => {
+  it("DataSetOptions renders empty until optionsDataSet is provided", async () => {
     const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
     el.props = {
       field: "category",
@@ -551,13 +603,15 @@ describe("PagesDropdown", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
-    const select = el.shadowRoot.querySelector("select")!;
+    const select = el.shadowRoot!.querySelector("select")!;
     expect(Array.from(select.querySelectorAll("option"))).toHaveLength(0);
   });
 
-  it("DataSetOptions populates options from optionsDataSet", () => {
+  it("DataSetOptions populates options from optionsDataSet", async () => {
     const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
     el.props = {
       field: "category",
@@ -566,26 +620,29 @@ describe("PagesDropdown", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const optionsDs = makeDataSet(
       [["value", "LABEL"], ["label", "LABEL"]],
       [["electronics", "Electronics"], ["clothing", "Clothing"], ["food", "Food"]],
     );
     el.optionsDataSet = optionsDs;
+    await el.updateComplete;
 
-    const select = el.shadowRoot.querySelector("select")!;
+    const select = el.shadowRoot!.querySelector("select")!;
     const opts = Array.from(select.querySelectorAll("option"));
     expect(opts).toHaveLength(3);
     expect(opts[0]!.value).toBe("electronics");
-    expect(opts[0]!.textContent).toBe("Electronics");
+    expect(opts[0]!.textContent!.trim()).toBe("Electronics");
     expect(opts[1]!.value).toBe("clothing");
-    expect(opts[1]!.textContent).toBe("Clothing");
+    expect(opts[1]!.textContent!.trim()).toBe("Clothing");
     expect(opts[2]!.value).toBe("food");
-    expect(opts[2]!.textContent).toBe("Food");
+    expect(opts[2]!.textContent!.trim()).toBe("Food");
   });
 
-  it("DataSetOptions selects current field value from optionsDataSet", () => {
+  it("DataSetOptions selects current field value from optionsDataSet", async () => {
     const ds = makeDataSet([["category", "LABEL"]], [["clothing"]]);
     el.props = {
       field: "category",
@@ -594,19 +651,22 @@ describe("PagesDropdown", () => {
     };
     el.editable = true;
     document.body.appendChild(el);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const optionsDs = makeDataSet(
       [["value", "LABEL"], ["label", "LABEL"]],
       [["electronics", "Electronics"], ["clothing", "Clothing"]],
     );
     el.optionsDataSet = optionsDs;
+    await el.updateComplete;
 
-    const select = el.shadowRoot.querySelector("select")!;
+    const select = el.shadowRoot!.querySelector("select")!;
     expect(select.value).toBe("clothing");
   });
 
-  it("DataSetOptions dispatches pages-data-request for options dataset", () => {
+  it("DataSetOptions dispatches pages-data-request for options dataset", async () => {
     const ds = makeDataSet([["category", "LABEL"]], [["electronics"]]);
     el.props = {
       field: "category",
@@ -624,7 +684,9 @@ describe("PagesDropdown", () => {
     });
     wrapper.appendChild(el);
     document.body.appendChild(wrapper);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const optionsReq = requests.find(r => r.dataSetId === "categories");
     expect(optionsReq).toBeDefined();
@@ -632,7 +694,7 @@ describe("PagesDropdown", () => {
     wrapper.remove();
   });
 
-  it("cascading: re-requests options when filterField changes", () => {
+  it("cascading: re-requests options when filterField changes", async () => {
     const ds = makeDataSet([["city", "LABEL"], ["country", "LABEL"]], [["Paris", "France"]]);
     el.props = {
       field: "city",
@@ -656,7 +718,9 @@ describe("PagesDropdown", () => {
     });
     wrapper.appendChild(el);
     document.body.appendChild(wrapper);
+    await el.updateComplete;
     el.dataSet = ds;
+    await el.updateComplete;
 
     const optionsRequests = requests.filter(r => r.dataSetId === "cities");
     expect(optionsRequests.length).toBe(1);

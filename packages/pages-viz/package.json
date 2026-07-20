@@ -23,7 +23,8 @@
   "dependencies": {
     "@casehubio/pages-component": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
-    "echarts": "^5.6.0"
+    "echarts": "^5.6.0",
+    "lit": "^3.3.3"
   },
   "devDependencies": {
     "rimraf": "^6.1.0",

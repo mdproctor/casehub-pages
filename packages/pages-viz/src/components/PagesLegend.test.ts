@@ -1,18 +1,18 @@
 import { describe, it, expect, afterEach } from "vitest";
 import type { LegendProps } from "./PagesLegend.js";
+import type { PagesLegend } from "./PagesLegend.js";
 import "./PagesLegend.js";
 
-type LegendEl = HTMLElement & { props: LegendProps };
-
-function createLegend(props: LegendProps): LegendEl {
-  const el = document.createElement("pages-legend") as LegendEl;
+async function createLegend(props: LegendProps): Promise<PagesLegend> {
+  const el = document.createElement("pages-legend") as PagesLegend;
   el.props = props;
   document.body.appendChild(el);
+  await el.updateComplete;
   return el;
 }
 
 describe("PagesLegend", () => {
-  let el: LegendEl | undefined;
+  let el: PagesLegend | undefined;
 
   afterEach(() => {
     if (el) {
@@ -21,8 +21,8 @@ describe("PagesLegend", () => {
     }
   });
 
-  it("renders entries as list items with swatches", () => {
-    el = createLegend({
+  it("renders entries as list items with swatches", async () => {
+    el = await createLegend({
       entries: [
         { label: "Alpha", color: "#ff0000" },
         { label: "Beta", color: "#00ff00" },
@@ -42,15 +42,15 @@ describe("PagesLegend", () => {
     expect(secondLabel!.textContent).toBe("Beta");
   });
 
-  it("uses semantic ul/li structure", () => {
-    el = createLegend({ entries: [{ label: "A", color: "#000" }] });
+  it("uses semantic ul/li structure", async () => {
+    el = await createLegend({ entries: [{ label: "A", color: "#000" }] });
 
     expect(el.shadowRoot!.querySelector("ul")).toBeTruthy();
     expect(el.shadowRoot!.querySelector("li")).toBeTruthy();
   });
 
-  it("defaults to linear layout (no extra class)", () => {
-    el = createLegend({ entries: [{ label: "A", color: "#000" }] });
+  it("defaults to linear layout (no extra class)", async () => {
+    el = await createLegend({ entries: [{ label: "A", color: "#000" }] });
 
     const ul = el.shadowRoot!.querySelector("ul")!;
     expect(ul.classList.contains("pages-legend")).toBe(true);
@@ -58,8 +58,8 @@ describe("PagesLegend", () => {
     expect(ul.classList.contains("grid")).toBe(false);
   });
 
-  it("applies horizontal layout class", () => {
-    el = createLegend({
+  it("applies horizontal layout class", async () => {
+    el = await createLegend({
       entries: [{ label: "A", color: "#000" }],
       layout: "horizontal",
     });
@@ -68,8 +68,8 @@ describe("PagesLegend", () => {
     expect(ul.classList.contains("horizontal")).toBe(true);
   });
 
-  it("applies grid layout class", () => {
-    el = createLegend({
+  it("applies grid layout class", async () => {
+    el = await createLegend({
       entries: [{ label: "A", color: "#000" }],
       layout: "grid",
     });
@@ -78,8 +78,8 @@ describe("PagesLegend", () => {
     expect(ul.classList.contains("grid")).toBe(true);
   });
 
-  it("applies circle swatch shape", () => {
-    el = createLegend({
+  it("applies circle swatch shape", async () => {
+    el = await createLegend({
       entries: [{ label: "A", color: "#000" }],
       swatchShape: "circle",
     });
@@ -88,8 +88,8 @@ describe("PagesLegend", () => {
     expect(swatch.classList.contains("circle")).toBe(true);
   });
 
-  it("defaults to square swatch shape (no circle class)", () => {
-    el = createLegend({
+  it("defaults to square swatch shape (no circle class)", async () => {
+    el = await createLegend({
       entries: [{ label: "A", color: "#000" }],
     });
 
@@ -97,8 +97,8 @@ describe("PagesLegend", () => {
     expect(swatch.classList.contains("circle")).toBe(false);
   });
 
-  it("renders empty entries array without error", () => {
-    el = createLegend({ entries: [] });
+  it("renders empty entries array without error", async () => {
+    el = await createLegend({ entries: [] });
     const items = el.shadowRoot!.querySelectorAll(".legend-entry");
     expect(items.length).toBe(0);
   });

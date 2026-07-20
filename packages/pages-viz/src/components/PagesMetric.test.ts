@@ -45,7 +45,7 @@ describe("PagesMetric", () => {
   // ── Card subtype ──────────────────────────────────────────────────
 
   describe("card subtype (default)", () => {
-    it("renders value and title with .card class", () => {
+    it("renders value and title with .card class", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[42]],
@@ -57,19 +57,21 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const card = el.shadowRoot.querySelector(".card");
+      const card = el.shadowRoot!.querySelector(".card");
       expect(card).not.toBeNull();
 
-      const title = el.shadowRoot.querySelector(".card .title");
+      const title = el.shadowRoot!.querySelector(".card .title");
       expect(title?.textContent).toBe("My Metric");
 
-      const value = el.shadowRoot.querySelector(".card .value");
+      const value = el.shadowRoot!.querySelector(".card .value");
       expect(value?.textContent).toBe("42");
     });
 
-    it("renders without title when not provided", () => {
+    it("renders without title when not provided", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[100]],
@@ -80,16 +82,18 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const title = el.shadowRoot.querySelector(".card .title");
+      const title = el.shadowRoot!.querySelector(".card .title");
       expect(title?.textContent).toBe("");
 
-      const value = el.shadowRoot.querySelector(".card .value");
+      const value = el.shadowRoot!.querySelector(".card .value");
       expect(value?.textContent).toBe("100");
     });
 
-    it("renders style element in shadow DOM", () => {
+    it("renders style element in shadow DOM", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[1]],
@@ -98,18 +102,21 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const style = el.shadowRoot.querySelector("style");
-      expect(style).not.toBeNull();
-      expect(style!.textContent).toContain(":host");
+      const styles = el.shadowRoot!.querySelectorAll("style");
+      expect(styles.length).toBeGreaterThan(0);
+      const allStyleText = Array.from(styles).map(s => s.textContent).join("");
+      expect(allStyleText).toContain(":host");
     });
   });
 
   // ── Card2 subtype ─────────────────────────────────────────────────
 
   describe("card2 subtype", () => {
-    it("renders with .card2 class", () => {
+    it("renders with .card2 class", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[999]],
@@ -122,15 +129,17 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const card2 = el.shadowRoot.querySelector(".card2");
+      const card2 = el.shadowRoot!.querySelector(".card2");
       expect(card2).not.toBeNull();
 
-      const value = el.shadowRoot.querySelector(".card2 .value");
+      const value = el.shadowRoot!.querySelector(".card2 .value");
       expect(value?.textContent).toBe("999");
 
-      const title = el.shadowRoot.querySelector(".card2 .title");
+      const title = el.shadowRoot!.querySelector(".card2 .title");
       expect(title?.textContent).toBe("Compact Metric");
     });
   });
@@ -138,7 +147,7 @@ describe("PagesMetric", () => {
   // ── Plain-text subtype ────────────────────────────────────────────
 
   describe("plain-text subtype", () => {
-    it("renders with .plain-text class", () => {
+    it("renders with .plain-text class", async () => {
       const ds = makeDataSet(
         [["metric", "LABEL"]],
         [["Active"]],
@@ -151,15 +160,17 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const plainText = el.shadowRoot.querySelector(".plain-text");
+      const plainText = el.shadowRoot!.querySelector(".plain-text");
       expect(plainText).not.toBeNull();
 
-      const title = el.shadowRoot.querySelector(".plain-text .title");
+      const title = el.shadowRoot!.querySelector(".plain-text .title");
       expect(title?.textContent).toBe("Status");
 
-      const value = el.shadowRoot.querySelector(".plain-text .value");
+      const value = el.shadowRoot!.querySelector(".plain-text .value");
       expect(value?.textContent).toBe("Active");
     });
   });
@@ -167,7 +178,7 @@ describe("PagesMetric", () => {
   // ── Quota subtype ─────────────────────────────────────────────────
 
   describe("quota subtype", () => {
-    it("renders progress bar with single column (no max)", () => {
+    it("renders progress bar with single column (no max)", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[75]],
@@ -180,24 +191,26 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const quota = el.shadowRoot.querySelector(".quota");
+      const quota = el.shadowRoot!.querySelector(".quota");
       expect(quota).not.toBeNull();
 
-      const value = el.shadowRoot.querySelector(".quota .value");
+      const value = el.shadowRoot!.querySelector(".quota .value");
       expect(value?.textContent).toBe("75");
 
-      const bar = el.shadowRoot.querySelector(".quota .bar");
+      const bar = el.shadowRoot!.querySelector(".quota .bar");
       expect(bar).not.toBeNull();
 
-      const barFill = el.shadowRoot.querySelector(".quota .bar-fill") as HTMLElement;
+      const barFill = el.shadowRoot!.querySelector(".quota .bar-fill") as HTMLElement;
       expect(barFill).not.toBeNull();
       // With no max, assume 100
       expect(barFill.style.width).toBe("75%");
     });
 
-    it("renders progress bar with two columns (value and max)", () => {
+    it("renders progress bar with two columns (value and max)", async () => {
       const ds = makeDataSet(
         [["current", "NUMBER"], ["max", "NUMBER"]],
         [[60, 200]],
@@ -210,12 +223,14 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const value = el.shadowRoot.querySelector(".quota .value");
+      const value = el.shadowRoot!.querySelector(".quota .value");
       expect(value?.textContent).toBe("60");
 
-      const barFill = el.shadowRoot.querySelector(".quota .bar-fill") as HTMLElement;
+      const barFill = el.shadowRoot!.querySelector(".quota .bar-fill") as HTMLElement;
       expect(barFill).not.toBeNull();
       // 60 / 200 = 30%
       expect(barFill.style.width).toBe("30%");
@@ -225,7 +240,7 @@ describe("PagesMetric", () => {
   // ── HTML template ─────────────────────────────────────────────────
 
   describe("html template", () => {
-    it("replaces ${value} with actual value", () => {
+    it("replaces ${value} with actual value", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[123]],
@@ -239,14 +254,16 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const custom = el.shadowRoot.querySelector(".custom");
+      const custom = el.shadowRoot!.querySelector(".custom");
       expect(custom).not.toBeNull();
       expect(custom?.textContent).toBe("Value: 123");
     });
 
-    it("handles multiple ${value} replacements", () => {
+    it("handles multiple ${value} replacements", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[5]],
@@ -260,13 +277,15 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const p = el.shadowRoot.querySelector("p");
+      const p = el.shadowRoot!.querySelector("p");
       expect(p?.textContent).toBe("5 items (5 total)");
     });
 
-    it("substitutes ${title} in template", () => {
+    it("substitutes ${title} in template", async () => {
       const ds = makeDataSet([["val", "NUMBER"]], [[42]]);
       const props: MetricProps = {
         lookup: mockLookup("test"),
@@ -278,9 +297,11 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const html = el.shadowRoot.querySelector("div div")?.innerHTML;
+      const html = el.shadowRoot!.querySelector("div div")?.innerHTML;
       expect(html).toContain("42");
       expect(html).toContain("Total Goals");
       expect(html).not.toContain("${title}");
@@ -290,7 +311,7 @@ describe("PagesMetric", () => {
   // ── Value extraction ──────────────────────────────────────────────
 
   describe("value extraction", () => {
-    it("extracts value from first row first column", () => {
+    it("extracts value from first row first column", async () => {
       const ds = makeDataSet(
         [["col1", "NUMBER"], ["col2", "NUMBER"]],
         [[99, 88], [77, 66]],
@@ -301,13 +322,15 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const value = el.shadowRoot.querySelector(".card .value");
+      const value = el.shadowRoot!.querySelector(".card .value");
       expect(value?.textContent).toBe("99");
     });
 
-    it("handles null values", () => {
+    it("handles null values", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[null]],
@@ -318,13 +341,15 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const value = el.shadowRoot.querySelector(".card .value");
+      const value = el.shadowRoot!.querySelector(".card .value");
       expect(value?.textContent).toBe("");
     });
 
-    it("handles string values", () => {
+    it("handles string values", async () => {
       const ds = makeDataSet(
         [["metric", "LABEL"]],
         [["Success"]],
@@ -335,9 +360,11 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const value = el.shadowRoot.querySelector(".card .value");
+      const value = el.shadowRoot!.querySelector(".card .value");
       expect(value?.textContent).toBe("Success");
     });
   });
@@ -345,7 +372,7 @@ describe("PagesMetric", () => {
   // ── Title extraction ──────────────────────────────────────────────
 
   describe("title extraction", () => {
-    it("uses props.title when provided", () => {
+    it("uses props.title when provided", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[1]],
@@ -357,13 +384,15 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const title = el.shadowRoot.querySelector(".card .title");
+      const title = el.shadowRoot!.querySelector(".card .title");
       expect(title?.textContent).toBe("Custom Title");
     });
 
-    it("uses empty string when title not provided", () => {
+    it("uses empty string when title not provided", async () => {
       const ds = makeDataSet(
         [["metric", "NUMBER"]],
         [[1]],
@@ -374,9 +403,11 @@ describe("PagesMetric", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
-      const title = el.shadowRoot.querySelector(".card .title");
+      const title = el.shadowRoot!.querySelector(".card .title");
       expect(title?.textContent).toBe("");
     });
   });

@@ -86,8 +86,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const series = option.series as Record<string, unknown>[];
@@ -127,8 +130,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const series = option.series as Record<string, unknown>[];
@@ -150,8 +156,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const visualMap = option.visualMap as Record<string, unknown>;
@@ -168,8 +177,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.visualMap).toMatchObject({
@@ -190,8 +202,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.geo).toMatchObject({
@@ -224,8 +239,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       const series = option.series as Record<string, unknown>[];
@@ -253,8 +271,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.legend).toMatchObject({ show: true, top: 0 });
@@ -277,8 +298,11 @@ describe("PagesMap", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await el.updateComplete;
+      await new Promise(r => { setTimeout(r, 0); });
+      await el.updateComplete;
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
       expect(option.title).toEqual({ text: "World Map" });

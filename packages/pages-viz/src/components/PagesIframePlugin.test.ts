@@ -30,7 +30,7 @@ describe("PagesIframePlugin", () => {
     }
   });
 
-  it("creates iframe with correct src", () => {
+  it("creates iframe with correct src", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
     };
@@ -42,13 +42,14 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
-    const iframe = element.shadowRoot.querySelector("iframe");
+    const iframe = element.shadowRoot!.querySelector("iframe");
     expect(iframe).toBeTruthy();
     expect(iframe!.src).toContain("/pages/component/echarts/index.html");
   });
 
-  it("applies width and height from props", () => {
+  it("applies width and height from props", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
       width: "800px",
@@ -62,14 +63,15 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
-    const iframe = element.shadowRoot.querySelector("iframe");
+    const iframe = element.shadowRoot!.querySelector("iframe");
     expect(iframe).toBeTruthy();
     expect(iframe!.style.width).toBe("800px");
     expect(iframe!.style.height).toBe("600px");
   });
 
-  it("defaults to 100% width and height", () => {
+  it("defaults to 100% width and height", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
     };
@@ -81,14 +83,15 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
-    const iframe = element.shadowRoot.querySelector("iframe");
+    const iframe = element.shadowRoot!.querySelector("iframe");
     expect(iframe).toBeTruthy();
     expect(iframe!.style.width).toBe("100%");
     expect(iframe!.style.height).toBe("100%");
   });
 
-  it("sends INIT message to iframe", () => {
+  it("sends INIT message to iframe", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
     };
@@ -101,9 +104,10 @@ describe("PagesIframePlugin", () => {
     const postMessageSpy = vi.fn();
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
     // Mock iframe contentWindow
-    const iframe = element.shadowRoot.querySelector("iframe");
+    const iframe = element.shadowRoot!.querySelector("iframe");
     if (iframe) {
       Object.defineProperty(iframe, "contentWindow", {
         value: { postMessage: postMessageSpy },
@@ -125,7 +129,7 @@ describe("PagesIframePlugin", () => {
     );
   });
 
-  it("sends DATASET message with wire format", () => {
+  it("sends DATASET message with wire format", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
       settings: { theme: "dark" },
@@ -147,8 +151,9 @@ describe("PagesIframePlugin", () => {
     const postMessageSpy = vi.fn();
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
-    const iframe = element.shadowRoot.querySelector("iframe");
+    const iframe = element.shadowRoot!.querySelector("iframe");
     if (iframe) {
       Object.defineProperty(iframe, "contentWindow", {
         value: { postMessage: postMessageSpy },
@@ -178,7 +183,7 @@ describe("PagesIframePlugin", () => {
     );
   });
 
-  it("handles FILTER messages — emits PagesFilterApply with row and value", () => {
+  it("handles FILTER messages — emits PagesFilterApply with row and value", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
       filter: { group: "test-group" },
@@ -192,6 +197,7 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
     const filterHandler = vi.fn();
     element.addEventListener("pages-filter", filterHandler);
@@ -222,7 +228,7 @@ describe("PagesIframePlugin", () => {
     expect(detail.group).toBe("test-group");
   });
 
-  it("ignores FILTER messages for other components", () => {
+  it("ignores FILTER messages for other components", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
     };
@@ -234,6 +240,7 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
     const filterHandler = vi.fn();
     element.addEventListener("pages-filter", filterHandler);
@@ -253,7 +260,7 @@ describe("PagesIframePlugin", () => {
     expect(filterHandler).not.toHaveBeenCalled();
   });
 
-  it("handles FILTER reset messages without valid row", () => {
+  it("handles FILTER reset messages without valid row", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
       filter: { group: "test-group" },
@@ -267,6 +274,7 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
     const filterHandler = vi.fn();
     element.addEventListener("pages-filter", filterHandler);
@@ -297,7 +305,7 @@ describe("PagesIframePlugin", () => {
     expect(detail.value).toBeUndefined();
   });
 
-  it("cleans up message listener on disconnect", () => {
+  it("cleans up message listener on disconnect", async () => {
     const props: IframePluginProps = {
       componentId: "echarts",
     };
@@ -309,6 +317,7 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
     const filterHandler = vi.fn();
     element.addEventListener("pages-filter", filterHandler);
@@ -331,7 +340,7 @@ describe("PagesIframePlugin", () => {
     expect(filterHandler).not.toHaveBeenCalled();
   });
 
-  it("recreates iframe when componentId changes", () => {
+  it("recreates iframe when componentId changes", async () => {
     const props1: IframePluginProps = {
       componentId: "echarts",
     };
@@ -343,8 +352,9 @@ describe("PagesIframePlugin", () => {
 
     element.props = props1;
     element.dataSet = dataset;
+    await element.updateComplete;
 
-    const iframe1 = element.shadowRoot.querySelector("iframe");
+    const iframe1 = element.shadowRoot!.querySelector("iframe");
     expect(iframe1).toBeTruthy();
     expect(iframe1!.src).toContain("/pages/component/echarts/index.html");
 
@@ -355,8 +365,9 @@ describe("PagesIframePlugin", () => {
 
     element.props = props2;
     element.dataSet = dataset;
+    await element.updateComplete;
 
-    const iframe2 = element.shadowRoot.querySelector("iframe");
+    const iframe2 = element.shadowRoot!.querySelector("iframe");
     expect(iframe2).toBeTruthy();
     expect(iframe2!.src).toContain("/pages/component/llm-prompter/index.html");
     expect(iframe2).not.toBe(iframe1); // Different iframe instance
@@ -376,8 +387,9 @@ describe("PagesIframePlugin", () => {
 
     element.props = props;
     element.dataSet = dataset;
+    await element.updateComplete;
 
-    const iframe = element.shadowRoot.querySelector("iframe");
+    const iframe = element.shadowRoot!.querySelector("iframe");
     expect(iframe).toBeTruthy();
 
     // Mock contentWindow but don't fire load yet
@@ -393,7 +405,7 @@ describe("PagesIframePlugin", () => {
     iframe!.dispatchEvent(new Event("load"));
 
     // Now messages should be sent
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await element.updateComplete;
     expect(postMessageSpy).toHaveBeenCalled();
   });
 });

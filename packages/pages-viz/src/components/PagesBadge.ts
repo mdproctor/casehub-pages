@@ -1,36 +1,10 @@
+import { html, css, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
 import type { TypedDataSet, Column } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import type { BadgeProps } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
-
-const BADGE_CSS = `
-:host {
-  display: block;
-  font-family: var(--pages-font-family, system-ui, sans-serif);
-  font-size: var(--pages-font-size-base, 14px);
-  color: var(--pages-neutral-12, #333);
-}
-.pages-badge-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--pages-badge-gap, 8px);
-  padding: var(--pages-badge-container-padding, 4px);
-}
-.pages-badge {
-  display: inline-block;
-  padding: var(--pages-badge-padding, 4px 12px);
-  border-radius: var(--pages-badge-radius, 12px);
-  font-size: var(--pages-badge-font-size, 13px);
-  font-weight: var(--pages-badge-font-weight, 500);
-  color: var(--pages-badge-text, #fff);
-  background: var(--pages-badge-bg, var(--pages-accent-9, #5470c6));
-  border: var(--pages-badge-border, none);
-  white-space: nowrap;
-  text-align: center;
-  line-height: 1.4;
-}
-`;
 
 const DEFAULT_PALETTE = [
   "var(--pages-accent-9)",
@@ -44,55 +18,67 @@ const DEFAULT_PALETTE = [
   "var(--pages-danger-11)",
 ];
 
+@customElement("pages-badge")
 export class PagesBadge extends PagesElement<BadgeProps> {
   private _colorCache = new Map<string, string>();
 
-  protected override render(
-    container: HTMLDivElement,
+  static override styles = css`
+      :host {
+        display: block;
+        font-family: var(--pages-font-family, system-ui, sans-serif);
+        font-size: var(--pages-font-size-base, 14px);
+        color: var(--pages-neutral-12, #333);
+      }
+      .pages-badge-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--pages-badge-gap, 8px);
+        padding: var(--pages-badge-container-padding, 4px);
+      }
+      .pages-badge {
+        display: inline-block;
+        padding: var(--pages-badge-padding, 4px 12px);
+        border-radius: var(--pages-badge-radius, 12px);
+        font-size: var(--pages-badge-font-size, 13px);
+        font-weight: var(--pages-badge-font-weight, 500);
+        color: var(--pages-badge-text, #fff);
+        background: var(--pages-badge-bg, var(--pages-accent-9, #5470c6));
+        border: var(--pages-badge-border, none);
+        white-space: nowrap;
+        text-align: center;
+        line-height: 1.4;
+      }
+    `;
+
+  protected override renderContent(
     props: BadgeProps,
     dataset: TypedDataSet,
-  ): void {
-    container.textContent = "";
-
-    // Style
-    const style = document.createElement("style");
-    style.textContent = BADGE_CSS;
-    container.appendChild(style);
-
-    // Empty dataset
+  ): TemplateResult {
     if (dataset.rows.length === 0) {
-      return;
+      return html``;
     }
 
-    // Determine target column
     const targetColumn = this.resolveTargetColumn(dataset, props);
     if (!targetColumn) {
-      return;
+      return html``;
     }
 
-    // Create badge container
-    const badgeContainer = document.createElement("div");
-    badgeContainer.className = "pages-badge-container";
-
-    // Render badge for each row
-    for (const row of dataset.rows) {
-      const cell = row.cell(targetColumn.id);
-      const raw = cellToRaw(cell);
-      const text = raw === null ? "" : String(raw);
-
-      const badge = document.createElement("span");
-      badge.className = "pages-badge";
-      badge.textContent = text;
-      badge.setAttribute("role", "status");
-
-      // Apply color
-      const color = this.resolveColor(text, props.colorMap);
-      badge.style.backgroundColor = color;
-
-      badgeContainer.appendChild(badge);
-    }
-
-    container.appendChild(badgeContainer);
+    return html`
+      <div class="pages-badge-container">
+        ${dataset.rows.map(row => {
+          const cell = row.cell(targetColumn.id);
+          const raw = cellToRaw(cell);
+          const text = raw === null ? "" : String(raw);
+          const color = this.resolveColor(text, props.colorMap);
+          return html`
+            <span class="pages-badge" role="status"
+                  style="background-color:${color}">
+              ${text}
+            </span>
+          `;
+        })}
+      </div>
+    `;
   }
 
   private resolveTargetColumn(dataset: TypedDataSet, props: BadgeProps): Column | undefined {
@@ -126,5 +112,3 @@ export class PagesBadge extends PagesElement<BadgeProps> {
     return color;
   }
 }
-
-customElements.define("pages-badge", PagesBadge);

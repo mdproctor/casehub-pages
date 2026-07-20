@@ -1,3 +1,5 @@
+import { html, css, type TemplateResult, type PropertyValues } from "lit";
+import { customElement } from "lit/decorators.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { DropdownProps, FixedOptions, DataSetOptions } from "@casehubio/pages-component";
 import { isFixedOptions } from "@casehubio/pages-component";
@@ -6,40 +8,41 @@ import type { DataSetLookup } from "@casehubio/pages-data";
 import type { DataSetOp } from "@casehubio/pages-data";
 import { cellToRaw } from "../base/cell-extract.js";
 
-const DROPDOWN_CSS = `
-:host {
-  display: block;
-  font-family: var(--pages-font-family, system-ui, sans-serif);
-}
-.pages-form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-label {
-  font-size: var(--pages-font-size-base, 14px);
-  font-weight: 500;
-  color: var(--pages-neutral-12, #333);
-}
-select {
-  padding: 8px 12px;
-  border: 1px solid var(--pages-neutral-6, #e0e0e0);
-  border-radius: var(--pages-radius-sm, 4px);
-  font-size: var(--pages-font-size-base, 14px);
-  background: var(--pages-neutral-1, #fff);
-  color: var(--pages-neutral-12, #333);
-}
-select:focus {
-  outline: none;
-  border-color: var(--pages-accent-9, #5470c6);
-}
-select:disabled {
-  background: var(--pages-neutral-3, #f5f5f5);
-  cursor: not-allowed;
-}
-`;
-
+@customElement("pages-dropdown")
 export class PagesDropdown extends PagesFormInput<DropdownProps> {
+  static override styles = css`
+    :host {
+      display: block;
+      font-family: var(--pages-font-family, system-ui, sans-serif);
+    }
+    .pages-form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: var(--pages-font-size-base, 14px);
+      font-weight: 500;
+      color: var(--pages-neutral-12, #333);
+    }
+    select {
+      padding: 8px 12px;
+      border: 1px solid var(--pages-neutral-6, #e0e0e0);
+      border-radius: var(--pages-radius-sm, 4px);
+      font-size: var(--pages-font-size-base, 14px);
+      background: var(--pages-neutral-1, #fff);
+      color: var(--pages-neutral-12, #333);
+    }
+    select:focus {
+      outline: none;
+      border-color: var(--pages-accent-9, #5470c6);
+    }
+    select:disabled {
+      background: var(--pages-neutral-3, #f5f5f5);
+      cursor: not-allowed;
+    }
+  `;
+
   private _optionsDataSet: TypedDataSet | undefined;
   private _optionsRequested = false;
   private _cascadeListener: ((e: Event) => void) | undefined;
@@ -47,10 +50,7 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
 
   set optionsDataSet(value: TypedDataSet) {
     this._optionsDataSet = value;
-    const currentProps = this.props;
-    if (this.isConnected && this.dataSet && currentProps) {
-      this.render(this.container, currentProps, this.dataSet);
-    }
+    this.requestUpdate();
   }
 
   override disconnectedCallback(): void {
@@ -58,57 +58,42 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
     this.removeCascadeListener();
   }
 
-  protected render(
-    container: HTMLElement,
-    props: DropdownProps & { lookup?: DataSetLookup },
-    dataset: TypedDataSet,
-  ): void {
-    container.innerHTML = "";
-
-    const style = document.createElement("style");
-    style.textContent = DROPDOWN_CSS;
-    container.appendChild(style);
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "pages-form-field";
-
-    if (props.label) {
-      const label = document.createElement("label");
-      label.textContent = props.label;
-      wrapper.appendChild(label);
-    }
-
-    const select = document.createElement("select");
-    const value = this.extractFieldValue(dataset);
-
-    const optionEntries = this.getOptionEntries(props.options);
-    for (const opt of optionEntries) {
-      const option = document.createElement("option");
-      option.value = opt.value;
-      option.textContent = opt.label;
-      const valueStr = typeof value === "string" ? value : typeof value === "number" ? String(value) : undefined;
-      if (valueStr !== undefined && valueStr === opt.value) {
-        option.selected = true;
-      }
-      select.appendChild(option);
-    }
-
-    if (props.required) select.required = true;
-    if (props.readonly || !this._editable) select.disabled = true;
-
-    select.addEventListener("change", () => {
-      this.emitFieldChange(select.value, true);
-    });
-
-    wrapper.appendChild(select);
-    container.appendChild(wrapper);
-
-    if (!isFixedOptions(props.options)) {
+  override updated(changed: PropertyValues): void {
+    super.updated(changed);
+    const props = this.props;
+    if (props && !isFixedOptions(props.options)) {
       if (!this._optionsRequested) {
         this.requestOptionsData(props.options);
       }
       this.setupCascadeListener(props.options);
     }
+  }
+
+  protected override renderContent(
+    props: DropdownProps & { lookup?: DataSetLookup },
+    dataset: TypedDataSet,
+  ): TemplateResult {
+    const value = this.extractFieldValue(dataset);
+    const valueStr = typeof value === "string" ? value : typeof value === "number" ? String(value) : undefined;
+    const optionEntries = this.getOptionEntries(props.options);
+    const isDisabled = !!props.readonly || !this._editable;
+
+    return html`
+      <div class="pages-form-field">
+        ${props.label ? html`<label>${props.label}</label>` : ""}
+        <select
+          ?required=${!!props.required}
+          ?disabled=${isDisabled}
+          @change=${(e: Event) => this.emitFieldChange((e.target as HTMLSelectElement).value, true)}
+        >
+          ${optionEntries.map((opt) => html`
+            <option value=${opt.value} ?selected=${valueStr !== undefined && valueStr === opt.value}>
+              ${opt.label}
+            </option>
+          `)}
+        </select>
+      </div>
+    `;
   }
 
   private getOptionEntries(
@@ -201,5 +186,3 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
     }
   }
 }
-
-customElements.define("pages-dropdown", PagesDropdown);

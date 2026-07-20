@@ -12,10 +12,12 @@ import type { BarChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
+import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([BarChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, DatasetComponent]);
 
+@customElement("pages-bar-chart")
 export class PagesBarChart extends PagesChartElement<BarChartProps> {
   override async buildOption(
     props: BarChartProps,
@@ -62,4 +64,3 @@ export class PagesBarChart extends PagesChartElement<BarChartProps> {
   }
 }
 
-customElements.define("pages-bar-chart", PagesBarChart);

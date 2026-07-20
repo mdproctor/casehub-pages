@@ -79,7 +79,7 @@ describe("PagesTimeline", () => {
   });
 
   describe("buildOption", () => {
-    it("produces ECharts option with type: 'custom' series", () => {
+    it("produces ECharts option with type: 'custom' series", async () => {
       const ds = makeDataSet(
         [["task", "LABEL"], ["start", "DATE"], ["end", "DATE"], ["category", "LABEL"]],
         [
@@ -97,7 +97,9 @@ describe("PagesTimeline", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -109,7 +111,7 @@ describe("PagesTimeline", () => {
       expect(typeof series[0]!.renderItem).toBe("function");
     });
 
-    it("time x-axis from start/end columns", () => {
+    it("time x-axis from start/end columns", async () => {
       const ds = makeDataSet(
         [["task", "LABEL"], ["start", "DATE"], ["end", "DATE"]],
         [["Task 1", new Date("2024-01-01"), new Date("2024-01-05")]],
@@ -123,7 +125,9 @@ describe("PagesTimeline", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -132,7 +136,7 @@ describe("PagesTimeline", () => {
       expect(xAxis.type).toBe("time");
     });
 
-    it("category y-axis from category column", () => {
+    it("category y-axis from category column", async () => {
       const ds = makeDataSet(
         [["task", "LABEL"], ["start", "DATE"], ["end", "DATE"], ["category", "LABEL"]],
         [
@@ -150,7 +154,9 @@ describe("PagesTimeline", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -160,7 +166,7 @@ describe("PagesTimeline", () => {
       expect(yAxis.data).toEqual(["Dev", "QA"]);
     });
 
-    it("rows with null endColumn render as milestone markers", () => {
+    it("rows with null endColumn render as milestone markers", async () => {
       const ds = makeDataSet(
         [["task", "LABEL"], ["start", "DATE"], ["end", "DATE"], ["category", "LABEL"]],
         [
@@ -179,7 +185,9 @@ describe("PagesTimeline", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
       const series = option.series as Array<Record<string, unknown>>;
@@ -192,7 +200,7 @@ describe("PagesTimeline", () => {
       expect(seriesData[2]!.isMilestone).toBeUndefined();
     });
 
-    it("standard ChartSettings (zoom, legend, margin) apply", () => {
+    it("standard ChartSettings (zoom, legend, margin) apply", async () => {
       const ds = makeDataSet(
         [["task", "LABEL"], ["start", "DATE"], ["end", "DATE"]],
         [["Task 1", new Date("2024-01-01"), new Date("2024-01-05")]],
@@ -209,7 +217,9 @@ describe("PagesTimeline", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -218,7 +228,7 @@ describe("PagesTimeline", () => {
       expect(option.grid).toMatchObject({ top: 20, right: 30, bottom: 40, left: 50 });
     });
 
-    it("works without categoryColumn - all rows on same y-axis category", () => {
+    it("works without categoryColumn - all rows on same y-axis category", async () => {
       const ds = makeDataSet(
         [["task", "LABEL"], ["start", "DATE"], ["end", "DATE"]],
         [
@@ -235,7 +245,9 @@ describe("PagesTimeline", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 
@@ -246,7 +258,7 @@ describe("PagesTimeline", () => {
       expect(yAxis.data).toEqual([""]);
     });
 
-    it("extra settings deep merge onto option", () => {
+    it("extra settings deep merge onto option", async () => {
       const ds = makeDataSet(
         [["task", "LABEL"], ["start", "DATE"], ["end", "DATE"]],
         [["Task 1", new Date("2024-01-01"), new Date("2024-01-05")]],
@@ -264,7 +276,9 @@ describe("PagesTimeline", () => {
 
       el.props = props;
       document.body.appendChild(el);
+      await el.updateComplete;
       el.dataSet = ds;
+      await el.updateComplete;
 
       const option = mockChart.setOption.mock.calls[0]![0] as Record<string, unknown>;
 

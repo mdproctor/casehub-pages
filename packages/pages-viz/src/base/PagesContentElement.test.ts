@@ -1,30 +1,28 @@
-import {afterEach, beforeEach, describe, expect, it} from "vitest";
-import {PagesContentElement} from "./PagesContentElement.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { html, type TemplateResult } from "lit";
+import { customElement } from "lit/decorators.js";
+import { PagesContentElement } from "./PagesContentElement.js";
 
 interface TestProps {
   readonly label?: string;
   readonly count?: number;
 }
 
+@customElement("test-content-element-lit")
 class TestContentElement extends PagesContentElement<TestProps> {
   renderCalls: Array<{ props: TestProps }> = [];
 
-  protected override render(
-    _container: HTMLDivElement,
-    props: TestProps,
-  ): void {
+  protected override renderContent(props: TestProps): TemplateResult {
     this.renderCalls.push({ props });
-    _container.textContent = `Rendered: ${props.label || "no label"}`;
+    return html`<div>Rendered: ${props.label ?? "no label"}</div>`;
   }
 }
-
-customElements.define("test-content-element", TestContentElement);
 
 describe("PagesContentElement", () => {
   let el: TestContentElement;
 
   beforeEach(() => {
-    el = document.createElement("test-content-element") as TestContentElement;
+    el = document.createElement("test-content-element-lit") as TestContentElement;
   });
 
   afterEach(() => {
@@ -34,16 +32,10 @@ describe("PagesContentElement", () => {
   });
 
   describe("shadow DOM", () => {
-    it("creates shadow root with a container div", () => {
+    it("creates shadow root when connected", async () => {
+      document.body.appendChild(el);
+      await el.updateComplete;
       expect(el.shadowRoot).not.toBeNull();
-      const container = el.shadowRoot.querySelector("div");
-      expect(container).not.toBeNull();
-    });
-
-    it("container div is accessible via protected property", () => {
-      // Verify the container is created in constructor
-      expect(el.shadowRoot).not.toBeNull();
-      expect(el.shadowRoot.childNodes.length).toBeGreaterThan(0);
     });
   });
 
@@ -61,7 +53,6 @@ describe("PagesContentElement", () => {
     it("allows setting props to undefined", () => {
       el.props = { label: "test" };
       expect(el.props).not.toBeUndefined();
-
       el.props = undefined;
       expect(el.props).toBeUndefined();
     });
@@ -73,68 +64,72 @@ describe("PagesContentElement", () => {
       expect(el.renderCalls).toHaveLength(0);
     });
 
-    it("renders when props are set and element is connected", () => {
+    it("renders when props are set and element is connected", async () => {
       document.body.appendChild(el);
       el.props = { label: "test" };
+      await el.updateComplete;
 
-      expect(el.renderCalls).toHaveLength(1);
-      expect(el.renderCalls[0]!.props).toEqual({ label: "test" });
+      expect(el.renderCalls.length).toBeGreaterThanOrEqual(1);
+      expect(el.renderCalls[el.renderCalls.length - 1]!.props).toEqual({ label: "test" });
     });
 
-    it("does not render when props are undefined", () => {
+    it("does not render content when props are undefined", async () => {
       document.body.appendChild(el);
-      el.props = undefined;
-      expect(el.renderCalls).toHaveLength(0);
+      await el.updateComplete;
+
+      const div = el.shadowRoot!.querySelector("div");
+      expect(div).toBeNull();
     });
 
-    it("re-renders when props change", () => {
+    it("re-renders when props change", async () => {
       document.body.appendChild(el);
       el.props = { label: "first" };
-      expect(el.renderCalls).toHaveLength(1);
+      await el.updateComplete;
+      const callsAfterFirst = el.renderCalls.length;
 
       el.props = { label: "second" };
-      expect(el.renderCalls).toHaveLength(2);
-      expect(el.renderCalls[1]!.props).toEqual({ label: "second" });
+      await el.updateComplete;
+
+      expect(el.renderCalls.length).toBeGreaterThan(callsAfterFirst);
+      expect(el.renderCalls[el.renderCalls.length - 1]!.props).toEqual({ label: "second" });
     });
 
-    it("renders to the container div", () => {
+    it("renders content to shadow DOM", async () => {
       document.body.appendChild(el);
       el.props = { label: "content" };
+      await el.updateComplete;
 
-      const container = el.shadowRoot.querySelector("div");
-      expect(container!.textContent).toContain("Rendered: content");
+      const div = el.shadowRoot!.querySelector("div");
+      expect(div).not.toBeNull();
+      expect(div!.textContent).toContain("Rendered: content");
     });
   });
 
   describe("connected/disconnected callbacks", () => {
-    it("renders on connectedCallback if props are set", () => {
+    it("renders on connectedCallback if props are set", async () => {
       el.props = { label: "test" };
       document.body.appendChild(el);
+      await el.updateComplete;
 
-      expect(el.renderCalls).toHaveLength(1);
+      expect(el.renderCalls.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("does not render on connectedCallback if props are undefined", () => {
-      document.body.appendChild(el);
-      expect(el.renderCalls).toHaveLength(0);
-    });
-
-    it("calls disconnectedCallback without error", () => {
+    it("calls disconnectedCallback without error", async () => {
       document.body.appendChild(el);
       el.props = { label: "test" };
-      expect(el.renderCalls).toHaveLength(1);
+      await el.updateComplete;
 
       el.remove();
-      // disconnectedCallback should complete without throwing
       expect(el.isConnected).toBe(false);
     });
 
-    it("allows subclasses to override disconnectedCallback", () => {
+    it("allows subclasses to override disconnectedCallback", async () => {
+      @customElement("test-subclass-element-lit")
       class TestSubclass extends PagesContentElement<TestProps> {
         disconnectedCalls = 0;
 
-        protected override render(_container: HTMLDivElement, _props: TestProps): void {
-          // no-op
+        protected override renderContent(_props: TestProps): TemplateResult {
+          return html`<div>subclass</div>`;
         }
 
         override disconnectedCallback(): void {
@@ -143,9 +138,9 @@ describe("PagesContentElement", () => {
         }
       }
 
-      customElements.define("test-subclass-element", TestSubclass);
-      const subclass = document.createElement("test-subclass-element") as TestSubclass;
+      const subclass = document.createElement("test-subclass-element-lit") as TestSubclass;
       document.body.appendChild(subclass);
+      await subclass.updateComplete;
       subclass.remove();
 
       expect(subclass.disconnectedCalls).toBe(1);
@@ -154,31 +149,18 @@ describe("PagesContentElement", () => {
 
   describe("no data machinery", () => {
     it("does not have dataSet property", () => {
-      // PagesContentElement should not have dataset-related properties
-      const descriptor = Object.getOwnPropertyDescriptor(
-        Object.getPrototypeOf(el),
-        "dataSet",
-      );
-      expect(descriptor).toBeUndefined();
+      expect("dataSet" in el).toBe(false);
     });
 
     it("does not have totalRows property", () => {
-      const descriptor = Object.getOwnPropertyDescriptor(
-        Object.getPrototypeOf(el),
-        "totalRows",
-      );
-      expect(descriptor).toBeUndefined();
+      expect("totalRows" in el).toBe(false);
     });
 
     it("does not have theme property", () => {
-      const descriptor = Object.getOwnPropertyDescriptor(
-        Object.getPrototypeOf(el),
-        "theme",
-      );
-      expect(descriptor).toBeUndefined();
+      expect("theme" in el).toBe(false);
     });
 
-    it("does not fire data-request events", () => {
+    it("does not fire data-request events", async () => {
       const events: CustomEvent[] = [];
       const handler = (e: Event) => events.push(e as CustomEvent);
       document.body.addEventListener("pages-data-request", handler);
@@ -186,6 +168,7 @@ describe("PagesContentElement", () => {
       try {
         document.body.appendChild(el);
         el.props = { label: "test" };
+        await el.updateComplete;
 
         expect(events).toHaveLength(0);
       } finally {
@@ -195,40 +178,21 @@ describe("PagesContentElement", () => {
   });
 
   describe("props setter updates", () => {
-    it("triggers update when props change from one value to another", () => {
+    it("triggers update when props change from one value to another", async () => {
       document.body.appendChild(el);
       el.props = { label: "first" };
+      await el.updateComplete;
+      const callsAfterFirst = el.renderCalls.length;
+
       el.props = { label: "second" };
+      await el.updateComplete;
 
-      expect(el.renderCalls).toHaveLength(2);
-    });
-
-    it("triggers update when setting same props object again", () => {
-      document.body.appendChild(el);
-      const props = { label: "test" };
-      el.props = props;
-      el.props = props;
-
-      // Both assignments should trigger render
-      expect(el.renderCalls).toHaveLength(2);
+      expect(el.renderCalls.length).toBeGreaterThan(callsAfterFirst);
     });
 
     it("does not render if element is not connected after props change", () => {
       el.props = { label: "test" };
-      // Not connected, so update() should skip render
-
       expect(el.renderCalls).toHaveLength(0);
-    });
-  });
-
-  describe("container element access", () => {
-    it("has accessible container div for subclasses", () => {
-      document.body.appendChild(el);
-      el.props = { label: "test" };
-
-      const container = el.shadowRoot.querySelector("div");
-      expect(container).not.toBeNull();
-      expect(container!.textContent).toContain("Rendered:");
     });
   });
 });
