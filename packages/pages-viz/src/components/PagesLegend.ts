@@ -1,5 +1,4 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import { PagesContentElement } from "../base/PagesContentElement.js";
 
 interface LegendEntry {
@@ -13,7 +12,6 @@ export interface LegendProps {
   readonly swatchShape?: "square" | "circle";
 }
 
-@customElement("pages-legend")
 export class PagesLegend extends PagesContentElement<LegendProps> {
   static override styles = css`
     .pages-legend { display: flex; flex-wrap: wrap; gap: var(--pages-space-3, 12px); list-style: none; margin: 0; padding: 0; font-size: var(--pages-font-size-sm, 12px); color: var(--pages-neutral-11, #404040); }
@@ -42,5 +40,15 @@ export class PagesLegend extends PagesContentElement<LegendProps> {
         `)}
       </ul>
     `;
+  }
+}
+
+if (!customElements.get('pages-legend')) {
+  customElements.define('pages-legend', PagesLegend);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-legend': PagesLegend;
   }
 }

@@ -12,12 +12,10 @@ import type { AreaChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
-import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components (area uses LineChart with areaStyle)
 use([LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, DatasetComponent]);
 
-@customElement("pages-area-chart")
 export class PagesAreaChart extends PagesChartElement<AreaChartProps> {
   override async buildOption(
     props: AreaChartProps,
@@ -64,3 +62,12 @@ export class PagesAreaChart extends PagesChartElement<AreaChartProps> {
   }
 }
 
+if (!customElements.get('pages-area-chart')) {
+  customElements.define('pages-area-chart', PagesAreaChart);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-area-chart': PagesAreaChart;
+  }
+}

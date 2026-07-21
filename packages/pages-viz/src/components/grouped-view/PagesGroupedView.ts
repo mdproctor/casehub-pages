@@ -1,5 +1,5 @@
 import { html, nothing, unsafeCSS, type TemplateResult } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import type { TypedDataSet, TypedRow, ColumnId, SortColumn, GroupingKey } from "@casehubio/pages-data";
@@ -41,7 +41,6 @@ interface PagesTableHost extends HTMLElement {
   getRowAccent?: ((row: TypedRow) => string | undefined) | undefined;
 }
 
-@customElement("pages-grouped-view")
 export class PagesGroupedView extends PagesElement<GroupedViewProps> {
   static override styles = unsafeCSS(GROUPED_VIEW_CSS);
 
@@ -622,5 +621,15 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
 
   private _nodeKey(parentPath: string, name: string): string {
     return parentPath ? `${parentPath}\x1F${name}` : name;
+  }
+}
+
+if (!customElements.get('pages-grouped-view')) {
+  customElements.define('pages-grouped-view', PagesGroupedView);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-grouped-view': PagesGroupedView;
   }
 }

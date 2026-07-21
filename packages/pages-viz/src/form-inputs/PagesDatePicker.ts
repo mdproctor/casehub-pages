@@ -1,12 +1,10 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { DatePickerProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 
-@customElement("pages-date-picker")
 export class PagesDatePicker extends PagesFormInput<DatePickerProps> {
   static override styles = css`
     :host {
@@ -77,5 +75,15 @@ export class PagesDatePicker extends PagesFormInput<DatePickerProps> {
         />
       </div>
     `;
+  }
+}
+
+if (!customElements.get('pages-date-picker')) {
+  customElements.define('pages-date-picker', PagesDatePicker);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-date-picker': PagesDatePicker;
   }
 }

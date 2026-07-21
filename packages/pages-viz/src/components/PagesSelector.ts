@@ -1,12 +1,10 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import type { TypedDataSet, ColumnId } from "@casehubio/pages-data";
 import type { SelectorProps } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw } from "../base/cell-extract.js";
 import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";
 
-@customElement("pages-selector")
 export class PagesSelector extends PagesElement<SelectorProps> {
   private _selectedValue: string | undefined;
   private _initialValues: Array<{ value: string | number | Date | null; rowIndex: number }> | undefined;
@@ -327,5 +325,15 @@ export class PagesSelector extends PagesElement<SelectorProps> {
       );
     }
     this.requestUpdate();
+  }
+}
+
+if (!customElements.get('pages-selector')) {
+  customElements.define('pages-selector', PagesSelector);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-selector': PagesSelector;
   }
 }

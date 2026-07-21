@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { RovingTabindexMixin, type RovingDirection } from '@casehubio/pages-primitives/a11y';
-import { customElement, property, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import type { TypedDataSet, TypedRow, Column, ColumnId, CellValue, ColumnSettings, GroupBoundary } from '@casehubio/pages-data';
 import { ColumnType, extractGroupBoundaries } from '@casehubio/pages-data';
 import type { SortColumn } from '@casehubio/pages-data';
@@ -19,7 +19,6 @@ import { EMPTY_CONTEXT } from '@casehubio/pages-component';
 
 const AUTO_THRESHOLD = 50;
 
-@customElement('pages-table')
 export class PagesTable extends RovingTabindexMixin(LitElement) {
   override rovingSelector = '.row[role="row"]:not(.header)';
   override rovingDirection: RovingDirection = 'both';
@@ -2682,6 +2681,10 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       </div>
     `;
   }
+}
+
+if (!customElements.get('pages-table')) {
+  customElements.define('pages-table', PagesTable);
 }
 
 declare global {

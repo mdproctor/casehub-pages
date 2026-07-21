@@ -12,7 +12,6 @@ import type { TypedDataSet } from "@casehubio/pages-data";
 import { cellToRaw } from "../base/cell-extract.js";
 import { applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
-import { customElement } from "lit/decorators.js";
 
 use([
   GaugeChart,
@@ -29,7 +28,6 @@ const LEGEND_ITEM_MAX_POS = 100;
 const LEGEND_ITEM_Y_GAP = 50;
 const LEGEND_ITEM_X_GAP = 70;
 
-@customElement("pages-meter")
 export class PagesMeter extends PagesChartElement<MeterProps> {
   override buildOption(
     props: MeterProps,
@@ -143,3 +141,12 @@ export class PagesMeter extends PagesChartElement<MeterProps> {
   }
 }
 
+if (!customElements.get('pages-meter')) {
+  customElements.define('pages-meter', PagesMeter);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-meter': PagesMeter;
+  }
+}

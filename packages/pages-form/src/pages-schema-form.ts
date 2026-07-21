@@ -1,11 +1,10 @@
 import { LitElement, html, css, type TemplateResult } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import { renderDisplayField, renderEditField } from './field-renderers.js';
 import { getFieldRenderer, hasFieldRenderer } from './field-registry.js';
 import type { FieldSchema, FieldRendererElement } from './types.js';
 import { validateField } from './validation.js';
 
-@customElement('pages-schema-form')
 export class PagesSchemaForm extends LitElement {
   @property({ type: Object }) schema: FieldSchema | null = null;
   @property({ type: Object }) data: Record<string, unknown> | null = null;
@@ -113,5 +112,15 @@ export class PagesSchemaForm extends LitElement {
       detail: { data: { ...this._editData } },
     }));
     return { ...this._editData };
+  }
+}
+
+if (!customElements.get('pages-schema-form')) {
+  customElements.define('pages-schema-form', PagesSchemaForm);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-schema-form': PagesSchemaForm;
   }
 }
