@@ -211,6 +211,55 @@ describe('pages-table', () => {
       expect(nav!.textContent).toContain('3');
     });
 
+    it('auto-hides pagination when all data fits on one page', async () => {
+      el.dataSet = makeLargeDataSet(5);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+      const nav = el.shadowRoot!.querySelector('[role="navigation"]');
+      expect(nav).toBeNull();
+    });
+
+    it('shows pagination when data exceeds one page', async () => {
+      el.dataSet = makeLargeDataSet(15);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+      const nav = el.shadowRoot!.querySelector('[role="navigation"]');
+      expect(nav).not.toBeNull();
+    });
+
+    it('shows pagination when data exactly fills one page plus one row', async () => {
+      el.dataSet = makeLargeDataSet(11);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+      const nav = el.shadowRoot!.querySelector('[role="navigation"]');
+      expect(nav).not.toBeNull();
+    });
+
+    it('auto-hides pagination with server-side totalRows on single page', async () => {
+      el.dataSet = testDataSet;
+      el.mode = 'paginated';
+      el.pageSize = 20;
+      el.totalRows = 5;
+      await el.updateComplete;
+      const nav = el.shadowRoot!.querySelector('[role="navigation"]');
+      expect(nav).toBeNull();
+    });
+
+    it('shows pagination when data grows beyond one page', async () => {
+      el.dataSet = makeLargeDataSet(5);
+      el.mode = 'paginated';
+      el.pageSize = 10;
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('[role="navigation"]')).toBeNull();
+
+      el.dataSet = makeLargeDataSet(15);
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('[role="navigation"]')).not.toBeNull();
+    });
+
     it('emits page-change on next click', async () => {
       el.dataSet = makeLargeDataSet(30);
       el.mode = 'paginated';

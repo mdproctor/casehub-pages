@@ -2503,6 +2503,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     const currentPageNum = this.currentPage + 1;
     const totalPages = this._totalPageCount;
+    if (totalPages <= 1) return nothing;
     const isFirstPage = this.currentPage === 0;
     const isLastPage = this.currentPage === totalPages - 1;
 
