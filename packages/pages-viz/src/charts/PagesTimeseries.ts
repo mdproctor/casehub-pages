@@ -13,12 +13,10 @@ import type { TypedDataSet } from "@casehubio/pages-data";
 import { ColumnType } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
-import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, DatasetComponent]);
 
-@customElement("pages-timeseries")
 export class PagesTimeseries extends PagesChartElement<TimeseriesProps> {
   override async buildOption(
     props: TimeseriesProps,
@@ -59,3 +57,12 @@ export class PagesTimeseries extends PagesChartElement<TimeseriesProps> {
   }
 }
 
+if (!customElements.get('pages-timeseries')) {
+  customElements.define('pages-timeseries', PagesTimeseries);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-timeseries': PagesTimeseries;
+  }
+}

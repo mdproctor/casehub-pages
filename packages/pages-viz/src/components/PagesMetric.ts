@@ -1,12 +1,10 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { MetricProps } from "@casehubio/pages-component";
 import { PagesElement } from "../base/PagesElement.js";
 import { cellToRaw, applyCellExpression, resolveColumnExpression } from "../base/cell-extract.js";
 
-@customElement("pages-metric")
 export class PagesMetric extends PagesElement<MetricProps> {
   private _renderGen = 0;
   private _asyncValue: string | undefined;
@@ -176,5 +174,15 @@ export class PagesMetric extends PagesElement<MetricProps> {
         </div>
       </div>
     `;
+  }
+}
+
+if (!customElements.get('pages-metric')) {
+  customElements.define('pages-metric', PagesMetric);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-metric': PagesMetric;
   }
 }

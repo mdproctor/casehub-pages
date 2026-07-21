@@ -12,12 +12,10 @@ import type { LineChartProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
-import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, DatasetComponent]);
 
-@customElement("pages-line-chart")
 export class PagesLineChart extends PagesChartElement<LineChartProps> {
   override async buildOption(
     props: LineChartProps,
@@ -63,3 +61,12 @@ export class PagesLineChart extends PagesChartElement<LineChartProps> {
   }
 }
 
+if (!customElements.get('pages-line-chart')) {
+  customElements.define('pages-line-chart', PagesLineChart);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-line-chart': PagesLineChart;
+  }
+}

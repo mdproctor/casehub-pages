@@ -1,11 +1,9 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { CheckboxProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 
-@customElement("pages-checkbox")
 export class PagesCheckbox extends PagesFormInput<CheckboxProps> {
   static override styles = css`
     :host {
@@ -65,5 +63,15 @@ export class PagesCheckbox extends PagesFormInput<CheckboxProps> {
         ${props.label ? html`<label for="cb">${props.label}</label>` : ""}
       </div>
     `;
+  }
+}
+
+if (!customElements.get('pages-checkbox')) {
+  customElements.define('pages-checkbox', PagesCheckbox);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-checkbox': PagesCheckbox;
   }
 }

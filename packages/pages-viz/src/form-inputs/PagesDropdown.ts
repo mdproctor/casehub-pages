@@ -1,5 +1,4 @@
 import { html, css, type TemplateResult, type PropertyValues } from "lit";
-import { customElement } from "lit/decorators.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { DropdownProps, FixedOptions, DataSetOptions } from "@casehubio/pages-component";
 import { isFixedOptions } from "@casehubio/pages-component";
@@ -8,7 +7,6 @@ import type { DataSetLookup } from "@casehubio/pages-data";
 import type { DataSetOp } from "@casehubio/pages-data";
 import { cellToRaw } from "../base/cell-extract.js";
 
-@customElement("pages-dropdown")
 export class PagesDropdown extends PagesFormInput<DropdownProps> {
   static override styles = css`
     :host {
@@ -184,5 +182,15 @@ export class PagesDropdown extends PagesFormInput<DropdownProps> {
       this.removeEventListener("pages-field-change", this._cascadeListener);
       this._cascadeListener = undefined;
     }
+  }
+}
+
+if (!customElements.get('pages-dropdown')) {
+  customElements.define('pages-dropdown', PagesDropdown);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-dropdown': PagesDropdown;
   }
 }

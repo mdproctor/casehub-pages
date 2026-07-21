@@ -13,12 +13,10 @@ import { ColumnType } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
 import { cellToRaw } from "../base/cell-extract.js";
-import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([ScatterChart, GridComponent, TooltipComponent, LegendComponent, DatasetComponent]);
 
-@customElement("pages-bubble-chart")
 export class PagesBubbleChart extends PagesChartElement<BubbleChartProps> {
   override async buildOption(
     props: BubbleChartProps,
@@ -88,3 +86,12 @@ export class PagesBubbleChart extends PagesChartElement<BubbleChartProps> {
   }
 }
 
+if (!customElements.get('pages-bubble-chart')) {
+  customElements.define('pages-bubble-chart', PagesBubbleChart);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-bubble-chart': PagesBubbleChart;
+  }
+}

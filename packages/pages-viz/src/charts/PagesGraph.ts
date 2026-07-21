@@ -8,7 +8,6 @@ import type {TypedDataSet} from "@casehubio/pages-data";
 import {applyChartSettings} from "./option-pipeline.js";
 import {deepMerge} from "../base/deep-merge.js";
 import {cellToRaw} from "../base/cell-extract.js";
-import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([CanvasRenderer, GraphChart, TooltipComponent, LegendComponent]);
@@ -26,7 +25,6 @@ interface GraphLink {
   value?: number;
 }
 
-@customElement("pages-graph")
 export class PagesGraph extends PagesChartElement<GraphProps> {
   override buildOption(
     props: GraphProps,
@@ -175,3 +173,12 @@ export class PagesGraph extends PagesChartElement<GraphProps> {
   }
 }
 
+if (!customElements.get('pages-graph')) {
+  customElements.define('pages-graph', PagesGraph);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-graph': PagesGraph;
+  }
+}

@@ -1,5 +1,4 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { CountdownProps } from "@casehubio/pages-component";
 import { parseRefreshTime } from "@casehubio/pages-data";
@@ -17,7 +16,6 @@ interface ThresholdState {
  * Displays time remaining until a deadline from the dataset.
  * Updates every second with threshold-based color transitions.
  */
-@customElement("pages-countdown")
 export class PagesCountdown extends PagesElement<CountdownProps> {
   private _countdownTimer: ReturnType<typeof setInterval> | undefined;
   private _deadlineMs: number | null = null;
@@ -239,5 +237,15 @@ export class PagesCountdown extends PagesElement<CountdownProps> {
       clearInterval(this._countdownTimer);
       this._countdownTimer = undefined;
     }
+  }
+}
+
+if (!customElements.get('pages-countdown')) {
+  customElements.define('pages-countdown', PagesCountdown);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-countdown': PagesCountdown;
   }
 }

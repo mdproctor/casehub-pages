@@ -1,12 +1,10 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { TextareaProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 
-@customElement("pages-textarea")
 export class PagesTextarea extends PagesFormInput<TextareaProps> {
   static override styles = css`
     :host {
@@ -67,5 +65,15 @@ export class PagesTextarea extends PagesFormInput<TextareaProps> {
         ></textarea>
       </div>
     `;
+  }
+}
+
+if (!customElements.get('pages-textarea')) {
+  customElements.define('pages-textarea', PagesTextarea);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-textarea': PagesTextarea;
   }
 }

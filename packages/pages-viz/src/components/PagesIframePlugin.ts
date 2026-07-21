@@ -1,5 +1,4 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { IframePluginProps } from "@casehubio/pages-component";
 import { toWireDataSet } from "@casehubio/pages-data";
@@ -7,7 +6,6 @@ import { PagesElement } from "../base/PagesElement.js";
 import type { PagesFilterDetail, PagesFilterApply, PagesFilterReset } from "../base/filter-types.js";
 import { cellToRaw } from "../base/cell-extract.js";
 
-@customElement("pages-iframe-plugin")
 export class PagesIframePlugin extends PagesElement<IframePluginProps> {
   private _iframe: HTMLIFrameElement | undefined;
   private _messageHandler: ((e: MessageEvent) => void) | undefined;
@@ -202,5 +200,15 @@ export class PagesIframePlugin extends PagesElement<IframePluginProps> {
         } satisfies PagesFilterApply,
       }),
     );
+  }
+}
+
+if (!customElements.get('pages-iframe-plugin')) {
+  customElements.define('pages-iframe-plugin', PagesIframePlugin);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-iframe-plugin': PagesIframePlugin;
   }
 }

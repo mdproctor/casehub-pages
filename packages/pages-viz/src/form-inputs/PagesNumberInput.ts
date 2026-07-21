@@ -1,12 +1,10 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 import { PagesFormInput } from "./PagesFormInput.js";
 import type { NumberInputProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import type { DataSetLookup } from "@casehubio/pages-data";
 
-@customElement("pages-number-input")
 export class PagesNumberInput extends PagesFormInput<NumberInputProps> {
   static override styles = css`
     :host {
@@ -75,5 +73,15 @@ export class PagesNumberInput extends PagesFormInput<NumberInputProps> {
         />
       </div>
     `;
+  }
+}
+
+if (!customElements.get('pages-number-input')) {
+  customElements.define('pages-number-input', PagesNumberInput);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-number-input': PagesNumberInput;
   }
 }

@@ -1,5 +1,5 @@
 import { html, css, type TemplateResult } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { state } from "lit/decorators.js";
 import type { ActionButtonProps, ActionRequest, ActionCallbacks, ActionResult, PagesActionRequestDetail } from "@casehubio/pages-component";
 import { PagesContentElement } from "../base/PagesContentElement.js";
 
@@ -11,7 +11,6 @@ const STYLE_CLASSES: Record<string, string> = {
   outline: "pages-btn-outline",
 };
 
-@customElement("pages-action-button")
 export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
   @state() private _isLoading = false;
   @state() private _resultMessage: string | null = null;
@@ -121,5 +120,15 @@ export class PagesActionButton extends PagesContentElement<ActionButtonProps> {
       clearTimeout(this._successTimeoutId);
       this._successTimeoutId = null;
     }
+  }
+}
+
+if (!customElements.get('pages-action-button')) {
+  customElements.define('pages-action-button', PagesActionButton);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-action-button': PagesActionButton;
   }
 }

@@ -12,7 +12,6 @@ import type { MapProps } from "@casehubio/pages-component";
 import type { TypedDataSet } from "@casehubio/pages-data";
 import { datasetToSource, applyChartSettings } from "./option-pipeline.js";
 import { deepMerge } from "../base/deep-merge.js";
-import { customElement } from "lit/decorators.js";
 
 // Register required ECharts components
 use([MapChart, ScatterChart, GeoComponent, VisualMapComponent, TooltipComponent, LegendComponent, DatasetComponent]);
@@ -44,7 +43,6 @@ function ensureMapRegistered(mapName: string): Promise<void> {
   return promise;
 }
 
-@customElement("pages-map")
 export class PagesMap extends PagesChartElement<MapProps> {
   override async buildOption(
     props: MapProps,
@@ -135,3 +133,12 @@ export class PagesMap extends PagesChartElement<MapProps> {
   }
 }
 
+if (!customElements.get('pages-map')) {
+  customElements.define('pages-map', PagesMap);
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'pages-map': PagesMap;
+  }
+}
