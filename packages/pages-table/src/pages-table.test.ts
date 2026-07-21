@@ -746,12 +746,13 @@ describe('pages-table', () => {
       expect(dataRows.length).toBe(3);
     });
 
-    it('renders filter input when clientFilter is true', async () => {
+    it('shows filter bar input when clientFilter is true and filter bar is open', async () => {
       el.dataSet = testDataSet;
       el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
       await el.updateComplete;
 
-      const input = el.shadowRoot!.querySelector('.filter-input');
+      const input = el.shadowRoot!.querySelector('.filter-bar-input');
       expect(input).not.toBeNull();
     });
   });
@@ -1239,18 +1240,21 @@ describe('pages-table', () => {
       outside.remove();
     });
 
-    it('toolbar is above header, not beside it', async () => {
+    it('kebab zone is inside header-container', async () => {
       el.dataSet = testDataSet;
-      el.clientFilter = true;
+      el.columnConfig = testConfig;
       await el.updateComplete;
+      const headerContainer = el.shadowRoot!.querySelector('.header-container');
+      const kebabZone = headerContainer!.querySelector('.kebab-zone');
+      expect(kebabZone).not.toBeNull();
+    });
 
-      const dataTable = el.shadowRoot!.querySelector('.data-table')!;
-      const toolbar = dataTable.querySelector('.toolbar');
-      const headerContainer = dataTable.querySelector('.header-container');
-      expect(toolbar).not.toBeNull();
-      expect(headerContainer).not.toBeNull();
-      const children = Array.from(dataTable.children);
-      expect(children.indexOf(toolbar!)).toBeLessThan(children.indexOf(headerContainer!));
+    it('kebab zone renders in empty-state path', async () => {
+      el.dataSet = makeDataSet([]);
+      el.columnConfig = testConfig;
+      await el.updateComplete;
+      const kebabZone = el.shadowRoot!.querySelector('.kebab-zone');
+      expect(kebabZone).not.toBeNull();
     });
 
     it('mouseleave closes picker after 400ms delay', async () => {
@@ -1294,20 +1298,23 @@ describe('pages-table', () => {
       expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).not.toBeNull();
     });
 
-    it('toolbar arrow keys do not propagate to mixin', async () => {
+    it('kebab button has aria-haspopup and aria-expanded', async () => {
       el.dataSet = testDataSet;
-      el.clientFilter = true;
+      el.columnConfig = testConfig;
       await el.updateComplete;
+      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    });
 
-      const input = el.shadowRoot!.querySelector('.filter-input') as HTMLInputElement;
-      const propagated: string[] = [];
-      el.addEventListener('keydown', (e: Event) => propagated.push((e as KeyboardEvent).key));
-
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
-
-      expect(propagated).toEqual([]);
+    it('kebab aria-expanded reflects dropdown state', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      await el.updateComplete;
+      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLButtonElement;
+      trigger.click();
+      await el.updateComplete;
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
     });
 
     it('includes current pageSize in options even when not in pageSizeOptions', async () => {
@@ -1345,13 +1352,13 @@ describe('pages-table', () => {
   });
 
   describe('embedded mode', () => {
-    it('suppresses toolbar when embedded is true', async () => {
+    it('suppresses kebab zone when embedded is true', async () => {
       el.dataSet = testDataSet;
       el.columnConfig = testConfig;
       (el as any).embedded = true;
       await el.updateComplete;
-      const toolbar = el.shadowRoot!.querySelector('.toolbar');
-      expect(toolbar).toBeNull();
+      const kebabZone = el.shadowRoot!.querySelector('.kebab-zone');
+      expect(kebabZone).toBeNull();
     });
 
     it('suppresses pagination footer when embedded is true', async () => {
@@ -1365,12 +1372,12 @@ describe('pages-table', () => {
       expect(footer).toBeNull();
     });
 
-    it('shows toolbar when embedded is false (default)', async () => {
+    it('shows kebab zone when embedded is false (default)', async () => {
       el.dataSet = testDataSet;
       el.columnConfig = testConfig;
       await el.updateComplete;
-      const toolbar = el.shadowRoot!.querySelector('.toolbar');
-      expect(toolbar).not.toBeNull();
+      const kebabZone = el.shadowRoot!.querySelector('.kebab-zone');
+      expect(kebabZone).not.toBeNull();
     });
   });
 
@@ -1709,6 +1716,219 @@ describe('pages-table', () => {
       const spanCell2 = [...el.shadowRoot!.querySelectorAll('.cell[role="gridcell"]')]
         .find(c => (c.getAttribute('style') ?? '').includes('span 3')) as HTMLElement;
       expect(spanCell2.classList.contains('selected')).toBe(true);
+    });
+  });
+
+  describe('filter bar', () => {
+    it('filter bar is hidden by default', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+      const filterBar = el.shadowRoot!.querySelector('.filter-bar');
+      expect(filterBar).toBeNull();
+    });
+
+    it('filter bar appears when _filterBarOpen is true', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const filterBar = el.shadowRoot!.querySelector('.filter-bar');
+      expect(filterBar).not.toBeNull();
+    });
+
+    it('filter bar is between header-container and body', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const dataTable = el.shadowRoot!.querySelector('.data-table')!;
+      const children = Array.from(dataTable.children);
+      const headerContainer = dataTable.querySelector('.header-container');
+      const filterBar = dataTable.querySelector('.filter-bar');
+      const body = dataTable.querySelector('.body');
+      expect(children.indexOf(filterBar!)).toBeGreaterThan(children.indexOf(headerContainer!));
+      expect(children.indexOf(filterBar!)).toBeLessThan(children.indexOf(body!));
+    });
+
+    it('filter bar renders in empty-state path', async () => {
+      el.dataSet = makeDataSet([]);
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const filterBar = el.shadowRoot!.querySelector('.filter-bar');
+      expect(filterBar).not.toBeNull();
+    });
+
+    it('filter bar suppressed when embedded is true', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any).embedded = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const filterBar = el.shadowRoot!.querySelector('.filter-bar');
+      expect(filterBar).toBeNull();
+    });
+
+    it('close button hides filter bar', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const closeBtn = el.shadowRoot!.querySelector('.filter-bar-close') as HTMLButtonElement;
+      expect(closeBtn).not.toBeNull();
+      closeBtn.click();
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-bar')).toBeNull();
+    });
+
+    it('preserves filter text when closing filter bar', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      el.filterText = 'Alice';
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const closeBtn = el.shadowRoot!.querySelector('.filter-bar-close') as HTMLButtonElement;
+      closeBtn.click();
+      await el.updateComplete;
+      expect(el.filterText).toBe('Alice');
+    });
+
+    it('filter bar has role search and aria-label', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const bar = el.shadowRoot!.querySelector('.filter-bar');
+      expect(bar!.getAttribute('role')).toBe('search');
+      expect(bar!.getAttribute('aria-label')).toBe('Filter table');
+    });
+
+    it('filter input has role searchbox and aria-label', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const input = el.shadowRoot!.querySelector('.filter-bar-input');
+      expect(input!.getAttribute('role')).toBe('searchbox');
+      expect(input!.getAttribute('aria-label')).toBe('Filter table');
+    });
+
+    it('filter bar arrow keys do not propagate', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const input = el.shadowRoot!.querySelector('.filter-bar-input') as HTMLInputElement;
+      const propagated: string[] = [];
+      el.addEventListener('keydown', (e: Event) => propagated.push((e as KeyboardEvent).key));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+      expect(propagated).toEqual([]);
+    });
+
+    it('filter-active dot appears when filterText is non-empty and bar is closed', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      el.filterText = 'Alice';
+      (el as any)._filterBarOpen = false;
+      await el.updateComplete;
+      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      expect(trigger.classList.contains('filter-active')).toBe(true);
+    });
+
+    it('no filter-active dot when filterText is empty', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      el.filterText = '';
+      await el.updateComplete;
+      const trigger = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      expect(trigger.classList.contains('filter-active')).toBe(false);
+    });
+  });
+
+  describe('filter bar keyboard', () => {
+    it('/ key opens filter bar when table has focus', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+      const dataTable = el.shadowRoot!.querySelector('.data-table') as HTMLElement;
+      dataTable.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-bar')).not.toBeNull();
+    });
+
+    it('/ key is no-op when embedded', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any).embedded = true;
+      await el.updateComplete;
+      const dataTable = el.shadowRoot!.querySelector('.data-table') as HTMLElement;
+      dataTable.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-bar')).toBeNull();
+    });
+
+    it('/ key is no-op when filter not enabled', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = false;
+      await el.updateComplete;
+      const dataTable = el.shadowRoot!.querySelector('.data-table') as HTMLElement;
+      dataTable.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-bar')).toBeNull();
+    });
+
+    it('Escape closes dropdown first when both are open', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      (el as any)._columnPickerOpen = true;
+      await el.updateComplete;
+      const dataTable = el.shadowRoot!.querySelector('.data-table') as HTMLElement;
+      dataTable.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).toBeNull();
+      expect(el.shadowRoot!.querySelector('.filter-bar')).not.toBeNull();
+    });
+
+    it('Escape closes filter bar when dropdown is closed', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      (el as any)._filterBarOpen = true;
+      await el.updateComplete;
+      const input = el.shadowRoot!.querySelector('.filter-bar-input') as HTMLInputElement;
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-bar')).toBeNull();
+    });
+
+    it('empty-state table responds to / key', async () => {
+      el.dataSet = makeDataSet([]);
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+      const dataTable = el.shadowRoot!.querySelector('.data-table') as HTMLElement;
+      dataTable.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true }));
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-bar')).not.toBeNull();
     });
   });
 });

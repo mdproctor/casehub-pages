@@ -104,6 +104,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @state() private _internalSelectedKeys = new Set<string>();
   @state() private _lastClickedKey: string | null = null;
   @state() private _columnPickerOpen = false;
+  @state() private _filterBarOpen = false;
   @state() private _focusColIndex = 0;
   @state() private _hiddenColumnIds = new Set<string>();
   @state() private _groupBoundaries: readonly GroupBoundary[] = [];
@@ -412,6 +413,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       border-bottom: 1px solid var(--pages-neutral-6, #d4d4d4);
       background: var(--pages-neutral-2, #fafafa);
       flex-shrink: 0;
+      padding-right: var(--pages-space-10, 40px);
     }
 
     .header {
@@ -720,35 +722,59 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       color: var(--pages-accent-9, #2563eb);
     }
 
-    .toolbar {
+    .kebab-zone {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
-      gap: var(--pages-space-2, 8px);
-      padding: var(--pages-space-2, 8px);
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
-      background: var(--pages-neutral-1, #ffffff);
+      padding-right: var(--pages-space-2, 8px);
+      z-index: 2;
+      background: linear-gradient(to right, transparent, var(--pages-neutral-2, #fafafa) 8px);
     }
 
-    .filter-input {
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--pages-space-2, 8px);
+      padding: var(--pages-space-2, 8px);
+      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+      background: var(--pages-neutral-1, #ffffff);
+      flex-shrink: 0;
+    }
+
+    .filter-bar-input {
+      flex: 1;
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       border: 1px solid var(--pages-neutral-5, #e0e0e0);
       background: var(--pages-neutral-1, #ffffff);
       border-radius: 4px;
       font-size: 13px;
       color: var(--pages-neutral-12, #171717);
-      width: 200px;
     }
 
-    .filter-input::placeholder {
+    .filter-bar-input::placeholder {
       color: var(--pages-neutral-8, #8c8c8c);
     }
 
-    .filter-input:focus {
+    .filter-bar-input:focus {
       outline: 2px solid var(--pages-primary-9, #3b82f6);
       outline-offset: 0;
       border-color: var(--pages-primary-9, #3b82f6);
+    }
+
+    .filter-bar-close {
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--pages-neutral-9, #737373);
+    }
+
+    .filter-bar-close:hover {
+      color: var(--pages-neutral-12, #171717);
     }
 
     .column-picker-wrapper {
@@ -756,6 +782,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     }
 
     .column-picker-trigger {
+      position: relative;
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       border: 1px solid var(--pages-neutral-5, #e0e0e0);
       background: var(--pages-neutral-2, #fafafa);
@@ -770,6 +797,38 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       background: var(--pages-neutral-3, #f5f5f5);
       border-color: var(--pages-neutral-7, #a3a3a3);
       color: var(--pages-neutral-12, #171717);
+    }
+
+    .column-picker-trigger.filter-active::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pages-primary-9, #3b82f6);
+    }
+
+    .picker-menu-item {
+      display: block;
+      width: 100%;
+      padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
+      border: none;
+      background: none;
+      cursor: pointer;
+      text-align: left;
+      font-size: var(--pages-font-size-sm, 12px);
+      color: var(--pages-neutral-11, #404040);
+    }
+
+    .picker-menu-item:hover {
+      background: var(--pages-neutral-2, #fafafa);
+    }
+
+    .picker-menu-item.active {
+      color: var(--pages-primary-9, #3b82f6);
+      font-weight: var(--pages-font-weight-medium, 500);
     }
 
     .column-picker-dropdown {
@@ -1130,6 +1189,13 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   }
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
+    if (changed.has('_filterBarOpen') && this._filterBarOpen) {
+      this.updateComplete.then(() => {
+        const input = this.shadowRoot?.querySelector('.filter-bar-input') as HTMLInputElement | null;
+        input?.focus();
+      });
+    }
+
     if (changed.has('dataSet') && this.mode === 'scroll') {
       this._loadingMore = false;
     }
@@ -1671,6 +1737,37 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     const key = event.key;
     const target = event.target as HTMLElement;
 
+    if (key === '/' && !this.embedded) {
+      const tag = target.tagName;
+      const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
+      if (!isEditable) {
+        const showFilter = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
+        if (showFilter && !this._filterBarOpen) {
+          event.preventDefault();
+          this._filterBarOpen = true;
+          return;
+        }
+      }
+    }
+
+    if (key === 'Escape') {
+      if (this._columnPickerOpen) {
+        this._columnPickerOpen = false;
+        event.preventDefault();
+        return;
+      }
+      if (this._filterBarOpen) {
+        this._filterBarOpen = false;
+        event.preventDefault();
+        if (this.rovingIndex >= 0 && this._dataRows.length > 0) {
+          this._focusRow(this.rovingIndex);
+        } else {
+          (this.shadowRoot?.querySelector('.data-table') as HTMLElement | null)?.focus();
+        }
+        return;
+      }
+    }
+
     const isRowTarget = target.classList.contains('row') && !target.classList.contains('header');
 
     if (key === 'Escape' && this.selection === 'multi') {
@@ -2056,55 +2153,45 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     `;
   }
 
-  private _renderToolbar() {
+  private _renderKebabZone() {
+    const showFilter = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
     const visibleCount = this._visibleColumns.length;
-
     const modes: Array<{ value: DisplayMode; label: string }> = [
       { value: 'auto', label: 'Auto' },
       { value: 'paginated', label: 'Pages' },
       { value: 'scroll', label: 'Scroll' },
     ];
 
-    const showFilter = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
-
     return html`
-      <div class="toolbar" @keydown="${this._onToolbarKeydown}">
-        ${this._csvExportEnabled && this.dataSet ? html`
-          <button class="pagination-button" aria-label="Download CSV" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">⬇</button>
-          <button class="pagination-button" aria-label="Copy CSV" @click="${this._handleCopyToClipboard}">📋</button>
-        ` : nothing}
-        ${showFilter ? html`
-          <input
-            type="text"
-            class="filter-input"
-            placeholder="Filter..."
-            .value="${this.filterText}"
-            @input="${(e: Event) => {
-              this.filterText = (e.target as HTMLInputElement).value;
-            }}"
-          />
-        ` : nothing}
+      <div class="kebab-zone">
         <div
           class="column-picker-wrapper"
           @mouseleave="${this._handlePickerMouseLeave}"
           @mouseenter="${this._handlePickerMouseEnter}"
         >
           <button
-            class="column-picker-trigger"
+            class="column-picker-trigger${this.filterText ? ' filter-active' : ''}"
             @click="${this._toggleColumnPicker}"
             aria-label="Table options"
+            aria-haspopup="menu"
+            aria-expanded="${this._columnPickerOpen ? 'true' : 'false'}"
           >
             ⋮
           </button>
           ${this._columnPickerOpen ? html`
             <div class="column-picker-dropdown">
+              ${showFilter ? html`
+                <button
+                  class="picker-menu-item${this._filterBarOpen ? ' active' : ''}"
+                  @click="${() => { this._filterBarOpen = !this._filterBarOpen; }}"
+                >🔍 Filter</button>
+              ` : nothing}
               <div class="picker-section-label">Columns</div>
               ${this._dataColumns.map(col => {
                 const config = this._configFor(col);
                 const colId = String(col.id);
                 const isVisible = !this._hiddenColumnIds.has(colId) && config?.visible !== false;
                 const isLastVisible = isVisible && visibleCount === 1;
-
                 return html`
                   <label class="column-picker-item">
                     <input
@@ -2124,10 +2211,16 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
                   <button
                     role="radio"
                     aria-pressed=${this.mode === m.value ? 'true' : 'false'}
+                    ?disabled=${!!this.groupBy}
                     @click=${() => this._setMode(m.value)}
                   >${m.label}</button>
                 `)}
               </div>
+              ${this._csvExportEnabled && this.dataSet ? html`
+                <div class="picker-divider"></div>
+                <button class="picker-menu-item" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">⬇ Download CSV</button>
+                <button class="picker-menu-item" @click="${this._handleCopyToClipboard}">📋 Copy CSV</button>
+              ` : nothing}
             </div>
           ` : nothing}
         </div>
@@ -2135,11 +2228,29 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     `;
   }
 
-  private _onToolbarKeydown = (e: KeyboardEvent): void => {
+  private _stopArrowKeyPropagation = (e: KeyboardEvent): void => {
     if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
       e.stopPropagation();
     }
   };
+
+  private _renderFilterBar() {
+    if (!this._filterBarOpen) return nothing;
+    return html`
+      <div class="filter-bar" role="search" aria-label="Filter table" @keydown="${this._stopArrowKeyPropagation}">
+        <input
+          class="filter-bar-input"
+          type="text"
+          role="searchbox"
+          aria-label="Filter table"
+          placeholder="Filter..."
+          .value="${this.filterText}"
+          @input="${(e: Event) => { this.filterText = (e.target as HTMLInputElement).value; }}"
+        />
+        <button class="filter-bar-close" aria-label="Close filter" @click="${() => { this._filterBarOpen = false; }}">✕</button>
+      </div>
+    `;
+  }
 
   private _clearFilterSelection(): void {
     if (this._selectedColumnId === undefined) return;
@@ -2524,7 +2635,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       : [...this.pageSizeOptions, this.pageSize].sort((a, b) => a - b);
 
     return html`
-      <div class="pagination" role="navigation" aria-label="Table pagination" @keydown="${this._onToolbarKeydown}">
+      <div class="pagination" role="navigation" aria-label="Table pagination" @keydown="${this._stopArrowKeyPropagation}">
         <div class="pagination-info">
           <span>Showing ${start}-${end} of ${total}</span>
           <label class="page-size-label">
@@ -2613,8 +2724,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     if (this._dataRows.length === 0) {
       return html`
-        <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}">
-          ${this.embedded ? nothing : this._renderToolbar()}
+        <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}" @keydown="${this._handleKeyDown}">
           <div class="header-container">
             <div
               class="header${this.headerVisible ? '' : ' visually-hidden'}"
@@ -2626,7 +2736,9 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
               ${this.selection === 'multi' ? html`<div class="header-cell"></div>` : nothing}
               ${visibleCols.map(col => this._renderHeaderCell(col))}
             </div>
+            ${this.embedded ? nothing : this._renderKebabZone()}
           </div>
+          ${!this.embedded ? this._renderFilterBar() : nothing}
           <div class="empty-state">${this.emptyMessage}</div>
         </div>
       `;
@@ -2636,7 +2748,6 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     return html`
       <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}" aria-label="Data table" @keydown="${this._handleKeyDown}">
-        ${this.embedded ? nothing : this._renderToolbar()}
         <div class="header-container">
           <div
             class="header${this.headerVisible ? '' : ' visually-hidden'}"
@@ -2648,7 +2759,9 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
             ${this._renderCheckbox(this._dataRows[0]!, true)}
             ${visibleCols.map(col => this._renderHeaderCell(col))}
           </div>
+          ${this.embedded ? nothing : this._renderKebabZone()}
         </div>
+        ${!this.embedded ? this._renderFilterBar() : nothing}
         <div class="body" @scroll="${this._onScroll}">
           ${this.groupBy && this._groupBoundaries.length > 0
             ? html`
