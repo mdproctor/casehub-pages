@@ -242,16 +242,26 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
         const expr = override?.expression;
         if (expr) {
           const expression = expr;
+          const pillMap = override?.pill;
           renderers.set(col.id, (cell: CellValue) => {
             const raw = cellToRaw(cell);
             if (raw === null) return '';
             return until(
-              applyCellExpression(raw, expression).then(r => r === null ? '' : String(r)),
+              applyCellExpression(raw, expression).then(r => {
+                if (r === null) return '';
+                const value = String(r);
+                if (pillMap) {
+                  const color = pillMap[value];
+                  if (color) {
+                    return html`<span style="font-size:10px; padding:1px 6px; border-radius:3px; color:#fff; background:${color}; display:inline-block; min-width:55px; text-align:center;">${value}</span>`;
+                  }
+                }
+                return value;
+              }),
               String(raw),
             );
           });
-        }
-        if (override?.pill) {
+        } else if (override?.pill) {
           const pillMap = override.pill;
           renderers.set(col.id, (cell: CellValue) => {
             const raw = cellToRaw(cell);
