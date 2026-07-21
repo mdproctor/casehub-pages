@@ -37,8 +37,18 @@ export function renderDisplayField(
   schema: FieldSchema,
   value: unknown,
 ): TemplateResult {
+  if (schema.oneOf) {
+    const match = schema.oneOf.find(o => o.const === value);
+    const displayValue = match ? match.title : (value ?? '—');
+    return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value${value == null ? ' muted' : ''}">${displayValue}</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
+  }
+
   if (value === null || value === undefined) {
     return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value muted">—</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
+  }
+
+  if (schema.format === 'time') {
+    return html`<div class="field"><span class="label">${schema.title ?? key}</span><span class="value">${value ?? '—'}</span>${schema.description ? html`<span class="description">${schema.description}</span>` : ''}</div>`;
   }
 
   if (schema.format === 'date' || schema.format === 'date-time') {
@@ -94,6 +104,20 @@ export function renderEditField(
   error?: string,
   onBlur?: (key: string) => void,
 ): TemplateResult {
+  if (schema.oneOf) {
+    const currentMatch = schema.oneOf.some(o => o.const === value);
+    return html`
+      <div class="field">
+        <label for="${key}">${schema.title ?? key}</label>
+        <select id="${key}" ?readonly=${schema.readOnly} @change=${(e: Event) => onChange(key, (e.target as HTMLSelectElement).value)} @blur=${() => onBlur?.(key)}>
+          ${!currentMatch ? html`<option value="" disabled selected>Select ${schema.title ?? key}...</option>` : ''}
+          ${schema.oneOf.map(opt => html`<option value=${opt.const} ?selected=${value === opt.const}>${opt.title}</option>`)}
+        </select>
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
+      </div>`;
+  }
+
   if (schema.enum) {
     return html`
       <div class="field">
@@ -148,6 +172,16 @@ export function renderEditField(
       </div>`;
   }
 
+  if (schema.format === 'time') {
+    return html`
+      <div class="field">
+        <label for="${key}">${schema.title ?? key}</label>
+        <input id="${key}" type="time" .value=${String(value ?? '')} ?readonly=${schema.readOnly} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} @blur=${() => onBlur?.(key)} />
+        ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
+        ${error ? html`<span class="error">${error}</span>` : ''}
+      </div>`;
+  }
+
   if (schema.type === 'object' && schema.properties) {
     const obj = (value ?? {}) as Record<string, unknown>;
     const nestedChange = (nestedKey: string, nestedValue: unknown) => {
@@ -156,6 +190,7 @@ export function renderEditField(
     return html`
       <div class="field nested">
         <span class="label">${schema.title ?? key}</span>
+        ${error ? html`<span class="error">${error}</span>` : ''}
         <div class="nested-content">
           ${Object.entries(schema.properties).map(([k, s]) =>
             renderEditField(k, s, obj[k], nestedChange)
@@ -182,7 +217,7 @@ export function renderEditField(
   return html`
     <div class="field">
       <label for="${key}">${schema.title ?? key}</label>
-      <input id="${key}" type="text" placeholder=${schema.placeholder ?? ''} .value=${String(value ?? '')} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} @blur=${() => onBlur?.(key)} />
+      <input id="${key}" type="text" placeholder=${schema.placeholder ?? ''} .value=${String(value ?? '')} ?readonly=${schema.readOnly} @input=${(e: Event) => onChange(key, (e.target as HTMLInputElement).value)} @blur=${() => onBlur?.(key)} />
       ${schema.description ? html`<span class="description">${schema.description}</span>` : ''}
       ${error ? html`<span class="error">${error}</span>` : ''}
     </div>`;

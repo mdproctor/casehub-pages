@@ -575,4 +575,216 @@ describe('pages-schema-form', () => {
       });
     });
   });
+
+  describe('oneOf labeled enums', () => {
+    const oneOfSchema = {
+      type: 'object',
+      properties: {
+        severity: {
+          type: 'string',
+          title: 'Severity',
+          oneOf: [
+            { const: 'INFO', title: 'Information' },
+            { const: 'WARNING', title: 'Warning' },
+            { const: 'URGENT', title: 'Urgent' },
+          ],
+        },
+      },
+      required: ['severity'],
+    };
+
+    it('renders select with title labels and const values in edit mode', async () => {
+      el.schema = oneOfSchema;
+      el.data = { severity: 'WARNING' };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const select = el.shadowRoot!.querySelector<HTMLSelectElement>('select[id="severity"]');
+      expect(select).toBeTruthy();
+      expect(select!.value).toBe('WARNING');
+      const options = Array.from(select!.querySelectorAll('option:not([disabled])'));
+      expect(options.map(o => o.textContent?.trim())).toEqual(['Information', 'Warning', 'Urgent']);
+      expect(options.map(o => (o as HTMLOptionElement).value)).toEqual(['INFO', 'WARNING', 'URGENT']);
+    });
+
+    it('renders disabled placeholder when value is empty', async () => {
+      el.schema = oneOfSchema;
+      el.data = { severity: '' };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const select = el.shadowRoot!.querySelector<HTMLSelectElement>('select[id="severity"]');
+      const placeholder = select!.querySelector('option[disabled]');
+      expect(placeholder).toBeTruthy();
+      expect(placeholder!.textContent?.trim()).toContain('Select');
+      expect(placeholder!.selected).toBe(true);
+    });
+
+    it('displays title instead of const in display mode', async () => {
+      el.schema = oneOfSchema;
+      el.data = { severity: 'URGENT' };
+      el.mode = 'display';
+      await (el as any).updateComplete;
+      expect(el.shadowRoot!.textContent).toContain('Urgent');
+      expect(el.shadowRoot!.textContent).not.toContain('URGENT');
+    });
+
+    it('takes priority over enum when both present', async () => {
+      el.schema = {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['A', 'B'],
+            oneOf: [
+              { const: 'X', title: 'Option X' },
+              { const: 'Y', title: 'Option Y' },
+            ],
+          },
+        },
+      };
+      el.data = { status: 'X' };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const options = el.shadowRoot!.querySelectorAll('select option:not([disabled])');
+      expect(options.length).toBe(2);
+      expect(options[0]!.textContent?.trim()).toBe('Option X');
+    });
+
+    it('validates required oneOf field rejects empty', async () => {
+      el.schema = oneOfSchema;
+      el.data = { severity: '' };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const result = (el as any).submit();
+      expect(result).toBeNull();
+      await (el as any).updateComplete;
+      const errors = el.shadowRoot!.querySelectorAll('.error');
+      expect(errors.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('format: time', () => {
+    const timeSchema = {
+      type: 'object',
+      properties: {
+        start: { type: 'string', format: 'time', title: 'Start Time' },
+      },
+    };
+
+    it('renders time input in edit mode', async () => {
+      el.schema = timeSchema;
+      el.data = { start: '09:30' };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const input = el.shadowRoot!.querySelector<HTMLInputElement>('input[type="time"]');
+      expect(input).toBeTruthy();
+      expect(input!.value).toBe('09:30');
+    });
+
+    it('displays time value in display mode', async () => {
+      el.schema = timeSchema;
+      el.data = { start: '14:00' };
+      el.mode = 'display';
+      await (el as any).updateComplete;
+      expect(el.shadowRoot!.textContent).toContain('14:00');
+    });
+  });
+
+  describe('readOnly', () => {
+    const readOnlySchema = {
+      type: 'object',
+      properties: {
+        id: { type: 'string', title: 'ID', readOnly: true },
+        name: { type: 'string', title: 'Name' },
+      },
+      required: ['id', 'name'],
+    };
+
+    it('renders readonly attribute in edit mode', async () => {
+      el.schema = readOnlySchema;
+      el.data = { id: 'abc-123', name: 'Test' };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const idInput = el.shadowRoot!.querySelector<HTMLInputElement>('input[id="id"]');
+      expect(idInput!.readOnly).toBe(true);
+    });
+
+    it('skips readOnly fields during validation', async () => {
+      el.schema = readOnlySchema;
+      el.data = { id: '', name: 'Test' };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const result = (el as any).submit();
+      expect(result).toBeTruthy();
+    });
+  });
+
+  describe('recursive validation', () => {
+    it('validates required fields in nested objects', async () => {
+      el.schema = {
+        type: 'object',
+        properties: {
+          template: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              category: { type: 'string' },
+            },
+            required: ['title', 'category'],
+          },
+        },
+      };
+      el.data = { template: { title: '', category: '' } };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const result = (el as any).submit();
+      expect(result).toBeNull();
+      await (el as any).updateComplete;
+      const errors = el.shadowRoot!.querySelectorAll('.error');
+      expect(errors.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('validates required fields in array items', async () => {
+      el.schema = {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                value: { type: 'string' },
+              },
+              required: ['name', 'value'],
+            },
+          },
+        },
+      };
+      el.data = { items: [{ name: '', value: '' }] };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const result = (el as any).submit();
+      expect(result).toBeNull();
+    });
+
+    it('passes when nested required fields are present', async () => {
+      el.schema = {
+        type: 'object',
+        properties: {
+          template: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+            },
+            required: ['title'],
+          },
+        },
+      };
+      el.data = { template: { title: 'Hello' } };
+      el.mode = 'edit';
+      await (el as any).updateComplete;
+      const result = (el as any).submit();
+      expect(result).toBeTruthy();
+    });
+  });
 });

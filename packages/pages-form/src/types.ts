@@ -5,6 +5,8 @@ export interface FieldSchema {
   readonly description?: string;
   readonly placeholder?: string;
   readonly enum?: readonly string[];
+  readonly oneOf?: readonly { readonly const: string; readonly title: string }[];
+  readonly readOnly?: boolean;
   readonly pattern?: string;
   readonly minimum?: number;
   readonly maximum?: number;
