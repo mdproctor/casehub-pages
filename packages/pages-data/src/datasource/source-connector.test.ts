@@ -3,7 +3,7 @@ import { createSourceConnector } from "./source-connector.js";
 import { createDataSetManager } from "../dataset/manager.js";
 import { toTypedDataSet } from "../dataset/conversion.js";
 import { columnId, ColumnType, dataSetId } from "../dataset/types.js";
-import type { DataSource, DataSink, SourceError } from "./types.js";
+import type { DataSource, DataSink } from "./types.js";
 import type { Column, TypedDataSet } from "../dataset/types.js";
 
 function col(id: string, name: string, type: ColumnType): Column {

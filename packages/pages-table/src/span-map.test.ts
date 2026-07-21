@@ -229,11 +229,11 @@ describe('computeSpanMap', () => {
       expect((map.get(0)?.get(String(countryCol)) as CellSpan).rowSpan).toBe(2);
 
       // row 0, name col: suppressed by colSpan
-      expect(isSuppressed(map.get(0)?.get(String(nameCol))!)).toBe(true);
+      expect(isSuppressed(map.get(0)!.get(String(nameCol))!)).toBe(true);
       // row 1, country col: suppressed by rowSpan
-      expect(isSuppressed(map.get(1)?.get(String(countryCol))!)).toBe(true);
+      expect(isSuppressed(map.get(1)!.get(String(countryCol))!)).toBe(true);
       // row 1, name col: suppressed by both
-      expect(isSuppressed(map.get(1)?.get(String(nameCol))!)).toBe(true);
+      expect(isSuppressed(map.get(1)!.get(String(nameCol))!)).toBe(true);
 
       // row 2 is unaffected
       expect(map.get(2)?.get(String(countryCol))).toBeUndefined();

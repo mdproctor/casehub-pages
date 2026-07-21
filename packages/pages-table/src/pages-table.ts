@@ -6,7 +6,7 @@ import { ColumnType, extractGroupBoundaries } from '@casehubio/pages-data';
 import type { SortColumn } from '@casehubio/pages-data';
 import type { TableColumnConfig, ColumnRenderer, DisplayMode, PageChangeDetail, PageSizeChangeDetail, LoadMoreDetail, SelectionMode, SelectionChangeDetail, RowActivateDetail, SortDirection, SortChangeDetail, SortEntry, ColumnChangeDetail, FilterChangeDetail, FilterConfig, DetailMode, DetailChangeDetail, RowAccentConfig } from './types.js';
 import { computeScrollWindow, extendWindowForSpans } from './virtual-scroll-engine.js';
-import { computeSpanMap, isSuppressed, isOrigin, type SpanMap, type SpanEntry } from './span-map.js';
+import { computeSpanMap, isSuppressed, isOrigin, type SpanMap } from './span-map.js';
 import { createMultiComparator } from './sort.js';
 import { flattenTree, type TreeRow } from './tree.js';
 import { cellToRaw, applyCellExpression } from './cell-utils.js';

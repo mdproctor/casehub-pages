@@ -468,7 +468,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     }));
   }
 
-  private _handleChildSelectionChange(e: Event): void {
+  private _handleChildSelectionChange = (e: Event): void => {
     const ce = e as CustomEvent;
     ce.stopPropagation();
     const childKeys: readonly string[] = ce.detail.selectedKeys ?? [];
@@ -492,7 +492,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
       bubbles: true,
       composed: true,
     }));
-  }
+  };
 
   private _handleSelectAll(dataset: TypedDataSet): void {
     const getRowKey = this._getRowKey;
@@ -510,9 +510,9 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     }));
   }
 
-  private _togglePicker(): void {
+  private _togglePicker = (): void => {
     this._pickerOpen = !this._pickerOpen;
-  }
+  };
 
   private _toggleColumnVisibility(columnId: string, contentColumnIds: readonly ColumnId[]): void {
     const visibleCount = contentColumnIds.filter((id) => !this._hiddenColumnIds.has(String(id))).length;
