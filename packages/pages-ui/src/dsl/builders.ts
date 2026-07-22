@@ -183,6 +183,13 @@ export function rows(...children: Component[]): Component {
   });
 }
 
+export function metricGrid(...children: Component[]): Component {
+  return freeze({
+    type: "metric-grid",
+    slots: { default: children },
+  });
+}
+
 export function stack(...children: Component[]): Component {
   return freeze({
     type: "stack",

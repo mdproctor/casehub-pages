@@ -5,6 +5,7 @@ const LAYOUT_TYPES = new Set([
   "grid", "columns", "rows", "stack",
   "tabs", "pills", "accordion", "carousel",
   "sidebar", "tree", "panel", "split",
+  "metric-grid",
 ]);
 
 export function isLayoutType(type: string): boolean {
@@ -26,6 +27,7 @@ export function applyLayoutCSS(
     }
     case "columns": {
       element.style.display = "grid";
+      element.style.gap = "var(--pages-space-3, 12px)";
       if (isColumns(component)) {
         if (component.props?.distribution) {
           element.style.gridTemplateColumns = component.props.distribution.map((n) => `${String(n)}fr`).join(" ");
@@ -36,6 +38,7 @@ export function applyLayoutCSS(
     case "rows":
       element.style.display = "flex";
       element.style.flexDirection = "column";
+      element.style.gap = "var(--pages-space-3, 12px)";
       break;
     case "stack":
     case "tabs":
@@ -53,6 +56,11 @@ export function applyLayoutCSS(
       element.style.gap = "var(--pages-space-4, 16px)";
       break;
     case "panel":
+      break;
+    case "metric-grid":
+      element.style.display = "grid";
+      element.style.gridTemplateColumns = "repeat(auto-fill, minmax(140px, 1fr))";
+      element.style.gap = "var(--pages-space-2, 8px)";
       break;
     case "split": {
       element.style.display = "flex";

@@ -19,10 +19,9 @@ describe("evaluateGenerator", () => {
     expect(result.rows[0]!.number(result.columns[1]!.id)).toBe(42);
   });
 
-  it("throws error for expression that produces empty array without columns", async () => {
-    await expect(
-      evaluateGenerator("[]", undefined, presetRegistry),
-    ).rejects.toThrow("EMPTY_RESULT");
+  it("returns empty dataset for expression that produces empty array", async () => {
+    const result = await evaluateGenerator("[]", undefined, presetRegistry);
+    expect(result.rows).toHaveLength(0);
   });
 
   it("works without explicit column definitions (infers from data)", async () => {

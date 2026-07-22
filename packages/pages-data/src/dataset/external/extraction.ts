@@ -407,7 +407,9 @@ function tabulate(
     rows = result.rows;
     inferred = true;
   } else if (Array.isArray(data) && data.length === 0) {
-    throw new DataSetError("EMPTY_RESULT", "Extraction produced no data (empty array)");
+    columns = [];
+    rows = [];
+    inferred = true;
   } else if (Array.isArray(data) && data.every(v => typeof v !== "object" || v === null)) {
     // Shape D: flat array of primitives → single row with auto-generated columns
     columns = data.map((_, i) => ({
@@ -431,10 +433,7 @@ function tabulate(
     inferred = false;
   }
 
-  // Check empty result (zero rows AND zero columns)
-  if (rows.length === 0 && columns.length === 0) {
-    throw new DataSetError("EMPTY_RESULT", "Extraction produced no data");
-  }
+  // Empty result (zero rows AND zero columns) is valid — return empty dataset
 
   return { dataset: { columns, data: rows }, inferredColumns: inferred };
 }

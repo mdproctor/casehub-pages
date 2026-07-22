@@ -10,6 +10,7 @@ import {
   at,
   columns,
   rows,
+  metricGrid,
   stack,
   tabs,
   pills,
@@ -214,6 +215,22 @@ describe("builders", () => {
 
     it("freezes returned component", () => {
       const result = rows();
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+  });
+
+  describe("metricGrid()", () => {
+    it("creates metric-grid component with children in default slot", () => {
+      const child1 = html("a");
+      const child2 = html("b");
+      const result = metricGrid(child1, child2);
+
+      expect(result.type).toBe("metric-grid");
+      expect(result.slots).toEqual({ default: [child1, child2] });
+    });
+
+    it("freezes returned component", () => {
+      const result = metricGrid();
       expect(Object.isFrozen(result)).toBe(true);
     });
   });

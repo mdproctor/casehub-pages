@@ -8,6 +8,7 @@ export {
   at,
   columns,
   rows,
+  metricGrid,
   stack,
   // Navigation builders
   tabs,

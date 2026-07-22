@@ -35,20 +35,22 @@ describe("applyLayoutCSS", () => {
     expect(el.style.gridTemplateColumns).toBe("repeat(12, 1fr)");
   });
 
-  it("applies columns CSS with distribution", () => {
+  it("applies columns CSS with distribution and gap", () => {
     const el = document.createElement("div");
     const component: Component = { type: "columns", props: { distribution: [2, 1] } };
     applyLayoutCSS(el, component);
     expect(el.style.display).toBe("grid");
     expect(el.style.gridTemplateColumns).toBe("2fr 1fr");
+    expect(el.style.gap).toBe("var(--pages-space-3, 12px)");
   });
 
-  it("applies rows CSS", () => {
+  it("applies rows CSS with gap", () => {
     const el = document.createElement("div");
     const component: Component = { type: "rows" };
     applyLayoutCSS(el, component);
     expect(el.style.display).toBe("flex");
     expect(el.style.flexDirection).toBe("column");
+    expect(el.style.gap).toBe("var(--pages-space-3, 12px)");
   });
 
   it("stack does not set display:grid", () => {
@@ -103,6 +105,21 @@ describe("applyLayoutCSS", () => {
     const component: Component = { type: "grid" };
     applyLayoutCSS(el, component);
     expect(el.style.gridTemplateColumns).toBe("repeat(12, 1fr)");
+  });
+});
+
+describe("metric-grid layout", () => {
+  it("metric-grid is a layout type", () => {
+    expect(isLayoutType("metric-grid")).toBe(true);
+  });
+
+  it("applies metric-grid CSS — auto-fill grid with tight gap", () => {
+    const el = document.createElement("div");
+    const component: Component = { type: "metric-grid" };
+    applyLayoutCSS(el, component);
+    expect(el.style.display).toBe("grid");
+    expect(el.style.gridTemplateColumns).toBe("repeat(auto-fill, minmax(140px, 1fr))");
+    expect(el.style.gap).toBe("var(--pages-space-2, 8px)");
   });
 });
 

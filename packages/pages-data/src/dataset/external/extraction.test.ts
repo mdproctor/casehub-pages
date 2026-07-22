@@ -278,10 +278,10 @@ describe("extractDataSet", () => {
 
   // --- Empty result ---
 
-  it("throws EMPTY_RESULT for empty data", async () => {
-    await expect(
-      extractDataSet(fetchResult([]), def(), registry),
-    ).rejects.toThrow("EMPTY_RESULT");
+  it("returns empty dataset for empty array", async () => {
+    const result = await extractDataSet(fetchResult([]), def(), registry);
+    expect(result.dataset.rows).toHaveLength(0);
+    expect(result.dataset.columns).toHaveLength(0);
   });
 
   // --- Invalid JSON string that is also not CSV ---
