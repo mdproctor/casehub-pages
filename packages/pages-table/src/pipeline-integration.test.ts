@@ -90,13 +90,22 @@ describe('pipeline integration', () => {
       table.remove();
     });
 
-    it('shows filter input in pipeline mode', async () => {
+    it('filter is available on demand in pipeline mode', async () => {
       el.props = { lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = testDataSet;
       await el.updateComplete;
 
-      const input = el.shadowRoot!.querySelector('.filter-input');
-      expect(input).not.toBeNull();
+      expect(el.shadowRoot!.querySelector('.filter-input')).toBeNull();
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      kebab.click();
+      await el.updateComplete;
+      const filterToggle = el.shadowRoot!.querySelector('.filter-toggle') as HTMLElement;
+      expect(filterToggle).not.toBeNull();
+      filterToggle.click();
+      await el.updateComplete;
+
+      expect(el.shadowRoot!.querySelector('.filter-input')).not.toBeNull();
     });
 
     it('maps columns[].name to columnConfig label', async () => {
@@ -709,9 +718,13 @@ describe('pipeline integration', () => {
   });
 
   describe('CSV export buttons', () => {
-    it('shows export buttons when csvExport is true', async () => {
+    it('shows export buttons in kebab menu when csvExport is true', async () => {
       el.props = { csvExport: true, lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      kebab.click();
       await el.updateComplete;
 
       const downloadBtn = el.shadowRoot!.querySelector('[aria-label="Download CSV"]');
@@ -720,9 +733,13 @@ describe('pipeline integration', () => {
       expect(copyBtn).not.toBeNull();
     });
 
-    it('does not show export buttons when csvExport is not set', async () => {
+    it('does not show export buttons in kebab menu when csvExport is not set', async () => {
       el.props = { lookup: { dataSetId: 'test', operations: [] } };
       el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      kebab.click();
       await el.updateComplete;
 
       const downloadBtn = el.shadowRoot!.querySelector('[aria-label="Download CSV"]');

@@ -746,13 +746,111 @@ describe('pages-table', () => {
       expect(dataRows.length).toBe(3);
     });
 
-    it('renders filter input when clientFilter is true', async () => {
+    it('filter input is hidden by default even when clientFilter is true', async () => {
       el.dataSet = testDataSet;
       el.clientFilter = true;
       await el.updateComplete;
 
       const input = el.shadowRoot!.querySelector('.filter-input');
+      expect(input).toBeNull();
+    });
+
+    it('filter input appears after clicking kebab and selecting filter', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      expect(kebab).not.toBeNull();
+      kebab.click();
+      await el.updateComplete;
+
+      const filterToggle = el.shadowRoot!.querySelector('.filter-toggle') as HTMLElement;
+      expect(filterToggle).not.toBeNull();
+      filterToggle.click();
+      await el.updateComplete;
+
+      const input = el.shadowRoot!.querySelector('.filter-input');
       expect(input).not.toBeNull();
+    });
+
+    it('no dedicated toolbar row exists', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+
+      const toolbar = el.shadowRoot!.querySelector('.toolbar');
+      expect(toolbar).toBeNull();
+    });
+
+    it('kebab button is inside header-container', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      await el.updateComplete;
+
+      const headerContainer = el.shadowRoot!.querySelector('.header-container');
+      const kebab = headerContainer!.querySelector('.column-picker-trigger');
+      expect(kebab).not.toBeNull();
+    });
+
+    it('filter bar has go and close buttons', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      kebab.click();
+      await el.updateComplete;
+      (el.shadowRoot!.querySelector('.filter-toggle') as HTMLElement).click();
+      await el.updateComplete;
+
+      expect(el.shadowRoot!.querySelector('.filter-go')).not.toBeNull();
+      expect(el.shadowRoot!.querySelector('.filter-close')).not.toBeNull();
+    });
+
+    it('close button hides the filter bar', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      kebab.click();
+      await el.updateComplete;
+      (el.shadowRoot!.querySelector('.filter-toggle') as HTMLElement).click();
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-input')).not.toBeNull();
+
+      (el.shadowRoot!.querySelector('.filter-close') as HTMLElement).click();
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector('.filter-input')).toBeNull();
+    });
+
+    it('Enter key in filter input triggers filter-change event', async () => {
+      el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
+      el.clientFilter = true;
+      await el.updateComplete;
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      kebab.click();
+      await el.updateComplete;
+      (el.shadowRoot!.querySelector('.filter-toggle') as HTMLElement).click();
+      await el.updateComplete;
+
+      const input = el.shadowRoot!.querySelector('.filter-input') as HTMLInputElement;
+      const events: CustomEvent[] = [];
+      el.addEventListener('filter-change', (e: Event) => events.push(e as CustomEvent));
+
+      input.value = 'quarkus';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(events.length).toBe(1);
+      expect(events[0]!.detail.text).toBe('quarkus');
     });
   });
 
@@ -1239,18 +1337,15 @@ describe('pages-table', () => {
       outside.remove();
     });
 
-    it('toolbar is above header, not beside it', async () => {
+    it('kebab is inside header-container, no toolbar div exists', async () => {
       el.dataSet = testDataSet;
-      el.clientFilter = true;
+      el.columnConfig = testConfig;
       await el.updateComplete;
 
       const dataTable = el.shadowRoot!.querySelector('.data-table')!;
-      const toolbar = dataTable.querySelector('.toolbar');
-      const headerContainer = dataTable.querySelector('.header-container');
-      expect(toolbar).not.toBeNull();
-      expect(headerContainer).not.toBeNull();
-      const children = Array.from(dataTable.children);
-      expect(children.indexOf(toolbar!)).toBeLessThan(children.indexOf(headerContainer!));
+      expect(dataTable.querySelector('.toolbar')).toBeNull();
+      const headerContainer = dataTable.querySelector('.header-container')!;
+      expect(headerContainer.querySelector('.column-picker-trigger')).not.toBeNull();
     });
 
     it('mouseleave closes picker after 400ms delay', async () => {
@@ -1294,9 +1389,17 @@ describe('pages-table', () => {
       expect(el.shadowRoot!.querySelector('.column-picker-dropdown')).not.toBeNull();
     });
 
-    it('toolbar arrow keys do not propagate to mixin', async () => {
+    it('filter bar arrow keys do not propagate to mixin', async () => {
       el.dataSet = testDataSet;
+      el.columnConfig = testConfig;
       el.clientFilter = true;
+      await el.updateComplete;
+
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger') as HTMLElement;
+      kebab.click();
+      await el.updateComplete;
+      const filterToggle = el.shadowRoot!.querySelector('.filter-toggle') as HTMLElement;
+      filterToggle.click();
       await el.updateComplete;
 
       const input = el.shadowRoot!.querySelector('.filter-input') as HTMLInputElement;
@@ -1365,12 +1468,12 @@ describe('pages-table', () => {
       expect(footer).toBeNull();
     });
 
-    it('shows toolbar when embedded is false (default)', async () => {
+    it('shows kebab when embedded is false (default)', async () => {
       el.dataSet = testDataSet;
       el.columnConfig = testConfig;
       await el.updateComplete;
-      const toolbar = el.shadowRoot!.querySelector('.toolbar');
-      expect(toolbar).not.toBeNull();
+      const kebab = el.shadowRoot!.querySelector('.column-picker-trigger');
+      expect(kebab).not.toBeNull();
     });
   });
 

@@ -105,6 +105,7 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
   @state() private _internalSelectedKeys = new Set<string>();
   @state() private _lastClickedKey: string | null = null;
   @state() private _columnPickerOpen = false;
+  @state() private _filterVisible = false;
   @state() private _focusColIndex = 0;
   @state() private _hiddenColumnIds = new Set<string>();
   @state() private _groupBoundaries: readonly GroupBoundary[] = [];
@@ -711,15 +712,33 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       color: var(--pages-accent-9, #2563eb);
     }
 
-    .toolbar {
+    .filter-bar {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
-      gap: var(--pages-space-2, 8px);
-      padding: var(--pages-space-2, 8px);
+      gap: var(--pages-space-1, 4px);
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       flex-shrink: 0;
       border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
       background: var(--pages-neutral-1, #ffffff);
+    }
+
+    .filter-go,
+    .filter-close {
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      border: 1px solid var(--pages-neutral-5, #e0e0e0);
+      background: var(--pages-neutral-2, #fafafa);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      color: var(--pages-neutral-9, #737373);
+    }
+
+    .filter-go:hover,
+    .filter-close:hover {
+      background: var(--pages-neutral-3, #f5f5f5);
+      border-color: var(--pages-neutral-7, #a3a3a3);
+      color: var(--pages-neutral-12, #171717);
     }
 
     .filter-input {
@@ -743,7 +762,10 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     }
 
     .column-picker-wrapper {
-      position: relative;
+      position: absolute;
+      top: var(--pages-space-1, 4px);
+      right: var(--pages-space-1, 4px);
+      z-index: 5;
     }
 
     .column-picker-trigger {
@@ -809,6 +831,24 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       height: 1px;
       background: var(--pages-neutral-4, #e5e5e5);
       margin: 4px 0;
+    }
+
+    .filter-toggle,
+    .picker-action {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--pages-neutral-11, #404040);
+    }
+
+    .filter-toggle:hover,
+    .picker-action:hover {
+      background: var(--pages-neutral-2, #fafafa);
     }
 
     .mode-switcher {
@@ -2047,8 +2087,9 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     `;
   }
 
-  private _renderToolbar() {
+  private _renderKebab() {
     const visibleCount = this._visibleColumns.length;
+    const showFilterOption = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
 
     const modes: Array<{ value: DisplayMode; label: string }> = [
       { value: 'auto', label: 'Auto' },
@@ -2056,75 +2097,107 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
       { value: 'scroll', label: 'Scroll' },
     ];
 
-    const showFilter = (this.clientFilter && this.totalRows === undefined) || this._pipelineMode;
-
     return html`
-      <div class="toolbar" @keydown="${this._onToolbarKeydown}">
-        ${this._csvExportEnabled && this.dataSet ? html`
-          <button class="pagination-button" aria-label="Download CSV" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">⬇</button>
-          <button class="pagination-button" aria-label="Copy CSV" @click="${this._handleCopyToClipboard}">📋</button>
-        ` : nothing}
-        ${showFilter ? html`
-          <input
-            type="text"
-            class="filter-input"
-            placeholder="Filter..."
-            .value="${this.filterText}"
-            @input="${(e: Event) => {
-              this.filterText = (e.target as HTMLInputElement).value;
-            }}"
-          />
-        ` : nothing}
-        <div
-          class="column-picker-wrapper"
-          @mouseleave="${this._handlePickerMouseLeave}"
-          @mouseenter="${this._handlePickerMouseEnter}"
+      <div
+        class="column-picker-wrapper"
+        @mouseleave="${this._handlePickerMouseLeave}"
+        @mouseenter="${this._handlePickerMouseEnter}"
+      >
+        <button
+          class="column-picker-trigger"
+          @click="${this._toggleColumnPicker}"
+          aria-label="Table options"
         >
-          <button
-            class="column-picker-trigger"
-            @click="${this._toggleColumnPicker}"
-            aria-label="Table options"
-          >
-            ⋮
-          </button>
-          ${this._columnPickerOpen ? html`
-            <div class="column-picker-dropdown">
-              <div class="picker-section-label">Columns</div>
-              ${this._dataColumns.map(col => {
-                const config = this._configFor(col);
-                const colId = String(col.id);
-                const isVisible = !this._hiddenColumnIds.has(colId) && config?.visible !== false;
-                const isLastVisible = isVisible && visibleCount === 1;
-
-                return html`
-                  <label class="column-picker-item">
-                    <input
-                      type="checkbox"
-                      .checked="${isVisible}"
-                      ?disabled="${isLastVisible}"
-                      @change="${() => this._toggleColumnVisibility(colId)}"
-                    />
-                    <span>${config?.label ?? col.name}</span>
-                  </label>
-                `;
-              })}
+          ⋮
+        </button>
+        ${this._columnPickerOpen ? html`
+          <div class="column-picker-dropdown">
+            ${showFilterOption ? html`
+              <button class="filter-toggle" @click="${this._toggleFilter}">
+                ${this._filterVisible ? 'Hide filter' : 'Show filter'}
+              </button>
               <div class="picker-divider"></div>
-              <div class="picker-section-label">Display</div>
-              <div class="mode-switcher" role="radiogroup" aria-label="Display mode">
-                ${modes.map(m => html`
-                  <button
-                    role="radio"
-                    aria-pressed=${this.mode === m.value ? 'true' : 'false'}
-                    @click=${() => this._setMode(m.value)}
-                  >${m.label}</button>
-                `)}
-              </div>
+            ` : nothing}
+            ${this._csvExportEnabled && this.dataSet ? html`
+              <button class="picker-action" aria-label="Download CSV" @click="${() => downloadCsv(tableToCsv(this.dataSet!, this.columnConfig))}">Download CSV</button>
+              <button class="picker-action" aria-label="Copy CSV" @click="${this._handleCopyToClipboard}">Copy CSV</button>
+              <div class="picker-divider"></div>
+            ` : nothing}
+            <div class="picker-section-label">Columns</div>
+            ${this._dataColumns.map(col => {
+              const config = this._configFor(col);
+              const colId = String(col.id);
+              const isVisible = !this._hiddenColumnIds.has(colId) && config?.visible !== false;
+              const isLastVisible = isVisible && visibleCount === 1;
+
+              return html`
+                <label class="column-picker-item">
+                  <input
+                    type="checkbox"
+                    .checked="${isVisible}"
+                    ?disabled="${isLastVisible}"
+                    @change="${() => this._toggleColumnVisibility(colId)}"
+                  />
+                  <span>${config?.label ?? col.name}</span>
+                </label>
+              `;
+            })}
+            <div class="picker-divider"></div>
+            <div class="picker-section-label">Display</div>
+            <div class="mode-switcher" role="radiogroup" aria-label="Display mode">
+              ${modes.map(m => html`
+                <button
+                  role="radio"
+                  aria-pressed=${this.mode === m.value ? 'true' : 'false'}
+                  @click=${() => this._setMode(m.value)}
+                >${m.label}</button>
+              `)}
             </div>
-          ` : nothing}
-        </div>
+          </div>
+        ` : nothing}
       </div>
     `;
   }
+
+  private _renderFilterBar() {
+    if (!this._filterVisible) return nothing;
+    return html`
+      <div class="filter-bar" @keydown="${this._onToolbarKeydown}">
+        <input
+          type="text"
+          class="filter-input"
+          placeholder="Filter..."
+          .value="${this.filterText}"
+          @input="${(e: Event) => {
+            this.filterText = (e.target as HTMLInputElement).value;
+          }}"
+          @keydown="${(e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              this._applyFilter();
+            }
+          }}"
+        />
+        <button class="filter-go" aria-label="Apply filter" @click="${this._applyFilter}">Go</button>
+        <button class="filter-close" aria-label="Close filter" @click="${this._toggleFilter}">✕</button>
+      </div>
+    `;
+  }
+
+  private _applyFilter = (): void => {
+    if (this._pipelineMode) {
+      this._requestData();
+    }
+    this.dispatchEvent(new CustomEvent('filter-change', {
+      bubbles: true, composed: true,
+      detail: { text: this.filterText },
+    }));
+  };
+
+  private _toggleFilter = (): void => {
+    this._filterVisible = !this._filterVisible;
+    this._columnPickerOpen = false;
+  };
 
   private _onToolbarKeydown = (e: KeyboardEvent): void => {
     if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
@@ -2605,7 +2678,6 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
     if (this._dataRows.length === 0) {
       return html`
         <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}">
-          ${this.embedded ? nothing : this._renderToolbar()}
           <div class="header-container">
             <div
               class="header${this.headerVisible ? '' : ' visually-hidden'}"
@@ -2617,7 +2689,9 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
               ${this.selection === 'multi' ? html`<div class="header-cell"></div>` : nothing}
               ${visibleCols.map(col => this._renderHeaderCell(col))}
             </div>
+            ${this.embedded ? nothing : this._renderKebab()}
           </div>
+          ${this.embedded ? nothing : this._renderFilterBar()}
           <div class="empty-state">${this.emptyMessage}</div>
         </div>
       `;
@@ -2627,7 +2701,6 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
     return html`
       <div class="data-table" role="grid" aria-rowcount="${rowCount}" aria-colcount="${ariaColCount}" aria-label="Data table" @keydown="${this._handleKeyDown}">
-        ${this.embedded ? nothing : this._renderToolbar()}
         <div class="header-container">
           <div
             class="header${this.headerVisible ? '' : ' visually-hidden'}"
@@ -2639,7 +2712,9 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
             ${this._renderCheckbox(this._dataRows[0]!, true)}
             ${visibleCols.map(col => this._renderHeaderCell(col))}
           </div>
+          ${this.embedded ? nothing : this._renderKebab()}
         </div>
+        ${this.embedded ? nothing : this._renderFilterBar()}
         <div class="body" @scroll="${this._onScroll}">
           ${this.groupBy && this._groupBoundaries.length > 0
             ? html`
