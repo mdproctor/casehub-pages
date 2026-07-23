@@ -49,7 +49,7 @@ pages:
                   direction: horizontal
                   ratio: [60, 40]
                   children:
-                    - type: table
+                    - type: data-table
                       properties:
                         lookup:
                           uuid: inventory
@@ -79,7 +79,7 @@ pages:
                         subtype: card
                         lookup:
                           uuid: inventory
-                    - type: table
+                    - type: data-table
                       properties:
                         lookup:
                           uuid: inventory
@@ -114,7 +114,7 @@ pages:
                           height: 300
                         lookup:
                           uuid: inventory
-                    - type: table
+                    - type: data-table
                       id: data-panel
                       properties:
                         lookup:
@@ -154,7 +154,7 @@ pages:
                                 listening: true
                               lookup:
                                 uuid: inventory
-                          - type: table
+                          - type: data-table
                             properties:
                               lookup:
                                 uuid: inventory

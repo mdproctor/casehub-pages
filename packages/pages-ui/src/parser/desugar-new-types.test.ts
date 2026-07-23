@@ -228,7 +228,7 @@ describe("desugar-new-types", () => {
         lookup: { uuid: "test" },
       });
 
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
       expect(result.visibleWhen).toBe("${userRole = 'admin'}");
     });
 
@@ -265,7 +265,7 @@ describe("desugar-new-types", () => {
         lookup: { uuid: "test" },
       });
 
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
       expect(result.props?.pageSize).toBe(20);
       expect(result.props?.sortable).toBe(true);
       expect(result.props?.resizable).toBe(true);
@@ -283,7 +283,7 @@ describe("desugar-new-types", () => {
         lookup: { uuid: "test" },
       });
 
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
       expect(result.props?.rowStyle).toEqual([
         { condition: "${status = 'ERROR'}", className: "error-row" },
         { condition: "${priority > 5}", style: { backgroundColor: "yellow" } },
@@ -303,7 +303,7 @@ describe("desugar-new-types", () => {
         lookup: { uuid: "test" },
       });
 
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
       expect(result.props?.expandable).toEqual({
         idColumn: "id",
         parentColumn: "parentId",

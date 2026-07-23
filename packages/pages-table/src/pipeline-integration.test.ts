@@ -41,8 +41,8 @@ describe('pipeline integration', () => {
   let el: TableEl;
 
   beforeEach(async () => {
-    await import('./pages-table.js');
-    el = document.createElement('pages-table') as TableEl;
+    await import('./pages-data-table');
+    el = document.createElement('pages-data-table') as TableEl;
     document.body.appendChild(el);
   });
 
@@ -78,7 +78,7 @@ describe('pipeline integration', () => {
         events.push(e as CustomEvent);
       }) as EventListener);
 
-      const table = document.createElement('pages-table') as TableEl;
+      const table = document.createElement('pages-data-table') as TableEl;
       table.props = { lookup: { dataSetId: 'employees', operations: [] } };
       document.body.appendChild(table);
       await table.updateComplete;
@@ -804,7 +804,7 @@ describe('pipeline integration', () => {
     let el: TableEl;
 
     beforeEach(async () => {
-      el = document.createElement('pages-table') as unknown as TableEl;
+      el = document.createElement('pages-data-table') as unknown as TableEl;
       document.body.appendChild(el);
     });
 
@@ -866,7 +866,7 @@ describe('pipeline integration', () => {
     let el: TableEl & { getRowAccent?: (row: any) => string | undefined };
 
     beforeEach(async () => {
-      el = document.createElement('pages-table') as unknown as TableEl & { getRowAccent?: (row: any) => string | undefined };
+      el = document.createElement('pages-data-table') as unknown as TableEl & { getRowAccent?: (row: any) => string | undefined };
       document.body.appendChild(el);
     });
 

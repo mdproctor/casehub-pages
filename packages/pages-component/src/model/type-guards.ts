@@ -28,7 +28,8 @@ import type {
   ScatterChartProps,
   BubbleChartProps,
   TimeseriesProps,
-  TableProps,
+  DataTableProps,
+  GridTableProps,
   MetricProps,
   MeterProps,
   SelectorProps,
@@ -81,7 +82,8 @@ export interface ComponentTypeRegistry {
   "bubble-chart": BubbleChartProps;
   timeseries: TimeseriesProps;
   // Data components
-  table: TableProps;
+  "data-table": DataTableProps;
+  "grid-table": GridTableProps;
   metric: MetricProps;
   meter: MeterProps;
   selector: SelectorProps;
@@ -230,8 +232,12 @@ export function isTimeseries(c: Component): c is TypedComponent<"timeseries"> {
 }
 
 // Data components
-export function isTable(c: Component): c is TypedComponent<"table"> {
-  return c.type === "table";
+export function isDataTable(c: Component): c is TypedComponent<"data-table"> {
+  return c.type === "data-table";
+}
+
+export function isGridTable(c: Component): c is TypedComponent<"grid-table"> {
+  return c.type === "grid-table";
 }
 
 export function isMetric(c: Component): c is TypedComponent<"metric"> {

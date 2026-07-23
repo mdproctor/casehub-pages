@@ -17,7 +17,7 @@ pages:
             }
 
         }
-  - type: table
+  - type: data-table
     properties:
       lookup:
         uuid: histogram

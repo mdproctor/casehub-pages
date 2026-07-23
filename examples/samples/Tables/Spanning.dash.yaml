@@ -55,7 +55,7 @@ pages:
                     Department and Team columns use `mergeRows: true` in the
                     YAML column config. Adjacent rows with the same value
                     collapse into a single spanning cell.
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: team-roadmap
@@ -92,7 +92,7 @@ pages:
                     into a single cell. The Department column also uses
                     `mergeRows` for vertical merging. Toggle the **source
                     code** panel to see the TypeScript.
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: team-roadmap

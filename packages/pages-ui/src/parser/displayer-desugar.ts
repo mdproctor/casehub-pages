@@ -13,7 +13,7 @@ const TYPE_MAP: Record<string, string> = {
   SCATTERCHART: "scatter-chart",
   BUBBLECHART: "bubble-chart",
   TIMESERIES: "timeseries",
-  TABLE: "table",
+  TABLE: "data-table",
   METRIC: "metric",
   METERCHART: "meter",
   METER: "meter",
@@ -99,7 +99,7 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
     // Standard displayer — case-insensitive lookup
     const rawType = raw.type as string | undefined;
     const normalised = rawType?.toUpperCase();
-    type = normalised && TYPE_MAP[normalised] ? TYPE_MAP[normalised] : "table";
+    type = normalised && TYPE_MAP[normalised] ? TYPE_MAP[normalised] : "data-table";
 
     // Grouped view has its own desugar for groupBy/aggregations/preset
     if (type === "grouped-view") {
@@ -367,7 +367,7 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
 
   // Pass through component-specific props not handled above
   const handledKeys = new Set([
-    "type", "component", "general", "chart", "axis", "external", "table", "meter",
+    "type", "component", "general", "chart", "axis", "external", "table", "data-table", "meter",
     "badge", "countdown", "timeline", "graph", "subtype", "filter", "lookup",
     "dataSetLookup", "columns", "refresh", "extraConfiguration", "dataSet",
     "visibleWhen", "html", "properties",
@@ -379,7 +379,7 @@ export function desugarDisplayer(raw: Record<string, unknown>): Component {
   }
 
   // Table defaults — runs AFTER passthrough so user-specified values win
-  if (type === "table") {
+  if (type === "data-table") {
     if (props.pageSize === undefined) {
       props.pageSize = 10;
     }

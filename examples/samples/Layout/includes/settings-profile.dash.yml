@@ -9,7 +9,7 @@ pages:
     properties:
       text: User Profile Fields
       size: h3
-  - type: table
+  - type: data-table
     properties:
       pageSize: 5
       sortable: true

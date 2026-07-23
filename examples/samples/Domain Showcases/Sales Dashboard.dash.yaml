@@ -382,7 +382,7 @@ pages:
             pattern: '#'
   - columns:
     - components:
-      - type: table
+      - type: data-table
         properties:
           pageSize: 10
           sortable: true
@@ -507,7 +507,7 @@ pages:
                 function: SUM
 - name: Deals
   components:
-  - type: table
+  - type: data-table
     properties:
       pageSize: 15
       sortable: true

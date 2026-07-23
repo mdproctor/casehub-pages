@@ -58,7 +58,7 @@ pages:
       lookup:
         uuid: floor-data
       width: 100%
-  - type: table
+  - type: data-table
     properties:
       lookup:
         uuid: floor-data

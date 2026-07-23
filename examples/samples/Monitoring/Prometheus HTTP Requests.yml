@@ -284,7 +284,7 @@ pages:
         properties:
           text: Request Details
           size: h3
-      - type: table
+      - type: data-table
         properties:
           sortable: true
           show_column_picker: true

@@ -181,7 +181,7 @@ pages:
         properties:
           text: Device Registry
           size: h3
-      - type: table
+      - type: data-table
         properties:
           sortable: true
           filter:
@@ -341,7 +341,7 @@ pages:
         properties:
           text: Devices
           size: h3
-      - type: table
+      - type: data-table
         properties:
           sortable: true
           filter:
@@ -397,7 +397,7 @@ pages:
         properties:
           text: Sensor Readings
           size: h3
-      - type: table
+      - type: data-table
         properties:
           pageSize: 10
           sortable: true

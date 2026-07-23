@@ -23,7 +23,7 @@ pages:
           functions:
           - source: Column 0
           - source: Column 2
-  - type: table
+  - type: data-table
     properties:
       chart:
         resizable: true

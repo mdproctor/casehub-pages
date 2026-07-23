@@ -34,10 +34,8 @@ export function resolveFilterTypes(
   if (expression.type === "unresolved") {
     const column = findColumn(columns, expression.columnId);
     if (!column) {
-      throw new DataSetError(
-        "UNKNOWN_COLUMN",
-        `Column "${expression.columnId}" not found`,
-      );
+      console.warn(`[pages-data] Filter skipped: column "${expression.columnId}" not found in dataset`);
+      return { type: "and", children: [] };
     }
 
     return resolveLeaf(expression.columnId, expression.fn, expression.args, column.type);

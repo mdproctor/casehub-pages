@@ -104,7 +104,7 @@ pages:
             source: Section
           functions:
           - source: Section
-  - type: table
+  - type: data-table
     properties:
       filter:
         listening: true

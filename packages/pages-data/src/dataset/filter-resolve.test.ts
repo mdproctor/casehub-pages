@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { resolveFilterTypes } from "./filter-resolve.js";
 import type { FilterExpression, ResolvedFilterExpression } from "./filter.js";
 import type { Column} from "./types.js";
@@ -459,7 +459,7 @@ describe("resolveFilterTypes", () => {
     expect(resolved).toEqual(expr);
   });
 
-  it("throws UNKNOWN_COLUMN for missing column", () => {
+  it("skips filter on unknown column — returns pass-through AND", () => {
     const expr: FilterExpression = {
       type: "unresolved",
       columnId: columnId("unknown"),
@@ -467,9 +467,33 @@ describe("resolveFilterTypes", () => {
       args: ["value"],
     };
 
-    expect(() => resolveFilterTypes(expr, columns)).toThrow(DataSetError);
-    expect(() => resolveFilterTypes(expr, columns)).toThrow(/UNKNOWN_COLUMN/);
-    expect(() => resolveFilterTypes(expr, columns)).toThrow(/unknown/);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const resolved = resolveFilterTypes(expr, columns);
+    expect(resolved).toEqual({ type: "and", children: [] });
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("unknown"));
+    warnSpy.mockRestore();
+  });
+
+  it("skips unknown column inside AND — keeps valid siblings", () => {
+    const expr: FilterExpression = {
+      type: "and",
+      children: [
+        { type: "unresolved", columnId: columnId("unknown"), fn: "EQUALS_TO", args: ["x"] },
+        { type: "unresolved", columnId: columnId("name"), fn: "EQUALS_TO", args: ["Alice"] },
+      ],
+    };
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const resolved = resolveFilterTypes(expr, columns);
+    expect(resolved).toEqual({
+      type: "and",
+      children: [
+        { type: "and", children: [] },
+        { type: "string", columnId: columnId("name"), filter: { fn: "EQUALS_TO", value: "Alice" } },
+      ],
+    });
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it("throws RESOLUTION_FAILED for LIKE_TO on NUMBER", () => {

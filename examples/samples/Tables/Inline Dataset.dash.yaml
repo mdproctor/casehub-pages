@@ -39,7 +39,7 @@ pages:
             a JSON array of rows. Each row is an array matching the `columns`
             definition. No external URL needed.
 
-      - type: table
+      - type: data-table
         properties:
           lookup:
             uuid: products

@@ -1,5 +1,5 @@
 import type { ColumnId } from '@casehubio/pages-data';
-import type { PagesTable } from '@casehubio/pages-table';
+import type { PagesDataTable } from '@casehubio/pages-table';
 
 // Configure the cellSpan tab's table with programmatic spanning.
 // Rows with "Unknown" status merge the Status and Quarter columns
@@ -11,7 +11,7 @@ import type { PagesTable } from '@casehubio/pages-table';
 var deptCol = 'department' as ColumnId;
 var statusCol = 'status' as ColumnId;
 
-function applySpanConfig(table: PagesTable) {
+function applySpanConfig(table: PagesDataTable) {
   if (!table.columnConfig) return;
   if (table.columnConfig.some(function(c) { return !!c.mergeRows; })) return;
 
@@ -35,7 +35,7 @@ function applySpanConfig(table: PagesTable) {
 }
 
 function tryApply() {
-  var table = document.querySelector('pages-table') as PagesTable;
+  var table = document.querySelector('pages-data-table') as PagesDataTable;
   if (table && table.columnConfig) {
     applySpanConfig(table);
   }

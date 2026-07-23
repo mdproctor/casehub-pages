@@ -51,7 +51,7 @@ pages:
                             uuid: layout-data
                   Details:
                     components:
-                      - type: table
+                      - type: data-table
                         properties:
                           lookup:
                             uuid: layout-data
@@ -68,7 +68,7 @@ pages:
                 sections:
                   "Section Overview":
                     components:
-                      - type: table
+                      - type: data-table
                         properties:
                           lookup:
                             uuid: layout-data
@@ -97,7 +97,7 @@ pages:
                           height: 300
                         lookup:
                           uuid: layout-data
-                    - type: table
+                    - type: data-table
                       properties:
                         lookup:
                           uuid: layout-data

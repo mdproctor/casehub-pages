@@ -184,7 +184,7 @@ pages:
                   <div style="background:#fff3e0; border:2px solid #f57c00; border-radius:6px; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
                   🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
 
-              - type: table
+              - type: data-table
                 style:
                   border: "1px solid #ddd"
                   border-radius: "8px"
@@ -249,7 +249,7 @@ pages:
                         backgroundColor: "#f0f5ff"
 
               - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Trust &amp; CBR</h3>'
-              - type: table
+              - type: data-table
                 style:
                   border: "1px solid #ddd"
                   border-radius: "8px"
@@ -307,7 +307,7 @@ pages:
                         backgroundColor: "#f0f5ff"
 
               - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Merge Queue</h3>'
-              - type: table
+              - type: data-table
                 style:
                   border: "1px solid #ddd"
                   border-radius: "8px"
@@ -365,7 +365,7 @@ pages:
                         backgroundColor: "#f0f5ff"
 
               - html: '<h3 style="border-bottom:2px solid #333; padding-bottom:5px; margin:20px 0 10px 0; font-size:16px;">Summary — v3 → v4 Delta</h3>'
-              - type: table
+              - type: data-table
                 style:
                   border: "1px solid #ddd"
                   border-radius: "8px"
@@ -409,7 +409,7 @@ pages:
               - html: >
                   <div style="background:#fff3e0; border:2px solid #f57c00; padding:8px 12px; margin:8px 0; display:inline-block; font-weight:bold; font-size:12px;">
                   🚧 GATE: blocks-ui#41 — unblocks ALL devtown UI</div>
-              - type: table
+              - type: data-table
                 style:
                   border: "1px solid #ddd"
                 properties:

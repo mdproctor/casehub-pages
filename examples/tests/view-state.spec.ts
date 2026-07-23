@@ -19,7 +19,7 @@ async function loadFixture(page: import("@playwright/test").Page) {
   await page.waitForFunction(() => {
     const target = document.getElementById("target");
     if (!target) return false;
-    const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
+    const table = target.querySelector("pages-data-table") as HTMLElement & { dataSet?: unknown };
     return !!table?.dataSet;
   }, { timeout: 10000 });
 
@@ -128,7 +128,7 @@ test.describe("View State Persistence", () => {
   test("Test 1: Sort table → URL contains sort param", async ({ page }) => {
     await loadFixture(page);
 
-    await sortTableByColumn(page, "pages-table", "name");
+    await sortTableByColumn(page, "pages-data-table", "name");
 
     const hash = await getHash(page);
     expect(hash).toContain("sort=test-table:");
@@ -138,7 +138,7 @@ test.describe("View State Persistence", () => {
     await loadFixture(page);
 
     // Sort by "age"
-    await sortTableByColumn(page, "pages-table", "age");
+    await sortTableByColumn(page, "pages-data-table", "age");
 
     // Verify URL has sort param
     let hash = await getHash(page);
@@ -150,12 +150,12 @@ test.describe("View State Persistence", () => {
     await page.waitForFunction(() => {
       const target = document.getElementById("target");
       if (!target) return false;
-      const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
+      const table = target.querySelector("pages-data-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
     }, { timeout: 10000 });
 
     // Check that sort indicator is present
-    const hasSortArrow = await hasSortIndicator(page, "pages-table", "age");
+    const hasSortArrow = await hasSortIndicator(page, "pages-data-table", "age");
     expect(hasSortArrow).toBe(true);
   });
 
@@ -163,7 +163,7 @@ test.describe("View State Persistence", () => {
     await loadFixture(page);
 
     // Sort by "city" on Page 1
-    await sortTableByColumn(page, "pages-table", "city");
+    await sortTableByColumn(page, "pages-data-table", "city");
 
     // Navigate to Page 2
     await switchToTab(page, "Page 2");
@@ -172,7 +172,7 @@ test.describe("View State Persistence", () => {
     await switchToTab(page, "Page 1");
 
     // Check that sort indicator is still present
-    const hasSortArrow = await hasSortIndicator(page, "pages-table", "city");
+    const hasSortArrow = await hasSortIndicator(page, "pages-data-table", "city");
     expect(hasSortArrow).toBe(true);
   });
 
@@ -180,7 +180,7 @@ test.describe("View State Persistence", () => {
     await loadFixture(page);
 
     // Click next page button
-    await clickNextPage(page, "pages-table");
+    await clickNextPage(page, "pages-data-table");
 
     const hash = await getHash(page);
     expect(hash).toContain("page=test-table:");
@@ -190,10 +190,10 @@ test.describe("View State Persistence", () => {
     await loadFixture(page);
 
     // Sort by name
-    await sortTableByColumn(page, "pages-table", "name");
+    await sortTableByColumn(page, "pages-data-table", "name");
 
     // Paginate to page 2
-    await clickNextPage(page, "pages-table");
+    await clickNextPage(page, "pages-data-table");
 
     // Check URL contains both
     let hash = await getHash(page);
@@ -206,7 +206,7 @@ test.describe("View State Persistence", () => {
     await page.waitForFunction(() => {
       const target = document.getElementById("target");
       if (!target) return false;
-      const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
+      const table = target.querySelector("pages-data-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
     }, { timeout: 10000 });
 
@@ -222,7 +222,7 @@ test.describe("View State Persistence", () => {
     await switchToTab(page, "Page 2");
 
     // Sort by name
-    const tables = page.locator("pages-table");
+    const tables = page.locator("pages-data-table");
     const tableCount = await tables.count();
     // Page 2 should have the second table
     const page2Table = tables.nth(tableCount > 1 ? 1 : 0);
@@ -248,7 +248,7 @@ test.describe("View State Persistence", () => {
     await page.waitForFunction(() => {
       const target = document.getElementById("target");
       if (!target) return false;
-      const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
+      const table = target.querySelector("pages-data-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
     }, { timeout: 10000 });
 

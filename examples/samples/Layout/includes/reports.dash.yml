@@ -80,7 +80,7 @@ pages:
         properties:
           text: Recent Report Runs
           size: h3
-      - type: table
+      - type: data-table
         properties:
           pageSize: 6
           sortable: true

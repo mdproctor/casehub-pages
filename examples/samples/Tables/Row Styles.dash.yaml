@@ -47,7 +47,7 @@ pages:
             Each rule has a `condition` expression evaluated against row data.
             When true, either a `className` or inline `style` is applied.
 
-      - type: table
+      - type: data-table
         properties:
           lookup:
             uuid: tasks

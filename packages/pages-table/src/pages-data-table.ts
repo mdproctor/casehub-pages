@@ -19,8 +19,8 @@ import { EMPTY_CONTEXT } from '@casehubio/pages-component';
 
 const AUTO_THRESHOLD = 50;
 
-@customElement('pages-table')
-export class PagesTable extends RovingTabindexMixin(LitElement) {
+@customElement('pages-data-table')
+export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   override rovingSelector = '.row[role="row"]:not(.header)';
   override rovingDirection: RovingDirection = 'both';
 
@@ -2761,6 +2761,6 @@ export class PagesTable extends RovingTabindexMixin(LitElement) {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'pages-table': PagesTable;
+    'pages-data-table': PagesDataTable;
   }
 }

@@ -28,7 +28,7 @@ pages:
 - components:
   - html: '<p style="font-size: x-large"><strong>Quarkus Repositories</strong></p> <small>Recently updated repositories matching
       "quarkus" on GitHub</small> <hr />'
-  - type: table
+  - type: data-table
     properties:
       chart:
         height: 600

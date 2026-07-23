@@ -382,7 +382,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
     props: GroupedViewProps,
   ): TemplateResult {
     return html`
-      <pages-table
+      <pages-data-table
         .embedded=${true}
         .headerVisible=${false}
         .dataSet=${this._sliceDataset(dataset, slice)}
@@ -400,7 +400,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
         .hiddenColumns=${this._hiddenColumnIds.size > 0 ? Array.from(this._hiddenColumnIds) : undefined}
         .selectedKeys=${this._selectedKeys.size > 0 ? Array.from(this._selectedKeys) : undefined}
         @selection-change=${this._handleChildSelectionChange}
-      ></pages-table>
+      ></pages-data-table>
     `;
   }
 

@@ -79,8 +79,8 @@ class MockPagesTable extends HTMLElement {
   selectedKeys: any;
 }
 
-if (!customElements.get("pages-table")) {
-  customElements.define("pages-table", MockPagesTable);
+if (!customElements.get("pages-data-table")) {
+  customElements.define("pages-data-table", MockPagesTable);
 }
 
 describe("PagesGroupedView", () => {
@@ -96,27 +96,27 @@ describe("PagesGroupedView", () => {
   });
 
   describe("basic rendering", () => {
-    it("sectioned mode creates pages-table per group", async () => {
+    it("sectioned mode creates pages-data-table per group", async () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       expect(tables.length).toBe(2);
     });
 
-    it("spreadsheet mode creates pages-table per group", async () => {
+    it("spreadsheet mode creates pages-data-table per group", async () => {
       element.props = makeProps({ preset: "spreadsheet" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       expect(tables.length).toBe(2);
     });
 
-    it("list mode renders dl elements, no pages-table", async () => {
+    it("list mode renders dl elements, no pages-data-table", async () => {
       element.props = makeProps({ preset: "list" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       expect(tables.length).toBe(0);
       const dls = element.shadowRoot!.querySelectorAll("dl");
       expect(dls.length).toBe(2);
@@ -126,7 +126,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       const t0 = tables[0] as MockTable;
       const t1 = tables[1] as MockTable;
       expect(t0.dataSet.rows.length).toBe(2);
@@ -137,7 +137,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       for (const table of tables) {
         expect((table as MockTable).embedded).toBe(true);
         expect((table as MockTable).headerVisible).toBe(false);
@@ -178,7 +178,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       const configs = Array.from(tables).map((t) => (t as MockTable).columnConfig);
       expect(configs[0]).toEqual(configs[1]);
       const visibleCols = configs[0].filter((c: any) => c.visible !== false);
@@ -195,7 +195,7 @@ describe("PagesGroupedView", () => {
       });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       const cfg = (tables[0] as MockTable).columnConfig;
       const nameCol = cfg.find((c: TableColumnConfig) => c.id === "name");
       expect(nameCol!.width).toBe("200px");
@@ -223,13 +223,13 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tableBefore = element.shadowRoot!.querySelector("pages-table");
+      const tableBefore = element.shadowRoot!.querySelector("pages-data-table");
       const toggle = element.shadowRoot!.querySelector("[data-group='Critical']") as HTMLButtonElement;
       toggle.click();
       await element.updateComplete;
       toggle.click();
       await element.updateComplete;
-      const tableAfter = element.shadowRoot!.querySelector("pages-table");
+      const tableAfter = element.shadowRoot!.querySelector("pages-data-table");
       expect(tableAfter).toBe(tableBefore);
     });
 
@@ -277,7 +277,7 @@ describe("PagesGroupedView", () => {
       await element.updateComplete;
       (element as any).setColumnRenderers(renderers);
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       for (const table of tables) {
         expect((table as MockTable).columnRenderers).toBe(renderers);
       }
@@ -288,7 +288,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned", rowStyle: rules });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       for (const table of tables) {
         expect((table as MockTable).rowStyle).toEqual(rules);
       }
@@ -298,7 +298,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned", selection: "multi" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       for (const table of tables) {
         expect((table as MockTable).selection).toBe("multi");
       }
@@ -310,10 +310,10 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tableBefore = element.shadowRoot!.querySelector("pages-table");
+      const tableBefore = element.shadowRoot!.querySelector("pages-data-table");
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tableAfter = element.shadowRoot!.querySelector("pages-table");
+      const tableAfter = element.shadowRoot!.querySelector("pages-data-table");
       expect(tableAfter).toBe(tableBefore);
     });
 
@@ -321,7 +321,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
-      const tableBefore = element.shadowRoot!.querySelector("pages-table");
+      const tableBefore = element.shadowRoot!.querySelector("pages-data-table");
 
       const newDs: DataSet = {
         columns: [
@@ -335,7 +335,7 @@ describe("PagesGroupedView", () => {
       };
       element.dataSet = toTypedDataSet(newDs);
       await element.updateComplete;
-      const tableAfter = element.shadowRoot!.querySelector("pages-table");
+      const tableAfter = element.shadowRoot!.querySelector("pages-data-table");
       expect(tableAfter).not.toBe(tableBefore);
     });
 
@@ -350,7 +350,7 @@ describe("PagesGroupedView", () => {
       element.props = makeProps({ preset: "sectioned" });
       element.dataSet = toTypedDataSet(ds);
       await element.updateComplete;
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       expect(tables.length).toBe(0);
     });
   });
@@ -500,7 +500,7 @@ describe("PagesGroupedView", () => {
       element.dataSet = makeMultiLevelDataset();
       await element.updateComplete;
 
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       expect(tables.length).toBe(4);
     });
 
@@ -513,7 +513,7 @@ describe("PagesGroupedView", () => {
       element.dataSet = makeMultiLevelDataset();
       await element.updateComplete;
 
-      const tables = element.shadowRoot!.querySelectorAll("pages-table") as NodeListOf<MockTable>;
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table") as NodeListOf<MockTable>;
       expect(tables[0]!.dataSet.rows.length).toBe(2);
       expect(tables[1]!.dataSet.rows.length).toBe(1);
       expect(tables[2]!.dataSet.rows.length).toBe(1);
@@ -621,7 +621,7 @@ describe("PagesGroupedView", () => {
       (checkboxes[0] as HTMLInputElement).click();
       await element.updateComplete;
 
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       for (const table of tables) {
         const t = table as MockTable;
         expect(t.hiddenColumns).toBeDefined();
@@ -702,7 +702,7 @@ describe("PagesGroupedView", () => {
       element.dataSet = makeGroupedDataset();
       await element.updateComplete;
 
-      const tables = element.shadowRoot!.querySelectorAll("pages-table") as NodeListOf<MockTable>;
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table") as NodeListOf<MockTable>;
       expect(tables.length).toBe(2);
 
       tables[0]!.dispatchEvent(new CustomEvent("selection-change", {
@@ -727,7 +727,7 @@ describe("PagesGroupedView", () => {
       const events: CustomEvent[] = [];
       element.addEventListener("selection-change", (e: Event) => events.push(e as CustomEvent));
 
-      const tables = element.shadowRoot!.querySelectorAll("pages-table");
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
       tables[0]!.dispatchEvent(new CustomEvent("selection-change", {
         detail: { selectedKeys: ["Server outage"], selectedRows: [] },
         bubbles: true,

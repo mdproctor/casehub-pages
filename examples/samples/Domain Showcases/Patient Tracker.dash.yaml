@@ -489,7 +489,7 @@ pages:
                 function: AVERAGE
   - columns:
     - components:
-      - type: table
+      - type: data-table
         properties:
           pageSize: 10
           sortable: true
@@ -508,7 +508,7 @@ pages:
     adapter: local
   components:
   - html: <div class='pf-v5-c-card pf-m-compact'><div class='pf-v5-c-card__title'>Patient Records</div><div class='pf-v5-c-card__body'>
-  - type: table
+  - type: data-table
     properties:
       sortable: true
       filter:

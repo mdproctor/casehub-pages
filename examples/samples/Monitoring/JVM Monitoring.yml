@@ -97,7 +97,7 @@ pages:
         expression: "value.replaceAll('id=\"', ' ')\n  .replaceAll('area=\"heap\",', \"\")\n  .replaceAll('area=\"nonheap\"\
           ,', \"\")                            \n  .replaceAll('\",', \"\")\n  .trim()\n"
   - title: All Metrics
-  - type: table
+  - type: data-table
     properties:
       lookup:
         uuid: pop

@@ -99,7 +99,7 @@ pages:
   - columns:
     - components:
       - markdown: '**Images List**'
-      - type: table
+      - type: data-table
         properties:
           lookup:
             uuid: images
@@ -206,7 +206,7 @@ pages:
       - title: Containers List
         properties:
           size: xl
-      - type: table
+      - type: data-table
         properties:
           lookup:
             uuid: containers

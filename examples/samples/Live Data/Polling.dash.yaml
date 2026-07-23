@@ -86,7 +86,7 @@ pages:
                   content: >
                     The same polling dataset rendered as a **table** — watch rows
                     appear in real time as the expression evaluates.
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: live-metrics

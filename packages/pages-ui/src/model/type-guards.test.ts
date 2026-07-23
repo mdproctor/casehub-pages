@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { Component } from "./types.js";
 import {
   isBarChart,
-  isTable,
+  isDataTable,
   isPage,
   isLineChart,
   isAreaChart,
@@ -103,13 +103,13 @@ describe("type guards - chart components", () => {
 });
 
 describe("type guards - data components", () => {
-  it("isTable narrows correctly", () => {
+  it("isDataTable narrows correctly", () => {
     const c: Component = {
-      type: "table",
+      type: "data-table",
       props: { lookup: { dataSetId: "users" }, pageSize: 10 },
     };
-    expect(isTable(c)).toBe(true);
-    if (isTable(c)) {
+    expect(isDataTable(c)).toBe(true);
+    if (isDataTable(c)) {
       expect(c.props!.pageSize).toBe(10);
     }
   });

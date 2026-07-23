@@ -55,7 +55,7 @@ describe("desugarDisplayer", () => {
       lookup: { uuid: "sales" },
       table: { pageSize: 10 },
     });
-    expect(result.type).toBe("table");
+    expect(result.type).toBe("data-table");
   });
 
   it("maps component key to iframe-plugin", () => {
@@ -116,7 +116,7 @@ describe("desugarDisplayer", () => {
       { input: "SCATTERCHART", expected: "scatter-chart" },
       { input: "BUBBLECHART", expected: "bubble-chart" },
       { input: "TIMESERIES", expected: "timeseries" },
-      { input: "TABLE", expected: "table" },
+      { input: "TABLE", expected: "data-table" },
       { input: "METRIC", expected: "metric" },
       { input: "METERCHART", expected: "meter" },
       { input: "SELECTOR", expected: "selector" },
@@ -217,7 +217,7 @@ describe("desugarDisplayer", () => {
       type: "TABLE",
       lookup: { uuid: "data" },
     });
-    expect(getProps(result, "table").filter).toEqual({ enabled: true });
+    expect(getProps(result, "data-table").filter).toEqual({ enabled: true });
   });
 
   it("table explicit pageSize overrides default", () => {
@@ -235,7 +235,7 @@ describe("desugarDisplayer", () => {
       filter: { enabled: false },
       lookup: { uuid: "data" },
     });
-    expect(getProps(result, "table").filter).toEqual({ enabled: false });
+    expect(getProps(result, "data-table").filter).toEqual({ enabled: false });
   });
 
   it("non-table types do not get table defaults", () => {
@@ -437,7 +437,7 @@ describe("desugarDisplayer", () => {
         sort: [{ column: "name", order: "ASCENDING" }],
       },
     });
-    const lookup = getProps(result, "table").lookup;
+    const lookup = getProps(result, "data-table").lookup;
     expect(lookup.dataSetId).toBe("data");
     expect(lookup.operations).toHaveLength(2);
     expect(lookup.operations[0]!.type).toBe("filter");

@@ -29,7 +29,7 @@ pages:
 - name: Contact List
   components:
   - title: Contact Manager
-  - type: table
+  - type: data-table
     properties:
       pageSize: 10
       sortable: true

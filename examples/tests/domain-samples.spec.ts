@@ -175,7 +175,7 @@ test.describe("Sales Dashboard", () => {
     await page.waitForFunction(() => {
       const target = document.getElementById("sample-target");
       if (!target) return false;
-      const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
+      const table = target.querySelector("pages-data-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
     }, { timeout: 10000 });
 
@@ -380,7 +380,7 @@ test.describe("Patient Tracker", () => {
     await page.waitForFunction(() => {
       const target = document.getElementById("sample-target");
       if (!target) return false;
-      const table = target.querySelector("pages-table") as HTMLElement & { dataSet?: unknown };
+      const table = target.querySelector("pages-data-table") as HTMLElement & { dataSet?: unknown };
       return !!table?.dataSet;
     }, { timeout: 10000 });
 
@@ -471,7 +471,7 @@ test.describe("Patient Tracker", () => {
 
     // Check that the vitals table renders with rows
     const hasRows = await page.evaluate(() => {
-      const table = document.querySelector("pages-table");
+      const table = document.querySelector("pages-data-table");
       if (!table || !table.shadowRoot) return false;
 
       const rows = table.shadowRoot.querySelectorAll("tbody tr");
@@ -493,7 +493,7 @@ test.describe("Patient Tracker", () => {
     const tableExists = await page.evaluate(() => {
       const containers = document.querySelectorAll("[data-component-type='table']");
       for (const container of containers) {
-        const vizEl = container.querySelector("pages-table");
+        const vizEl = container.querySelector("pages-data-table");
         if (vizEl) {
           return true;
         }

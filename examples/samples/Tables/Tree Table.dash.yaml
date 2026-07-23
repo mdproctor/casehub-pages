@@ -59,7 +59,7 @@ pages:
         tabs:
           Expand 2 Levels:
             components:
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: org
@@ -73,7 +73,7 @@ pages:
 
           Fully Expanded:
             components:
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: org
@@ -91,7 +91,7 @@ pages:
                 properties:
                   content: >
                     Start collapsed — click rows to expand manually.
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: org

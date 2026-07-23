@@ -45,7 +45,7 @@ pages:
             **department** cell to filter — the bar chart below responds.
             Click again to clear.
 
-      - type: table
+      - type: data-table
         properties:
           lookup:
             uuid: sales

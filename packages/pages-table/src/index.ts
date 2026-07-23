@@ -1,4 +1,4 @@
-export { PagesTable } from './pages-table.js';
+export { PagesDataTable } from './pages-data-table';
 export type {
   TableColumnConfig,
   ColumnRenderer,

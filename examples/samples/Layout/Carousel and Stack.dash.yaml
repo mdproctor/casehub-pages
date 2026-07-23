@@ -65,7 +65,7 @@ pages:
                                     function: SUM
                   Data Table:
                     components:
-                      - type: table
+                      - type: data-table
                         properties:
                           lookup:
                             uuid: demo-data
@@ -93,7 +93,7 @@ pages:
                                     function: SUM
                   Details:
                     components:
-                      - type: table
+                      - type: data-table
                         properties:
                           lookup:
                             uuid: demo-data

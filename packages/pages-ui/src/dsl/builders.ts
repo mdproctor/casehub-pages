@@ -30,7 +30,8 @@ import type {
   ScatterChartProps,
   BubbleChartProps,
   TimeseriesProps,
-  TableProps,
+  DataTableProps,
+  GridTableProps,
   MetricProps,
   MeterProps,
   SelectorProps,
@@ -358,9 +359,16 @@ export function timeseries(props: TimeseriesProps): TypedComponent<"timeseries">
   });
 }
 
-export function table(props: TableProps): TypedComponent<"table"> {
+export function dataTable(props: DataTableProps): TypedComponent<"data-table"> {
   return freeze({
-    type: "table" as const,
+    type: "data-table" as const,
+    props: { ...props },
+  });
+}
+
+export function gridTable(props: GridTableProps): TypedComponent<"grid-table"> {
+  return freeze({
+    type: "grid-table" as const,
     props: { ...props },
   });
 }

@@ -55,7 +55,7 @@ pages:
         x:
           labels_angle: -10
   - title: List of top repositories by stars
-  - type: table
+  - type: data-table
     properties:
       lookup:
         uuid: github_repos

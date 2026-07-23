@@ -27,7 +27,7 @@ datasets:
     type: NUMBER
 pages:
 - components:
-  - type: table
+  - type: data-table
     properties:
       lookup:
         uuid: traces

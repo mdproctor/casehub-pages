@@ -68,7 +68,7 @@ pages:
                   lookup:
                     uuid: products
           - components:
-              - type: table
+              - type: data-table
                 properties:
                   filter:
                     listening: true

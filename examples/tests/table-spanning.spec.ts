@@ -10,7 +10,7 @@ async function loadScenario(page: import("@playwright/test").Page, scenario: str
 }
 
 function getTable(page: import("@playwright/test").Page) {
-  return page.locator("pages-table").first();
+  return page.locator("pages-data-table").first();
 }
 
 test.describe("Table spanning — visual tests", () => {
@@ -43,7 +43,7 @@ test.describe("Table spanning — visual tests", () => {
     await expect(table).toBeVisible();
 
     await page.evaluate(() => {
-      const table = document.querySelector("pages-table")!;
+      const table = document.querySelector("pages-data-table")!;
       const scrollContainer = table.shadowRoot!.querySelector(".body-scroll");
       if (scrollContainer) {
         scrollContainer.scrollTop = 800;
@@ -60,7 +60,7 @@ test.describe("Table spanning — visual tests", () => {
     await expect(table).toBeVisible();
 
     await page.evaluate(() => {
-      const table = document.querySelector("pages-table")!;
+      const table = document.querySelector("pages-data-table")!;
       const scrollContainer = table.shadowRoot!.querySelector(".body-scroll");
       if (scrollContainer) {
         scrollContainer.scrollTop = 800;
@@ -69,7 +69,7 @@ test.describe("Table spanning — visual tests", () => {
     await page.waitForTimeout(300);
 
     await page.evaluate(() => {
-      const table = document.querySelector("pages-table")!;
+      const table = document.querySelector("pages-data-table")!;
       const scrollContainer = table.shadowRoot!.querySelector(".body-scroll");
       if (scrollContainer) {
         scrollContainer.scrollTop = 2500;
@@ -86,7 +86,7 @@ test.describe("Table spanning — visual tests", () => {
     await expect(table).toBeVisible();
 
     await page.evaluate(() => {
-      const table = document.querySelector("pages-table")!;
+      const table = document.querySelector("pages-data-table")!;
       const scrollContainer = table.shadowRoot!.querySelector(".body-scroll");
       if (scrollContainer) {
         let pos = 0;
@@ -117,7 +117,7 @@ test.describe("Table spanning — visual tests", () => {
     await expect(table).toBeVisible();
 
     const spanCell = await page.evaluate(() => {
-      const table = document.querySelector("pages-table")!;
+      const table = document.querySelector("pages-data-table")!;
       const cells = table.shadowRoot!.querySelectorAll(".cell[role='gridcell']");
       for (const cell of cells) {
         const style = cell.getAttribute("style") || "";

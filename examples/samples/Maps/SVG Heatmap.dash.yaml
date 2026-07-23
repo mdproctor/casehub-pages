@@ -64,7 +64,7 @@ pages:
 
       - columns:
           - components:
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: zones

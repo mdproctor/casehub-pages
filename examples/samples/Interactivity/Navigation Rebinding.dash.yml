@@ -182,7 +182,7 @@ pages:
     properties:
       text: User Profile Fields
       size: h3
-  - type: table
+  - type: data-table
     properties:
       pageSize: 5
       sortable: true
@@ -194,7 +194,7 @@ pages:
     properties:
       text: Security Audit Log
       size: h3
-  - type: table
+  - type: data-table
     properties:
       pageSize: 5
       sortable: true
@@ -281,7 +281,7 @@ pages:
         properties:
           text: Recent Report Runs
           size: h3
-      - type: table
+      - type: data-table
         properties:
           pageSize: 6
           sortable: true
@@ -341,7 +341,7 @@ pages:
     properties:
       text: Recent Transactions
       size: h3
-  - type: table
+  - type: data-table
     properties:
       pageSize: 8
       sortable: true

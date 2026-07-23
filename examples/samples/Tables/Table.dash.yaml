@@ -68,7 +68,7 @@ pages:
                 functions:
                   - source: Department
 
-      - type: table
+      - type: data-table
         properties:
           lookup:
             uuid: employees

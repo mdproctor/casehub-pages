@@ -221,7 +221,7 @@ pages:
   rows:
   - columns:
     - components:
-      - type: table
+      - type: data-table
         properties:
           lookup:
             .filter:

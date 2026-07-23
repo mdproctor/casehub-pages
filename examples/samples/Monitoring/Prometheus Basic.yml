@@ -178,7 +178,7 @@ pages:
         properties:
           text: Raw Metrics
           size: h3
-      - type: table
+      - type: data-table
         properties:
           sortable: true
           show_column_picker: true

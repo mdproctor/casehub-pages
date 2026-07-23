@@ -475,3 +475,31 @@ describe("renderComponent — lazy rendering for one-at-a-time containers", () =
     expect(calls).not.toContain("table");
   });
 });
+
+describe("renderComponent — page padding", () => {
+  it("page container gets default padding", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "page",
+      props: { name: "main" },
+      slots: { content: [{ type: "html" }] },
+    };
+    renderComponent(target, component);
+    const el = target.firstElementChild as HTMLElement;
+    expect(el.dataset.componentType).toBe("page");
+    expect(el.style.padding).toBe("var(--pages-space-4, 16px)");
+  });
+
+  it("author style overrides page padding", () => {
+    const target = document.createElement("div");
+    const component: Component = {
+      type: "page",
+      props: { name: "main" },
+      style: { padding: "0" },
+      slots: { content: [{ type: "html" }] },
+    };
+    renderComponent(target, component);
+    const el = target.firstElementChild as HTMLElement;
+    expect(el.style.padding).toBe("0px");
+  });
+});

@@ -13,7 +13,7 @@ pages:
         properties:
           text: All Team Members
           size: h3
-      - type: table
+      - type: data-table
         properties:
           pageSize: 15
           sortable: true

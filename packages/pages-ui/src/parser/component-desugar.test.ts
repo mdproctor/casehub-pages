@@ -105,7 +105,7 @@ describe("desugarComponent", () => {
       const result = desugarComponent({
         displayer: { type: "TABLE" },
       });
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
     });
   });
 
@@ -339,7 +339,7 @@ describe("desugarComponent", () => {
       });
       // desugarDisplayer with type: Displayer should map to table (default)
       // but we're passing it the raw object, so it depends on implementation
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
     });
 
     it("type: displayer (lowercase)", () => {
@@ -347,7 +347,7 @@ describe("desugarComponent", () => {
         type: "displayer",
         lookup: { uuid: "data" },
       });
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
     });
   });
 
@@ -407,7 +407,7 @@ describe("desugarComponent", () => {
     it("handles null displayer with global defaults", () => {
       const defaults = { chart: { resizable: true }, lookup: { uuid: "global" } };
       const result = desugarComponent({ displayer: null }, defaults);
-      expect(result.type).toBe("table"); // defaults to table
+      expect(result.type).toBe("data-table"); // defaults to table
       expect(result.props?.["resizable"]).toBe(true);
     });
 
@@ -455,7 +455,7 @@ describe("desugarComponent", () => {
           lookup: { uuid: "employees" },
         },
       });
-      expect(result.type).toBe("table");
+      expect(result.type).toBe("data-table");
       const lookup = result.props?.["lookup"] as { dataSetId: string } | undefined;
       expect(lookup?.dataSetId).toBe("employees");
     });

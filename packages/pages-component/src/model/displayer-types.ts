@@ -93,12 +93,20 @@ export type SelectionMode = "none" | "single" | "multi";
 
 export type ColumnRenderer = (cell: CellValue, row: TypedRow, column: Column) => unknown;
 
-export interface TableProps extends DataComponentCommon {
+export interface DataTableProps extends DataComponentCommon {
   readonly pageSize?: number;
   readonly sortable?: boolean;
   readonly resizable?: boolean;
   readonly rowStyle?: readonly RowStyleRule[];
   readonly expandable?: ExpandableConfig;
+}
+
+export type CellDisplay = "text" | "boolean" | "color" | "badge" | "number";
+
+export interface GridTableProps extends DataComponentCommon {
+  readonly columnHeaders?: boolean;
+  readonly rowHeaders?: boolean;
+  readonly cellDisplay?: Readonly<Record<string, CellDisplay>>;
 }
 
 export interface MetricProps extends DataComponentCommon {

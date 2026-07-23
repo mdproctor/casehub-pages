@@ -316,7 +316,7 @@ describe("DataSetManager — error paths", () => {
     expect(() => mgr.lookup(createLookup(ID_UNKNOWN, []))).toThrow("UNKNOWN_PROVIDER");
   });
 
-  it("filter referencing unknown column throws UNKNOWN_COLUMN", () => {
+  it("filter referencing unknown column degrades gracefully — returns unfiltered", () => {
     const mgr = createDataSetManager();
     mgr.apply(SALES_ID, { type: "snapshot", dataset: salesDataSet() });
     const filter: FilterOp = {
@@ -328,7 +328,11 @@ describe("DataSetManager — error paths", () => {
         args: ["x"],
       }],
     };
-    expect(() => mgr.lookup(createLookup(SALES_ID, [filter]))).toThrow("UNKNOWN_COLUMN");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = mgr.lookup(createLookup(SALES_ID, [filter]));
+    expect(result.dataset.rows.length).toBe(salesDataSet().rows.length);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it("invalid function/type combo throws RESOLUTION_FAILED", () => {

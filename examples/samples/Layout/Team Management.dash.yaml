@@ -43,7 +43,7 @@ pages:
         properties:
           text: Teams Overview
           size: h3
-      - type: table
+      - type: data-table
         properties:
           pageSize: 10
           sortable: true
@@ -75,7 +75,7 @@ pages:
         properties:
           text: All Team Members
           size: h3
-      - type: table
+      - type: data-table
         properties:
           pageSize: 15
           sortable: true

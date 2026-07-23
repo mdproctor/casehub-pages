@@ -246,7 +246,7 @@ pages:
 
               <strong>All Matches</strong>
           </p>
-      - type: table
+      - type: data-table
         properties:
           chart:
             resizable: true

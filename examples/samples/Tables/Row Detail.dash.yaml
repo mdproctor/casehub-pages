@@ -54,7 +54,7 @@ pages:
         tabs:
           Multi Mode:
             components:
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: employees
@@ -87,7 +87,7 @@ pages:
                   content: >
                     **Single mode** (default) — expanding one row automatically
                     collapses the previously open row.
-              - type: table
+              - type: data-table
                 properties:
                   lookup:
                     uuid: employees

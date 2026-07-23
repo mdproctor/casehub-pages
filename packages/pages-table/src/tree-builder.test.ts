@@ -93,8 +93,8 @@ describe('tree table (expandable)', () => {
   let el: TableEl;
 
   beforeEach(async () => {
-    await import('./pages-table.js');
-    el = document.createElement('pages-table') as TableEl;
+    await import('./pages-data-table');
+    el = document.createElement('pages-data-table') as TableEl;
     document.body.appendChild(el);
   });
 

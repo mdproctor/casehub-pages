@@ -19,7 +19,7 @@ const NAV_TYPE_MAP: Record<string, string> = {
 const DATA_COMPONENT_TYPES = new Set([
   "bar-chart", "line-chart", "area-chart", "pie-chart",
   "scatter-chart", "bubble-chart", "timeseries",
-  "table", "metric", "meter", "selector", "map",
+  "data-table", "grid-table", "metric", "meter", "selector", "map",
   "grouped-view", "iframe-plugin",
   "badge", "countdown", "timeline", "graph",
   "text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea",
@@ -31,7 +31,7 @@ const DATA_COMPONENT_TYPES = new Set([
 const LEGACY_TYPE_MAP: Record<string, string> = {
   BARCHART: "bar-chart", LINECHART: "line-chart", AREACHART: "area-chart",
   PIECHART: "pie-chart", SCATTERCHART: "scatter-chart", BUBBLECHART: "bubble-chart",
-  TIMESERIES: "timeseries", TABLE: "table", METRIC: "metric", METERCHART: "meter",
+  TIMESERIES: "timeseries", TABLE: "data-table", table: "data-table", METRIC: "metric", METERCHART: "meter",
   SELECTOR: "selector", MAP: "map", GROUPED_VIEW: "grouped-view",
   BADGE: "badge", COUNTDOWN: "countdown", TIMELINE: "timeline", GRAPH: "graph",
 };

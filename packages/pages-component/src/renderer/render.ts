@@ -56,6 +56,11 @@ function renderNode(
     applyLayoutCSS(el, component);
   }
 
+  // 3b. Page-level padding
+  if (component.type === "page") {
+    el.style.padding = "var(--pages-space-4, 16px)";
+  }
+
   // 4. Apply Component.style — runs AFTER layout CSS so author overrides win
   if (component.style) {
     for (const [prop, value] of Object.entries(component.style)) {

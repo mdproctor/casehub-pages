@@ -50,7 +50,7 @@ pages:
             functions:
             - source: language
 
-    - type: table
+    - type: data-table
       properties:
         lookup:
           uuid: devs

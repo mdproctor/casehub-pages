@@ -192,7 +192,7 @@ pages:
                 column: count
   - columns:
     - components:
-      - type: table
+      - type: data-table
         properties:
           pageSize: 15
           sortable: true

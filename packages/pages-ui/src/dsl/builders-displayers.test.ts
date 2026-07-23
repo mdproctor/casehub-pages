@@ -7,7 +7,7 @@ import {
   scatterChart,
   bubbleChart,
   timeseries,
-  table,
+  dataTable,
   metric,
   meter,
   selector,
@@ -15,7 +15,7 @@ import {
   iframePlugin,
 } from "./builders.js";
 import { lookup, groupBy, col, sum } from "./lookup-helpers.js";
-import { isBarChart, isTable, isMetric } from "../model/type-guards.js";
+import { isBarChart, isDataTable, isMetric } from "../model/type-guards.js";
 
 describe("data component builders", () => {
   const salesLookup = lookup("sales", groupBy("product", col("product"), sum("revenue")));
@@ -61,9 +61,9 @@ describe("data component builders", () => {
     expect(c.type).toBe("timeseries");
   });
 
-  it("table()", () => {
-    const c = table({ lookup: salesLookup, pageSize: 10, sortable: true });
-    expect(isTable(c)).toBe(true);
+  it("dataTable()", () => {
+    const c = dataTable({ lookup: salesLookup, pageSize: 10, sortable: true });
+    expect(isDataTable(c)).toBe(true);
     expect(c.props!["pageSize"]).toBe(10);
     expect(c.props!["sortable"]).toBe(true);
   });

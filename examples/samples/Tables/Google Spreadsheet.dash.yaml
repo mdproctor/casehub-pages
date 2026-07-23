@@ -5,7 +5,7 @@ datasets:
   url: https://docs.google.com/spreadsheets/d/${sheet_id}/gviz/tq?tqx=out:csv
 pages:
 - components:
-  - type: table
+  - type: data-table
     properties:
       filter:
         notification: true

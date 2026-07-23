@@ -42,7 +42,7 @@ pages:
   - columns:
     - span: 6
       components:
-      - type: table
+      - type: data-table
         properties:
           lookup:
             group:

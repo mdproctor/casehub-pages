@@ -1,6 +1,6 @@
 import { html } from 'lit';
 import type { TypedRow, ColumnId } from '@casehubio/pages-data';
-import type { PagesTable } from '@casehubio/pages-table';
+import type { PagesDataTable } from '@casehubio/pages-table';
 
 // Column IDs matching the dataset
 const idCol = 'id' as ColumnId;
@@ -13,7 +13,7 @@ const skillsCol = 'skills' as ColumnId;
 const notesCol = 'notes' as ColumnId;
 
 // Get a reference to the table element
-const table = document.querySelector('pages-table') as PagesTable;
+const table = document.querySelector('pages-data-table') as PagesDataTable;
 
 // Required: getRowKey identifies each row for expand state tracking
 table.getRowKey = (row: TypedRow) => row.text(idCol);
