@@ -8,6 +8,7 @@ import {
   bubbleChart,
   timeseries,
   dataTable,
+  gridTable,
   metric,
   meter,
   selector,
@@ -15,7 +16,7 @@ import {
   iframePlugin,
 } from "./builders.js";
 import { lookup, groupBy, col, sum } from "./lookup-helpers.js";
-import { isBarChart, isDataTable, isMetric } from "../model/type-guards.js";
+import { isBarChart, isDataTable, isGridTable, isMetric } from "../model/type-guards.js";
 
 describe("data component builders", () => {
   const salesLookup = lookup("sales", groupBy("product", col("product"), sum("revenue")));
@@ -66,6 +67,23 @@ describe("data component builders", () => {
     expect(isDataTable(c)).toBe(true);
     expect(c.props!["pageSize"]).toBe(10);
     expect(c.props!["sortable"]).toBe(true);
+  });
+
+  it("gridTable()", () => {
+    const c = gridTable({ lookup: salesLookup, columnHeaders: true, rowHeaders: true, compact: true });
+    expect(isGridTable(c)).toBe(true);
+    expect(c.type).toBe("grid-table");
+    expect(c.props!["columnHeaders"]).toBe(true);
+    expect(c.props!["rowHeaders"]).toBe(true);
+    expect(c.props!["compact"]).toBe(true);
+  });
+
+  it("gridTable() with cellDisplay and stripe", () => {
+    const c = gridTable({ lookup: salesLookup, cellDisplay: { status: "boolean" }, stripe: "rows", verticalLines: true });
+    expect(isGridTable(c)).toBe(true);
+    expect(c.props!["cellDisplay"]).toEqual({ status: "boolean" });
+    expect(c.props!["stripe"]).toBe("rows");
+    expect(c.props!["verticalLines"]).toBe(true);
   });
 
   it("metric() with subtype", () => {

@@ -3,6 +3,7 @@ import type { Component } from "./types.js";
 import {
   isBarChart,
   isDataTable,
+  isGridTable,
   isPage,
   isLineChart,
   isAreaChart,
@@ -112,6 +113,29 @@ describe("type guards - data components", () => {
     if (isDataTable(c)) {
       expect(c.props!.pageSize).toBe(10);
     }
+  });
+
+  it("isGridTable narrows correctly", () => {
+    const c: Component = {
+      type: "grid-table",
+      props: { lookup: { dataSetId: "matrix" }, columnHeaders: true, rowHeaders: true, compact: true },
+    };
+    expect(isGridTable(c)).toBe(true);
+    if (isGridTable(c)) {
+      expect(c.props!.columnHeaders).toBe(true);
+      expect(c.props!.rowHeaders).toBe(true);
+      expect(c.props!.compact).toBe(true);
+    }
+  });
+
+  it("isGridTable rejects data-table", () => {
+    const c: Component = { type: "data-table", props: {} };
+    expect(isGridTable(c)).toBe(false);
+  });
+
+  it("isDataTable rejects grid-table", () => {
+    const c: Component = { type: "grid-table", props: {} };
+    expect(isDataTable(c)).toBe(false);
   });
 
   it("isMetric narrows correctly", () => {
