@@ -51,6 +51,7 @@ export type {
   TimeseriesProps,
   DataTableProps,
   CellDisplay,
+  GridStripe,
   GridTableProps,
   MetricProps,
   MeterProps,

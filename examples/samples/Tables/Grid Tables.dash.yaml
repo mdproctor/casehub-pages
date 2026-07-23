@@ -361,3 +361,77 @@ pages:
                     write: boolean
                     approve: boolean
                     admin: boolean
+
+      # ── Striped Rows ───────────────────────────────────────────────
+      - type: title
+        properties:
+          text: "Striped Rows — alternating row backgrounds"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: schedule
+          columnHeaders: true
+          rowHeaders: true
+          stripe: rows
+
+      # ── Striped Columns ────────────────────────────────────────────
+      - type: title
+        properties:
+          text: "Striped Columns — alternating column backgrounds"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: quarterly
+          columnHeaders: true
+          rowHeaders: true
+          stripe: columns
+          cellDisplay:
+            q1: number
+            q2: number
+            q3: number
+            q4: number
+
+      # ── Full Grid — vertical lines + row stripes ───────────────────
+      - type: title
+        properties:
+          text: "Full Grid — vertical lines + row stripes"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: permissions
+          columnHeaders: true
+          rowHeaders: true
+          verticalLines: true
+          stripe: rows
+          cellDisplay:
+            read: boolean
+            write: boolean
+            approve: boolean
+            admin: boolean
+
+      # ── Compact Full Grid ──────────────────────────────────────────
+      - type: title
+        properties:
+          text: "Compact Full Grid — all options combined"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: features
+          columnHeaders: true
+          rowHeaders: true
+          compact: true
+          verticalLines: true
+          stripe: both
+          cellDisplay:
+            tests: boolean
+            docs: boolean
+            i18n: boolean
+            a11y: boolean

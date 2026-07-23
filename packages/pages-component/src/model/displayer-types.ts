@@ -103,11 +103,15 @@ export interface DataTableProps extends DataComponentCommon {
 
 export type CellDisplay = "text" | "boolean" | "color" | "badge" | "number";
 
+export type GridStripe = "rows" | "columns" | "both";
+
 export interface GridTableProps extends DataComponentCommon {
   readonly columnHeaders?: boolean;
   readonly rowHeaders?: boolean;
   readonly cellDisplay?: Readonly<Record<string, CellDisplay>>;
   readonly compact?: boolean;
+  readonly stripe?: GridStripe;
+  readonly verticalLines?: boolean;
 }
 
 export interface MetricProps extends DataComponentCommon {

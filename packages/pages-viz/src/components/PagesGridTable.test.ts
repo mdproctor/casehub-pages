@@ -193,4 +193,49 @@ describe("pages-grid-table", () => {
       expect(table!.classList.contains("compact")).toBe(false);
     });
   });
+
+  describe("stripe", () => {
+    it("stripe: rows adds stripe-rows class", async () => {
+      el.props = { lookup: L, stripe: "rows" };
+      el.dataSet = ds([col("a")], [["1"], ["2"]]);
+      await el.updateComplete;
+      const table = el.shadowRoot!.querySelector("table")!;
+      expect(table.classList.contains("stripe-rows")).toBe(true);
+      expect(table.classList.contains("stripe-cols")).toBe(false);
+    });
+
+    it("stripe: columns adds stripe-cols class", async () => {
+      el.props = { lookup: L, stripe: "columns" };
+      el.dataSet = ds([col("a"), col("b")], [["1", "2"]]);
+      await el.updateComplete;
+      const table = el.shadowRoot!.querySelector("table")!;
+      expect(table.classList.contains("stripe-cols")).toBe(true);
+      expect(table.classList.contains("stripe-rows")).toBe(false);
+    });
+
+    it("stripe: both adds both classes", async () => {
+      el.props = { lookup: L, stripe: "both" };
+      el.dataSet = ds([col("a"), col("b")], [["1", "2"]]);
+      await el.updateComplete;
+      const table = el.shadowRoot!.querySelector("table")!;
+      expect(table.classList.contains("stripe-rows")).toBe(true);
+      expect(table.classList.contains("stripe-cols")).toBe(true);
+    });
+  });
+
+  describe("vertical lines", () => {
+    it("verticalLines: true adds v-lines class", async () => {
+      el.props = { lookup: L, verticalLines: true };
+      el.dataSet = ds([col("a"), col("b")], [["1", "2"]]);
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector("table")!.classList.contains("v-lines")).toBe(true);
+    });
+
+    it("no v-lines class by default", async () => {
+      el.props = { lookup: L };
+      el.dataSet = ds([col("a"), col("b")], [["1", "2"]]);
+      await el.updateComplete;
+      expect(el.shadowRoot!.querySelector("table")!.classList.contains("v-lines")).toBe(false);
+    });
+  });
 });
