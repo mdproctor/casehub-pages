@@ -36,7 +36,7 @@ datasets:
         type: NUMBER
 
 pages:
-  - name: Table
+  - name: Data Table
     components:
       - type: title
         properties:
