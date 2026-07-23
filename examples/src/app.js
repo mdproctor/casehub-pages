@@ -438,17 +438,7 @@ function setupEventListeners() {
         }
     });
 
-    // Theme toggle
-    const themeToggle = document.getElementById('theme-toggle');
-    themeToggle.addEventListener('click', () => {
-        galleryThemeMode = galleryThemeMode === 'light' ? 'dark' : 'light';
-        document.documentElement.classList.remove('pages-theme-light', 'pages-theme-dark');
-        document.documentElement.classList.add(`pages-theme-${galleryThemeMode}`);
-        if (currentSite) {
-            currentSite.setTheme(galleryThemeMode);
-        }
-        themeToggle.textContent = galleryThemeMode === 'dark' ? '☀️' : '🌙';
-    });
+    // Theme switching is handled by <pages-theme-picker> component
 
     // Density toggle
     const densityToggle = document.getElementById('density-toggle');
