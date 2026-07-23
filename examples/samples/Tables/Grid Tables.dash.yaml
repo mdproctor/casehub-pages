@@ -1,0 +1,324 @@
+datasets:
+  - uuid: features
+    content: >-
+      [
+        ["Pages Runtime", "true", "true", "false", "true"],
+        ["Data Pipeline", "true", "true", "true", "false"],
+        ["Theme System", "true", "false", "false", "true"],
+        ["Schema Form", "false", "true", "true", "true"],
+        ["Push Protocol", "true", "true", "true", "true"]
+      ]
+    columns:
+      - id: module
+        type: LABEL
+      - id: tests
+        type: LABEL
+      - id: docs
+        type: LABEL
+      - id: i18n
+        type: LABEL
+      - id: a11y
+        type: LABEL
+
+  - uuid: service-status
+    content: >-
+      [
+        ["API Gateway", "#22c55e", "#22c55e", "#22c55e", "#eab308", "#22c55e"],
+        ["Auth Service", "#22c55e", "#eab308", "#22c55e", "#22c55e", "#22c55e"],
+        ["Data Pipeline", "#22c55e", "#22c55e", "#22c55e", "#22c55e", "#ef4444"],
+        ["Search Index", "#eab308", "#22c55e", "#22c55e", "#22c55e", "#22c55e"],
+        ["Notification", "#22c55e", "#22c55e", "#ef4444", "#22c55e", "#22c55e"]
+      ]
+    columns:
+      - id: service
+        type: LABEL
+      - id: mon
+        type: LABEL
+      - id: tue
+        type: LABEL
+      - id: wed
+        type: LABEL
+      - id: thu
+        type: LABEL
+      - id: fri
+        type: LABEL
+
+  - uuid: scorecard
+    content: >-
+      [
+        ["Revenue", "2340000", "2100000", "Active"],
+        ["Customers", "18420", "15800", "Active"],
+        ["Churn Rate", "2.1", "3.4", "Improved"],
+        ["NPS Score", "72", "68", "Active"],
+        ["Uptime", "99.97", "99.91", "Active"]
+      ]
+    columns:
+      - id: metric
+        type: LABEL
+      - id: current
+        type: LABEL
+      - id: previous
+        type: LABEL
+      - id: status
+        type: LABEL
+
+  - uuid: comparison
+    content: >-
+      [
+        ["Language", "TypeScript", "Java", "Python"],
+        ["Typing", "Structural", "Nominal", "Duck"],
+        ["Runtime", "Node/Browser", "JVM", "CPython"],
+        ["Package Manager", "npm/yarn", "Maven/Gradle", "pip"],
+        ["Concurrency", "Event loop", "Threads", "asyncio/GIL"]
+      ]
+    columns:
+      - id: attribute
+        type: LABEL
+      - id: col1
+        type: LABEL
+      - id: col2
+        type: LABEL
+      - id: col3
+        type: LABEL
+
+  - uuid: schedule
+    content: >-
+      [
+        ["Alice", "Sprint planning", "Dev", "Dev", "Code review", "Retro"],
+        ["Bob", "Dev", "Dev", "Design review", "Dev", "Retro"],
+        ["Carol", "Sprint planning", "QA", "QA", "Release", "Retro"],
+        ["Dan", "Dev", "Pairing", "Dev", "Dev", "Retro"]
+      ]
+    columns:
+      - id: person
+        type: LABEL
+      - id: mon
+        type: LABEL
+      - id: tue
+        type: LABEL
+      - id: wed
+        type: LABEL
+      - id: thu
+        type: LABEL
+      - id: fri
+        type: LABEL
+
+  - uuid: kpi
+    content: >-
+      [
+        ["Status", "Running"],
+        ["Uptime", "48h 23m"],
+        ["CPU", "42%"],
+        ["Memory", "3.2 GB"],
+        ["Requests/s", "1,247"],
+        ["Error Rate", "0.03%"]
+      ]
+    columns:
+      - id: label
+        type: LABEL
+      - id: value
+        type: LABEL
+
+  - uuid: permissions
+    content: >-
+      [
+        ["Admin", "true", "true", "true", "true"],
+        ["Editor", "true", "true", "true", "false"],
+        ["Reviewer", "true", "true", "false", "false"],
+        ["Viewer", "true", "false", "false", "false"],
+        ["Guest", "false", "false", "false", "false"]
+      ]
+    columns:
+      - id: role
+        type: LABEL
+      - id: read
+        type: LABEL
+      - id: write
+        type: LABEL
+      - id: approve
+        type: LABEL
+      - id: admin
+        type: LABEL
+
+  - uuid: quarterly
+    content: >-
+      [
+        ["North", "1200", "1350", "1180", "1420"],
+        ["South", "980", "1020", "1100", "1050"],
+        ["East", "1500", "1400", "1550", "1680"],
+        ["West", "870", "920", "890", "960"]
+      ]
+    columns:
+      - id: region
+        type: LABEL
+      - id: q1
+        type: LABEL
+      - id: q2
+        type: LABEL
+      - id: q3
+        type: LABEL
+      - id: q4
+        type: LABEL
+
+pages:
+  - name: Grid Tables
+    components:
+      - type: title
+        properties:
+          text: Grid Table Patterns
+          size: h2
+
+      - type: markdown
+        properties:
+          content: |
+            The `grid-table` component renders information grids — fixed-layout
+            displays for feature matrices, status dashboards, scorecards, and
+            cross-tabulations. Unlike `data-table`, there is no sorting, filtering,
+            or pagination — just clean, styled information display.
+
+      # ── Feature Matrix (boolean cells, cross-matrix) ──────────────
+      - type: title
+        properties:
+          text: "Feature Matrix — boolean cells"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: features
+          columnHeaders: true
+          rowHeaders: true
+          cellDisplay:
+            tests: boolean
+            docs: boolean
+            i18n: boolean
+            a11y: boolean
+
+      # ── Service Status Dashboard (color cells) ────────────────────
+      - type: title
+        properties:
+          text: "Service Status — color cells"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: service-status
+          columnHeaders: true
+          rowHeaders: true
+          cellDisplay:
+            mon: color
+            tue: color
+            wed: color
+            thu: color
+            fri: color
+
+      # ── KPI Summary (row headers, no column headers) ──────────────
+      - type: title
+        properties:
+          text: "KPI Summary — row headers only"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: kpi
+          columnHeaders: false
+          rowHeaders: true
+
+      # ── Scorecard (badge + number cells) ───────────────────────────
+      - type: title
+        properties:
+          text: "Scorecard — badge + number cells"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: scorecard
+          columnHeaders: true
+          rowHeaders: true
+          cellDisplay:
+            current: number
+            previous: number
+            status: badge
+
+      # ── Permission Matrix (boolean cross-matrix) ───────────────────
+      - type: title
+        properties:
+          text: "Permission Matrix — boolean cross-matrix"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: permissions
+          columnHeaders: true
+          rowHeaders: true
+          cellDisplay:
+            read: boolean
+            write: boolean
+            approve: boolean
+            admin: boolean
+
+      # ── Comparison Table (text cross-matrix) ──────────────────────
+      - type: title
+        properties:
+          text: "Comparison Table — text cross-matrix"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: comparison
+          columnHeaders: false
+          rowHeaders: true
+
+      # ── Quarterly Revenue (number cells, cross-matrix) ─────────────
+      - type: title
+        properties:
+          text: "Quarterly Revenue — number cells"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: quarterly
+          columnHeaders: true
+          rowHeaders: true
+          cellDisplay:
+            q1: number
+            q2: number
+            q3: number
+            q4: number
+
+      # ── Schedule Grid (plain text, all headers) ────────────────────
+      - type: title
+        properties:
+          text: "Schedule Grid — plain text"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: schedule
+          columnHeaders: true
+          rowHeaders: true
+
+      # ── Data-only Grid (no headers) ────────────────────────────────
+      - type: title
+        properties:
+          text: "Data-only Grid — no headers"
+          size: h3
+
+      - type: grid-table
+        properties:
+          lookup:
+            uuid: quarterly
+          columnHeaders: false
+          rowHeaders: false
+          cellDisplay:
+            q1: number
+            q2: number
+            q3: number
+            q4: number

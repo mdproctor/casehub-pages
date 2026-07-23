@@ -32,6 +32,8 @@ const TYPE_MAP: Record<string, string> = {
   "SCATTER-CHART": "scatter-chart",
   "BUBBLE-CHART": "bubble-chart",
   "GROUPED-VIEW": "grouped-view",
+  "DATA-TABLE": "data-table",
+  "GRID-TABLE": "grid-table",
 };
 
 /**
