@@ -302,8 +302,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         return html`
           <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; padding: 12px 0;">
             ${pairs.map(p => html`
-              <span style="font-weight: var(--pages-font-weight-semibold, 600); font-size: var(--pages-font-size-sm, 12px); color: var(--pages-neutral-9, #737373);">${p.label}</span>
-              <span style="font-size: var(--pages-font-size-base, 14px); color: var(--pages-neutral-11, #404040);">${p.value}</span>
+              <span style="font-weight: var(--pages-font-weight-semibold, 600); font-size: var(--pages-font-size-sm, 12px); color: var(--pages-text-muted, #737373);">${p.label}</span>
+              <span style="font-size: var(--pages-font-size-base, 14px); color: var(--pages-text-secondary, #404040);">${p.value}</span>
             `)}
           </div>
         `;
@@ -401,8 +401,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
 
     .header-container {
       position: relative;
-      border-bottom: 1px solid var(--pages-neutral-6, #d4d4d4);
-      background: var(--pages-neutral-2, #fafafa);
+      border-bottom: 1px solid var(--pages-border-default, #d4d4d4);
+      background: var(--pages-surface-secondary, #fafafa);
       flex-shrink: 0;
     }
 
@@ -414,7 +414,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       padding: var(--pages-space-3, 12px) var(--pages-space-2, 8px);
       font-weight: var(--pages-font-weight-semibold, 600);
       font-size: var(--pages-font-size-sm, 12px);
-      color: var(--pages-neutral-12, #171717);
+      color: var(--pages-text-primary, #171717);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -429,10 +429,10 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     .checkbox {
       width: 16px;
       height: 16px;
-      border: 2px solid var(--pages-neutral-7, #a3a3a3);
+      border: 2px solid var(--pages-border-strong, #a3a3a3);
       border-radius: 3px;
       cursor: pointer;
-      background: var(--pages-neutral-1, #ffffff);
+      background: var(--pages-surface-primary, #ffffff);
       position: relative;
     }
 
@@ -444,7 +444,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       top: 1px;
       width: 4px;
       height: 8px;
-      border: solid var(--pages-neutral-1, #ffffff);
+      border: solid var(--pages-surface-primary, #ffffff);
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
     }
@@ -480,11 +480,11 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .cell.row-odd {
-      background: var(--pages-neutral-2, #fafafa);
+      background: var(--pages-surface-secondary, #fafafa);
     }
 
     .cell.hover {
-      background: var(--pages-neutral-3, #f5f5f5);
+      background: var(--pages-surface-hover, #f5f5f5);
     }
 
     .cell.focus-row {
@@ -522,17 +522,17 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .cell.pages-row-muted {
-      background: var(--pages-neutral-3, #f5f5f5);
+      background: var(--pages-surface-hover, #f5f5f5);
     }
 
     .cell {
       padding: var(--pages-space-3, 12px) var(--pages-space-2, 8px);
       font-size: var(--pages-font-size-base, 14px);
-      color: var(--pages-neutral-11, #404040);
+      color: var(--pages-text-secondary, #404040);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+      border-bottom: 1px solid var(--pages-border-subtle, #e5e5e5);
     }
 
     .empty-state,
@@ -541,7 +541,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       align-items: center;
       justify-content: center;
       padding: var(--pages-space-8, 32px);
-      color: var(--pages-neutral-9, #737373);
+      color: var(--pages-text-muted, #737373);
       font-size: var(--pages-font-size-base, 14px);
     }
 
@@ -550,8 +550,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       align-items: center;
       justify-content: space-between;
       padding: var(--pages-space-3, 12px) var(--pages-space-4, 16px);
-      border-top: 1px solid var(--pages-neutral-4, #e5e5e5);
-      background: var(--pages-neutral-1, #ffffff);
+      border-top: 1px solid var(--pages-border-subtle, #e5e5e5);
+      background: var(--pages-surface-primary, #ffffff);
     }
 
     .pagination-info {
@@ -559,7 +559,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       align-items: center;
       gap: var(--pages-space-4, 16px);
       font-size: var(--pages-font-size-sm, 12px);
-      color: var(--pages-neutral-11, #404040);
+      color: var(--pages-text-secondary, #404040);
     }
 
     .pagination-controls {
@@ -570,9 +570,9 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
 
     .pagination-button {
       padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
-      border: 1px solid var(--pages-neutral-6, #d4d4d4);
-      background: var(--pages-neutral-1, #ffffff);
-      color: var(--pages-neutral-11, #404040);
+      border: 1px solid var(--pages-border-default, #d4d4d4);
+      background: var(--pages-surface-primary, #ffffff);
+      color: var(--pages-text-secondary, #404040);
       font-size: var(--pages-font-size-sm, 12px);
       cursor: pointer;
       border-radius: 4px;
@@ -580,8 +580,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .pagination-button:hover:not(:disabled) {
-      background: var(--pages-neutral-2, #fafafa);
-      border-color: var(--pages-neutral-7, #a3a3a3);
+      background: var(--pages-surface-secondary, #fafafa);
+      border-color: var(--pages-border-strong, #a3a3a3);
     }
 
     .pagination-button:disabled {
@@ -594,18 +594,18 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       align-items: center;
       gap: var(--pages-space-1, 4px);
       font-size: var(--pages-font-size-sm, 12px);
-      color: var(--pages-neutral-11, #404040);
+      color: var(--pages-text-secondary, #404040);
     }
 
     .page-jump-input {
       width: 48px;
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
-      border: 1px solid var(--pages-neutral-6, #d4d4d4);
+      border: 1px solid var(--pages-border-default, #d4d4d4);
       border-radius: 4px;
       font-size: var(--pages-font-size-sm, 12px);
       text-align: center;
-      color: var(--pages-neutral-12, #171717);
-      background: var(--pages-neutral-1, #ffffff);
+      color: var(--pages-text-primary, #171717);
+      background: var(--pages-surface-primary, #ffffff);
     }
 
     .page-jump-input:focus {
@@ -629,16 +629,16 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       align-items: center;
       gap: var(--pages-space-1, 4px);
       font-size: var(--pages-font-size-sm, 12px);
-      color: var(--pages-neutral-11, #404040);
+      color: var(--pages-text-secondary, #404040);
     }
 
     .page-size-select {
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
-      border: 1px solid var(--pages-neutral-6, #d4d4d4);
+      border: 1px solid var(--pages-border-default, #d4d4d4);
       border-radius: 4px;
       font-size: var(--pages-font-size-sm, 12px);
-      color: var(--pages-neutral-12, #171717);
-      background: var(--pages-neutral-1, #ffffff);
+      color: var(--pages-text-primary, #171717);
+      background: var(--pages-surface-primary, #ffffff);
       cursor: pointer;
     }
 
@@ -657,7 +657,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .sortable-header:hover {
-      background: var(--pages-neutral-3, #f5f5f5);
+      background: var(--pages-surface-hover, #f5f5f5);
     }
 
     .sort-indicator {
@@ -677,14 +677,14 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       cursor: pointer;
       padding: 0;
       font-size: 10px;
-      color: var(--pages-neutral-9, #737373);
+      color: var(--pages-text-muted, #737373);
       border-radius: 3px;
       flex-shrink: 0;
     }
 
     .tree-toggle:hover {
-      background: var(--pages-neutral-3, #f5f5f5);
-      color: var(--pages-neutral-12, #171717);
+      background: var(--pages-surface-hover, #f5f5f5);
+      color: var(--pages-text-primary, #171717);
     }
 
     .tree-spacer {
@@ -718,41 +718,41 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       gap: var(--pages-space-1, 4px);
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       flex-shrink: 0;
-      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
-      background: var(--pages-neutral-1, #ffffff);
+      border-bottom: 1px solid var(--pages-border-subtle, #e5e5e5);
+      background: var(--pages-surface-primary, #ffffff);
     }
 
     .filter-go,
     .filter-close {
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
-      border: 1px solid var(--pages-neutral-5, #e0e0e0);
-      background: var(--pages-neutral-2, #fafafa);
+      border: 1px solid var(--pages-border-subtle, #e0e0e0);
+      background: var(--pages-surface-secondary, #fafafa);
       border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
       line-height: 1;
-      color: var(--pages-neutral-9, #737373);
+      color: var(--pages-text-muted, #737373);
     }
 
     .filter-go:hover,
     .filter-close:hover {
-      background: var(--pages-neutral-3, #f5f5f5);
-      border-color: var(--pages-neutral-7, #a3a3a3);
-      color: var(--pages-neutral-12, #171717);
+      background: var(--pages-surface-hover, #f5f5f5);
+      border-color: var(--pages-border-strong, #a3a3a3);
+      color: var(--pages-text-primary, #171717);
     }
 
     .filter-input {
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
-      border: 1px solid var(--pages-neutral-5, #e0e0e0);
-      background: var(--pages-neutral-1, #ffffff);
+      border: 1px solid var(--pages-border-subtle, #e0e0e0);
+      background: var(--pages-surface-primary, #ffffff);
       border-radius: 4px;
       font-size: 13px;
-      color: var(--pages-neutral-12, #171717);
+      color: var(--pages-text-primary, #171717);
       width: 200px;
     }
 
     .filter-input::placeholder {
-      color: var(--pages-neutral-8, #8c8c8c);
+      color: var(--pages-text-muted, #8c8c8c);
     }
 
     .filter-input:focus {
@@ -770,19 +770,19 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
 
     .column-picker-trigger {
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
-      border: 1px solid var(--pages-neutral-5, #e0e0e0);
-      background: var(--pages-neutral-2, #fafafa);
+      border: 1px solid var(--pages-border-subtle, #e0e0e0);
+      background: var(--pages-surface-secondary, #fafafa);
       cursor: pointer;
       border-radius: 4px;
       font-size: 14px;
       line-height: 1;
-      color: var(--pages-neutral-9, #737373);
+      color: var(--pages-text-muted, #737373);
     }
 
     .column-picker-trigger:hover {
-      background: var(--pages-neutral-3, #f5f5f5);
-      border-color: var(--pages-neutral-7, #a3a3a3);
-      color: var(--pages-neutral-12, #171717);
+      background: var(--pages-surface-hover, #f5f5f5);
+      border-color: var(--pages-border-strong, #a3a3a3);
+      color: var(--pages-text-primary, #171717);
     }
 
     .column-picker-dropdown {
@@ -790,8 +790,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       top: 100%;
       right: 0;
       margin-top: var(--pages-space-1, 4px);
-      background: var(--pages-neutral-1, #ffffff);
-      border: 1px solid var(--pages-neutral-6, #d4d4d4);
+      background: var(--pages-surface-primary, #ffffff);
+      border: 1px solid var(--pages-border-default, #d4d4d4);
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       z-index: 10;
@@ -807,7 +807,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .column-picker-item:hover {
-      background: var(--pages-neutral-2, #fafafa);
+      background: var(--pages-surface-secondary, #fafafa);
     }
 
     .column-picker-item input[type="checkbox"] {
@@ -824,12 +824,12 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--pages-neutral-9, #737373);
+      color: var(--pages-text-muted, #737373);
     }
 
     .picker-divider {
       height: 1px;
-      background: var(--pages-neutral-4, #e5e5e5);
+      background: var(--pages-border-subtle, #e5e5e5);
       margin: 4px 0;
     }
 
@@ -843,18 +843,18 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       background: none;
       cursor: pointer;
       font-size: 13px;
-      color: var(--pages-neutral-11, #404040);
+      color: var(--pages-text-secondary, #404040);
     }
 
     .filter-toggle:hover,
     .picker-action:hover {
-      background: var(--pages-neutral-2, #fafafa);
+      background: var(--pages-surface-secondary, #fafafa);
     }
 
     .mode-switcher {
       display: flex;
       margin: 4px 8px 6px;
-      border: 1px solid var(--pages-neutral-6, #d4d4d4);
+      border: 1px solid var(--pages-border-default, #d4d4d4);
       border-radius: 4px;
       overflow: hidden;
     }
@@ -863,9 +863,9 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       flex: 1;
       padding: 4px 8px;
       border: none;
-      border-right: 1px solid var(--pages-neutral-6, #d4d4d4);
-      background: var(--pages-neutral-1, #ffffff);
-      color: var(--pages-neutral-9, #737373);
+      border-right: 1px solid var(--pages-border-default, #d4d4d4);
+      background: var(--pages-surface-primary, #ffffff);
+      color: var(--pages-text-muted, #737373);
       font-size: 11px;
       cursor: pointer;
       line-height: 1.2;
@@ -876,12 +876,12 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .mode-switcher button:hover {
-      background: var(--pages-neutral-3, #f5f5f5);
+      background: var(--pages-surface-hover, #f5f5f5);
     }
 
     .mode-switcher button[aria-pressed="true"] {
-      background: var(--pages-neutral-12, #171717);
-      color: var(--pages-neutral-1, #ffffff);
+      background: var(--pages-text-primary, #171717);
+      color: var(--pages-surface-primary, #ffffff);
     }
 
     .expand-header {
@@ -909,12 +909,12 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       cursor: pointer;
       padding: 0;
       border-radius: var(--pages-radius-sm, 4px);
-      color: var(--pages-neutral-9, #737373);
+      color: var(--pages-text-muted, #737373);
     }
 
     .expand-toggle:hover {
-      background: var(--pages-neutral-3, #f5f5f5);
-      color: var(--pages-neutral-12, #171717);
+      background: var(--pages-surface-hover, #f5f5f5);
+      color: var(--pages-text-primary, #171717);
     }
 
     .expand-toggle:focus-visible {
@@ -943,13 +943,13 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       cursor: pointer;
       padding: 0;
       border-radius: var(--pages-radius-sm, 4px);
-      color: var(--pages-neutral-9, #737373);
+      color: var(--pages-text-muted, #737373);
       font-size: 10px;
     }
 
     .expand-all-toggle:hover {
-      background: var(--pages-neutral-3, #f5f5f5);
-      color: var(--pages-neutral-12, #171717);
+      background: var(--pages-surface-hover, #f5f5f5);
+      color: var(--pages-text-primary, #171717);
     }
 
     .cell.detail-expanded {
@@ -1009,8 +1009,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       display: flex;
       align-items: center;
       padding: 6px 12px;
-      background: var(--pages-neutral-3, #f5f5f5);
-      border-bottom: 1px solid var(--pages-neutral-5, #e0e0e0);
+      background: var(--pages-surface-hover, #f5f5f5);
+      border-bottom: 1px solid var(--pages-border-subtle, #e0e0e0);
       font-weight: 600;
       font-size: 13px;
       gap: 8px;
@@ -1022,7 +1022,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
     .group-header-count {
       font-weight: 400;
-      color: var(--pages-neutral-9, #616161);
+      color: var(--pages-text-muted, #616161);
       font-size: 12px;
     }
     .group-header-count::before { content: "("; }
