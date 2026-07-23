@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { toTypedDataSet, toWireDataSet, fromRows } from "./conversion.js";
 import type { DataSet, Column} from "./types.js";
 import { ColumnType, columnId} from "./types.js";
@@ -98,14 +98,40 @@ describe("toTypedDataSet", () => {
     expect(result.columns).toHaveLength(1);
   });
 
-  it("cell() throws for unknown column ID", () => {
+  it("cell() returns NULL for unknown column ID", () => {
     const ds: DataSet = {
       columns: [col("name", "Name", ColumnType.TEXT)],
       data: [["Acme"]],
     };
 
     const result = toTypedDataSet(ds);
-    expect(() => result.rows[0]!.cell(columnId("unknown"))).toThrow();
+    const cell = result.rows[0]!.cell(columnId("unknown"));
+    expect(cell.type).toBe("NULL");
+  });
+
+  it("cell() warns on unknown column ID", () => {
+    const ds: DataSet = {
+      columns: [col("name", "Name", ColumnType.TEXT)],
+      data: [["Acme"]],
+    };
+
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = toTypedDataSet(ds);
+    result.rows[0]!.cell(columnId("unknown"));
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining('"unknown"'),
+    );
+    spy.mockRestore();
+  });
+
+  it("cell() case-insensitive lookup still works", () => {
+    const ds: DataSet = {
+      columns: [col("Name", "Name", ColumnType.TEXT)],
+      data: [["Acme"]],
+    };
+
+    const result = toTypedDataSet(ds);
+    expect(result.rows[0]!.text(columnId("name"))).toBe("Acme");
   });
 
   it("number() throws when called on a TEXT column", () => {

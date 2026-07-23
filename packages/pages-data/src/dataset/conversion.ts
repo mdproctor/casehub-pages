@@ -58,7 +58,8 @@ export function createTypedRow(cells: readonly CellValue[], columns: readonly Co
       const idx = columnIndex.get(columnId)
         ?? (typeof columnId === "string" ? columnIndexLower.get(columnId.toLowerCase()) : undefined);
       if (idx === undefined) {
-        throw new DataSetError("UNKNOWN_COLUMN", `Column "${columnId}" not found`);
+        console.warn(`[pages-data] Cell skipped: column "${columnId}" not found in dataset`);
+        return { type: "NULL" as const };
       }
       const cell = frozenCells[idx];
       if (cell === undefined) {
