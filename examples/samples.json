@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 64,
+  "totalSamples": 65,
   "categories": [
     {
       "category": "Charts",
@@ -60,6 +60,12 @@
           "file": "Column Settings.dash.yaml"
         },
         {
+          "name": "Data Table",
+          "path": "Tables/Data Table.dash.yaml",
+          "category": "Tables",
+          "file": "Data Table.dash.yaml"
+        },
+        {
           "name": "GitHub Repos",
           "path": "Tables/GitHub Repos.dash.yaml",
           "category": "Tables",
@@ -70,6 +76,12 @@
           "path": "Tables/Google Spreadsheet.dash.yaml",
           "category": "Tables",
           "file": "Google Spreadsheet.dash.yaml"
+        },
+        {
+          "name": "Grid Tables",
+          "path": "Tables/Grid Tables.dash.yaml",
+          "category": "Tables",
+          "file": "Grid Tables.dash.yaml"
         },
         {
           "name": "Grouped Roadmap",
@@ -120,12 +132,6 @@
           "category": "Tables",
           "file": "Spanning.dash.yaml",
           "tsPath": "Tables/Spanning.ts"
-        },
-        {
-          "name": "Table",
-          "path": "Tables/Table.dash.yaml",
-          "category": "Tables",
-          "file": "Table.dash.yaml"
         },
         {
           "name": "Tree Table",
