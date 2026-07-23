@@ -1,6 +1,7 @@
 /* ============================================================
-   CaseHub Pages Examples Gallery — OKLCH Token System
-   All values use var(--pages-*) tokens from pages-ui-tokens.
+   CaseHub Pages Examples Gallery — Semantic Role Tokens
+   All values use var(--pages-*) role tokens from pages-ui-tokens.
+   Role tokens abstract light/dark mode — no manual mode switching.
    Code panel is theme-independent (hardcoded dark).
    ============================================================ */
 
@@ -12,8 +13,8 @@
 
 body {
     font-family: var(--pages-font-family);
-    background: var(--pages-neutral-2);
-    color: var(--pages-neutral-11);
+    background: var(--pages-surface-primary);
+    color: var(--pages-text-secondary);
 }
 
 .container {
@@ -27,8 +28,8 @@ body {
 
 .sidebar {
     width: 320px;
-    background: var(--pages-neutral-1);
-    border-right: 1px solid var(--pages-neutral-4);
+    background: var(--pages-surface-secondary);
+    border-right: 1px solid var(--pages-border-subtle);
     display: flex;
     flex-direction: column;
     transition: margin-left var(--pages-duration-normal) var(--pages-ease-out);
@@ -46,7 +47,7 @@ body {
     left: 295px;
     width: 20px;
     height: 20px;
-    background: var(--pages-accent-9);
+    background: var(--pages-interactive);
     border: none;
     border-radius: var(--pages-radius-sm);
     cursor: pointer;
@@ -60,7 +61,7 @@ body {
 }
 
 .sidebar-toggle-btn:hover {
-    background: var(--pages-accent-10);
+    background: var(--pages-interactive-hover);
     box-shadow: var(--pages-shadow-2);
     transform: translateY(-2px);
 }
@@ -77,8 +78,8 @@ body {
 
 .header {
     padding: var(--pages-space-5);
-    border-bottom: 1px solid var(--pages-neutral-4);
-    background: var(--pages-accent-9);
+    border-bottom: 1px solid var(--pages-border-subtle);
+    background: var(--pages-interactive);
     color: white;
     display: flex;
     flex-wrap: wrap;
@@ -122,24 +123,24 @@ body {
 
 .search-box {
     padding: var(--pages-space-4);
-    border-bottom: 1px solid var(--pages-neutral-4);
+    border-bottom: 1px solid var(--pages-border-subtle);
 }
 
 #search {
     width: 100%;
     padding: var(--pages-space-3) var(--pages-space-3);
-    border: 1px solid var(--pages-neutral-4);
+    border: 1px solid var(--pages-border-default);
     border-radius: var(--pages-radius-md);
     font-size: var(--pages-font-size-base);
     font-family: var(--pages-font-family);
-    color: var(--pages-neutral-12);
-    background: var(--pages-neutral-1);
+    color: var(--pages-text-primary);
+    background: var(--pages-surface-primary);
     outline: none;
     transition: border-color var(--pages-duration-fast) var(--pages-ease-out);
 }
 
 #search:focus {
-    border-color: var(--pages-accent-9);
+    border-color: var(--pages-interactive);
 }
 
 /* --- Categories nav --- */
@@ -159,7 +160,7 @@ body {
     font-weight: var(--pages-font-weight-semibold);
     font-size: var(--pages-font-size-sm);
     text-transform: uppercase;
-    color: var(--pages-neutral-9);
+    color: var(--pages-text-muted);
     letter-spacing: 0.5px;
     cursor: pointer;
     user-select: none;
@@ -170,7 +171,7 @@ body {
 }
 
 .category-header:hover {
-    background: var(--pages-neutral-2);
+    background: var(--pages-surface-hover);
 }
 
 .category-toggle {
@@ -193,20 +194,20 @@ body {
     padding: var(--pages-space-2) var(--pages-space-5) var(--pages-space-2) var(--pages-space-8);
     cursor: pointer;
     font-size: var(--pages-font-size-base);
-    color: var(--pages-neutral-10);
+    color: var(--pages-text-secondary);
     transition: all var(--pages-duration-fast) var(--pages-ease-out);
     border-left: 3px solid transparent;
 }
 
 .sample-item:hover {
-    background: var(--pages-neutral-2);
-    color: var(--pages-accent-9);
+    background: var(--pages-surface-hover);
+    color: var(--pages-interactive);
 }
 
 .sample-item.active {
-    background: var(--pages-accent-3);
-    color: var(--pages-accent-9);
-    border-left-color: var(--pages-accent-9);
+    background: var(--pages-surface-selected);
+    color: var(--pages-interactive);
+    border-left-color: var(--pages-interactive);
     font-weight: var(--pages-font-weight-medium);
 }
 
@@ -239,13 +240,13 @@ body {
 .welcome h1 {
     font-size: 32px;
     font-weight: var(--pages-font-weight-semibold);
-    color: var(--pages-neutral-12);
+    color: var(--pages-text-primary);
     margin-bottom: var(--pages-space-4);
 }
 
 .welcome p {
     font-size: var(--pages-font-size-lg);
-    color: var(--pages-neutral-9);
+    color: var(--pages-text-muted);
     margin-bottom: var(--pages-space-8);
 }
 
@@ -261,10 +262,10 @@ body {
 }
 
 .stat-card {
-    background: var(--pages-neutral-1);
+    background: var(--pages-surface-secondary);
     padding: var(--pages-space-6);
     border-radius: var(--pages-radius-lg);
-    border: 1px solid var(--pages-neutral-4);
+    border: 1px solid var(--pages-border-subtle);
     box-shadow: var(--pages-shadow-1);
     text-align: left;
 }
@@ -272,7 +273,7 @@ body {
 .stat-card h3 {
     font-size: var(--pages-font-size-sm);
     font-weight: var(--pages-font-weight-semibold);
-    color: var(--pages-neutral-9);
+    color: var(--pages-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: var(--pages-space-2);
@@ -281,7 +282,7 @@ body {
 .stat-card .value {
     font-size: 36px;
     font-weight: 700;
-    color: var(--pages-accent-9);
+    color: var(--pages-interactive);
 }
 
 /* --- Sample container --- */
@@ -290,7 +291,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: var(--pages-neutral-1);
+    background: var(--pages-surface-primary);
     min-width: 0;
     min-height: 0;
 }
@@ -313,7 +314,7 @@ body {
 
 .sample-header {
     padding: var(--pages-space-4) var(--pages-space-6);
-    border-bottom: 1px solid var(--pages-neutral-4);
+    border-bottom: 1px solid var(--pages-border-subtle);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -322,7 +323,7 @@ body {
 .sample-header h2 {
     font-size: var(--pages-font-size-xl);
     font-weight: var(--pages-font-weight-semibold);
-    color: var(--pages-neutral-12);
+    color: var(--pages-text-primary);
 }
 
 .sample-actions {
@@ -332,21 +333,21 @@ body {
 
 .sample-actions button {
     padding: var(--pages-space-2) var(--pages-space-3);
-    border: 1px solid var(--pages-neutral-4);
-    background: var(--pages-neutral-1);
+    border: 1px solid var(--pages-border-default);
+    background: var(--pages-surface-secondary);
     border-radius: var(--pages-radius-md);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--pages-neutral-10);
+    color: var(--pages-text-secondary);
     transition: all var(--pages-duration-fast) var(--pages-ease-out);
 }
 
 .sample-actions button:hover {
-    background: var(--pages-neutral-2);
-    border-color: var(--pages-accent-9);
-    color: var(--pages-accent-9);
+    background: var(--pages-surface-hover);
+    border-color: var(--pages-interactive);
+    color: var(--pages-interactive);
 }
 
 #sample-target {
@@ -364,16 +365,16 @@ body {
 }
 
 .categories::-webkit-scrollbar-track {
-    background: var(--pages-neutral-2);
+    background: var(--pages-surface-primary);
 }
 
 .categories::-webkit-scrollbar-thumb {
-    background: var(--pages-neutral-5);
+    background: var(--pages-border-default);
     border-radius: var(--pages-radius-sm);
 }
 
 .categories::-webkit-scrollbar-thumb:hover {
-    background: var(--pages-neutral-8);
+    background: var(--pages-border-strong);
 }
 
 /* --- Code sidebar (theme-independent) --- */
@@ -381,7 +382,7 @@ body {
 .code-sidebar {
     flex: 0 0 35%;
     background: #1e1e1e;
-    border-left: 1px solid var(--pages-neutral-6);
+    border-left: 1px solid var(--pages-border-default);
     transition: flex-basis var(--pages-duration-normal) var(--pages-ease-out);
     overflow-y: auto;
     overflow-x: auto;
@@ -439,8 +440,8 @@ body {
     align-items: end;
     padding: var(--pages-space-3) var(--pages-space-4);
     margin: 0 0 var(--pages-space-3);
-    background: var(--pages-neutral-2);
-    border: 1px solid var(--pages-neutral-4);
+    background: var(--pages-surface-tertiary);
+    border: 1px solid var(--pages-border-subtle);
     border-radius: var(--pages-radius-md);
     font-size: var(--pages-font-size-sm);
 }
@@ -455,7 +456,7 @@ body {
 
 .config-bar label {
     font-weight: var(--pages-font-weight-semibold);
-    color: var(--pages-neutral-9);
+    color: var(--pages-text-muted);
     font-size: var(--pages-font-size-xs);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -463,28 +464,28 @@ body {
 
 .config-bar input {
     padding: var(--pages-space-1-5) var(--pages-space-3);
-    border: 1px solid var(--pages-neutral-4);
+    border: 1px solid var(--pages-border-default);
     border-radius: var(--pages-radius-md);
     font-size: var(--pages-font-size-sm);
     font-family: monospace;
-    color: var(--pages-neutral-12);
-    background: var(--pages-neutral-1);
+    color: var(--pages-text-primary);
+    background: var(--pages-surface-primary);
     transition: border-color var(--pages-duration-fast) var(--pages-ease-out);
 }
 
 .config-bar input:focus {
     outline: none;
-    border-color: var(--pages-accent-9);
-    box-shadow: 0 0 0 2px var(--pages-accent-3);
+    border-color: var(--pages-interactive);
+    box-shadow: 0 0 0 2px var(--pages-focus-ring);
 }
 
 .config-bar input::placeholder {
-    color: var(--pages-neutral-8);
+    color: var(--pages-text-muted);
 }
 
 .config-bar .config-apply {
     padding: var(--pages-space-1-5) var(--pages-space-4);
-    background: var(--pages-accent-9);
+    background: var(--pages-interactive);
     color: white;
     border: none;
     border-radius: var(--pages-radius-md);
@@ -496,11 +497,11 @@ body {
 }
 
 .config-bar .config-apply:hover {
-    background: var(--pages-accent-10);
+    background: var(--pages-interactive-hover);
 }
 
 .config-bar .config-status {
     font-size: var(--pages-font-size-xs);
-    color: var(--pages-neutral-8);
+    color: var(--pages-text-muted);
     align-self: center;
 }

@@ -25,6 +25,8 @@ const DEFAULT_LIGHT_PRESET: PresetConfig = {
   pipeline: [
     { transform: 'light-mode' },
     { transform: 'oklch-scale', params: DEFAULT_HUES },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
   ],
 };
 
@@ -34,6 +36,8 @@ const DEFAULT_DARK_PRESET: PresetConfig = {
   pipeline: [
     { transform: 'dark-mode' },
     { transform: 'oklch-scale', params: DEFAULT_HUES },
+    { transform: 'semantic-map' },
+    { transform: 'gamut-clamp' },
   ],
 };
 
