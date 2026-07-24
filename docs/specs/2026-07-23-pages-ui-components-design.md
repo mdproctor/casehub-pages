@@ -442,19 +442,29 @@ function createFormFieldProxy(
   fieldName: string,
 ): VizTarget {
   let _dataSet: TypedDataSet | undefined;
+  // Implements DataReceiver mutual-clearing invariant:
+  // - set dataSet clears error
+  // - set error clears dataSet (proxy reference, not displayed value)
+  // - set loading(true) clears error
   return {
     get loading() { return false; },
-    set loading(_: boolean) { /* standalone form inputs have no loading state */ },
+    set loading(v: boolean) {
+      if (v) (component as any).error = undefined;
+    },
     get dataSet() { return _dataSet; },
     set dataSet(ds: TypedDataSet | undefined) {
       _dataSet = ds;
+      (component as any).error = undefined;
       if (ds) {
         const value = extractFieldValue(ds, fieldName);
         setComponentValue(component, value);
       }
     },
     get error() { return (component as any).error ?? ""; },
-    set error(msg: string) { (component as any).error = msg || undefined; },
+    set error(msg: string) {
+      _dataSet = undefined;
+      (component as any).error = msg || undefined;
+    },
     get totalRows() { return 0; },
     set totalRows(_: number) {},
     get activeSort() { return undefined; },
