@@ -27,15 +27,14 @@ import {lookupPanel} from "./panel-registry.js";
 import type {ConfigurablePanel, DataReceiver, VizTarget} from "@casehubio/pages-component";
 import type {HostPanelProps} from "@casehubio/pages-component";
 import type {SortColumn} from "@casehubio/pages-data";
+import "@casehubio/pages-ui-components/input";
+import "@casehubio/pages-ui-components/select";
+import "@casehubio/pages-ui-components/textarea";
+import "@casehubio/pages-ui-components/checkbox";
 
-const FORM_INPUT_TYPES = new Set([
-  "text-input",
-  "number-input",
-  "dropdown",
-  "checkbox",
-  "date-picker",
-  "textarea",
-]);
+const STANDALONE_FORM_TYPES = new Set(["input", "select", "textarea", "checkbox"]);
+const LEGACY_FORM_TYPES = new Set(["number-input", "date-picker"]);
+const FORM_INPUT_TYPES = new Set([...STANDALONE_FORM_TYPES, ...LEGACY_FORM_TYPES]);
 
 const DATA_COMPONENT_TYPES = new Set([
   "bar-chart",
@@ -119,6 +118,82 @@ export function createActivationCallback(
       if (pageProps?.save) {
         options.saveConfigRegistry.set(pagePath, pageProps.save);
       }
+    }
+
+    if (STANDALONE_FORM_TYPES.has(component.type)) {
+      const tagName = `pages-${component.type}`;
+      const formEl = document.createElement(tagName);
+      const field = (component.props as Record<string, unknown> | undefined)?.field as string | undefined;
+
+      if (component.props) {
+        const p = component.props as Record<string, unknown>;
+        if (p.label) (formEl as any).label = p.label;
+        if (p.placeholder) (formEl as any).placeholder = p.placeholder;
+        if (p.maxLength) (formEl as any).maxlength = p.maxLength;
+        if (p.required) (formEl as any).required = p.required;
+        if (p.readonly) (formEl as any).readonly = p.readonly;
+        if (p.rows) (formEl as any).rows = p.rows;
+        if (component.type === "select" && p.options) {
+          const opts = p.options as { values?: string[] };
+          if (opts.values) {
+            (formEl as any).options = opts.values.map((v: string) => ({ value: v, label: v }));
+          }
+        }
+      }
+
+      const proxy = field ? createFormFieldProxy(formEl, field) : undefined;
+      let lookup = (component.props as Record<string, unknown> | undefined)?.lookup as DataSetLookup | undefined;
+
+      if (options) {
+        const pageDataScope = options.dataScopeRegistry.get(pagePath);
+        if (pageDataScope) {
+          lookup = { dataSetId: pageDataScope.dataset, operations: [] };
+        } else if (field) {
+          (formEl as any).error = "Form input requires page dataScope";
+        }
+      }
+
+      const entry = {
+        element: el,
+        ...(proxy && { vizElement: proxy }),
+        component,
+        pagePath,
+        hasExplicitId: component.id !== undefined,
+        ...(lookup !== undefined && { originalLookup: lookup }),
+      };
+      registry.set(componentId, entry);
+      el.appendChild(formEl);
+
+      if (field) {
+        formEl.addEventListener("input", (e: Event) => {
+          const target = e.target as HTMLInputElement;
+          formEl.dispatchEvent(new CustomEvent("pages-field-change", {
+            bubbles: true, composed: true,
+            detail: { field, value: target.value, committed: false },
+          }));
+        });
+        formEl.addEventListener("change", (e: Event) => {
+          const target = e.target as HTMLInputElement;
+          const val = component.type === "checkbox" ? (target as any).checked : target.value;
+          formEl.dispatchEvent(new CustomEvent("pages-field-change", {
+            bubbles: true, composed: true,
+            detail: { field, value: val, committed: true },
+          }));
+        });
+      }
+
+      if (proxy && lookup) {
+        formEl.dispatchEvent(new CustomEvent("pages-data-request", {
+          bubbles: true, composed: true,
+          detail: { element: proxy, lookup },
+        }));
+      }
+
+      if (component.visibleWhen && contextManager) {
+        registerVisibleWhenConsumer(el, null, component.visibleWhen, contextManager);
+      }
+
+      return;
     }
 
     if (DATA_COMPONENT_TYPES.has(component.type)) {
@@ -590,3 +665,60 @@ function registerVisibleWhenConsumer(
   el.hidden = !initialResult;
 }
 
+function createFormFieldProxy(
+  component: HTMLElement,
+  fieldName: string,
+): VizTarget {
+  let _dataSet: TypedDataSet | undefined;
+  return {
+    get loading() { return false; },
+    set loading(v: boolean) {
+      if (v) (component as any).error = undefined;
+    },
+    get dataSet() { return _dataSet; },
+    set dataSet(ds: TypedDataSet | undefined) {
+      _dataSet = ds;
+      (component as any).error = undefined;
+      if (ds) {
+        const value = extractFormFieldValue(ds, fieldName);
+        setFormComponentValue(component, value);
+      }
+    },
+    get error() { return (component as any).error ?? ""; },
+    set error(msg: string) {
+      _dataSet = undefined;
+      (component as any).error = msg || undefined;
+    },
+    get totalRows() { return 0; },
+    set totalRows(_: number) {},
+    get activeSort() { return undefined; },
+    set activeSort(_: SortColumn | undefined) {},
+    get activePage() { return undefined; },
+    set activePage(_: number | undefined) {},
+  };
+}
+
+function extractFormFieldValue(dataset: TypedDataSet, field: string): unknown {
+  if (!dataset.rows.length) return undefined;
+  const row = dataset.rows[0];
+  if (!row) return undefined;
+  try {
+    const cell = row.cell(field as ColumnId);
+    if (cell.type === "NULL") return undefined;
+    return cell.value;
+  } catch {
+    return undefined;
+  }
+}
+
+function setFormComponentValue(component: HTMLElement, value: unknown): void {
+  const tag = component.tagName.toLowerCase();
+  if (tag === "pages-checkbox") {
+    let checked = false;
+    if (typeof value === "boolean") checked = value;
+    else if (typeof value === "string") checked = value.toLowerCase() === "true";
+    (component as any).checked = checked;
+  } else {
+    (component as any).value = value !== undefined && value !== null ? String(value) : "";
+  }
+}
