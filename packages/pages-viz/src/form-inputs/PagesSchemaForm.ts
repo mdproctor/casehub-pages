@@ -11,12 +11,8 @@ import {
 } from "./schema-types.js";
 import { cellToRaw } from "../base/cell-extract.js";
 
-import "./PagesTextInput.js";
 import "./PagesNumberInput.js";
-import "./PagesCheckbox.js";
-import "./PagesDropdown.js";
 import "./PagesDatePicker.js";
-import "./PagesTextarea.js";
 
 export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: DataSetLookup }> {
   private _children: Map<string, HTMLElement> = new Map();
@@ -150,7 +146,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       if (fieldSchema.type === "integer") base.step = 1;
     }
 
-    if (componentType === "dropdown") {
+    if (componentType === "select") {
       if (fieldSchema.enum && fieldSchema.enum.length > 0) {
         base.options = { values: [...fieldSchema.enum] };
       } else {
@@ -159,7 +155,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       }
     }
 
-    if (componentType === "text-input") {
+    if (componentType === "input") {
       if (fieldSchema.maxLength !== undefined) base.maxLength = fieldSchema.maxLength;
       if (fieldSchema.placeholder !== undefined) base.placeholder = fieldSchema.placeholder;
     }

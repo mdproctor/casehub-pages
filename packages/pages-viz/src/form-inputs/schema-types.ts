@@ -65,14 +65,14 @@ export function mapFieldToComponentType(fieldSchema: FieldSchema): string {
   if (fieldSchema.type === "number") return "number-input";
   if (fieldSchema.type === "integer") return "number-input";
   if (fieldSchema.type === "string") {
-    if (fieldSchema.enum && fieldSchema.enum.length > 0) return "dropdown";
+    if (fieldSchema.enum && fieldSchema.enum.length > 0) return "select";
     if (fieldSchema.format === "date") return "date-picker";
     if (fieldSchema.format === "datetime-local") return "date-picker";
     if (fieldSchema.format === "textarea") return "textarea";
-    return "text-input";
+    return "input";
   }
-  if (fieldSchema.enum && fieldSchema.enum.length > 0) return "dropdown";
-  return "text-input";
+  if (fieldSchema.enum && fieldSchema.enum.length > 0) return "select";
+  return "input";
 }
 
 export function validateField(

@@ -37,12 +37,8 @@ export type { FieldSchema, SchemaFormProps } from "./form-inputs/schema-types.js
 // Form inputs
 export { PagesFormInput } from "./form-inputs/PagesFormInput.js";
 export type { PagesFieldChangeDetail } from "./form-inputs/PagesFormInput.js";
-export { PagesTextInput } from "./form-inputs/PagesTextInput.js";
 export { PagesNumberInput } from "./form-inputs/PagesNumberInput.js";
-export { PagesDropdown } from "./form-inputs/PagesDropdown.js";
-export { PagesCheckbox } from "./form-inputs/PagesCheckbox.js";
 export { PagesDatePicker } from "./form-inputs/PagesDatePicker.js";
-export { PagesTextarea } from "./form-inputs/PagesTextarea.js";
 
 // New charts
 export { PagesTimeline } from "./charts/PagesTimeline.js";
