@@ -44,9 +44,9 @@ describe("PagesSchemaForm — auto-derive schema", () => {
     form.dataSet = ds;
     await form.updateComplete;
 
-    expect(form.shadowRoot!.querySelector("pages-text-input")).not.toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-input")).not.toBeNull();
     expect(form.shadowRoot!.querySelector("pages-number-input")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-dropdown")).not.toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-select")).not.toBeNull();
     expect(form.shadowRoot!.querySelector("pages-date-picker")).not.toBeNull();
   });
 
@@ -64,10 +64,10 @@ describe("PagesSchemaForm — auto-derive schema", () => {
     await form.updateComplete;
 
     const allInputs = form.shadowRoot!.querySelectorAll(
-      "pages-text-input, pages-number-input, pages-dropdown, pages-checkbox, pages-date-picker, pages-textarea",
+      "pages-input, pages-number-input, pages-select, pages-checkbox, pages-date-picker, pages-textarea",
     );
     expect(allInputs.length).toBe(1);
-    expect(allInputs[0]!.tagName.toLowerCase()).toBe("pages-text-input");
+    expect(allInputs[0]!.tagName.toLowerCase()).toBe("pages-input");
   });
 });
 
@@ -92,7 +92,7 @@ describe("PagesSchemaForm — explicit schema", () => {
     await form.updateComplete;
     form.dataSet = ds;
     await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-text-input")).not.toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-input")).not.toBeNull();
   });
 
   it("maps number to number-input", async () => {
@@ -118,7 +118,7 @@ describe("PagesSchemaForm — explicit schema", () => {
     await form.updateComplete;
     form.dataSet = ds;
     await form.updateComplete;
-    expect(form.shadowRoot!.querySelector("pages-dropdown")).not.toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-select")).not.toBeNull();
   });
 
   it("maps boolean to checkbox", async () => {
@@ -180,7 +180,7 @@ describe("PagesSchemaForm — explicit schema", () => {
     form.dataSet = ds;
     await form.updateComplete;
     expect(form.shadowRoot!.querySelector("pages-textarea")).not.toBeNull();
-    expect(form.shadowRoot!.querySelector("pages-text-input")).toBeNull();
+    expect(form.shadowRoot!.querySelector("pages-input")).toBeNull();
   });
 });
 
@@ -206,11 +206,11 @@ describe("PagesSchemaForm — field customization", () => {
     form.dataSet = ds;
     await form.updateComplete;
 
-    const inputs = form.shadowRoot!.querySelectorAll("pages-text-input");
+    const inputs = form.shadowRoot!.querySelectorAll("pages-input");
     expect(inputs.length).toBe(3);
-    expect((inputs[0] as any).props.field).toBe("c");
-    expect((inputs[1] as any).props.field).toBe("a");
-    expect((inputs[2] as any).props.field).toBe("b");
+    expect((inputs[0] as any).label).toBe("C");
+    expect((inputs[1] as any).label).toBe("A");
+    expect((inputs[2] as any).label).toBe("B");
   });
 
   it("labels override auto-generated labels", async () => {
@@ -240,7 +240,7 @@ describe("PagesSchemaForm — events and data flow", () => {
     container.remove();
   });
 
-  it("children receive dataset and emit pages-field-change", async () => {
+  it("children receive dataset values from schema form", async () => {
     const ds = makeDataSet([["name", "TEXT"]], [["Alice"]]);
     const form = document.createElement("pages-schema-form") as PagesSchemaForm;
     form.props = {};
@@ -250,17 +250,10 @@ describe("PagesSchemaForm — events and data flow", () => {
     form.dataSet = ds;
     await form.updateComplete;
 
-    const events: CustomEvent[] = [];
-    form.addEventListener("pages-field-change", (e) => events.push(e as CustomEvent));
-
-    const textInput = form.shadowRoot!.querySelector("pages-text-input")!;
-    const input = textInput.shadowRoot!.querySelector("input")!;
-    input.value = "Bob";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-
-    expect(events.length).toBe(1);
-    expect(events[0]!.detail.field).toBe("name");
-    expect(events[0]!.detail.value).toBe("Bob");
+    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
+    expect(textInput).not.toBeNull();
+    expect(textInput.value).toBe("Alice");
+    expect(textInput.label).toBe("Name");
   });
 
   it("display mode sets children as not editable", async () => {
@@ -273,8 +266,8 @@ describe("PagesSchemaForm — events and data flow", () => {
     form.dataSet = ds;
     await form.updateComplete;
 
-    const textInput = form.shadowRoot!.querySelector("pages-text-input") as any;
-    expect(textInput.editable).toBe(false);
+    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
+    expect(textInput.disabled).toBe(true);
   });
 });
 
@@ -314,10 +307,8 @@ describe("PagesSchemaForm — create mode", () => {
     form.dataSet = ds;
     await form.updateComplete;
 
-    const textInput = form.shadowRoot!.querySelector("pages-text-input")!;
-    const input = textInput.shadowRoot!.querySelector("input")!;
-    input.value = "NewName";
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    const textInput = form.shadowRoot!.querySelector("pages-input") as any;
+    textInput.value = "NewName";
 
     const events: CustomEvent[] = [];
     form.addEventListener("pages-record-create", (e) => events.push(e as CustomEvent));

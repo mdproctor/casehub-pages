@@ -23,6 +23,7 @@
   "dependencies": {
     "@casehubio/pages-component": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-ui-components": "workspace:*",
     "echarts": "^5.6.0",
     "lit": "^3.3.3"
   },
