@@ -24,12 +24,12 @@ describe("form input desugaring", () => {
     expect(item.component.props).toEqual({ field: "age", min: 0 });
   });
 
-  it("desugars dropdown with fixed options", () => {
+  it("desugars select with fixed options", () => {
     const root = parsePage({
-      pages: [{ components: [{ dropdown: { field: "dept", options: { values: ["A", "B"] } } }] }],
+      pages: [{ components: [{ select: { field: "dept", options: { values: ["A", "B"] } } }] }],
     });
     const item = root.slots!.content![0]!.items![0]!;
-    expect(item.component.type).toBe("dropdown");
+    expect(item.component.type).toBe("select");
   });
 
   it("desugars checkbox shorthand", () => {
