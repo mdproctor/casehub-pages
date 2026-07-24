@@ -390,7 +390,7 @@ export class PagesGroupedView extends PagesElement<GroupedViewProps> {
         .columnRenderers=${this._columnRenderers}
         .rowStyle=${props.rowStyle}
         .getRowAccent=${this._getRowAccent}
-        .selection=${props.selection}
+        .selection=${props.selection ?? "none"}
         .getRowKey=${this._getRowKey}
         .getRowDetail=${this._getRowDetail}
         .getRowClass=${this._getRowClass}

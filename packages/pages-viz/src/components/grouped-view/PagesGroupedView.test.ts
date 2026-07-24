@@ -269,6 +269,29 @@ describe("PagesGroupedView", () => {
     });
   });
 
+  describe("selection defaults", () => {
+    it("does not throw when selection is undefined (no getRowKey)", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await element.updateComplete;
+      const tables = element.shadowRoot!.querySelectorAll("pages-data-table");
+      for (const table of tables) {
+        expect((table as MockTable).selection).toBe("none");
+      }
+    });
+
+    it("toggle works when selection is undefined", async () => {
+      element.props = makeProps({ preset: "sectioned" });
+      element.dataSet = makeGroupedDataset();
+      await element.updateComplete;
+      const toggle = element.shadowRoot!.querySelector("[data-group='Critical']") as HTMLButtonElement;
+      expect(toggle.getAttribute("aria-expanded")).toBe("true");
+      toggle.click();
+      await element.updateComplete;
+      expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    });
+  });
+
   describe("property forwarding", () => {
     it("forwards columnRenderers to all tables", async () => {
       const renderers = new Map([["name" as ColumnId, (() => "custom") as unknown as ColumnRenderer]]);
