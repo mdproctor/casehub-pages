@@ -13,9 +13,16 @@ import { cellToRaw } from "../base/cell-extract.js";
 
 import "./PagesNumberInput.js";
 import "./PagesDatePicker.js";
+import "@casehubio/pages-ui-components/input";
+import "@casehubio/pages-ui-components/select";
+import "@casehubio/pages-ui-components/checkbox";
+import "@casehubio/pages-ui-components/textarea";
+
+const STANDALONE_TYPES = new Set(["input", "select", "checkbox", "textarea"]);
 
 export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: DataSetLookup }> {
   private _children: Map<string, HTMLElement> = new Map();
+  private _childTypes: Map<string, string> = new Map();
   private _resolvedSchema: FieldSchema | null = null;
   private _editable = false;
   private _liveRegion: HTMLElement | null = null;
@@ -67,9 +74,25 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
   get currentValue(): Record<string, unknown> {
     const record: Record<string, unknown> = {};
     for (const [field, child] of this._children) {
-      record[field] = (child as unknown as PagesFormInput<any>).currentValue;
+      const ct = this._childTypes.get(field) ?? "input";
+      record[field] = this.getChildValue(child, ct);
     }
     return record;
+  }
+
+  private getChildValue(child: HTMLElement, componentType: string): unknown {
+    if (STANDALONE_TYPES.has(componentType)) {
+      return componentType === "checkbox" ? (child as any).checked : (child as any).value;
+    }
+    return (child as unknown as PagesFormInput<any>).currentValue;
+  }
+
+  private setChildError(child: HTMLElement, componentType: string, error: string | undefined): void {
+    if (STANDALONE_TYPES.has(componentType)) {
+      (child as any).error = error;
+    } else {
+      (child as unknown as PagesFormInput<any>).errorMessage = error;
+    }
   }
 
   protected override renderContent(
@@ -105,13 +128,49 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
         child = document.createElement(tagName);
         this._children.set(field, child);
       }
+      this._childTypes.set(field, componentType);
 
-      const formInput = child as unknown as PagesFormInput<any>;
-      const childProps = this.buildChildProps(field, fieldSchema, componentType, label, dataset);
-      formInput.props = childProps;
-      formInput.dataSet = dataset;
-      formInput.editable = !isDisplay && this._editable;
-      formInput.required = requiredSet.has(field);
+      const isStandalone = STANDALONE_TYPES.has(componentType);
+      if (isStandalone) {
+        (child as any).label = label;
+        (child as any).disabled = isDisplay || !this._editable;
+        (child as any).required = requiredSet.has(field);
+        if (dataset.rows.length > 0) {
+          const row = dataset.rows[0]!;
+          try {
+            const cell = row.cell(field as ColumnId);
+            if (cell.type !== "NULL") {
+              if (componentType === "checkbox") {
+                const v = typeof cell.value === "boolean" ? cell.value : String(cell.value).toLowerCase() === "true";
+                (child as any).checked = v;
+              } else {
+                (child as any).value = String(cell.value);
+              }
+            }
+          } catch { /* column not found */ }
+        }
+        if (componentType === "select") {
+          const childProps = this.buildChildProps(field, fieldSchema, componentType, label, dataset);
+          const opts = childProps.options as { values?: string[] } | undefined;
+          if (opts?.values) {
+            (child as any).options = opts.values.map((v: string) => ({ value: v, label: v }));
+          }
+        }
+        if (componentType === "input") {
+          if (fieldSchema.maxLength !== undefined) (child as any).maxlength = fieldSchema.maxLength;
+          if (fieldSchema.placeholder !== undefined) (child as any).placeholder = fieldSchema.placeholder;
+        }
+        if (componentType === "textarea") {
+          if (fieldSchema.maxLength !== undefined) (child as any).maxlength = fieldSchema.maxLength;
+        }
+      } else {
+        const formInput = child as unknown as PagesFormInput<any>;
+        const childProps = this.buildChildProps(field, fieldSchema, componentType, label, dataset);
+        formInput.props = childProps;
+        formInput.dataSet = dataset;
+        formInput.editable = !isDisplay && this._editable;
+        formInput.required = requiredSet.has(field);
+      }
     }
 
     for (const key of staleKeys) {
@@ -192,16 +251,16 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
       const fieldSchema = this._resolvedSchema.properties[field];
       if (!fieldSchema) continue;
 
-      const formInput = child as unknown as PagesFormInput<any>;
-      const value = formInput.currentValue;
+      const ct = this._childTypes.get(field) ?? "input";
+      const value = this.getChildValue(child, ct);
       record[field] = value;
 
       const error = validateField(fieldSchema, value, requiredSet.has(field));
       if (error) {
         errors[field] = error;
-        formInput.errorMessage = error;
+        this.setChildError(child, ct, error);
       } else {
-        formInput.errorMessage = undefined;
+        this.setChildError(child, ct, undefined);
       }
     }
 
