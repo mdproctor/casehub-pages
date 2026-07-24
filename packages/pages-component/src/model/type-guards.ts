@@ -93,9 +93,9 @@ export interface ComponentTypeRegistry {
   // Plugin component
   "iframe-plugin": IframePluginProps;
   // Form input components
-  "text-input": TextInputProps;
+  input: TextInputProps;
   "number-input": NumberInputProps;
-  dropdown: DropdownProps;
+  select: DropdownProps;
   checkbox: CheckboxProps;
   "date-picker": DatePickerProps;
   textarea: TextareaProps;
@@ -267,16 +267,16 @@ export function isIframePlugin(c: Component): c is TypedComponent<"iframe-plugin
 }
 
 // Form input components
-export function isTextInput(c: Component): c is TypedComponent<"text-input"> {
-  return c.type === "text-input";
+export function isInput(c: Component): c is TypedComponent<"input"> {
+  return c.type === "input";
 }
 
 export function isNumberInput(c: Component): c is TypedComponent<"number-input"> {
   return c.type === "number-input";
 }
 
-export function isDropdown(c: Component): c is TypedComponent<"dropdown"> {
-  return c.type === "dropdown";
+export function isSelect(c: Component): c is TypedComponent<"select"> {
+  return c.type === "select";
 }
 
 export function isCheckbox(c: Component): c is TypedComponent<"checkbox"> {

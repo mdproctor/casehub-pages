@@ -16,9 +16,9 @@ import {
   isSelector,
   isMap,
   isIframePlugin,
-  isTextInput,
+  isInput,
   isNumberInput,
-  isDropdown,
+  isSelect,
   isCheckbox,
   isDatePicker,
   isTextarea,
@@ -210,9 +210,9 @@ describe("type guards - plugin components", () => {
 });
 
 describe("type guards - form input components", () => {
-  it("isTextInput matches text-input type", () => {
-    const c: Component = { type: "text-input", props: { field: "name" } };
-    expect(isTextInput(c)).toBe(true);
+  it("isInput matches input type", () => {
+    const c: Component = { type: "input", props: { field: "name" } };
+    expect(isInput(c)).toBe(true);
     expect(isFormInput(c)).toBe(true);
   });
 
@@ -222,12 +222,12 @@ describe("type guards - form input components", () => {
     expect(isFormInput(c)).toBe(true);
   });
 
-  it("isDropdown matches dropdown type", () => {
+  it("isSelect matches select type", () => {
     const c: Component = {
-      type: "dropdown",
+      type: "select",
       props: { field: "dept", options: { values: ["Sales", "Engineering"] } },
     };
-    expect(isDropdown(c)).toBe(true);
+    expect(isSelect(c)).toBe(true);
     expect(isFormInput(c)).toBe(true);
   });
 
@@ -259,9 +259,9 @@ describe("type guards - form input components", () => {
 
   it("isFormInput returns true for all form input types", () => {
     const formTypes: Component[] = [
-      { type: "text-input", props: { field: "f1" } },
+      { type: "input", props: { field: "f1" } },
       { type: "number-input", props: { field: "f2" } },
-      { type: "dropdown", props: { field: "f3", options: { values: [] } } },
+      { type: "select", props: { field: "f3", options: { values: [] } } },
       { type: "checkbox", props: { field: "f4" } },
       { type: "date-picker", props: { field: "f5" } },
       { type: "textarea", props: { field: "f6" } },
