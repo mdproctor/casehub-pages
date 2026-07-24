@@ -165,16 +165,14 @@ export function createActivationCallback(
       el.appendChild(formEl);
 
       if (field) {
-        formEl.addEventListener("input", (e: Event) => {
-          const target = e.target as HTMLInputElement;
+        formEl.addEventListener("input", () => {
           formEl.dispatchEvent(new CustomEvent("pages-field-change", {
             bubbles: true, composed: true,
-            detail: { field, value: target.value, committed: false },
+            detail: { field, value: (formEl as any).value, committed: false },
           }));
         });
-        formEl.addEventListener("change", (e: Event) => {
-          const target = e.target as HTMLInputElement;
-          const val = component.type === "checkbox" ? (target as any).checked : target.value;
+        formEl.addEventListener("change", () => {
+          const val = component.type === "checkbox" ? (formEl as any).checked : (formEl as any).value;
           formEl.dispatchEvent(new CustomEvent("pages-field-change", {
             bubbles: true, composed: true,
             detail: { field, value: val, committed: true },

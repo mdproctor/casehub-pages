@@ -49,6 +49,7 @@ export class PagesSelect extends LitElement {
           aria-invalid=${ifDefined(this.error ? 'true' : undefined)}
           @change=${(e: Event) => {
             this.value = (e.target as HTMLSelectElement).value;
+            this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
           }}
         >
           ${this.options.map((opt) => html`
