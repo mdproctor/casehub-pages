@@ -1631,6 +1631,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@casehubio/pages-ui-components@workspace:packages/pages-ui-components":
+  version: 0.0.0-use.local
+  resolution: "@casehubio/pages-ui-components@workspace:packages/pages-ui-components"
+  dependencies:
+    "@casehubio/pages-tsconfig": "workspace:*"
+    "@casehubio/pages-ui-tokens": "workspace:*"
+    jsdom: "npm:^26.0.0"
+    lit: "npm:^3.3.3"
+    rimraf: "npm:^6.1.0"
+    typescript: "npm:^5.6.0"
+    vitest: "npm:^3.2.1"
+  languageName: unknown
+  linkType: soft
+
 "@casehubio/pages-ui-tokens@workspace:*, @casehubio/pages-ui-tokens@workspace:packages/pages-ui-tokens":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-ui-tokens@workspace:packages/pages-ui-tokens"
