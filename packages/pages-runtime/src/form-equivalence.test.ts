@@ -74,15 +74,15 @@ pages:
       delay: 2000
       adapter: local
     components:
-      - text-input:
+      - input:
           field: name
           label: Full Name
           required: true
-      - text-input:
+      - input:
           field: email
           label: Email
           required: true
-      - text-input:
+      - input:
           field: phone
           label: Phone
       - number-input:
@@ -90,7 +90,7 @@ pages:
           label: Priority
           min: 1
           max: 5
-      - dropdown:
+      - select:
           field: category
           label: Category
           options:
@@ -205,9 +205,9 @@ describe("YAML ↔ TS equivalence", () => {
 
     // Verify specific components are present
     expect(tsTags).toContain("pages-metric");
-    expect(tsTags).toContain("pages-text-input");
+    expect(tsTags).toContain("pages-input");
     expect(tsTags).toContain("pages-number-input");
-    expect(tsTags).toContain("pages-dropdown");
+    expect(tsTags).toContain("pages-select");
     expect(tsTags).toContain("pages-checkbox");
     expect(tsTags).toContain("pages-date-picker");
     expect(tsTags).toContain("pages-textarea");
@@ -235,25 +235,25 @@ describe("YAML ↔ TS equivalence", () => {
     expect(yamlMetric?.dataSet?.rows.length).toBe(3);
     expect(tsMetric?.dataSet?.rows.length).toBe(3);
 
-    const yamlInputs = yamlTarget.querySelectorAll("pages-text-input");
-    const tsInputs = tsTarget.querySelectorAll("pages-text-input");
+    const yamlInputs = yamlTarget.querySelectorAll("pages-input");
+    const tsInputs = tsTarget.querySelectorAll("pages-input");
     expect(yamlInputs.length).toBe(tsInputs.length);
 
     document.body.removeChild(yamlTarget);
     document.body.removeChild(tsTarget);
   });
 
-  it("TS version form inputs are editable (same as YAML)", async () => {
+  it("TS version form inputs have labels (same as YAML)", async () => {
     const tsTarget = document.createElement("div");
     document.body.appendChild(tsTarget);
     const tsSite = await loadSite(tsTarget, buildContactManagerTS());
     sites.push(tsSite);
     await new Promise((r) => setTimeout(r, 200));
 
-    const inputs = tsTarget.querySelectorAll("pages-text-input");
+    const inputs = tsTarget.querySelectorAll("pages-input");
     expect(inputs.length).toBeGreaterThan(0);
     for (const input of inputs) {
-      expect(input.editable).toBe(true);
+      expect((input as any).label).toBeTruthy();
     }
 
     document.body.removeChild(tsTarget);

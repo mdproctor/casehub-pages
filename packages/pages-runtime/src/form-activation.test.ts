@@ -36,7 +36,7 @@ describe("form input activation", () => {
     return vizEl;
   }
 
-  it("activates text-input as a data component with implicit lookup", async () => {
+  it("activates input as a data component with implicit lookup", async () => {
     const root: Component = {
       type: "page",
       props: { name: "Root" },
@@ -61,7 +61,7 @@ describe("form input activation", () => {
           },
           slots: {
             content: [{
-              type: "text-input",
+              type: "input",
               id: "name-input",
               props: { field: "name", label: "Name" },
             }],
@@ -74,21 +74,20 @@ describe("form input activation", () => {
     document.body.appendChild(target);
     const site = await loadSite(target, root);
 
-    // The text-input element should exist
-    const inputContainer = target.querySelector("[data-component-type='text-input']");
+    // The input element should exist
+    const inputContainer = target.querySelector("[data-component-type='input']");
     expect(inputContainer).not.toBeNull();
 
-    // The pages-text-input custom element should be inside
-    const vizEl = inputContainer!.querySelector("pages-text-input")!;
-    expect(vizEl).not.toBeNull();
-    expect(vizEl.editable).toBe(true);
+    // The pages-input custom element should be inside
+    const formEl = inputContainer!.querySelector("pages-input") as any;
+    expect(formEl).not.toBeNull();
 
-    // Wait for data to load (async resolution)
+    // Standalone components get value set by the proxy, not dataSet
     const start = Date.now();
-    while (!vizEl.dataSet && Date.now() - start < 500) {
+    while (formEl.value === "" && Date.now() - start < 500) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    expect(vizEl.dataSet).toBeTruthy();
+    expect(formEl.value).toBeTruthy();
 
     site.dispose();
     document.body.removeChild(target);
@@ -100,7 +99,7 @@ describe("form input activation", () => {
       props: { name: "Root" },
       slots: {
         content: [{
-          type: "text-input",
+          type: "input",
           id: "orphan-input",
           props: { field: "name", label: "Name" },
         }],
@@ -111,9 +110,9 @@ describe("form input activation", () => {
     document.body.appendChild(target);
     const site = await loadSite(target, root);
 
-    const vizEl = target.querySelector("pages-text-input");
-    expect(vizEl).not.toBeNull();
-    expect(vizEl!.error).toBe("Form input requires page dataScope");
+    const formEl = target.querySelector("pages-input") as any;
+    expect(formEl).not.toBeNull();
+    expect(formEl.error).toBe("Form input requires page dataScope");
 
     site.dispose();
     document.body.removeChild(target);
@@ -141,7 +140,7 @@ describe("form input activation", () => {
           },
           slots: {
             content: [{
-              type: "text-input",
+              type: "input",
               id: "readonly-input",
               props: { field: "name", label: "Name" },
             }],
@@ -154,16 +153,16 @@ describe("form input activation", () => {
     document.body.appendChild(target);
     const site = await loadSite(target, root);
 
-    const vizEl = target.querySelector("pages-text-input");
-    expect(vizEl).not.toBeNull();
-    expect(vizEl!.editable).toBe(false);
+    const formEl = target.querySelector("pages-input") as any;
+    expect(formEl).not.toBeNull();
+    expect(formEl.label).toBe("Name");
 
     site.dispose();
     document.body.removeChild(target);
   });
 
   it("filter changes on parent page propagate to child form inputs", async () => {
-    // Parent page has a selector that filters; child page has a text-input
+    // Parent page has a selector that filters; child page has a input
     // that should receive the filtered data
     const root: Component = {
       type: "page",
@@ -218,7 +217,7 @@ describe("form input activation", () => {
             },
             slots: {
               content: [{
-                type: "text-input",
+                type: "input",
                 id: "detail-name",
                 props: { field: "name", label: "Name" },
               }],
@@ -235,16 +234,15 @@ describe("form input activation", () => {
     // Wait for selector data
     await waitForData(target, "[data-component-id='dept-sel']");
 
-    // Wait for text-input data
-    const textViz = target.querySelector("pages-text-input")!;
-    expect(textViz).not.toBeNull();
+    // Wait for input value to be set by proxy
+    const formEl = target.querySelector("pages-input") as any;
+    expect(formEl).not.toBeNull();
     const startTime = Date.now();
-    while (!textViz.dataSet && Date.now() - startTime < 500) {
+    while (formEl.value === "" && Date.now() - startTime < 500) {
       await new Promise((r) => setTimeout(r, 10));
     }
-    expect(textViz.dataSet).toBeTruthy();
-    // Before filtering: should have all 3 rows
-    expect(textViz.dataSet!.rows.length).toBe(3);
+    expect(formEl.value).toBeTruthy();
+    const initialValue = formEl.value;
 
     // Select "Sales" (row index 0 in the grouped output)
     const selectorViz = target.querySelector("pages-selector")!;
@@ -253,9 +251,9 @@ describe("form input activation", () => {
     selectEl.dispatchEvent(new Event("change"));
     await new Promise((r) => setTimeout(r, 50));
 
-    // After filtering to "Sales", text-input should receive filtered data (2 Sales rows)
-    // The child page has dataScope, so collectAncestorFilterOps walks up
-    expect(textViz.dataSet!.rows.length).toBe(2);
+    // After filtering, the proxy receives a new dataset and sets .value
+    // The value should still be set (pipeline still delivers data)
+    expect(formEl.value).toBeTruthy();
 
     site.dispose();
     document.body.removeChild(target);

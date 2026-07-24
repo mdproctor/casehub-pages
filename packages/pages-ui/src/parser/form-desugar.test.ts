@@ -4,14 +4,14 @@ import { getProps } from "@casehubio/pages-component";
 import type { DataScopeRef } from "@casehubio/pages-component";
 
 describe("form input desugaring", () => {
-  it("desugars text-input shorthand", () => {
+  it("desugars input shorthand", () => {
     const root = parsePage({
-      pages: [{ components: [{ "text-input": { field: "name", label: "Name" } }] }],
+      pages: [{ components: [{ "input": { field: "name", label: "Name" } }] }],
     });
     const content = root.slots!.content!;
     const grid = content[0]!;
     const item = grid.items![0]!;
-    expect(item.component.type).toBe("text-input");
+    expect(item.component.type).toBe("input");
     expect(item.component.props).toEqual({ field: "name", label: "Name" });
   });
 
@@ -140,7 +140,7 @@ describe("dataScope and save parsing", () => {
         name: "Form",
         dataScope: { dataset: "emps", idColumn: "id" },
         save: { trigger: "auto", delay: 2000, adapter: "local" },
-        components: [{ "text-input": { field: "name" } }],
+        components: [{ "input": { field: "name" } }],
       }],
     });
     const page = root.slots!.content![0]!;
@@ -155,7 +155,7 @@ describe("dataScope and save parsing", () => {
         name: "Form",
         dataScope: { dataset: "emps", idColumn: "id" },
         save: { trigger: "auto", adapter: "rest", rest: { method: "PATCH" } },
-        components: [{ "text-input": { field: "name" } }],
+        components: [{ "input": { field: "name" } }],
       }],
     });
     const page = root.slots!.content![0]!;
@@ -172,7 +172,7 @@ describe("dataScope and save parsing", () => {
           idColumn: "id",
           filter: { employee_id: { $ref: "employees.id" } },
         },
-        components: [{ "text-input": { field: "name" } }],
+        components: [{ "input": { field: "name" } }],
       }],
     });
     const page = root.slots!.content![0]!;

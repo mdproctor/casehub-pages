@@ -409,17 +409,21 @@ export function iframePlugin(props: IframePluginProps): TypedComponent<"iframe-p
 }
 
 // Form input builders
-export function textInput(props: TextInputProps): Component {
-  return freeze({ type: "text-input" as const, props: freeze({ ...props }) });
+export function input(props: TextInputProps): Component {
+  return freeze({ type: "input" as const, props: freeze({ ...props }) });
 }
+
+export const textInput = input;
 
 export function numberInput(props: NumberInputProps): Component {
   return freeze({ type: "number-input" as const, props: freeze({ ...props }) });
 }
 
-export function dropdown(props: DropdownProps): Component {
-  return freeze({ type: "dropdown" as const, props: freeze({ ...props }) });
+export function select(props: DropdownProps): Component {
+  return freeze({ type: "select" as const, props: freeze({ ...props }) });
 }
+
+export const dropdown = select;
 
 export function checkbox(props: CheckboxProps): Component {
   return freeze({ type: "checkbox" as const, props: freeze({ ...props }) });

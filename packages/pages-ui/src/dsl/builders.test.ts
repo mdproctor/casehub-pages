@@ -582,9 +582,9 @@ describe("builders", () => {
   });
 
   describe("form input builders", () => {
-    it("textInput creates text-input component", () => {
+    it("textInput creates input component", () => {
       const c = textInput({ field: "name", label: "Name" });
-      expect(c.type).toBe("text-input");
+      expect(c.type).toBe("input");
       expect(c.props).toEqual({ field: "name", label: "Name" });
       expect(Object.isFrozen(c)).toBe(true);
     });
@@ -595,9 +595,9 @@ describe("builders", () => {
       expect(c.props).toEqual({ field: "age", min: 0, max: 120 });
     });
 
-    it("dropdown creates dropdown component with fixed options", () => {
+    it("dropdown creates select component with fixed options", () => {
       const c = dropdown({ field: "dept", options: { values: ["A", "B"] } });
-      expect(c.type).toBe("dropdown");
+      expect(c.type).toBe("select");
       expect(c.props).toEqual({ field: "dept", options: { values: ["A", "B"] } });
     });
 

@@ -122,7 +122,7 @@ describe("schema-form runtime integration", () => {
     );
 
     const children = schemaForm!.shadowRoot!.querySelectorAll(
-      "pages-text-input, pages-number-input, pages-dropdown",
+      "pages-input, pages-number-input, pages-select",
     );
     expect(children.length).toBeGreaterThan(0);
   });
@@ -145,7 +145,7 @@ describe("schema-form runtime integration", () => {
       "schema-form receives data",
     );
 
-    const textInput = schemaForm!.shadowRoot!.querySelector("pages-text-input");
+    const textInput = schemaForm!.shadowRoot!.querySelector("pages-input");
     expect(textInput).not.toBeNull();
 
     textInput!.dispatchEvent(
@@ -166,7 +166,7 @@ describe("schema-form runtime integration", () => {
       "schema-form receives data",
     );
 
-    expect(schemaForm!.shadowRoot!.querySelector("pages-text-input")).not.toBeNull();
+    expect(schemaForm!.shadowRoot!.querySelector("pages-input")).not.toBeNull();
     expect(schemaForm!.shadowRoot!.querySelector("pages-number-input")).not.toBeNull();
     expect(schemaForm!.shadowRoot!.querySelector("pages-checkbox")).not.toBeNull();
   });

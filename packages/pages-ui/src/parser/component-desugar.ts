@@ -22,7 +22,7 @@ const DATA_COMPONENT_TYPES = new Set([
   "data-table", "grid-table", "metric", "meter", "selector", "map",
   "grouped-view", "iframe-plugin",
   "badge", "countdown", "timeline", "graph",
-  "text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea",
+  "input", "number-input", "select", "checkbox", "date-picker", "textarea",
   "schema-form",
   "action-button", "alert",
   "split", "dock-bar", "host-panel",
@@ -87,7 +87,7 @@ export function desugarComponent(raw: Record<string, unknown>, displayerDefaults
   }
 
   // Form input shorthands
-  const FORM_INPUT_TYPES = ["text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea"] as const;
+  const FORM_INPUT_TYPES = ["input", "number-input", "select", "checkbox", "date-picker", "textarea"] as const;
   for (const formType of FORM_INPUT_TYPES) {
     if (formType in raw) {
       const props = raw[formType] as Record<string, unknown>;
