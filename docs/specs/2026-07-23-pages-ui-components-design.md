@@ -379,10 +379,30 @@ The naming style difference (compound `number-input` vs simple `input`) is
 a phased migration artifact. When standalone equivalents for number-input and
 date-picker are added, their YAML types will be evaluated for simplification.
 
-The `FORM_INPUT_TYPES` set in `activation.ts` updates to the new type names.
-`mapFieldToComponentType()` in `schema-types.ts` updates its return values
-accordingly (`"text-input"` → `"input"`, `"dropdown"` → `"select"`). Issue
-#237 covers propagating the YAML type renames to downstream repos.
+### Type system change set
+
+The renames touch the component type system foundation in `pages-component`,
+not just `pages-runtime`. The full change set:
+
+| Location | Package | Change |
+|----------|---------|--------|
+| `ComponentTypeRegistry` in `type-guards.ts` | pages-component | `"text-input": TextInputProps` → `"input": TextInputProps`, `dropdown: DropdownProps` → `select: DropdownProps` |
+| `isTextInput()` → `isInput()` | pages-component | Type guard renamed, checks `c.type === "input"` |
+| `isDropdown()` → `isSelect()` | pages-component | Type guard renamed, checks `c.type === "select"` |
+| `FORM_INPUT_TYPES` set | pages-ui | Second set in `pages-ui/src/model/type-guards.ts` — update entries |
+| `isFormInput()` | pages-ui | Depends on FORM_INPUT_TYPES — updated transitively |
+| Re-exports in `pages-ui/type-guards.ts` | pages-ui | Re-export `isInput`/`isSelect` instead of old names |
+| `FORM_INPUT_TYPES` set | pages-runtime | Update entries in `activation.ts` |
+| `DATA_COMPONENT_TYPES` set | pages-runtime | Spreads FORM_INPUT_TYPES — updated transitively |
+| `mapFieldToComponentType()` | pages-viz | Returns `"input"` / `"select"` instead of old names |
+| `buildChildProps()` | pages-viz | Conditionals use `componentType === "select"` / `"input"` |
+
+The `ComponentTypeRegistry` change is the root — it redefines `ComponentType`
+(which is `keyof ComponentTypeRegistry`), cascading to every `TypedComponent<T>`,
+every `getProps()` call, and every `isComponentType()` usage. TypeScript will
+surface all stale references as compile errors.
+
+Issue #237 covers propagating the YAML type renames to downstream repos.
 
 ## Activation Layer Changes
 
@@ -519,15 +539,34 @@ If `component.props.refresh?.interval` is set, the activation callback:
 
 ### Disconnect lifecycle
 
-The activation callback uses a `MutationObserver` on the component's
-parent to detect removal:
+The activation callback uses a Lit `ReactiveController` attached to the
+standalone component for cleanup. Since standalone components extend
+`LitElement` (which extends `ReactiveElement`), they support
+`addController()`:
 
-1. When the standalone component is removed from DOM, the observer fires
-2. Clears refresh timers, removes event listeners (`input`, `change`,
-   `keydown`, cascade `pages-field-change`), deletes the registry entry
-3. The observer is registered per-component and cleaned up on removal
+```typescript
+class ActivationCleanupController implements ReactiveController {
+  constructor(private cleanup: () => void) {}
+  hostConnected(): void {}
+  hostDisconnected(): void { this.cleanup(); }
+}
 
-This keeps pipeline cleanup concerns external to the component.
+// In the activation callback:
+const controller = new ActivationCleanupController(() => {
+  clearInterval(refreshTimer);
+  component.removeEventListener("input", inputHandler);
+  component.removeEventListener("change", changeHandler);
+  component.removeEventListener("keydown", keydownHandler);
+  registry.delete(componentId);
+});
+(component as ReactiveElement).addController(controller);
+```
+
+`hostDisconnected()` fires on `disconnectedCallback()`, which fires for
+any DOM removal — direct or ancestor-triggered. This is gap-free for the
+page navigation scenario (ancestor container removed, all descendants
+disconnect). The component doesn't know what the controller does — it
+just hosts it. Pipeline cleanup stays external to the component.
 
 ## PagesSchemaForm Migration
 
@@ -574,6 +613,29 @@ After the extraction, PagesSchemaForm creates a mix of:
 This is a bounded change to PagesSchemaForm — the core schema derivation,
 validation, and submit logic are unchanged.
 
+### Tag name conflict with pages-form package
+
+`packages/pages-form/` contains a separate `PagesSchemaForm` that extends
+`LitElement` directly (not `PagesElement`). It registers the same tag:
+`@customElement('pages-schema-form')`. The pages-viz version uses guarded
+registration: `if (!customElements.get("pages-schema-form"))`. Whichever
+package loads first wins.
+
+The two implementations serve different purposes:
+- **pages-form PagesSchemaForm:** standalone, pipeline-free. Takes `schema`
+  and `data` as direct Lit properties, renders native HTML form elements
+  (no custom element children), fires `pages-form-change` and
+  `pages-form-submit` events. This is the consumer-facing standalone form
+  for apps that want schema-driven forms without the data pipeline.
+- **pages-viz PagesSchemaForm:** data-bound (`extends PagesElement`). Takes
+  schema via dataset, creates custom element children, integrated with the
+  data pipeline via activation layer.
+
+The tag name conflict must be resolved. A follow-up issue tracks this —
+the likely resolution is renaming the pages-viz version's tag (e.g.,
+`pages-data-schema-form`) since it's internal to the pipeline and only
+instantiated by the activation layer.
+
 ## Testing
 
 ### pages-ui-components tests (Vitest)
@@ -602,7 +664,7 @@ Updated to test the new pipeline-external wiring:
 - Error propagation from pipeline to component `.error`
 - DataSetOptions resolution and cascade filtering for `<pages-select>`
 - Refresh timer lifecycle (start, tick, clear on disconnect)
-- MutationObserver cleanup on component removal
+- ReactiveController cleanup on component removal (direct and ancestor)
 
 ## Follow-up Issues
 
@@ -610,11 +672,16 @@ Updated to test the new pipeline-external wiring:
 - **#237** — Propagate tag renames to downstream repos (devtown, Claudony, etc.)
 - **NEW** — PagesSchemaForm: complete migration to standalone child adapter
 - **NEW** — PagesActionButton: delegate rendering to `<pages-button>`
+- **NEW** — Resolve `pages-schema-form` tag name conflict between pages-form
+  and pages-viz packages (rename pages-viz version's tag)
 - **NEW** — Update web-component-strategy protocol: add standalone UI
   component category (extends LitElement directly, no PagesElement/
   PagesContentElement data machinery)
 - **NEW** — Platform-wide migration from primitive step tokens to semantic
   role tokens (when semantic-map pipeline is ready)
+- **NEW** — Update ARC42STORIES: add `@casehubio/pages-ui-components` to §5
+  Building Block View, update §6 Runtime View data request dispatch
+  description, add note to §10 Architectural Decisions
 - Future: standalone `pages-number-input`, `pages-date-picker` equivalents
 - Future: extract chart pipeline adapter (same pattern as form field adapter)
 - Future: extract grid/table pipeline adapter with `TabularData` type
