@@ -529,7 +529,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     .cell {
       padding: var(--pages-space-3, 12px) var(--pages-space-2, 8px);
       font-size: var(--pages-font-size-base, 14px);
-      color: var(--pages-text-secondary, #404040);
+      color: var(--pages-text-muted, #404040);
+      background: var(--pages-surface-secondary, #fafafa);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
