@@ -1596,6 +1596,7 @@ __metadata:
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-table": "workspace:*"
     "@casehubio/pages-ui": "workspace:*"
+    "@casehubio/pages-ui-components": "workspace:*"
     "@casehubio/pages-ui-tokens": "workspace:*"
     "@casehubio/pages-viz": "workspace:*"
     "@types/js-yaml": "npm:^4.0.9"
@@ -1631,7 +1632,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-ui-components@workspace:packages/pages-ui-components":
+"@casehubio/pages-ui-components@workspace:*, @casehubio/pages-ui-components@workspace:packages/pages-ui-components":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-ui-components@workspace:packages/pages-ui-components"
   dependencies:
@@ -1680,6 +1681,7 @@ __metadata:
   dependencies:
     "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-ui-components": "workspace:*"
     echarts: "npm:^5.6.0"
     lit: "npm:^3.3.3"
     rimraf: "npm:^6.1.0"
