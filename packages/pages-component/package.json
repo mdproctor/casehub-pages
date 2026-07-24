@@ -20,7 +20,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehubio/pages-data": "workspace:*"
+    "@casehubio/pages-data": "file:../pages-data"
   },
   "devDependencies": {
     "rimraf": "^6.1.0",

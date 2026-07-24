@@ -67,8 +67,8 @@
     "lit": "^3.3.3"
   },
   "devDependencies": {
-    "@casehubio/pages-tsconfig": "workspace:*",
-    "@casehubio/pages-ui-tokens": "workspace:*",
+    "@casehubio/pages-tsconfig": "file:../pages-tsconfig",
+    "@casehubio/pages-ui-tokens": "file:../pages-ui-tokens",
     "jsdom": "^26.0.0",
     "rimraf": "^6.1.0",
     "typescript": "^5.6.0",

@@ -26,7 +26,7 @@
     "test": "jest --silent --verbose --passWithNoTests"
   },
   "dependencies": {
-    "@casehubio/pages-iframe-api": "workspace:*",
+    "@casehubio/pages-iframe-api": "file:../pages-iframe-api",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
@@ -34,7 +34,7 @@
     "@babel/core": "^7.28.6",
     "@babel/preset-env": "^7.28.6",
     "@babel/preset-react": "^7.28.5",
-    "@casehubio/pages-tsconfig": "workspace:*",
+    "@casehubio/pages-tsconfig": "file:../pages-tsconfig",
     "@testing-library/jest-dom": "^6.4.2",
     "@types/jest": "^29.5.12",
     "@types/jest-when": "^3.5.5",

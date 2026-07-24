@@ -20,8 +20,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehubio/pages-component": "workspace:*",
-    "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-component": "file:../pages-component",
+    "@casehubio/pages-data": "file:../pages-data",
     "zod": "^3.23.0"
   },
   "devDependencies": {

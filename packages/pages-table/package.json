@@ -20,13 +20,13 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@casehubio/pages-component": "workspace:*",
-    "@casehubio/pages-data": "workspace:*",
-    "@casehubio/pages-primitives": "workspace:*",
+    "@casehubio/pages-component": "file:../pages-component",
+    "@casehubio/pages-data": "file:../pages-data",
+    "@casehubio/pages-primitives": "file:../pages-primitives",
     "lit": "^3.0.0"
   },
   "devDependencies": {
-    "@casehubio/pages-tsconfig": "workspace:*",
+    "@casehubio/pages-tsconfig": "file:../pages-tsconfig",
     "@open-wc/testing": "^4.0.0",
     "jsdom": "^25.0.0",
     "rimraf": "^6.1.0",
