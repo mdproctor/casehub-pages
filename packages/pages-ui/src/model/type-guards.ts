@@ -40,9 +40,9 @@ export {
   isSelector,
   isMap,
   isIframePlugin,
-  isTextInput,
+  isInput,
   isNumberInput,
-  isDropdown,
+  isSelect,
   isCheckbox,
   isDatePicker,
   isTextarea,
@@ -57,7 +57,7 @@ export function isPage(c: Component): c is TypedComponent<"page"> {
 }
 
 // isFormInput is a pages-ui utility combining multiple guards
-const FORM_INPUT_TYPES = new Set(["text-input", "number-input", "dropdown", "checkbox", "date-picker", "textarea"]);
+const FORM_INPUT_TYPES = new Set(["input", "number-input", "select", "checkbox", "date-picker", "textarea"]);
 
 export function isFormInput(c: Component): boolean {
   return FORM_INPUT_TYPES.has(c.type);
