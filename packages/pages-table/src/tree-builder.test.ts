@@ -323,4 +323,71 @@ describe('tree table (expandable)', () => {
     toggle = el.shadowRoot!.querySelector('.tree-toggle') as HTMLElement;
     expect(toggle.textContent).toContain('▼');
   });
+
+  it('client filter preserves ancestor rows for matching descendants', async () => {
+    el.props = {
+      lookup: { dataSetId: 'test', operations: [] },
+      expandable: { idColumn: idCol, parentColumn: parentIdCol, defaultExpanded: true },
+    };
+    el.dataSet = makeOrgDataSet();
+    (el as any).clientFilter = true;
+    (el as any).filterText = 'Platform';
+    await el.updateComplete;
+
+    const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+    expect(rows.length).toBe(3);
+    expect(rows[0]!.textContent).toContain('Acme Corp');
+    expect(rows[1]!.textContent).toContain('Engineering');
+    expect(rows[2]!.textContent).toContain('Platform');
+  });
+
+  it('ancestor context rows have filter-context class', async () => {
+    el.props = {
+      lookup: { dataSetId: 'test', operations: [] },
+      expandable: { idColumn: idCol, parentColumn: parentIdCol, defaultExpanded: true },
+    };
+    el.dataSet = makeOrgDataSet();
+    (el as any).clientFilter = true;
+    (el as any).filterText = 'Platform';
+    await el.updateComplete;
+
+    const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+    const acmeCell = rows[0]!.querySelector('.cell');
+    const engCell = rows[1]!.querySelector('.cell');
+    const platformCell = rows[2]!.querySelector('.cell');
+    expect(acmeCell!.classList.contains('filter-context')).toBe(true);
+    expect(engCell!.classList.contains('filter-context')).toBe(true);
+    expect(platformCell!.classList.contains('filter-context')).toBe(false);
+  });
+
+  it('filter auto-expands collapsed ancestors to show matches', async () => {
+    el.props = {
+      lookup: { dataSetId: 'test', operations: [] },
+      expandable: { idColumn: idCol, parentColumn: parentIdCol },
+    };
+    el.dataSet = makeOrgDataSet();
+    (el as any).clientFilter = true;
+    (el as any).filterText = 'Design';
+    await el.updateComplete;
+
+    const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+    expect(rows.length).toBe(3);
+    expect(rows[0]!.textContent).toContain('Acme Corp');
+    expect(rows[1]!.textContent).toContain('Product');
+    expect(rows[2]!.textContent).toContain('Design');
+  });
+
+  it('empty filter shows all rows per expand state', async () => {
+    el.props = {
+      lookup: { dataSetId: 'test', operations: [] },
+      expandable: { idColumn: idCol, parentColumn: parentIdCol, defaultExpanded: true },
+    };
+    el.dataSet = makeOrgDataSet();
+    (el as any).clientFilter = true;
+    (el as any).filterText = '';
+    await el.updateComplete;
+
+    const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+    expect(rows.length).toBe(6);
+  });
 });

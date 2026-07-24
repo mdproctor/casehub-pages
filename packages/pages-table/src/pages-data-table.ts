@@ -14,7 +14,7 @@ import { until } from 'lit/directives/until.js';
 import { tableToCsv, downloadCsv, copyToClipboard } from './csv-export.js';
 import { evaluateExpression, createRowContext } from '@casehubio/pages-component';
 import type { RowStyleRule } from '@casehubio/pages-component';
-import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, paginateTreeByRoots, type TreeNode, type ExpandableConfig } from './tree-builder.js';
+import { buildTreeIndex, computeDefaultExpandState, collectVisibleNodes, paginateTreeByRoots, findMatchingNodes, rowMatchesText, type TreeNode, type ExpandableConfig } from './tree-builder.js';
 import { EMPTY_CONTEXT } from '@casehubio/pages-component';
 
 const AUTO_THRESHOLD = 50;
@@ -127,6 +127,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
   private _treeExpandState = new Map<string, boolean>();
   private _treeExpandStateInitialized = false;
   private _treeNodeByRow = new Map<TypedRow, TreeNode>();
+  private _treeFilterContextRows = new Set<TypedRow>();
   private _csvExportEnabled = false;
   private _rowAccentColumns: 'all' | readonly string[] | undefined = undefined;
   private _rowDetailConfig?: { mode?: string; columns?: readonly { id: string; label?: string }[] };
@@ -508,6 +509,10 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
 
     .cell.filter-selected {
       background: var(--pages-accent-5, #d3e3fd);
+    }
+
+    .cell.filter-context {
+      opacity: 0.45;
     }
 
     .cell.pages-row-danger {
@@ -1974,12 +1979,33 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     this._treeMetadata.clear();
+    this._treeFilterContextRows.clear();
     if (this._expandableConfig && this._treeRoots.length > 0) {
-      if (this._usePagination) {
-        const { pageNodes } = paginateTreeByRoots(this._treeRoots, this._treeExpandState, this.currentPage, this.pageSize);
+      const hasTreeFilter = this.clientFilter && this.filterText && this.totalRows === undefined;
+      const matchingIds = hasTreeFilter ? findMatchingNodes(this._treeRoots, this.filterText) : null;
+
+      let effectiveExpandState = this._treeExpandState;
+      if (matchingIds) {
+        effectiveExpandState = new Map(this._treeExpandState);
+        for (const id of matchingIds) {
+          const node = this._treeNodeMap.get(id);
+          if (node && node.children.length > 0) effectiveExpandState.set(id, true);
+        }
+      }
+
+      if (this._usePagination && !matchingIds) {
+        const { pageNodes } = paginateTreeByRoots(this._treeRoots, effectiveExpandState, this.currentPage, this.pageSize);
         return pageNodes.map(n => n.row);
       }
-      const visibleNodes = collectVisibleNodes(this._treeRoots, this._treeExpandState);
+      let visibleNodes = collectVisibleNodes(this._treeRoots, effectiveExpandState);
+      if (matchingIds) {
+        visibleNodes = visibleNodes.filter(n => matchingIds.has(n.id));
+        for (const n of visibleNodes) {
+          if (!rowMatchesText(n, this.filterText)) {
+            this._treeFilterContextRows.add(n.row);
+          }
+        }
+      }
       rows = visibleNodes.map(n => n.row);
     } else if (this.getChildren && this.getRowKey) {
       const treeRows = flattenTree(rows, this.getChildren, this._expandedRowIds, this.getRowKey);
@@ -2503,6 +2529,8 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       ? this._isDetailExpanded(this.getRowKey(row))
       : false;
 
+    const isFilterContext = this._treeFilterContextRows.has(row);
+
     const cellStateClasses = [
       stripe,
       isHovered ? 'hover' : '',
@@ -2510,6 +2538,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       isClickable ? 'clickable' : '',
       isFilterSelected ? 'filter-selected' : '',
       isDetailExpanded ? 'detail-expanded' : '',
+      isFilterContext ? 'filter-context' : '',
       rowStyleClass,
     ].filter(Boolean).join(' ');
 
