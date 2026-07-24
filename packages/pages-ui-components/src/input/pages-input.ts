@@ -55,6 +55,14 @@ export class PagesInput extends LitElement {
           ?disabled=${this.disabled}
           aria-required=${ifDefined(this.required ? 'true' : undefined)}
           aria-invalid=${ifDefined(this.error ? 'true' : undefined)}
+          @input=${(e: Event) => {
+            this.value = (e.target as HTMLInputElement).value;
+            this.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+          }}
+          @change=${(e: Event) => {
+            this.value = (e.target as HTMLInputElement).value;
+            this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+          }}
         />
         ${this.error ? html`<span class="error" role="alert">${this.error}</span>` : nothing}
       </div>

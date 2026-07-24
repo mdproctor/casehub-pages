@@ -44,6 +44,7 @@ export class PagesCheckbox extends LitElement {
             aria-invalid=${ifDefined(this.error ? 'true' : undefined)}
             @change=${(e: Event) => {
               this.checked = (e.target as HTMLInputElement).checked;
+              this.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
             }}
           />
           ${this.label ? html`<label for="cb">${this.label}</label>` : nothing}

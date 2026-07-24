@@ -176,6 +176,7 @@ export class PagesSchemaForm extends PagesElement<SchemaFormProps & { lookup?: D
     for (const key of staleKeys) {
       this._children.get(key)?.remove();
       this._children.delete(key);
+      this._childTypes.delete(key);
     }
 
     return html`
