@@ -282,7 +282,9 @@ async function loadSampleInTarget(samplePath) {
         };
 
         currentSite = await window.casehubPages.loadSite(sampleTarget, yamlText, { baseUrl, fetch: galleryFetch });
-        currentSite.setTheme(galleryThemeMode);
+        const currentTheme = casehubPages.getTheme() || 'default-light';
+        casehubPages.applyTheme(currentTheme, sampleTarget);
+        currentSite.setTheme(currentTheme.endsWith('-dark') ? 'dark' : 'light');
 
         // Execute companion TS/JS script if present
         if (currentSample && currentSample.tsPath) {
@@ -438,8 +440,13 @@ function setupEventListeners() {
         }
     });
 
-    // Propagate theme changes to the loaded site
+    // Propagate theme changes to the loaded site and sample target
     document.documentElement.addEventListener('pages-theme-change', (e) => {
+        if (e.target !== document.documentElement) return;
+        const target = document.getElementById('sample-target');
+        if (target) {
+            casehubPages.applyTheme(e.detail.name, target);
+        }
         if (currentSite) {
             currentSite.setTheme(e.detail.mode);
         }
