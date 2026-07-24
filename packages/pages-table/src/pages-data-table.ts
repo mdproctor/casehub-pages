@@ -397,6 +397,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       flex-direction: column;
       height: 100%;
       min-height: 0;
+      background: var(--pages-surface-secondary, #fafafa);
     }
 
     .header-container {
@@ -432,7 +433,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       border: 2px solid var(--pages-border-strong, #a3a3a3);
       border-radius: 3px;
       cursor: pointer;
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
       position: relative;
     }
 
@@ -480,7 +481,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .cell.row-odd {
-      background: var(--pages-surface-secondary, #fafafa);
+      background: var(--pages-surface-tertiary, #f5f5f5);
     }
 
     .cell.hover {
@@ -551,7 +552,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       justify-content: space-between;
       padding: var(--pages-space-3, 12px) var(--pages-space-4, 16px);
       border-top: 1px solid var(--pages-border-subtle, #e5e5e5);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
     }
 
     .pagination-info {
@@ -571,7 +572,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     .pagination-button {
       padding: var(--pages-space-2, 8px) var(--pages-space-3, 12px);
       border: 1px solid var(--pages-border-default, #d4d4d4);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
       color: var(--pages-text-secondary, #404040);
       font-size: var(--pages-font-size-sm, 12px);
       cursor: pointer;
@@ -580,7 +581,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
 
     .pagination-button:hover:not(:disabled) {
-      background: var(--pages-surface-secondary, #fafafa);
+      background: var(--pages-surface-tertiary, #f5f5f5);
       border-color: var(--pages-border-strong, #a3a3a3);
     }
 
@@ -605,7 +606,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       font-size: var(--pages-font-size-sm, 12px);
       text-align: center;
       color: var(--pages-text-primary, #171717);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
     }
 
     .page-jump-input:focus {
@@ -638,7 +639,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       border-radius: 4px;
       font-size: var(--pages-font-size-sm, 12px);
       color: var(--pages-text-primary, #171717);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
       cursor: pointer;
     }
 
@@ -719,7 +720,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       flex-shrink: 0;
       border-bottom: 1px solid var(--pages-border-subtle, #e5e5e5);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
     }
 
     .filter-go,
@@ -744,7 +745,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     .filter-input {
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       border: 1px solid var(--pages-border-subtle, #e0e0e0);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
       border-radius: 4px;
       font-size: 13px;
       color: var(--pages-text-primary, #171717);
@@ -790,7 +791,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       top: 100%;
       right: 0;
       margin-top: var(--pages-space-1, 4px);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
       border: 1px solid var(--pages-border-default, #d4d4d4);
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -864,7 +865,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
       padding: 4px 8px;
       border: none;
       border-right: 1px solid var(--pages-border-default, #d4d4d4);
-      background: var(--pages-surface-primary, #ffffff);
+      background: var(--pages-surface-secondary, #fafafa);
       color: var(--pages-text-muted, #737373);
       font-size: 11px;
       cursor: pointer;
