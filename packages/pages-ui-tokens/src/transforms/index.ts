@@ -64,7 +64,7 @@ const CASEHUB_DARK_PRESET: PresetConfig = {
   $description: 'CaseHub brand dark theme — Claudony / casehub.org look',
   $extends: 'default-dark',
   pipeline: [
-    { transform: 'oklch-scale', params: { hues: { accent: 215, neutral: 260 }, chroma: 0.30, steps: CASEHUB_STEPS } },
+    { transform: 'oklch-scale', params: { hues: { accent: 215, neutral: [260, 215] }, chroma: 0.30, steps: CASEHUB_STEPS } },
     { transform: 'oklch-scale', params: { ...CASEHUB_BRAND_HUES, steps: CASEHUB_STEPS, chroma: 0.12 } },
     { transform: 'chroma-curve', params: { curve: 'gaussian', neutral: 1.8, accent: 0.52 } },
     { transform: 'semantic-hues', params: { success: 175, warning: 85 } },
