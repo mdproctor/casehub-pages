@@ -1,0 +1,33 @@
+{
+  "name": "@casehubio/graph-work-registry",
+  "version": "0.1.0",
+  "description": "CaseHub Graph Work Registry — marketplace work stencil discovery",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@casehubio/graph-core": "workspace:*",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "rimraf": "^6.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "Apache-2.0"
+}
