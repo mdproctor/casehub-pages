@@ -85,6 +85,7 @@ by the runtime event delegation layer:
 | `pages-refresh-request` | Panel requests data re-fetch from source | Host panels, any component needing fresh data |
 | `pages-deferred-render` | Trigger deferred child rendering | Dock-toggle handler, deferred activation |
 | `pages-dock-rearrange` | Panel dragged to new zone | Dock drag system |
+| `selection-change` | Master row selection for parameterised detail datasets | `PagesDataTable` component |
 
 Do not use these names as `pages-event` topics or as custom event names in
 application code — they will collide with the framework's event delegation.
