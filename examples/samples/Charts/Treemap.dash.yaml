@@ -1,0 +1,74 @@
+datasets:
+  - uuid: departments
+    content: >-
+      [
+        ["Engineering", 450],
+        ["Sales", 280],
+        ["Marketing", 150],
+        ["Support", 120],
+        ["HR", 60],
+        ["Finance", 55],
+        ["Legal", 35],
+        ["Operations", 90],
+        ["Product", 85],
+        ["Design", 45]
+      ]
+    columns:
+      - id: department
+        type: LABEL
+      - id: headcount
+        type: NUMBER
+
+  - uuid: org-tree
+    content: >-
+      [
+        ["Company", 0, ""],
+        ["Engineering", 450, "Company"],
+        ["Frontend", 180, "Engineering"],
+        ["Backend", 200, "Engineering"],
+        ["DevOps", 70, "Engineering"],
+        ["Sales", 280, "Company"],
+        ["Enterprise", 160, "Sales"],
+        ["SMB", 120, "Sales"],
+        ["Operations", 150, "Company"],
+        ["Support", 90, "Operations"],
+        ["IT", 60, "Operations"]
+      ]
+    columns:
+      - id: name
+        type: LABEL
+      - id: headcount
+        type: NUMBER
+      - id: parent
+        type: LABEL
+
+pages:
+  - rows:
+    - columns:
+      - span: 6
+        components:
+          - type: title
+            properties:
+              text: Flat Treemap
+              size: h3
+          - type: treemap-chart
+            properties:
+              title: Department Headcount
+              chart:
+                height: 400
+              lookup:
+                uuid: departments
+      - span: 6
+        components:
+          - type: title
+            properties:
+              text: Hierarchical Treemap
+              size: h3
+          - type: treemap-chart
+            properties:
+              title: Org Structure
+              parentColumn: parent
+              chart:
+                height: 400
+              lookup:
+                uuid: org-tree

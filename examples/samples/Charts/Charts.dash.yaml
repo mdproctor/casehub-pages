@@ -1,7 +1,5 @@
 pages:
 - name: index
-  properties:
-    margin: 10px
   components:
   - type: tabs
     properties:

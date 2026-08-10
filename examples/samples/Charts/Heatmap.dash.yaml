@@ -1,0 +1,52 @@
+datasets:
+  - uuid: correlation
+    content: >-
+      [
+        ["Revenue", "Costs", 0.92],
+        ["Revenue", "Marketing", 0.78],
+        ["Revenue", "Headcount", 0.65],
+        ["Revenue", "Satisfaction", 0.45],
+        ["Costs", "Revenue", 0.92],
+        ["Costs", "Marketing", 0.85],
+        ["Costs", "Headcount", 0.71],
+        ["Costs", "Satisfaction", -0.12],
+        ["Marketing", "Revenue", 0.78],
+        ["Marketing", "Costs", 0.85],
+        ["Marketing", "Headcount", 0.33],
+        ["Marketing", "Satisfaction", 0.67],
+        ["Headcount", "Revenue", 0.65],
+        ["Headcount", "Costs", 0.71],
+        ["Headcount", "Marketing", 0.33],
+        ["Headcount", "Satisfaction", 0.28],
+        ["Satisfaction", "Revenue", 0.45],
+        ["Satisfaction", "Costs", -0.12],
+        ["Satisfaction", "Marketing", 0.67],
+        ["Satisfaction", "Headcount", 0.28]
+      ]
+    columns:
+      - id: metric_x
+        type: LABEL
+      - id: metric_y
+        type: LABEL
+      - id: correlation
+        type: NUMBER
+
+pages:
+  - components:
+      - type: title
+        properties:
+          text: Correlation Heatmap
+          size: h3
+      - type: heatmap-chart
+        properties:
+          title: Metric Correlations
+          minColor: "#313695"
+          maxColor: "#a50026"
+          chart:
+            height: 400
+          lookup:
+            uuid: correlation
+      - type: data-table
+        properties:
+          lookup:
+            uuid: correlation

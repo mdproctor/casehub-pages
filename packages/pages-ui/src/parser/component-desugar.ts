@@ -21,7 +21,8 @@ const NAV_TYPE_MAP: Record<string, string> = {
 
 const DATA_COMPONENT_TYPES = new Set([
   "bar-chart", "line-chart", "area-chart", "pie-chart",
-  "scatter-chart", "bubble-chart", "timeseries",
+  "scatter-chart", "bubble-chart", "heatmap-chart", "treemap-chart",
+  "density-heatmap", "timeseries",
   "data-table", "grid-table", "metric", "meter", "selector", "map",
   "grouped-view", "iframe-plugin",
   "badge", "countdown", "timeline", "graph",

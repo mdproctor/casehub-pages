@@ -43,6 +43,9 @@ export { PagesDatePicker } from "./form-inputs/PagesDatePicker.js";
 // New charts
 export { PagesTimeline } from "./charts/PagesTimeline.js";
 export { PagesGraph } from "./charts/PagesGraph.js";
+export { PagesHeatmapChart } from "./charts/PagesHeatmapChart.js";
+export { PagesTreemapChart } from "./charts/PagesTreemapChart.js";
+export { PagesDensityHeatmap } from "./charts/PagesDensityHeatmap.js";
 
 // New components
 export { PagesActionButton } from "./components/PagesActionButton.js";
