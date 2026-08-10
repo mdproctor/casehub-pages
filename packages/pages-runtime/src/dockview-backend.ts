@@ -1,4 +1,4 @@
-import type { FloatingFrameBackend } from "./floating-frame-backend.js";
+import type { FloatingFrameBackend, BackendAttachOptions, FrameButtonConfig } from "./floating-frame-backend.js";
 import type { FrameLayout, FrameTabConfig, ContentFactory, ContentFactoryResult } from "@casehubio/pages-component";
 
 const CSS_MARKER = "data-pages-dockview-css";
@@ -19,7 +19,7 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
         if (cssText) {
           const style = document.createElement("style");
           style.setAttribute(CSS_MARKER, "");
-          style.textContent = cssText;
+          style.textContent = cssText + "\n.dv-resize-container > .dv-groupview .dv-tabs-container { pointer-events: none; }\n.dv-resize-container > .dv-groupview .dv-tabs-container .dv-tab { pointer-events: auto; }\n";
           document.head.appendChild(style);
         }
       } catch {
@@ -38,6 +38,9 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
   const frameResizeCallbacks: Array<(key: string, size: { width: number; height: number }) => void> = [];
   const tabDragOutCallbacks: Array<(fromFrame: string, tabKey: string, position: { x: number; y: number }) => void> = [];
   const tabReorderCallbacks: Array<(frameKey: string, tabKeys: string[]) => void> = [];
+  const frameCloseCallbacks: Array<(key: string) => void> = [];
+  const framePinCallbacks: Array<(key: string) => void> = [];
+  let storedExtraButtons: readonly FrameButtonConfig[] = [];
   const frameGroups = new Map<string, any>();
   const contentResults = new Map<string, ContentFactoryResult>();
 
@@ -75,26 +78,39 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
     closeDot.style.cssText = "width:12px;height:12px;border-radius:50%;background:#ff5f57;cursor:pointer;display:inline-block;margin:0 4px;";
     closeDot.addEventListener("pointerdown", (e) => e.stopPropagation());
     closeDot.addEventListener("click", () => {
-      container?.dispatchEvent(new CustomEvent("pages-frame-close", { bubbles: true, composed: true, detail: { frameKey } }));
+      for (const cb of frameCloseCallbacks) cb(frameKey);
     });
 
     const pinBtn = document.createElement("span");
     pinBtn.className = "frame-pin-btn";
     pinBtn.textContent = "\u{1F4CC}";
     pinBtn.style.cssText = "cursor:pointer;margin:0 4px;font-size:12px;opacity:0.5;";
+    pinBtn.setAttribute("aria-pressed", "false");
     pinBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
     pinBtn.addEventListener("click", () => {
-      container?.dispatchEvent(new CustomEvent("pages-frame-pin", { bubbles: true, composed: true, detail: { frameKey } }));
+      for (const cb of framePinCallbacks) cb(frameKey);
     });
 
     titlebar.prepend(pinBtn);
     titlebar.prepend(closeDot);
+
+    for (const btnConfig of storedExtraButtons) {
+      const btn = document.createElement("span");
+      btn.className = `frame-extra-btn${btnConfig.className ? ` ${btnConfig.className}` : ""}`;
+      btn.textContent = btnConfig.icon;
+      btn.title = btnConfig.title;
+      btn.style.cssText = "cursor:pointer;margin:0 4px;font-size:12px;";
+      btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+      btn.addEventListener("click", () => btnConfig.onClick(frameKey));
+      titlebar.appendChild(btn);
+    }
   }
 
   const backend: FloatingFrameBackend = {
-    attach(el: HTMLElement, contentFactory: ContentFactory) {
+    attach(el: HTMLElement, contentFactory: ContentFactory, options?: BackendAttachOptions) {
       container = el;
       factory = contentFactory;
+      storedExtraButtons = options?.extraButtons ?? [];
       dockview = new DockviewComponent(el, {
         createComponent: () => {
           const wrapper = document.createElement("div");
@@ -229,6 +245,44 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
     onFrameResize(cb) { frameResizeCallbacks.push(cb); },
     onTabDragOut(cb) { tabDragOutCallbacks.push(cb); },
     onTabReorder(cb) { tabReorderCallbacks.push(cb); },
+    onFrameClose(cb) { frameCloseCallbacks.push(cb); },
+    onFramePin(cb) { framePinCallbacks.push(cb); },
+
+    updatePinState(key: string, pinned: boolean) {
+      const group = frameGroups.get(key);
+      if (!group) return;
+
+      if ("locked" in group) {
+        group.locked = pinned;
+      }
+
+      const el = group.element ?? group.header?.element?.closest?.(".dv-groupview");
+      if (!el) return;
+
+      const titlebar = el.querySelector(".dv-floating-titlebar") as HTMLElement | null;
+      if (titlebar) {
+        const existingHandler = (titlebar as any).__pinDragLock as ((e: PointerEvent) => void) | undefined;
+        if (pinned && !existingHandler) {
+          const handler = (e: PointerEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.closest(".frame-close-dot, .frame-pin-btn, .frame-extra-btn")) return;
+            e.stopPropagation();
+          };
+          titlebar.addEventListener("pointerdown", handler, { capture: true });
+          (titlebar as any).__pinDragLock = handler;
+        } else if (!pinned && existingHandler) {
+          titlebar.removeEventListener("pointerdown", existingHandler, { capture: true });
+          delete (titlebar as any).__pinDragLock;
+        }
+      }
+
+      const pinBtn = el.querySelector(".frame-pin-btn") as HTMLElement | null;
+      if (pinBtn) {
+        pinBtn.style.opacity = pinned ? "1" : "0.5";
+        pinBtn.setAttribute("aria-pressed", String(pinned));
+        pinBtn.classList.toggle("frame-pin-active", pinned);
+      }
+    },
 
     dispose() {
       if (dockview) { dockview.dispose(); dockview = null; }
@@ -238,6 +292,8 @@ export async function createDockviewBackend(): Promise<FloatingFrameBackend> {
       frameResizeCallbacks.length = 0;
       tabDragOutCallbacks.length = 0;
       tabReorderCallbacks.length = 0;
+      frameCloseCallbacks.length = 0;
+      framePinCallbacks.length = 0;
     },
 
     unwrap() { return dockview ?? null; },
@@ -259,6 +315,8 @@ function createErrorBackend(): FloatingFrameBackend {
     renderFrame() {}, removeFrame() {}, updatePosition() {}, updateSize() {}, bringToFront() {},
     addTab() {}, removeTab() {}, setActiveTab() {},
     onFrameMove() {}, onFrameResize() {}, onTabDragOut() {}, onTabReorder() {},
+    onFrameClose() {}, onFramePin() {},
+    updatePinState() {},
     dispose() {},
     unwrap() { return null; },
   };

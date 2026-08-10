@@ -11,6 +11,8 @@ function mockBackend(): FloatingFrameBackend {
     updatePosition: vi.fn(), updateSize: vi.fn(), bringToFront: vi.fn(),
     addTab: vi.fn(), removeTab: vi.fn(), setActiveTab: vi.fn(),
     onFrameMove: vi.fn(), onFrameResize: vi.fn(), onTabDragOut: vi.fn(), onTabReorder: vi.fn(),
+    onFrameClose: vi.fn(), onFramePin: vi.fn(),
+    updatePinState: vi.fn(),
     dispose: vi.fn(), unwrap: vi.fn(() => null),
   };
 }
@@ -212,6 +214,48 @@ describe("FloatingFrameEngine", () => {
       const backend2 = mockBackend();
       createFloatingFrameEngine(backend2, captured);
       expect(backend2.renderFrame).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("position/size sync", () => {
+    it("updatePosition updates frame position without backend call", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      (backend.updatePosition as ReturnType<typeof vi.fn>).mockClear();
+      engine.updatePosition("f1", { x: 200, y: 300 });
+      expect(engine.frames.get("f1")!.position).toEqual({ x: 200, y: 300 });
+      expect(backend.updatePosition).not.toHaveBeenCalled();
+    });
+
+    it("updateSize updates frame size without backend call", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      (backend.updateSize as ReturnType<typeof vi.fn>).mockClear();
+      engine.updateSize("f1", { width: 600, height: 500 });
+      expect(engine.frames.get("f1")!.size).toEqual({ width: 600, height: 500 });
+      expect(backend.updateSize).not.toHaveBeenCalled();
+    });
+
+    it("updatePosition on unknown key is a no-op", () => {
+      engine.updatePosition("unknown", { x: 0, y: 0 });
+      expect(engine.frames.size).toBe(0);
+    });
+
+    it("updateSize on unknown key is a no-op", () => {
+      engine.updateSize("unknown", { width: 0, height: 0 });
+      expect(engine.frames.size).toBe(0);
+    });
+
+    it("captureLayout reflects updated position after updatePosition", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.updatePosition("f1", { x: 999, y: 888 });
+      const saved = engine.captureLayout();
+      expect(saved[0]!.position).toEqual({ x: 999, y: 888 });
+    });
+
+    it("captureLayout reflects updated size after updateSize", () => {
+      engine.createFrame(makeFrameConfig("f1"));
+      engine.updateSize("f1", { width: 777, height: 666 });
+      const saved = engine.captureLayout();
+      expect(saved[0]!.size).toEqual({ width: 777, height: 666 });
     });
   });
 

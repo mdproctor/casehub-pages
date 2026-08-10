@@ -962,44 +962,16 @@ export async function loadSite(
     scheduleLayoutSave();
   }), { signal: abortController.signal });
 
-  // --- Floating workspace frame events ---
+  // --- Floating workspace frame events (layout save only — wire function handles state) ---
 
-  target.addEventListener("pages-frame-close", ((e: Event) => {
-    const { frameKey } = (e as CustomEvent<{ frameKey: string }>).detail;
-    if (floatingWorkspaceRef.engine) {
-      floatingWorkspaceRef.engine.removeFrame(frameKey);
+  for (const eventName of [
+    "pages-frame-close", "pages-frame-pin", "pages-frame-move",
+    "pages-frame-resize", "pages-tab-drag-out", "pages-tab-reorder",
+  ] as const) {
+    target.addEventListener(eventName, () => {
       scheduleLayoutSave();
-    }
-  }), { signal: abortController.signal });
-
-  target.addEventListener("pages-frame-pin", ((e: Event) => {
-    const { frameKey } = (e as CustomEvent<{ frameKey: string }>).detail;
-    if (floatingWorkspaceRef.engine) {
-      floatingWorkspaceRef.engine.togglePin(frameKey);
-      scheduleLayoutSave();
-    }
-  }), { signal: abortController.signal });
-
-  target.addEventListener("pages-frame-move", (() => {
-    scheduleLayoutSave();
-  }), { signal: abortController.signal });
-
-  target.addEventListener("pages-frame-resize", (() => {
-    scheduleLayoutSave();
-  }), { signal: abortController.signal });
-
-  target.addEventListener("pages-tab-drag-out", ((e: Event) => {
-    const { tabKey, fromFrame, position } = (e as CustomEvent<{ tabKey: string; fromFrame: string; position: { x: number; y: number } }>).detail;
-    if (floatingWorkspaceRef.engine) {
-      const newKey = `frame-${String(Date.now())}-${Math.random().toString(36).slice(2, 6)}`;
-      floatingWorkspaceRef.engine.createFrame({ key: newKey, tabs: [], position, size: { width: 400, height: 300 } });
-      floatingWorkspaceRef.engine.moveTab(fromFrame, tabKey, newKey);
-      if (floatingWorkspaceRef.engine.frames.get(fromFrame)?.tabs.length === 0) {
-        floatingWorkspaceRef.engine.removeFrame(fromFrame);
-      }
-      scheduleLayoutSave();
-    }
-  }), { signal: abortController.signal });
+    }, { signal: abortController.signal });
+  }
 
   // --- Zone rearrangement ---
 

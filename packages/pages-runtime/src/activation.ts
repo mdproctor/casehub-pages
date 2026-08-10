@@ -32,8 +32,8 @@ import type {ZoneLayoutEngine} from "./zone-layout-engine.js";
 import {attachDockDrag} from "./dock-drag.js";
 import type {FloatingWorkspaceProps, ContentFactory, FrameLayout, FrameConfig} from "@casehubio/pages-component";
 import type {FloatingFrameEngine} from "./floating-frame-engine.js";
-import {createFloatingFrameEngine} from "./floating-frame-engine.js";
 import {createDockviewBackend} from "./dockview-backend.js";
+import {wireFloatingWorkspace} from "./wire-floating-workspace.js";
 import "@casehubio/pages-ui-components/input";
 import "@casehubio/pages-ui-components/select";
 import "@casehubio/pages-ui-components/textarea";
@@ -705,43 +705,18 @@ export function createActivationCallback(
         };
 
         backend.attach(overlayContainer, defaultFactory);
-        const engine = createFloatingFrameEngine(backend, wsRef?.stash ?? undefined);
+        const handle = wireFloatingWorkspace(backend, overlayContainer, wsRef?.stash ?? undefined);
 
         if (wsRef) {
-          wsRef.engine = engine;
+          wsRef.engine = handle.engine;
           wsRef.stash = undefined;
         }
 
         if (props.frames && !wsRef?.stash) {
           for (const frameConfig of props.frames) {
-            engine.createFrame(frameConfig);
+            handle.engine.createFrame(frameConfig);
           }
         }
-
-        backend.onFrameMove((key, pos) => {
-          el.dispatchEvent(new CustomEvent("pages-frame-move", {
-            bubbles: true, composed: true,
-            detail: { frameKey: key, position: pos },
-          }));
-        });
-        backend.onFrameResize((key, size) => {
-          el.dispatchEvent(new CustomEvent("pages-frame-resize", {
-            bubbles: true, composed: true,
-            detail: { frameKey: key, size },
-          }));
-        });
-        backend.onTabDragOut((fromFrame, tabKey, position) => {
-          el.dispatchEvent(new CustomEvent("pages-tab-drag-out", {
-            bubbles: true, composed: true,
-            detail: { tabKey, fromFrame, position },
-          }));
-        });
-        backend.onTabReorder((frameKey, tabKeys) => {
-          el.dispatchEvent(new CustomEvent("pages-tab-reorder", {
-            bubbles: true, composed: true,
-            detail: { frameKey, tabKeys },
-          }));
-        });
       }).catch((err: unknown) => {
         console.error("Failed to initialize floating workspace backend:", err);
       });

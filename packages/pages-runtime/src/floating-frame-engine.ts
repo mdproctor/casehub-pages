@@ -19,6 +19,8 @@ export interface FloatingFrameEngine {
   setActiveTab(frameKey: string, tabKey: string): void;
   bringToFront(key: string): void;
   togglePin(key: string): void;
+  updatePosition(key: string, pos: { x: number; y: number }): void;
+  updateSize(key: string, size: { width: number; height: number }): void;
   focusDirection(direction: "up" | "down" | "left" | "right"): string | null;
   applyOrganiser(preset: Preset, canvasSize?: { width: number; height: number }): void;
   captureLayout(): readonly FrameLayout[];
@@ -147,6 +149,20 @@ export function createFloatingFrameEngine(
       frames.set(key, updated);
       frames = zBringToFront(frames, key);
       backend.bringToFront(key);
+    },
+
+    updatePosition(key: string, pos: { x: number; y: number }) {
+      assertAlive();
+      const frame = frames.get(key);
+      if (!frame) return;
+      frames.set(key, { key: frame.key, order: frame.order, position: pos, size: frame.size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: frame.hidden, tabs: frame.tabs, activeTabKey: frame.activeTabKey });
+    },
+
+    updateSize(key: string, size: { width: number; height: number }) {
+      assertAlive();
+      const frame = frames.get(key);
+      if (!frame) return;
+      frames.set(key, { key: frame.key, order: frame.order, position: frame.position, size, zIndex: frame.zIndex, pinned: frame.pinned, hidden: frame.hidden, tabs: frame.tabs, activeTabKey: frame.activeTabKey });
     },
 
     focusDirection(direction) {
