@@ -676,6 +676,70 @@ describe("ContextManager", () => {
       element.remove();
     });
   });
+
+  describe("updateSelection", () => {
+    it("sets selection for a dataset", () => {
+      const row = { id: 42, name: "Event A" };
+      manager.updateSelection("adverseEvents", row);
+
+      const ctx = manager.getContext();
+      expect(ctx.selection["adverseEvents"]).toEqual({ id: 42, name: "Event A" });
+    });
+
+    it("clears selection when row is null", () => {
+      manager.updateSelection("adverseEvents", { id: 42 });
+      manager.updateSelection("adverseEvents", null);
+
+      const ctx = manager.getContext();
+      expect(ctx.selection["adverseEvents"]).toBeUndefined();
+    });
+
+    it("supports multiple independent selections", () => {
+      manager.updateSelection("adverseEvents", { id: 1 });
+      manager.updateSelection("deviations", { id: 2 });
+
+      const ctx = manager.getContext();
+      expect(ctx.selection["adverseEvents"]).toEqual({ id: 1 });
+      expect(ctx.selection["deviations"]).toEqual({ id: 2 });
+    });
+
+    it("triggers evaluateAll for registered consumers", () => {
+      const apply = vi.fn();
+      const element = document.createElement("div");
+      document.body.appendChild(element);
+
+      const consumer: ContextConsumer = {
+        element,
+        templates: new Map([
+          [
+            "test",
+            {
+              template: "ID: #{selection.adverseEvents.id}",
+              escapeMode: "none" as const,
+              lastResolved: "",
+              apply,
+            },
+          ],
+        ]),
+        suspended: false,
+      };
+
+      manager.registerConsumer(consumer);
+      manager.updateSelection("adverseEvents", { id: 42 });
+
+      expect(apply).toHaveBeenCalledWith("ID: 42");
+      element.remove();
+    });
+
+    it("clears all selections via clearAllSelections", () => {
+      manager.updateSelection("adverseEvents", { id: 1 });
+      manager.updateSelection("deviations", { id: 2 });
+      manager.clearAllSelections();
+
+      const ctx = manager.getContext();
+      expect(ctx.selection).toEqual({});
+    });
+  });
 });
 
 // Helper to create a TypedRow

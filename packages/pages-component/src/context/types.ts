@@ -4,6 +4,7 @@ export interface RuntimeContext {
   readonly page: { readonly name: string; readonly path: string };
   readonly params: Record<string, string>;
   readonly row?: Record<string, unknown>;
+  readonly selection: Readonly<Record<string, Record<string, unknown>>>;
 }
 
 export interface DataSetSnapshot {
@@ -19,4 +20,5 @@ export const EMPTY_CONTEXT: RuntimeContext = {
   datasets: {},
   page: { name: "", path: "" },
   params: {},
+  selection: {},
 };
