@@ -35,6 +35,9 @@ import type {
   MeterProps,
   SelectorProps,
   MapProps,
+  HeatmapChartProps,
+  TreemapChartProps,
+  DensityHeatmapProps,
   IframePluginProps,
   GroupedViewProps,
 } from "./displayer-types.js";
@@ -83,6 +86,9 @@ export interface ComponentTypeRegistry {
   "scatter-chart": ScatterChartProps;
   "bubble-chart": BubbleChartProps;
   timeseries: TimeseriesProps;
+  "heatmap-chart": HeatmapChartProps;
+  "treemap-chart": TreemapChartProps;
+  "density-heatmap": DensityHeatmapProps;
   // Data components
   "data-table": DataTableProps;
   "grid-table": GridTableProps;
@@ -235,6 +241,18 @@ export function isBubbleChart(c: Component): c is TypedComponent<"bubble-chart">
 
 export function isTimeseries(c: Component): c is TypedComponent<"timeseries"> {
   return c.type === "timeseries";
+}
+
+export function isHeatmapChart(c: Component): c is TypedComponent<"heatmap-chart"> {
+  return c.type === "heatmap-chart";
+}
+
+export function isTreemapChart(c: Component): c is TypedComponent<"treemap-chart"> {
+  return c.type === "treemap-chart";
+}
+
+export function isDensityHeatmap(c: Component): c is TypedComponent<"density-heatmap"> {
+  return c.type === "density-heatmap";
 }
 
 // Data components

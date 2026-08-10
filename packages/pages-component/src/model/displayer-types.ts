@@ -171,6 +171,27 @@ export interface TimelineProps extends DataComponentCommon, ChartSettings {
   readonly categoryColumn?: ColumnId;
 }
 
+export interface HeatmapChartProps extends DataComponentCommon, ChartSettings {
+  readonly minColor?: string;
+  readonly maxColor?: string;
+}
+
+export interface TreemapChartProps extends DataComponentCommon, ChartSettings {
+  readonly parentColumn?: ColumnId;
+  readonly colorColumn?: ColumnId;
+}
+
+export interface DensityHeatmapProps extends DataComponentCommon {
+  readonly xColumn?: ColumnId;
+  readonly yColumn?: ColumnId;
+  readonly valueColumn?: ColumnId;
+  readonly gradient?: readonly { readonly offset: number; readonly color: string }[];
+  readonly radius?: number;
+  readonly aggregation?: "max" | "sum" | "mean" | "count";
+  readonly showTooltip?: boolean;
+  readonly showLegend?: boolean;
+}
+
 export interface GraphProps extends DataComponentCommon, ChartSettings {
   readonly layout?: "force" | "circular" | "none";
   readonly sourceColumn?: ColumnId;

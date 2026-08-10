@@ -34,6 +34,9 @@ const TYPE_MAP: Record<string, string> = {
   "GROUPED-VIEW": "grouped-view",
   "DATA-TABLE": "data-table",
   "GRID-TABLE": "grid-table",
+  "HEATMAP-CHART": "heatmap-chart",
+  "TREEMAP-CHART": "treemap-chart",
+  "DENSITY-HEATMAP": "density-heatmap",
 };
 
 /**

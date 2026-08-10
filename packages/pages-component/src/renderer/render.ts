@@ -96,7 +96,8 @@ function renderNode(
   if (component.items && component.items.length > 0) {
     el.style.display = "grid";
     el.style.gridTemplateColumns = "repeat(12, 1fr)";
-    el.style.gridAutoRows = "minmax(min-content, 1fr)";
+    el.style.gridAutoRows = "min-content";
+    el.style.alignContent = "start";
     el.style.gap = "var(--pages-space-3, 12px)";
     for (const item of component.items) {
       renderNode(el, item.component, id, item.placement.x, item.placement.y, permissions, doc, onNode);

@@ -221,7 +221,7 @@ describe("applyChartSettings", () => {
 
     const result = applyChartSettings(option, props);
 
-    expect(result.grid).toEqual({ right: 30 });
+    expect(result.grid).toEqual({ right: 30, top: 10 });
   });
 
   it("applies margin bottom", () => {
@@ -230,7 +230,7 @@ describe("applyChartSettings", () => {
 
     const result = applyChartSettings(option, props);
 
-    expect(result.grid).toEqual({ bottom: 40 });
+    expect(result.grid).toEqual({ bottom: 40, top: 10 });
   });
 
   it("applies margin left", () => {
@@ -239,7 +239,7 @@ describe("applyChartSettings", () => {
 
     const result = applyChartSettings(option, props);
 
-    expect(result.grid).toEqual({ left: 50 });
+    expect(result.grid).toEqual({ left: 50, top: 10 });
   });
 
   it("applies all margins", () => {
@@ -260,13 +260,23 @@ describe("applyChartSettings", () => {
     expect(result.dataZoom).toEqual([{ type: "inside" }, { type: "slider" }]);
   });
 
-  it("does not modify option when no settings provided", () => {
+  it("sets compact grid.top when no title or explicit margin.top", () => {
     const option = {};
     const props = {};
 
     const result = applyChartSettings(option, props);
 
-    expect(result).toEqual({});
+    expect(result).toEqual({ grid: { top: 10 } });
+  });
+
+  it("does not override grid.top when title is set", () => {
+    const option = {};
+    const props = { title: "My Chart" };
+
+    const result = applyChartSettings(option, props);
+
+    expect(result.grid).toBeUndefined();
+    expect(result.title).toEqual({ text: "My Chart" });
   });
 
   it("applies multiple settings combined", () => {

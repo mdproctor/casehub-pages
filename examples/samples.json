@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 69,
+  "totalSamples": 72,
   "categories": [
     {
       "category": "Charts",
@@ -19,10 +19,22 @@
           "file": "Decal Pattern.dash.yaml"
         },
         {
+          "name": "Density Heatmap",
+          "path": "Charts/Density Heatmap.dash.yaml",
+          "category": "Charts",
+          "file": "Density Heatmap.dash.yaml"
+        },
+        {
           "name": "ECharts Custom",
           "path": "Charts/ECharts Custom.dash.yaml",
           "category": "Charts",
           "file": "ECharts Custom.dash.yaml"
+        },
+        {
+          "name": "Heatmap",
+          "path": "Charts/Heatmap.dash.yaml",
+          "category": "Charts",
+          "file": "Heatmap.dash.yaml"
         },
         {
           "name": "Histogram",
@@ -41,6 +53,12 @@
           "path": "Charts/TimeSeries.dash.yaml",
           "category": "Charts",
           "file": "TimeSeries.dash.yaml"
+        },
+        {
+          "name": "Treemap",
+          "path": "Charts/Treemap.dash.yaml",
+          "category": "Charts",
+          "file": "Treemap.dash.yaml"
         }
       ]
     },

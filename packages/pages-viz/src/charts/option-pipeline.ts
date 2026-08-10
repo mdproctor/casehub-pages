@@ -170,6 +170,15 @@ export function applyChartSettings(
     }
   }
 
+  // Compact grid.top when no internal title and no explicit margin.top
+  if (withAxes && props.title === undefined && props.margin?.top === undefined) {
+    const grid: Record<string, unknown> = { ...((option.grid as Record<string, unknown> | undefined) ?? {}) };
+    if (grid.top === undefined) {
+      grid.top = 10;
+      option.grid = grid;
+    }
+  }
+
   // Zoom
   if (props.zoom === true) {
     option.dataZoom = [{ type: "inside" }, { type: "slider" }];

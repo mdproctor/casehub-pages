@@ -1748,6 +1748,7 @@ __metadata:
     "@casehubio/pages-component": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-ui-components": "workspace:*"
+    "@drdreo/heatmap": "npm:^1.4.1"
     echarts: "npm:^5.6.0"
     lit: "npm:^3.3.3"
     rimraf: "npm:^6.1.0"
@@ -1843,6 +1844,13 @@ __metadata:
   version: 0.6.3
   resolution: "@discoveryjs/json-ext@npm:0.6.3"
   checksum: 10c0/778a9f9d5c3696da3c1f9fa4186613db95a1090abbfb6c2601430645c0d0158cd5e4ba4f32c05904e2dd2747d57710f6aab22bd2f8aa3c4e8feab9b247c65d85
+  languageName: node
+  linkType: hard
+
+"@drdreo/heatmap@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "@drdreo/heatmap@npm:1.4.1"
+  checksum: 10c0/775b7c99d4dceb1c19b73681d23c4d669d930d92080d585d613ef777ef4972cfb32daeb83d59a7ed95d19d27847909cc0c7dfb018d60dec1d29fc4faa26dd419
   languageName: node
   linkType: hard
 
