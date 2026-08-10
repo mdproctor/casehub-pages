@@ -14,6 +14,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("plain text", ctx, "none")).toBe("plain text");
     });
@@ -24,6 +25,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: { name: "Alice" },
+        selection: {},
       };
       expect(resolveTemplate("Hello #{params.name}", ctx, "none")).toBe(
         "Hello Alice"
@@ -36,6 +38,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{filter.ward}", ctx, "none")).toBe("ICU");
     });
@@ -46,6 +49,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{filter.ward}", ctx, "none")).toBe("");
     });
@@ -62,6 +66,7 @@ describe("template-parser", () => {
         },
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(
         resolveTemplate("#{datasets.patients.first.name}", ctx, "none")
@@ -79,6 +84,7 @@ describe("template-parser", () => {
         },
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{datasets.patients.rowCount}", ctx, "none")).toBe(
         "25"
@@ -91,6 +97,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{filter.missing}", ctx, "none")).toBe("");
     });
@@ -101,6 +108,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{filter.a} and #{filter.b}", ctx, "none")).toBe(
         "A and B"
@@ -113,6 +121,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{filter.name}", ctx, "html")).toBe(
         "&lt;script&gt;alert(&#39;XSS&#39;)&lt;/script&gt;"
@@ -125,6 +134,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: { text: "*bold* <tag>" },
+        selection: {},
       };
       expect(resolveTemplate("#{params.text}", ctx, "markdown")).toBe(
         "\\*bold\\* &lt;tag&gt;"
@@ -137,6 +147,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: { query: "hello world" },
+        selection: {},
       };
       expect(resolveTemplate("#{params.query}", ctx, "url")).toBe(
         "hello%20world"
@@ -149,6 +160,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{filter.html}", ctx, "none")).toBe(
         "<b>test</b>"
@@ -161,6 +173,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "Dashboard", path: "/dashboards/icu" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{page.name}", ctx, "none")).toBe("Dashboard");
       expect(resolveTemplate("#{page.path}", ctx, "none")).toBe(
@@ -175,6 +188,7 @@ describe("template-parser", () => {
         page: { name: "test", path: "/test" },
         params: {},
         row: { status: "Critical", score: 95 },
+        selection: {},
       };
       expect(resolveTemplate("#{row.status}", ctx, "none")).toBe("Critical");
       expect(resolveTemplate("#{row.score}", ctx, "none")).toBe("95");
@@ -192,6 +206,7 @@ describe("template-parser", () => {
         },
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(resolveTemplate("#{datasets.data.first.value}", ctx, "none")).toBe(
         ""
@@ -219,6 +234,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(allTemplateVarsResolved("#{filter.a} and #{filter.b}", ctx)).toBe(
         true
@@ -231,6 +247,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(allTemplateVarsResolved("#{filter.a} and #{filter.b}", ctx)).toBe(
         false
@@ -243,6 +260,7 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(allTemplateVarsResolved("#{filter.a} and #{filter.b}", ctx)).toBe(
         false
@@ -255,8 +273,60 @@ describe("template-parser", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       expect(allTemplateVarsResolved("plain text", ctx)).toBe(true);
+    });
+  });
+
+  describe("selection template resolution", () => {
+    it("resolves selection field path", () => {
+      const ctx: RuntimeContext = {
+        filter: {},
+        datasets: {},
+        page: { name: "test", path: "/test" },
+        params: {},
+        selection: {
+          adverseEvents: { id: 42, grade: "Grade 3" },
+        },
+      };
+      expect(resolveTemplate("#{selection.adverseEvents.id}", ctx, "none")).toBe("42");
+      expect(resolveTemplate("#{selection.adverseEvents.grade}", ctx, "none")).toBe("Grade 3");
+    });
+
+    it("resolves to empty string when no selection exists", () => {
+      const ctx: RuntimeContext = {
+        filter: {},
+        datasets: {},
+        page: { name: "test", path: "/test" },
+        params: {},
+        selection: {},
+      };
+      expect(resolveTemplate("#{selection.adverseEvents.id}", ctx, "none")).toBe("");
+    });
+
+    it("allTemplateVarsResolved returns false when selection is missing", () => {
+      const ctx: RuntimeContext = {
+        filter: {},
+        datasets: {},
+        page: { name: "test", path: "/test" },
+        params: {},
+        selection: {},
+      };
+      expect(allTemplateVarsResolved("#{selection.adverseEvents.id}", ctx)).toBe(false);
+    });
+
+    it("allTemplateVarsResolved returns true when selection exists", () => {
+      const ctx: RuntimeContext = {
+        filter: {},
+        datasets: {},
+        page: { name: "test", path: "/test" },
+        params: {},
+        selection: {
+          adverseEvents: { id: 42 },
+        },
+      };
+      expect(allTemplateVarsResolved("#{selection.adverseEvents.id}", ctx)).toBe(true);
     });
   });
 });

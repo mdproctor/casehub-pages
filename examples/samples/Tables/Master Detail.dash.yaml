@@ -1,0 +1,150 @@
+datasets:
+  - uuid: events
+    content: >-
+      [
+        ["AE-001", "Alice Johnson", "Nausea", "Grade 1", "2026-01-15", "Mild", "Resolved", "Associated with first infusion cycle. Symptoms subsided within 24 hours without intervention."],
+        ["AE-002", "Bob Smith", "Neutropenia", "Grade 3", "2026-02-03", "Severe", "Ongoing", "Absolute neutrophil count dropped below 1.0. Dose reduction applied, monitoring weekly with CBC."],
+        ["AE-003", "Charlie Brown", "Fatigue", "Grade 2", "2026-01-28", "Moderate", "Resolved", "Persisted for 5 days post-infusion. Improved after supportive care and reduced activity."],
+        ["AE-004", "Diana Ross", "Rash", "Grade 1", "2026-03-10", "Mild", "Resolved", "Maculopapular rash on trunk. Topical corticosteroid prescribed, resolved in 3 days."],
+        ["AE-005", "Eve Wilson", "Thrombocytopenia", "Grade 4", "2026-02-20", "Life-threatening", "Ongoing", "Platelet count 18k. Transfusion required, treatment paused pending haematology review."],
+        ["AE-006", "Frank Miller", "Diarrhea", "Grade 2", "2026-03-05", "Moderate", "Resolved", "4-6 episodes daily for 3 days. Managed with loperamide and oral rehydration."],
+        ["AE-007", "Grace Lee", "Headache", "Grade 1", "2026-01-22", "Mild", "Resolved", "Onset 2 hours post-infusion. Self-limiting, no intervention required."],
+        ["AE-008", "Henry Davis", "Anemia", "Grade 3", "2026-02-14", "Severe", "Ongoing", "Hemoglobin 7.2 g/dL. Erythropoietin started, iron studies pending."]
+      ]
+    columns:
+      - id: id
+        type: TEXT
+      - id: patient
+        type: TEXT
+      - id: event
+        type: TEXT
+      - id: grade
+        type: LABEL
+      - id: onset
+        type: TEXT
+      - id: severity
+        type: LABEL
+      - id: outcome
+        type: LABEL
+      - id: notes
+        type: TEXT
+
+pages:
+  - name: Master Detail
+    components:
+      - type: title
+        properties:
+          text: "Master–Detail Selection"
+          size: h2
+
+      - markdown: |
+          Select a row in the table to see its full record in the detail
+          panel below. This demonstrates the **selection context bridge** —
+          a new runtime feature that connects table row selection to
+          dependent data and UI.
+
+          **How it works:** When you click a row, the table's
+          `selection-change` event is captured by the runtime and written
+          into `RuntimeContext.selection`, keyed by dataset ID. Any
+          component using `#{selection.<dataset>.<field>}` templates
+          re-evaluates automatically — including `visibleWhen` conditions
+          and parameterised dataset URLs.
+
+          **Why it matters:** This enables master-detail patterns where
+          the detail view fetches from a *different API endpoint* based on
+          the selected row — e.g. selecting an adverse event could trigger
+          `/api/ae/#{selection.events.id}/grade-history` to fetch grade
+          history from the server. No custom components or hardcoded IDs
+          required.
+
+      - type: data-table
+        properties:
+          lookup:
+            uuid: events
+          sortable: true
+          columns:
+            - id: id
+              name: ID
+            - id: patient
+              name: Patient
+            - id: event
+              name: Event
+            - id: grade
+              name: Grade
+            - id: severity
+              name: Severity
+            - id: outcome
+              name: Outcome
+
+      - html: |
+          <div style="
+            margin-top: 24px;
+            border: 1px solid var(--pages-neutral-6, #3a4a5c);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--pages-neutral-2, #1a2332);
+          ">
+            <div style="
+              padding: 16px 24px;
+              background: linear-gradient(135deg, var(--pages-primary-4, #1a5276) 0%, var(--pages-primary-5, #1f6d9e) 100%);
+              display: flex;
+              align-items: baseline;
+              gap: 12px;
+            ">
+              <span style="font-size: 20px; font-weight: 600; color: white;">
+                #{selection.events.event}
+              </span>
+              <span style="font-size: 14px; color: rgba(255,255,255,0.75);">
+                #{selection.events.patient} · #{selection.events.id}
+              </span>
+            </div>
+            <div style="padding: 20px 24px;">
+              <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 20px;
+              ">
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pages-neutral-9, #8899aa); margin-bottom: 4px;">Grade</div>
+                  <div style="font-size: 15px; font-weight: 500;">#{selection.events.grade}</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pages-neutral-9, #8899aa); margin-bottom: 4px;">Severity</div>
+                  <div style="font-size: 15px; font-weight: 500;">#{selection.events.severity}</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pages-neutral-9, #8899aa); margin-bottom: 4px;">Onset</div>
+                  <div style="font-size: 15px; font-weight: 500;">#{selection.events.onset}</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pages-neutral-9, #8899aa); margin-bottom: 4px;">Outcome</div>
+                  <div style="font-size: 15px; font-weight: 500;">#{selection.events.outcome}</div>
+                </div>
+              </div>
+              <div style="
+                border-top: 1px solid var(--pages-neutral-4, #2a3a4c);
+                padding-top: 16px;
+              ">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pages-neutral-9, #8899aa); margin-bottom: 6px;">Clinical Notes</div>
+                <div style="font-size: 14px; line-height: 1.6; color: var(--pages-neutral-11, #c0ccdd);">
+                  #{selection.events.notes}
+                </div>
+              </div>
+            </div>
+          </div>
+        visibleWhen: "#{selection.events.id}"
+
+      - html: |
+          <div style="
+            margin-top: 24px;
+            padding: 32px;
+            border: 1px dashed var(--pages-neutral-5, #2e3e50);
+            border-radius: 8px;
+            text-align: center;
+            color: var(--pages-neutral-8, #6b7d8e);
+            font-size: 14px;
+          ">
+            Click a row above to view the full adverse event record
+          </div>
+        visibleWhen: "#{selection.events.id} == ''"

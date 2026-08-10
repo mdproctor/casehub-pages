@@ -33,6 +33,8 @@ import {load as yamlLoad} from "js-yaml";
 import {cellToRaw} from "@casehubio/pages-viz/dist/base/cell-extract.js";
 import {applyTheme} from "@casehubio/pages-ui-tokens";
 import type {PagesFilterDetail} from "@casehubio/pages-viz/dist/base/filter-types.js";
+import type {SelectionChangeDetail} from "@casehubio/pages-table";
+import {typedRowToRecord} from "./selection-bridge.js";
 import {buildPagePathMap} from "./page-paths.js";
 import {buildDataSetScope, resolveDataSetDef} from "./dataset-scope.js";
 import type {ActiveSlots} from "./navigation.js";
@@ -178,6 +180,7 @@ export async function loadSite(
   const manager = createDataSetManager({
     onChanged: (id, dataset) => {
       contextManager.updateDataset(id, dataset);
+      contextManager.updateSelection(id as string, null);
       pipeline.deliverDataSet(id);
     },
   });
@@ -347,6 +350,7 @@ export async function loadSite(
     const segments = path.split("/").filter(Boolean);
     currentPage = walkNavigate(root, segments, target, lazyPageResolutions);
     contextManager.updatePage(currentPage, currentPage);
+    contextManager.clearAllSelections();
     _navigating = false;
   }
 
@@ -664,6 +668,25 @@ export async function loadSite(
     updatePage(componentViewState, componentId, 0);
     pipeline.handleDataRequest(entry.vizElement, entry.originalLookup, componentId);
     syncUrl("replaceState");
+  }), { signal: abortController.signal });
+
+  target.addEventListener("selection-change", ((e: Event) => {
+    const detail = (e as CustomEvent<SelectionChangeDetail>).detail;
+    const componentId = findComponentId(e);
+    if (!componentId) return;
+
+    const entry = registry.get(componentId);
+    if (!entry?.originalLookup) return;
+
+    const datasetId = entry.originalLookup.dataSetId as string;
+    if (detail.selectedRows.length > 0) {
+      const row = detail.selectedRows[0]!;
+      const ds = entry.vizElement?.dataSet as TypedDataSet | undefined;
+      if (!ds) return;
+      contextManager.updateSelection(datasetId, typedRowToRecord(row, ds.columns));
+    } else {
+      contextManager.updateSelection(datasetId, null);
+    }
   }), { signal: abortController.signal });
 
   target.addEventListener("pages-text-filter", ((e: Event) => {

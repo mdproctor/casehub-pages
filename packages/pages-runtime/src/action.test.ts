@@ -9,6 +9,7 @@ describe("ActionExecutor", () => {
     datasets: {},
     page: { name: "Dashboard", path: "/dashboard" },
     params: { orgId: "123" },
+    selection: {},
   };
 
   it("executes successful POST with template resolution in URL", async () => {

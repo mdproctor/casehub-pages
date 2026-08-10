@@ -11,6 +11,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.ward}", ctx)).toBe(true);
       });
@@ -21,6 +22,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.ward}", ctx)).toBe(false);
       });
@@ -31,6 +33,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.missing}", ctx)).toBe(false);
       });
@@ -43,6 +46,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.ward} == 'ICU'", ctx)).toBe(true);
         expect(evaluateExpression("#{filter.ward} == 'CCU'", ctx)).toBe(false);
@@ -54,6 +58,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
           row: { score: "3" },
         };
         expect(evaluateExpression("#{row.score} == 3", ctx)).toBe(true);
@@ -65,6 +70,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.status} != 'inactive'", ctx)).toBe(
           true
@@ -80,6 +86,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.ward} != null", ctx)).toBe(true);
         expect(evaluateExpression("#{filter.missing} == null", ctx)).toBe(false); // missing resolves to "", not null
@@ -93,6 +100,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
           row: { grade: "5" },
         };
         expect(evaluateExpression("#{row.grade} >= 4", ctx)).toBe(true);
@@ -105,6 +113,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
           row: { count: "10" },
         };
         expect(evaluateExpression("#{row.count} < 20", ctx)).toBe(true);
@@ -118,6 +127,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
           row: { name: "Smith" },
         };
         expect(evaluateExpression("#{row.name} > 'M'", ctx)).toBe(true);
@@ -130,6 +140,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
           row: { a: "10", b: "2" },
         };
         expect(evaluateExpression("#{row.a} > #{row.b}", ctx)).toBe(true); // 10 > 2, not "10" < "2"
@@ -143,6 +154,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("!#{filter.ward}", ctx)).toBe(true);
       });
@@ -153,6 +165,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.a} && #{filter.b}", ctx)).toBe(
           true
@@ -163,6 +176,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.a} && #{filter.b}", ctx2)).toBe(
           false
@@ -175,6 +189,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.a} || #{filter.b}", ctx)).toBe(
           true
@@ -185,6 +200,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.a} || #{filter.b}", ctx2)).toBe(
           false
@@ -197,6 +213,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
           row: { a: "false", b: "true", c: "true" },
         };
         // a || b && c should parse as a || (b && c)
@@ -214,6 +231,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
           row: { x: "a", y: "b", z: "c" },
         };
         expect(
@@ -232,6 +250,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("true", ctx)).toBe(true);
         expect(evaluateExpression("false", ctx)).toBe(false);
@@ -247,6 +266,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         const rowCtx = createRowContext(base, { status: "Critical" });
         expect(evaluateExpression("#{row.status} == 'Critical'", rowCtx)).toBe(
@@ -262,6 +282,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.priority} == 'high'", ctx)).toBe(
           true
@@ -274,6 +295,7 @@ describe("expression-evaluator", () => {
           datasets: {},
           page: { name: "test", path: "/test" },
           params: {},
+          selection: {},
         };
         expect(evaluateExpression("#{filter.priority}", ctx)).toBe(false);
       });
@@ -287,6 +309,7 @@ describe("expression-evaluator", () => {
         datasets: {},
         page: { name: "test", path: "/test" },
         params: {},
+        selection: {},
       };
       const rowCtx = createRowContext(base, { status: "Critical", score: 95 });
 
@@ -303,6 +326,7 @@ describe("expression-evaluator", () => {
         datasets: {},
         page: { name: "Dashboard", path: "/dash" },
         params: { p: "P" },
+        selection: {},
       };
       const rowCtx = createRowContext(base, { x: "X" });
 

@@ -68,6 +68,21 @@ export class ContextManager {
     this.evaluateAll();
   }
 
+  updateSelection(datasetId: string, row: Record<string, unknown> | null): void {
+    const { [datasetId]: _, ...rest } = this.#context.selection;
+    this.#context = {
+      ...this.#context,
+      selection: row ? { ...rest, [datasetId]: row } : rest,
+    };
+    this.evaluateAll();
+  }
+
+  clearAllSelections(): void {
+    if (Object.keys(this.#context.selection).length === 0) return;
+    this.#context = { ...this.#context, selection: {} };
+    this.evaluateAll();
+  }
+
   registerConsumer(consumer: ContextConsumer): void {
     this.#consumers.add(consumer);
     // Evaluate immediately to set initial state
