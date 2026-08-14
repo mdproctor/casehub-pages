@@ -1,0 +1,319 @@
+properties:
+  api: http://localhost:8090
+
+datasets:
+  - uuid: cases
+    url: ${api}/api/v1/cases?namespace=casehub-examples&name=helpdesk-ticket
+    refreshTime: 2second
+    expression: >-
+      $.content.[id, namespace, name, state, createdAt]
+    columns:
+      - id: id
+        type: LABEL
+      - id: namespace
+        type: LABEL
+      - id: name
+        type: LABEL
+      - id: state
+        type: LABEL
+      - id: created
+        type: DATE
+
+  - uuid: workitems
+    url: ${api}/workitems
+    refreshTime: 2second
+    expression: >-
+      $.[id, title, status, assigneeId, candidateGroups, createdAt]
+    columns:
+      - id: id
+        type: LABEL
+      - id: title
+        type: TEXT
+      - id: status
+        type: LABEL
+      - id: assignee
+        type: LABEL
+      - id: groups
+        type: LABEL
+      - id: created
+        type: DATE
+
+  - uuid: notifications
+    url: ${api}/scenario/verify/notifications
+    refreshTime: 2second
+    expression: >-
+      $.[ to, message, sentAt ]
+    columns:
+      - id: to
+        type: LABEL
+      - id: message
+        type: TEXT
+      - id: sentAt
+        type: DATE
+
+pages:
+  - name: index
+    components:
+      - type: tabs
+        properties:
+          navGroupId: HelpdeskNav
+          width: 100%
+
+  - name: Ops Dashboard
+    rows:
+      - columns:
+          - span: 3
+            components:
+              - type: title
+                properties:
+                  text: Total Cases
+                  size: h3
+              - type: metric
+                properties:
+                  lookup:
+                    uuid: cases
+                    group:
+                      - functions:
+                          - source: id
+                            function: COUNT
+                  columns:
+                    - id: id
+                      pattern: '#'
+
+          - span: 3
+            components:
+              - type: title
+                properties:
+                  text: Running
+                  size: h3
+              - type: metric
+                properties:
+                  lookup:
+                    uuid: cases
+                    filter:
+                      - column: state
+                        function: EQUALS_TO
+                        args:
+                          - RUNNING
+                    group:
+                      - functions:
+                          - source: id
+                            function: COUNT
+                  columns:
+                    - id: id
+                      pattern: '#'
+
+          - span: 3
+            components:
+              - type: title
+                properties:
+                  text: Completed
+                  size: h3
+              - type: metric
+                properties:
+                  lookup:
+                    uuid: cases
+                    filter:
+                      - column: state
+                        function: EQUALS_TO
+                        args:
+                          - COMPLETED
+                    group:
+                      - functions:
+                          - source: id
+                            function: COUNT
+                  columns:
+                    - id: id
+                      pattern: '#'
+
+          - span: 3
+            components:
+              - type: title
+                properties:
+                  text: Work Items
+                  size: h3
+              - type: metric
+                properties:
+                  lookup:
+                    uuid: workitems
+                    group:
+                      - functions:
+                          - source: id
+                            function: COUNT
+                  columns:
+                    - id: id
+                      pattern: '#'
+
+      - columns:
+          - span: 6
+            components:
+              - type: title
+                properties:
+                  text: Cases by Status
+                  size: h3
+              - type: pie-chart
+                properties:
+                  subtype: donut
+                  lookup:
+                    uuid: cases
+                    group:
+                      - columnGroup:
+                          source: state
+                        functions:
+                          - source: state
+                          - source: state
+                            function: COUNT
+                            column: count
+
+          - span: 6
+            components:
+              - type: title
+                properties:
+                  text: Work Items by Status
+                  size: h3
+              - type: pie-chart
+                properties:
+                  subtype: donut
+                  lookup:
+                    uuid: workitems
+                    group:
+                      - columnGroup:
+                          source: status
+                        functions:
+                          - source: status
+                          - source: status
+                            function: COUNT
+                            column: count
+
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: Live Cases
+                  size: h3
+              - type: data-table
+                properties:
+                  sortable: true
+                  pageSize: 20
+                  lookup:
+                    uuid: cases
+                  columns:
+                    - id: id
+                      expression: "value ? value.substring(0, 8) + '…' : ''"
+
+  - name: Work Items
+    rows:
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: Work Item Queue
+                  size: h2
+              - type: markdown
+                properties:
+                  content: >
+                    Work items created by the engine's humanTask bindings.
+                    Specialists claim, start, and complete items to resolve tickets.
+              - type: data-table
+                properties:
+                  sortable: true
+                  pageSize: 20
+                  lookup:
+                    uuid: workitems
+                  columns:
+                    - id: id
+                      expression: "value ? value.substring(0, 8) + '…' : ''"
+
+  - name: Submit Ticket
+    rows:
+      - columns:
+          - span: 8
+            components:
+              - type: title
+                properties:
+                  text: New Support Ticket
+                  size: h2
+              - type: markdown
+                properties:
+                  content: >
+                    Submit a ticket via the UI. The scenario engine can automate
+                    this form using delivery: ui-form, or you can fill it manually.
+              - input:
+                  field: chatFrom
+                  label: Your Name
+              - input:
+                  field: chatText
+                  label: Describe your issue
+              - action-button:
+                  label: Submit Ticket
+                  url: ${api}/scenario/inject/chat
+                  method: POST
+                  style: primary
+                  body:
+                    from: "#{chatFrom}"
+                    channelId: support
+                    text: "#{chatText}"
+                  onSuccess:
+                    message: Ticket submitted - check the Ops Dashboard
+
+          - span: 4
+            components:
+              - type: title
+                properties:
+                  text: Quick Actions
+                  size: h3
+              - action-button:
+                  label: Bootstrap Demo Data
+                  url: ${api}/scenario/bootstrap/helpdesk
+                  method: POST
+                  style: secondary
+                  body:
+                    ticketClassifications:
+                      - match: laptop
+                        category: HARDWARE
+                        priority: HIGH
+                      - match: password
+                        category: ACCESS
+                        priority: LOW
+                      - match: install
+                        category: SOFTWARE
+                        priority: MEDIUM
+                      - match: printer
+                        category: HARDWARE
+                        priority: MEDIUM
+                  onSuccess:
+                    message: Classification data loaded
+              - type: markdown
+                properties:
+                  content: >
+                    Load the demo classification lookup so the
+                    classifier knows how to categorise tickets.
+
+  - name: Notifications
+    rows:
+      - columns:
+          - components:
+              - type: title
+                properties:
+                  text: Customer Notifications
+                  size: h2
+              - type: markdown
+                properties:
+                  content: >
+                    Notifications sent to customers when their tickets are resolved.
+                    Updates live as the scenario runs.
+              - type: data-table
+                properties:
+                  sortable: true
+                  lookup:
+                    uuid: notifications
+
+navTree:
+  root_items:
+    - type: GROUP
+      id: HelpdeskNav
+      children:
+        - page: Ops Dashboard
+        - page: Work Items
+        - page: Submit Ticket
+        - page: Notifications
