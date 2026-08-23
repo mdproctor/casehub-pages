@@ -1,0 +1,35 @@
+{
+  "name": "@casehubio/pages-filter-bar",
+  "version": "0.1.0",
+  "description": "CaseHub Pages filter bar — type chips, entity dropdown, date range",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-ui-tokens": "workspace:*",
+    "lit": "^3.0.0"
+  },
+  "devDependencies": {
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "jsdom": "^25.0.0",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "Apache-2.0"
+}

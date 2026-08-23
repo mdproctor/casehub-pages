@@ -194,3 +194,6 @@ proj
 .mvn/maven.config
 .mvn/slot-settings.xml
 CLAUDE.md
+.worktrees
+.worktrees/
+.claude/
