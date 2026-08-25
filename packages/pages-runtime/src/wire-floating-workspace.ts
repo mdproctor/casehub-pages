@@ -13,8 +13,6 @@ import {
 import type { Layout, Entry } from "./frame-sandbox/types.js";
 import { createContainer } from "./frame-sandbox/index.js";
 
-
-
 export interface WireOptions {
   readonly detachEnabled?: boolean | undefined;
   readonly contentFactory?: ContentFactory | undefined;
@@ -28,6 +26,7 @@ export interface WireHandle {
   readonly detachHandler?: FrameDetachHandler | undefined;
   readonly zonePickerButton?: FrameButtonConfig | undefined;
   readonly containerToolbar?: ContainerToolbar | undefined;
+  setContentFactory(factory: ContentFactory): void;
   applyViewMode(key: string): void;
   dispose(): void;
 }
@@ -188,6 +187,63 @@ export function wireFloatingWorkspace(
   let workspaceContainer: ReturnType<typeof import("./frame-sandbox/index.js").createContainer> | null = null;
   let workspaceMode: Layout = "free";
   let wsHostEl: HTMLElement | null = null;
+  let storedContentFactory: ContentFactory | null = null;
+
+  function hideFrames(): void {
+    for (const [key] of engine.frames) {
+      const frameEl = backend.getFrameElement(key);
+      if (frameEl) frameEl.style.display = "none";
+    }
+  }
+
+  function showFrames(): void {
+    for (const [key] of engine.frames) {
+      const frameEl = backend.getFrameElement(key);
+      if (frameEl) frameEl.style.display = "";
+    }
+  }
+
+  function buildWorkspaceContainer(initialLayout: Layout): void {
+    const entries: Entry[] = [];
+    for (const [key, frame] of engine.frames) {
+      if (frame.hidden) continue;
+      const rootContainer = backend.getRootContainer(key);
+      if (rootContainer) rootContainer.unmount();
+      entries.push({
+        key,
+        label: frame.tabs[0]?.label ?? key,
+        childContainer: rootContainer ?? undefined,
+      });
+    }
+
+    workspaceContainer = createContainer({
+      entries,
+      layout: initialLayout,
+      contentFactory: (entry) => {
+        if (entry.childContainer) {
+          const el = document.createElement("div");
+          el.style.cssText = "display:flex;flex-direction:column;height:100%;";
+          entry.childContainer.mount(el);
+          return { element: el, dispose: () => { entry.childContainer!.unmount(); } };
+        }
+        const el = document.createElement("div");
+        el.style.cssText = "padding:12px;";
+        el.textContent = entry.label;
+        return { element: el };
+      },
+      policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 5 },
+      depth: 2,
+    });
+
+    wsHostEl = document.createElement("div");
+    wsHostEl.setAttribute("data-workspace-container", "");
+    wsHostEl.style.cssText = "position:absolute;inset:0;z-index:9999;background:var(--pages-neutral-2,#1e1e1e);overflow:auto;pointer-events:auto;";
+    workspaceContainer.mount(wsHostEl);
+    const wsParent = container.parentElement ?? container;
+    wsParent.appendChild(wsHostEl);
+  }
+
+  let wsToolbar: ContainerToolbar | null = null;
 
   function applyWorkspaceMode(targetMode: Layout): void {
     if (targetMode === workspaceMode) return;
@@ -195,48 +251,37 @@ export function wireFloatingWorkspace(
     if (workspaceMode !== "free" && targetMode !== "free" && workspaceContainer) {
       workspaceContainer.setLayout(targetMode);
       workspaceMode = targetMode;
+      wsToolbar?.setActive(targetMode);
       return;
     }
 
     if (workspaceMode === "free" && targetMode !== "free") {
-      const entries: Entry[] = [];
-      for (const [key, frame] of engine.frames) {
-        if (frame.hidden) continue;
-        const frameEl = backend.getFrameElement(key);
-        if (frameEl) {
-          frameEl.style.display = "none";
-          entries.push({ key, label: frame.tabs[0]?.label ?? key });
+      hideFrames();
+      const liveFrames = engine.captureLayout();
+      const visibleFrames = liveFrames.filter(f => !f.hidden);
+      const topFrameKey = visibleFrames.length > 0
+        ? visibleFrames.reduce((a, b) => a.zIndex > b.zIndex ? a : b).key
+        : "";
+
+      if (workspaceContainer) {
+        workspaceContainer.dispose();
+        workspaceContainer = null;
+      }
+      wsHostEl?.remove();
+      wsHostEl = null;
+
+      buildWorkspaceContainer(targetMode);
+
+      const hostAfterBuild = wsHostEl as HTMLElement | null;
+      if (topFrameKey && hostAfterBuild) {
+        const tabBtn = hostAfterBuild.querySelector(`[data-tab-key="${topFrameKey}"]`) as HTMLElement | null;
+        if (tabBtn) {
+          tabBtn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+          document.dispatchEvent(new PointerEvent("pointerup"));
         }
       }
-
-      workspaceContainer = createContainer({
-        entries,
-        layout: targetMode,
-        contentFactory: (entry) => {
-          const frame = engine.frames.get(entry.key);
-          if (!frame) return { element: document.createElement("div") };
-          const el = document.createElement("div");
-          el.style.cssText = "padding:12px;";
-          for (const tab of frame.tabs) {
-            const section = document.createElement("div");
-            section.style.cssText = "margin-bottom:8px;";
-            const h = document.createElement("h3");
-            h.textContent = tab.label;
-            section.appendChild(h);
-            el.appendChild(section);
-          }
-          return { element: el };
-        },
-        policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 1 },
-      });
-
-      wsHostEl = document.createElement("div");
-      wsHostEl.setAttribute("data-workspace-container", "");
-      wsHostEl.style.cssText = "position:absolute;inset:0;z-index:9999;background:var(--pages-neutral-2,#1e1e1e);overflow:auto;pointer-events:auto;";
-      workspaceContainer.mount(wsHostEl);
-      const wsParent = container.parentElement ?? container;
-      wsParent.appendChild(wsHostEl);
       workspaceMode = targetMode;
+      wsToolbar?.setActive(targetMode);
       return;
     }
 
@@ -247,11 +292,19 @@ export function wireFloatingWorkspace(
       }
       wsHostEl?.remove();
       wsHostEl = null;
+
       for (const [key] of engine.frames) {
         const frameEl = backend.getFrameElement(key);
-        if (frameEl) frameEl.style.display = "";
+        if (!frameEl) continue;
+        const tabContentEl = frameEl.querySelector("[data-frame-body]") as HTMLElement | null;
+        if (!tabContentEl) continue;
+        const rootContainer = backend.getRootContainer(key);
+        if (rootContainer) rootContainer.mount(tabContentEl);
       }
+
+      showFrames();
       workspaceMode = targetMode;
+      wsToolbar?.setActive(targetMode);
     }
   }
 
@@ -289,11 +342,17 @@ export function wireFloatingWorkspace(
     detachHandler,
     zonePickerButton,
     containerToolbar,
+    setContentFactory(factory: ContentFactory) {
+      storedContentFactory = factory;
+    },
     applyViewMode(_key: string) {
       // No-op: Container handles layout changes internally.
       // Kept for backward compatibility with activation.ts.
     },
     dispose() {
+      if (workspaceContainer) { workspaceContainer.dispose(); workspaceContainer = null; }
+      wsHostEl?.remove();
+      wsHostEl = null;
       containerToolbar.dispose();
       detachHandler?.dispose();
       engine.dispose();

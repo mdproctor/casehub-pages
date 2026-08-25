@@ -1,4 +1,5 @@
-import type { FrameLayout, FrameTabConfig, ContentFactory } from "@casehubio/pages-component";
+import type { FrameLayout, FrameTabConfig, ContentFactory, ContainerState } from "@casehubio/pages-component";
+import type { Container } from "./frame-sandbox/types.js";
 import type { EdgeZone } from "./frame-boundaries.js";
 
 export interface FrameButtonConfig {
@@ -48,6 +49,9 @@ export interface FloatingFrameBackend {
   getFrameElement(key: string): HTMLElement | null;
   getSubFrameElements(frameKey: string): Array<{ element: HTMLElement; tabKey: string }>;
   getTabContentElement(frameKey: string, tabKey: string): HTMLElement | null;
+
+  captureContainerTree(frameKey: string): ContainerState | undefined;
+  getRootContainer(frameKey: string): Container | null;
 
   dispose(): void;
   unwrap(): unknown | null;

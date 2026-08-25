@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { wireFloatingWorkspace } from "./wire-floating-workspace.js";
 import type { FloatingFrameBackend } from "./floating-frame-backend.js";
 import type { FrameTabConfig, FrameLayout } from "@casehubio/pages-component";
+import { createContainer } from "./frame-sandbox/index.js";
+import type { Entry, ContentFactory as CF } from "./frame-sandbox/types.js";
 
 function makeTab(key: string): FrameTabConfig {
   return { key, label: key, content: { type: "html", props: { content: `<div>${key}</div>` } } };
@@ -50,6 +52,8 @@ function mockBackend(): FloatingFrameBackend & {
     getFrameElement: vi.fn(() => null),
     getSubFrameElements: vi.fn(() => []),
     getTabContentElement: vi.fn(() => null),
+    captureContainerTree: vi.fn(() => undefined),
+    getRootContainer: vi.fn(() => null),
     dispose: vi.fn(), unwrap: vi.fn(() => null),
     _fireMove(key, pos) { for (const cb of moveCbs) cb(key, pos); },
     _fireResize(key, size) { for (const cb of resizeCbs) cb(key, size); },
@@ -226,6 +230,80 @@ describe("wireFloatingWorkspace", () => {
       const handle = wireFloatingWorkspace(backend, container);
       handle.dispose();
       expect(() => handle.engine.createFrame({ key: "f1", tabs: [makeTab("t1")] })).toThrow("Engine is disposed");
+    });
+  });
+
+  describe("workspace mount transfer", () => {
+    function makeFrameElement(key: string): HTMLElement {
+      const frameEl = document.createElement("div");
+      frameEl.setAttribute("data-frame-key", key);
+      const body = document.createElement("div");
+      body.setAttribute("data-frame-body", "");
+      body.style.cssText = "flex:1;display:flex;flex-direction:column;overflow:hidden;";
+      frameEl.appendChild(body);
+      return frameEl;
+    }
+
+    function simpleFactory(): CF {
+      return (entry: Entry) => {
+        const el = document.createElement("div");
+        el.textContent = entry.key;
+        el.dataset.testLeaf = entry.key;
+        return { element: el };
+      };
+    }
+
+    function clickModeButton(handle: ReturnType<typeof wireFloatingWorkspace>): void {
+      const modeBtn = handle.containerToolbar!.element.querySelector("[data-toolbar-mode]") as HTMLElement;
+      modeBtn.click();
+    }
+
+    it("free→tabbed calls getRootContainer for each frame", () => {
+      const frameEl = makeFrameElement("f1");
+      container.appendChild(frameEl);
+      backend.getFrameElement = vi.fn(() => frameEl);
+
+      const handle = wireFloatingWorkspace(backend, container);
+      handle.engine.createFrame({
+        key: "f1", tabs: [makeTab("t1"), makeTab("t2")],
+        position: { x: 0, y: 0 }, size: { width: 400, height: 300 },
+      });
+
+      clickModeButton(handle); // free → tabbed
+
+      expect(backend.getRootContainer).toHaveBeenCalledWith("f1");
+    });
+
+    it("free→tabbed→free preserves container identity", () => {
+      const frameEl = makeFrameElement("f1");
+      container.appendChild(frameEl);
+      const body = frameEl.querySelector("[data-frame-body]") as HTMLElement;
+      backend.getFrameElement = vi.fn(() => frameEl);
+
+      const liveContainer = createContainer({
+        entries: [{ key: "t1", label: "T1" }, { key: "t2", label: "T2" }],
+        layout: "tabbed",
+        contentFactory: simpleFactory(),
+      });
+      liveContainer.mount(body);
+      backend.getRootContainer = vi.fn(() => liveContainer);
+
+      const handle = wireFloatingWorkspace(backend, container);
+      handle.engine.createFrame({
+        key: "f1", tabs: [makeTab("t1"), makeTab("t2")],
+        position: { x: 0, y: 0 }, size: { width: 400, height: 300 },
+      });
+
+      clickModeButton(handle); // free → tabbed
+      const wsParent = container.parentElement ?? container;
+      expect(wsParent.querySelector("[data-workspace-container]")).not.toBeNull();
+
+      clickModeButton(handle); // tabbed → accordion
+      clickModeButton(handle); // accordion → free
+
+      expect(wsParent.querySelector("[data-workspace-container]")).toBeNull();
+      expect(body.children.length).toBeGreaterThan(0);
+      expect(liveContainer.entries).toHaveLength(2);
     });
   });
 });

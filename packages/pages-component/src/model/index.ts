@@ -8,6 +8,8 @@ export type {
   PanelEntry,
   DockZone,
   DockSide,
+  Layout,
+  ContainerState,
   FrameTabConfig,
   FrameConfig,
   FloatingWorkspaceConfig,

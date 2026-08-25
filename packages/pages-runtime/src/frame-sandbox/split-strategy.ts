@@ -7,13 +7,9 @@ import type {
   SplitState,
 } from "./types.js";
 
-interface SplitCallbacks extends LayoutCallbacks {
-  onCollapse?: (remaining: Entry) => void;
-}
-
 export function createSplitStrategy(
   direction: "horizontal" | "vertical",
-  callbacks: SplitCallbacks,
+  callbacks?: LayoutCallbacks,
 ): LayoutStrategy {
   const type: Layout = direction === "horizontal" ? "splith" : "splitv";
   let hostElement: HTMLElement | null = null;
@@ -130,7 +126,7 @@ export function createSplitStrategy(
 
       callbacks?.onEntryClose?.(key);
 
-      if (currentEntries.length === 1 && callbacks.onCollapse) {
+      if (currentEntries.length === 1 && callbacks?.onCollapse) {
         callbacks.onCollapse(currentEntries[0]!);
         return;
       }
@@ -154,6 +150,20 @@ export function createSplitStrategy(
           }
         }
       }
+    },
+
+    refreshEntry(key: string): void {
+      const entry = currentEntries.find(e => e.key === key);
+      if (!entry || !flexContainer) return;
+      const pane = flexContainer.querySelector(`[data-split-pane="${key}"]`) as HTMLElement;
+      if (!pane) return;
+      if (entry.contentElement?.parentElement) {
+        entry.contentElement.remove();
+      }
+      entry.contentDispose?.();
+      entry.contentElement = undefined;
+      entry.contentDispose = undefined;
+      pane.appendChild(ensureContent(entry));
     },
 
     dispose() {

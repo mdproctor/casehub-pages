@@ -21,8 +21,8 @@ export function createContainerToolbar(
   bar.setAttribute("data-container-toolbar", "");
   bar.style.cssText =
     "display:flex;align-items:center;padding:2px 4px;" +
-    "border-bottom:1px solid var(--pages-border-1,#333);" +
-    "gap:2px;user-select:none;";
+    "gap:2px;user-select:none;" +
+    "position:absolute;bottom:4px;right:4px;z-index:5;";
 
   const spacer = document.createElement("span");
   spacer.style.cssText = "flex:1;";

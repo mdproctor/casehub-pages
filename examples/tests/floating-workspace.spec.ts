@@ -159,4 +159,44 @@ test.describe("Floating Workspace", () => {
       expect(Math.abs(afterBox.y - beforeBox.y)).toBeLessThan(5);
     }
   });
+
+  test("frames scale proportionally on window resize", async ({ page, context }) => {
+    await openFloatingWorkspace(page);
+    await page.waitForSelector("[data-frame-key]", { timeout: 10000 });
+
+    const before = await page.evaluate(() => {
+      const overlay = document.querySelector("[data-floating-workspace-overlay]");
+      const oRect = overlay?.getBoundingClientRect();
+      const frames = [...document.querySelectorAll("[data-frame-key]")].map(f => {
+        const r = f.getBoundingClientRect();
+        return { key: f.getAttribute("data-frame-key"), w: r.width, l: r.left, r: r.right };
+      });
+      return { overlayW: oRect?.width ?? 0, frames };
+    });
+
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.waitForTimeout(500);
+
+    const after = await page.evaluate(() => {
+      const overlay = document.querySelector("[data-floating-workspace-overlay]");
+      const oRect = overlay?.getBoundingClientRect();
+      const frames = [...document.querySelectorAll("[data-frame-key]")].map(f => {
+        const r = f.getBoundingClientRect();
+        return { key: f.getAttribute("data-frame-key"), w: r.width, r: r.right };
+      });
+      return { overlayW: oRect?.width ?? 0, overlayR: oRect?.right ?? 0, frames };
+    });
+
+    // Overlay must have grown
+    expect(after.overlayW).toBeGreaterThan(before.overlayW);
+
+    // Every frame must have grown proportionally
+    for (const bf of before.frames) {
+      const af = after.frames.find(f => f.key === bf.key);
+      if (!af) continue;
+      expect(af.w).toBeGreaterThan(bf.w);
+      // Frame must not overflow the overlay
+      expect(af.r).toBeLessThanOrEqual(after.overlayR + 1);
+    }
+  });
 });

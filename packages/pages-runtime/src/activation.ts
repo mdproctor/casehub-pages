@@ -568,10 +568,22 @@ export function createActivationCallback(
       const centreComponents = Array.isArray(props.centre) ? props.centre : [props.centre];
 
       el.style.position = "relative";
-      el.style.height = "100%";
+      el.style.flex = "1";
       el.style.display = "flex";
       el.style.flexDirection = "column";
       el.style.minHeight = "0";
+      const wsParent = el.parentElement;
+      if (wsParent && getComputedStyle(wsParent).display === "grid") {
+        wsParent.style.display = "flex";
+        wsParent.style.flexDirection = "column";
+      }
+      let wsAncestor: HTMLElement | null = el.parentElement;
+      while (wsAncestor) {
+        if ((wsAncestor as HTMLElement).dataset?.componentType === "page") {
+          wsAncestor.style.padding = "0";
+        }
+        wsAncestor = wsAncestor.parentElement;
+      }
 
       const wsRef = options?.floatingWorkspaceRef;
       const depth = options?.nestingDepth ?? 0;
@@ -617,10 +629,12 @@ export function createActivationCallback(
             tabCallbacks.set(tab.key, tabCallback);
           }
 
-          renderComponent(container, tab.content, {
-            permissions: options?.permissions ?? ALLOW_ALL,
-            onNode: tabCallback ?? callback,
-          });
+          if (tab.content) {
+            renderComponent(container, tab.content, {
+              permissions: options?.permissions ?? ALLOW_ALL,
+              onNode: tabCallback ?? callback,
+            });
+          }
 
           return { element: container };
         }
@@ -644,6 +658,7 @@ export function createActivationCallback(
         const extraButtons: FrameButtonConfig[] = [];
         if (handle.zonePickerButton) extraButtons.push(handle.zonePickerButton);
         backend.attach(overlayContainer, contentFactory, extraButtons.length > 0 ? { extraButtons } : undefined);
+        handle.setContentFactory(contentFactory);
 
         const showOrganisers = depth > 0 ? props.organisers === true : props.organisers !== false;
         if (showOrganisers && handle.containerToolbar) {
@@ -682,7 +697,9 @@ export function createActivationCallback(
         key: string; label: string; content?: Component;
         position?: { x: number; y: number }; size?: { width: number; height: number };
       }>) ?? [];
-      const organiserType = (sandboxProps?.organiser as string) ?? "tabbed";
+      const ORGANISER_ALIASES: Record<string, string> = { "free-layout": "free", "tab": "tabbed" };
+      const resolveOrganiser = (name: string): string => ORGANISER_ALIASES[name] ?? name;
+      const organiserType = resolveOrganiser((sandboxProps?.organiser as string) ?? "tabbed");
       const policyProp = sandboxProps?.policy as {
         allowedOrganisers?: string[]; maxDepth?: number;
       } | undefined;
@@ -727,13 +744,25 @@ export function createActivationCallback(
       };
       if (policyProp) {
         groupConfig.policy = {
-          allowedLayouts: (policyProp.allowedOrganisers ?? ["tabbed", "accordion", "free"]) as Array<"tabbed" | "accordion" | "free">,
+          allowedLayouts: (policyProp.allowedOrganisers ?? ["tabbed", "accordion", "free"]).map(resolveOrganiser) as Array<"tabbed" | "accordion" | "free">,
           maxDepth: policyProp.maxDepth ?? 3,
         };
       }
       const group = createContainer(groupConfig);
 
-      el.style.cssText = "position:relative;width:100%;height:100%;min-height:400px;";
+      el.style.cssText = "position:relative;width:100%;flex:1;min-height:400px;";
+      const parentEl = el.parentElement;
+      if (parentEl && getComputedStyle(parentEl).display === "grid") {
+        parentEl.style.display = "flex";
+        parentEl.style.flexDirection = "column";
+      }
+      let ancestor: HTMLElement | null = el.parentElement;
+      while (ancestor) {
+        if ((ancestor as HTMLElement).dataset?.componentType === "page") {
+          ancestor.style.padding = "0";
+        }
+        ancestor = ancestor.parentElement;
+      }
       group.mount(el);
       el.dataset.frameSandbox = "mounted";
       return;

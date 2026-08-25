@@ -110,25 +110,36 @@ function initializeApp() {
     updateSampleCount();
     setupEventListeners();
 
-    // Check if there's a sample in the URL hash
+    // Restore sample from hash or sessionStorage (loadSite overwrites the hash on load)
+    let restored = false;
     const hash = window.location.hash.slice(1);
     if (hash) {
-        if (hash.startsWith('server/')) {
-            setActiveTab('server');
-            const rest = hash.slice(7);
-            const [category, samplePath] = rest.split('/');
-            if (category && samplePath) loadSampleFromHash(category, samplePath);
-        } else if (hash.startsWith('client/')) {
-            setActiveTab('client');
-            const rest = hash.slice(7);
-            const [category, samplePath] = rest.split('/');
-            if (category && samplePath) loadSampleFromHash(category, samplePath);
-        } else {
-            // backward compat — bare hash defaults to client
-            const [category, samplePath] = hash.split('/');
-            loadSampleFromHash(category, samplePath);
-        }
+        restored = tryRestoreFromHash(hash);
     }
+    if (!restored) {
+        try {
+            const saved = sessionStorage.getItem('pages-gallery-sample');
+            if (saved) restored = tryRestoreFromHash(saved);
+        } catch { /* private browsing */ }
+    }
+}
+
+function tryRestoreFromHash(hash) {
+    if (hash.startsWith('server/')) {
+        setActiveTab('server');
+        const rest = hash.slice(7);
+        const [category, samplePath] = rest.split('/');
+        if (category && samplePath) { loadSampleFromHash(category, samplePath); return true; }
+    } else if (hash.startsWith('client/')) {
+        setActiveTab('client');
+        const rest = hash.slice(7);
+        const [category, samplePath] = rest.split('/');
+        if (category && samplePath) { loadSampleFromHash(category, samplePath); return true; }
+    } else if (hash.includes('/')) {
+        const [category, samplePath] = hash.split('/');
+        if (category && samplePath) { loadSampleFromHash(category, samplePath); return true; }
+    }
+    return false;
 }
 
 // Render categories and samples
@@ -213,6 +224,9 @@ function loadSample(sample) {
         activeItem.classList.add('active');
     }
 
+    // Persist sample selection for refresh recovery (loadSite overwrites the hash)
+    try { sessionStorage.setItem('pages-gallery-sample', `${activeTab}/${sample.category}/${encodeURIComponent(sample.path)}`); } catch { /* private browsing */ }
+
     // Update URL hash (suppress hashchange to avoid double-load)
     suppressHashChange = true;
     window.location.hash = `${activeTab}/${sample.category}/${encodeURIComponent(sample.path)}`;
@@ -222,10 +236,6 @@ function loadSample(sample) {
     welcomeScreen.style.display = 'none';
     sampleContainer.style.display = 'flex';
     currentSampleName.textContent = sample.name;
-
-    // Update URL hash (suppress hashchange reload)
-    suppressHashChange = true;
-    window.location.hash = `${sample.category}/${encodeURIComponent(sample.path)}`;
 
     // Load sample in target div
     loadSampleInTarget(sample.path);

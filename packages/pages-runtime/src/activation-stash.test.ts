@@ -22,6 +22,8 @@ function mockBackend(): FloatingFrameBackend {
     getFrameElement: vi.fn(() => null),
     getSubFrameElements: vi.fn(() => []),
     getTabContentElement: vi.fn(() => null),
+    captureContainerTree: vi.fn(() => undefined),
+    getRootContainer: vi.fn(() => null),
     dispose: vi.fn(), unwrap: vi.fn(() => null),
   };
 }

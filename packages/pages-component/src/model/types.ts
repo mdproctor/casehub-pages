@@ -59,11 +59,20 @@ export interface LayoutState {
   readonly frames?: readonly FrameLayout[];
 }
 
+export type Layout = "free" | "tabbed" | "accordion" | "splith" | "splitv" | "content";
+
+export interface ContainerState {
+  readonly layout: Layout;
+  readonly tabs: readonly FrameTabConfig[];
+  readonly layoutState?: unknown;
+}
+
 export interface FrameTabConfig {
   readonly key: string;
   readonly label: string;
   readonly icon?: string;
-  readonly content: Component;
+  readonly content: Component | null;
+  readonly children?: ContainerState;
 }
 
 export interface FrameConfig {
@@ -108,6 +117,7 @@ export interface FrameLayout {
     readonly collapsed: readonly string[];
     readonly heights: Readonly<Record<string, number>>;
   };
+  readonly containerTree?: ContainerState;
 }
 
 export interface ContentFactoryResult {

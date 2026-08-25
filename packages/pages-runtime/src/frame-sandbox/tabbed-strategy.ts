@@ -270,9 +270,9 @@ export function createTabbedStrategy(
     addEntry(entry, _atIndex?) {
       currentEntries.push(entry);
       if (stripEl) {
-        const actions = stripEl.querySelector("[data-toolbar-actions]");
-        if (actions) {
-          stripEl.insertBefore(createTabButton(entry), actions);
+        const sentinel = stripEl.querySelector("[data-container-toolbar], [data-toolbar-actions]");
+        if (sentinel) {
+          stripEl.insertBefore(createTabButton(entry), sentinel);
         } else {
           stripEl.appendChild(createTabButton(entry));
         }
@@ -291,11 +291,16 @@ export function createTabbedStrategy(
 
       stripEl?.querySelector(`[data-tab-key="${key}"]`)?.remove();
 
+      callbacks?.onEntryClose?.(key);
+
+      if (currentEntries.length === 1 && callbacks?.onCollapse) {
+        callbacks.onCollapse(currentEntries[0]!);
+        return;
+      }
+
       if (activeKey === key && currentEntries.length > 0) {
         activateTab(currentEntries[0]!.key);
       }
-
-      callbacks?.onEntryClose?.(key);
     },
 
     getState(): TabState {
@@ -309,6 +314,21 @@ export function createTabbedStrategy(
       const s = state as TabState | undefined;
       if (s?.activeKey) activeKey = s.activeKey;
     },
+
+    refreshEntry(key: string): void {
+      const entry = currentEntries.find(e => e.key === key);
+      if (!entry) return;
+      if (key === activeKey && contentEl) {
+        if (entry.contentElement?.parentElement) {
+          entry.contentElement.remove();
+        }
+        entry.contentDispose?.();
+        entry.contentElement = undefined;
+        entry.contentDispose = undefined;
+        contentEl.appendChild(ensureContent(entry));
+      }
+    },
+
     dispose() {
       for (const entry of currentEntries) {
         entry.contentDispose?.();

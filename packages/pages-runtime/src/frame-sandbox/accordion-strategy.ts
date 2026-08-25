@@ -148,6 +148,11 @@ export function createAccordionStrategy(
       delete heights[key];
 
       callbacks?.onEntryClose?.(key);
+
+      if (currentEntries.length === 1 && callbacks?.onCollapse) {
+        callbacks.onCollapse(currentEntries[0]!);
+        return;
+      }
     },
 
     getState(): AccordionState {
@@ -158,6 +163,23 @@ export function createAccordionStrategy(
     },
 
     restoreState() {},
+
+    refreshEntry(key: string): void {
+      const entry = currentEntries.find(e => e.key === key);
+      if (!entry) return;
+      const section = sectionElements.get(key);
+      if (!section) return;
+      const contentDiv = section.lastElementChild as HTMLElement | null;
+      if (!contentDiv) return;
+      if (entry.contentElement?.parentElement) {
+        entry.contentElement.remove();
+      }
+      entry.contentDispose?.();
+      entry.contentElement = undefined;
+      entry.contentDispose = undefined;
+      contentDiv.appendChild(ensureContent(entry));
+    },
+
     dispose() {
       for (const entry of currentEntries) {
         entry.contentDispose?.();

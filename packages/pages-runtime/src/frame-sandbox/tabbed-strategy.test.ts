@@ -283,4 +283,37 @@ describe("TabOrganiser", () => {
 
     expect(onTabDragOut).toHaveBeenCalledWith("a", 10, 200);
   });
+
+  describe("onCollapse", () => {
+    it("fires onCollapse when last sibling is removed and one entry remains", () => {
+      const onCollapse = vi.fn();
+      const strategy = createTabbedStrategy({ onCollapse });
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      strategy.mount(host, makeEntries("a", "b"), testFactory());
+
+      strategy.removeEntry("a");
+
+      expect(onCollapse).toHaveBeenCalledOnce();
+      expect(onCollapse).toHaveBeenCalledWith(expect.objectContaining({ key: "b" }));
+
+      strategy.dispose();
+      document.body.removeChild(host);
+    });
+
+    it("does not fire onCollapse when 2+ entries remain", () => {
+      const onCollapse = vi.fn();
+      const strategy = createTabbedStrategy({ onCollapse });
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      strategy.mount(host, makeEntries("a", "b", "c"), testFactory());
+
+      strategy.removeEntry("a");
+
+      expect(onCollapse).not.toHaveBeenCalled();
+
+      strategy.dispose();
+      document.body.removeChild(host);
+    });
+  });
 });

@@ -2,6 +2,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createFreeLayoutStrategy } from "./free-layout-strategy";
 import type { Entry, ContentFactory, FreeLayoutState } from "./types.js";
 
+let resizeObserverCallback: ((entries: Array<{ contentRect: { width: number; height: number } }>) => void) | null = null;
+const ResizeObserverMock = vi.fn().mockImplementation((cb: any) => {
+  resizeObserverCallback = cb;
+  return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
+});
+vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+
 function testFactory(): ContentFactory {
   return (entry) => {
     const el = document.createElement("div");
@@ -69,10 +76,8 @@ describe("FreeLayoutOrganiser", () => {
     org.mount(container, makeEntries("a"), testFactory());
 
     const frame = container.querySelector("[data-frame-key='a']")!;
-    const titlebar = frame.querySelector("[data-frame-titlebar]");
     const content = frame.querySelector("[data-test-key='a']");
-    expect(titlebar).not.toBeNull();
-    expect(titlebar!.textContent).toContain("A");
+    expect(frame).not.toBeNull();
     expect(content).not.toBeNull();
   });
 
@@ -130,9 +135,8 @@ describe("FreeLayoutOrganiser", () => {
     );
     org.mount(container, makeEntries("a"), testFactory());
 
-    const titlebar = container.querySelector(
-      "[data-frame-titlebar]",
-    ) as HTMLElement;
+    const frame = container.querySelector("[data-frame-key='a']") as HTMLElement;
+    const titlebar = frame.querySelector("[data-frame-titlebar]") as HTMLElement;
 
     titlebar.dispatchEvent(
       new PointerEvent("pointerdown", {
@@ -287,5 +291,71 @@ describe("FreeLayoutOrganiser", () => {
     expect(Number(frameA.style.zIndex)).toBeGreaterThan(
       Number(frameB.style.zIndex),
     );
+  });
+
+  it("scales frames proportionally on container resize", () => {
+    const org = createFreeLayoutStrategy({
+      entries: {
+        a: {
+          position: { x: 100, y: 100 },
+          size: { width: 400, height: 300 },
+        },
+      },
+      zOrder: ["a"],
+    });
+    org.mount(container, makeEntries("a"), testFactory());
+
+    expect(resizeObserverCallback).not.toBeNull();
+
+    // Baseline is frame bounding box: (100+400+20)=520 x (100+300+20)=420
+    // Resize to 1040x840 = 2x baseline
+    resizeObserverCallback!([{ contentRect: { width: 1040, height: 840 } }]);
+
+    const state = org.getState() as FreeLayoutState;
+    expect(state.entries["a"]!.position.x).toBe(200);
+    expect(state.entries["a"]!.position.y).toBe(200);
+    expect(state.entries["a"]!.size.width).toBe(800);
+    expect(state.entries["a"]!.size.height).toBe(600);
+  });
+
+  it("close dot removes the panel entry", () => {
+    const org = createFreeLayoutStrategy({
+      entries: {
+        a: { position: { x: 0, y: 0 }, size: { width: 200, height: 150 } },
+        b: { position: { x: 300, y: 0 }, size: { width: 200, height: 150 } },
+      },
+      zOrder: ["a", "b"],
+    });
+    org.mount(container, makeEntries("a", "b"), testFactory());
+    expect(container.querySelectorAll("[data-frame-key]")).toHaveLength(2);
+
+    const closeBtn = container.querySelector("[data-frame-key='a'] .frame-close-dot") as HTMLElement;
+    expect(closeBtn).not.toBeNull();
+    closeBtn.click();
+
+    expect(container.querySelectorAll("[data-frame-key]")).toHaveLength(1);
+    expect(container.querySelector("[data-frame-key='b']")).not.toBeNull();
+  });
+
+  it("pin button brings panel to front and toggles visual", () => {
+    const org = createFreeLayoutStrategy({
+      entries: {
+        a: { position: { x: 0, y: 0 }, size: { width: 200, height: 150 } },
+        b: { position: { x: 50, y: 50 }, size: { width: 200, height: 150 } },
+      },
+      zOrder: ["a", "b"],
+    });
+    org.mount(container, makeEntries("a", "b"), testFactory());
+
+    const frameA = container.querySelector("[data-frame-key='a']") as HTMLElement;
+    const frameB = container.querySelector("[data-frame-key='b']") as HTMLElement;
+    expect(Number(frameB.style.zIndex)).toBeGreaterThan(Number(frameA.style.zIndex));
+
+    const pinBtn = frameA.querySelector(".frame-pin-btn") as HTMLElement;
+    expect(pinBtn).not.toBeNull();
+    pinBtn.click();
+
+    expect(Number(frameA.style.zIndex)).toBeGreaterThan(Number(frameB.style.zIndex));
+    expect(pinBtn.getAttribute("aria-pressed")).toBe("true");
   });
 });

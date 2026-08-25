@@ -44,7 +44,7 @@ describe("Container toolbar and tab strip integration", () => {
     expect(host.querySelector("[data-container-toolbar]")).not.toBeNull();
   });
 
-  it("addEntry inserts tab before toolbar-actions in strip", () => {
+  it("addEntry inserts tab before container toolbar in strip", () => {
     const c = createContainer({
       entries: [{ key: "a", label: "A" }],
       layout: "tabbed",
@@ -52,39 +52,33 @@ describe("Container toolbar and tab strip integration", () => {
     });
     c.mount(host);
     const strip = host.querySelector("[data-tab-strip]") as HTMLElement;
-    const actions = document.createElement("span");
-    actions.setAttribute("data-toolbar-actions", "");
-    strip.appendChild(actions);
 
     c.addEntry({ key: "b", label: "B" });
 
     const children = [...strip.children];
     const bIdx = children.findIndex(el => el.getAttribute("data-tab-key") === "b");
-    const actIdx = children.findIndex(el => el.hasAttribute("data-toolbar-actions"));
-    expect(bIdx).toBeLessThan(actIdx);
+    const toolbarIdx = children.findIndex(el => el.hasAttribute("data-container-toolbar"));
+    expect(bIdx).toBeLessThan(toolbarIdx);
   });
 
-  it("multiple addEntry calls keep all tabs before actions", () => {
+  it("multiple addEntry calls keep all tabs before container toolbar", () => {
     const c = createContainer({
       entries: [{ key: "a", label: "A" }],
       layout: "tabbed",
       contentFactory: stubFactory,
     });
     c.mount(host);
-    const strip = host.querySelector("[data-tab-strip]") as HTMLElement;
-    const actions = document.createElement("span");
-    actions.setAttribute("data-toolbar-actions", "");
-    strip.appendChild(actions);
 
     c.addEntry({ key: "b", label: "B" });
     c.addEntry({ key: "c", label: "C" });
     c.addEntry({ key: "d", label: "D" });
 
+    const strip = host.querySelector("[data-tab-strip]") as HTMLElement;
     const children = [...strip.children];
-    const actIdx = children.findIndex(el => el.hasAttribute("data-toolbar-actions"));
-    const tabKeys = children.slice(0, actIdx).map(el => el.getAttribute("data-tab-key"));
+    const toolbarIdx = children.findIndex(el => el.hasAttribute("data-container-toolbar"));
+    const tabKeys = children.slice(0, toolbarIdx).map(el => el.getAttribute("data-tab-key"));
     expect(tabKeys).toEqual(["a", "b", "c", "d"]);
-    expect(actIdx).toBe(4);
+    expect(toolbarIdx).toBe(4);
   });
 
   it("onAdd callback fires when + is clicked on container toolbar", () => {
@@ -144,6 +138,136 @@ describe("Container toolbar and tab strip integration", () => {
 
     const contentAfter = host.querySelector('[data-stub="a"]');
     expect(contentAfter).toBe(contentBefore);
+  });
+});
+
+describe("Container toolbar placement: strip vs overlay", () => {
+  let host: HTMLElement;
+
+  beforeEach(() => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+  });
+
+  afterEach(() => {
+    host.remove();
+  });
+
+  it("toolbar renders in tab strip when layout is tabbed", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }, { key: "b", label: "B" }],
+      layout: "tabbed",
+      contentFactory: stubFactory,
+    });
+    c.mount(host);
+
+    const strip = host.querySelector("[data-tab-strip]");
+    const toolbarInStrip = strip?.querySelector("[data-container-toolbar]");
+    expect(toolbarInStrip).not.toBeNull();
+  });
+
+  it("toolbar renders as overlay when layout is accordion", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }, { key: "b", label: "B" }],
+      layout: "accordion",
+      contentFactory: stubFactory,
+    });
+    c.mount(host);
+
+    const strip = host.querySelector("[data-tab-strip]");
+    expect(strip).toBeNull();
+    const toolbar = host.querySelector("[data-container-toolbar]") as HTMLElement;
+    expect(toolbar).not.toBeNull();
+    expect(toolbar.style.position).toBe("relative");
+    const toolbarBar = host.querySelector("[data-toolbar-bar]");
+    expect(toolbarBar).not.toBeNull();
+  });
+
+  it("toolbar moves from overlay to strip on setLayout tabbed", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }, { key: "b", label: "B" }],
+      layout: "accordion",
+      contentFactory: stubFactory,
+    });
+    c.mount(host);
+
+    c.setLayout("tabbed");
+
+    const strip = host.querySelector("[data-tab-strip]");
+    const toolbarInStrip = strip?.querySelector("[data-container-toolbar]");
+    expect(toolbarInStrip).not.toBeNull();
+  });
+
+  it("toolbar moves from strip to overlay on setLayout accordion", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }, { key: "b", label: "B" }],
+      layout: "tabbed",
+      contentFactory: stubFactory,
+    });
+    c.mount(host);
+
+    c.setLayout("accordion");
+
+    const strip = host.querySelector("[data-tab-strip]");
+    expect(strip).toBeNull();
+    const toolbar = host.querySelector("[data-container-toolbar]") as HTMLElement;
+    expect(toolbar).not.toBeNull();
+    expect(toolbar.style.position).toBe("relative");
+    const toolbarBar = host.querySelector("[data-toolbar-bar]");
+    expect(toolbarBar).not.toBeNull();
+  });
+
+  it("toolbar survives full layout cycle: tabbed→accordion→free→tabbed", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }, { key: "b", label: "B" }],
+      layout: "tabbed",
+      contentFactory: stubFactory,
+    });
+    c.mount(host);
+
+    c.setLayout("accordion");
+    expect(host.querySelector("[data-container-toolbar]")).not.toBeNull();
+
+    c.setLayout("free");
+    expect(host.querySelector("[data-container-toolbar]")).not.toBeNull();
+
+    c.setLayout("tabbed");
+    const strip = host.querySelector("[data-tab-strip]");
+    const toolbarInStrip = strip?.querySelector("[data-container-toolbar]");
+    expect(toolbarInStrip).not.toBeNull();
+  });
+
+  it("toolbar ☰ and + remain functional after layout cycling", () => {
+    let addCalled = false;
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }],
+      layout: "tabbed",
+      contentFactory: stubFactory,
+      onAdd: () => { addCalled = true; },
+    });
+    c.mount(host);
+
+    c.setLayout("accordion");
+    c.setLayout("tabbed");
+
+    addCalled = false;
+
+    const toolbar = host.querySelector("[data-container-toolbar]")!;
+    const addBtn = toolbar.querySelector("[data-toolbar-add]") as HTMLElement;
+    addBtn.click();
+    expect(addCalled).toBe(true);
+  });
+
+  it("no toolbar at depth > 1", () => {
+    const c = createContainer({
+      entries: [{ key: "a", label: "A" }],
+      layout: "tabbed",
+      contentFactory: stubFactory,
+      depth: 2,
+    });
+    c.mount(host);
+
+    expect(host.querySelector("[data-container-toolbar]")).toBeNull();
   });
 });
 

@@ -1,5 +1,5 @@
-export { createContainer } from "./container";
-export type { Container, ContainerConfig } from "./container";
+export { createContainer, containerizeEntry, flattenEntry } from "./container";
+export type { Container, ContainerConfig } from "./types.js";
 export { createTabbedStrategy } from "./tabbed-strategy";
 export { createAccordionStrategy } from "./accordion-strategy";
 export { createFreeLayoutStrategy } from "./free-layout-strategy";
@@ -23,4 +23,4 @@ export type {
   SplitState,
   PerLayoutMeta,
 } from "./types.js";
-export { DEFAULT_POLICY } from "./types.js";
+export { DEFAULT_POLICY, SPLIT_POLICY } from "./types.js";

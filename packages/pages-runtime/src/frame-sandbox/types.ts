@@ -1,4 +1,5 @@
-export type Layout = "free" | "tabbed" | "accordion" | "splith" | "splitv" | "content";
+import type { Layout, Component } from "@casehubio/pages-component";
+export type { Layout };
 
 export interface ContainerPolicy {
   readonly allowedLayouts: readonly Layout[];
@@ -7,7 +8,12 @@ export interface ContainerPolicy {
 
 export const DEFAULT_POLICY: ContainerPolicy = {
   allowedLayouts: ["free", "tabbed", "accordion"],
-  maxDepth: 3,
+  maxDepth: 5,
+};
+
+export const SPLIT_POLICY: ContainerPolicy = {
+  allowedLayouts: ["free", "tabbed", "accordion", "splith", "splitv"],
+  maxDepth: 5,
 };
 
 export interface PerLayoutMeta {
@@ -21,6 +27,8 @@ export interface Entry {
   contentElement?: HTMLElement | undefined;
   contentDispose?: (() => void) | undefined;
   meta?: PerLayoutMeta;
+  childContainer?: Container | undefined;
+  component?: Component | undefined;
 }
 
 export type ContentFactory = (entry: Entry) => {
@@ -62,6 +70,7 @@ export interface LayoutCallbacks {
   onStateChange?: () => void;
   onEntryMove?: (key: string, x: number, y: number) => void;
   onEntryResize?: (key: string, w: number, h: number) => void;
+  onCollapse?: (remaining: Entry) => void;
 }
 
 export interface LayoutStrategy {
@@ -76,5 +85,35 @@ export interface LayoutStrategy {
   removeEntry(key: string): void;
   getState(): TabState | AccordionState | FreeLayoutState | SplitState;
   restoreState(state: unknown): void;
+  refreshEntry(key: string): void;
   dispose(): void;
+}
+
+export interface Container {
+  readonly entries: readonly Entry[];
+  readonly organiser: LayoutStrategy;
+  readonly policy: ContainerPolicy;
+  readonly depth: number;
+  addEntry(entry: Entry, atIndex?: number): void;
+  removeEntry(key: string): void;
+  replaceChild(oldKey: string, newChild: Entry): void;
+  refreshEntry(key: string): void;
+  setLayout(type: Layout): void;
+  mount(container: HTMLElement): void;
+  unmount(): void;
+  dispose(): void;
+}
+
+export interface ContainerConfig {
+  entries: Entry[];
+  layout: Layout;
+  policy?: ContainerPolicy;
+  contentFactory: ContentFactory;
+  callbacks?: LayoutCallbacks;
+  depth?: number;
+  freeLayoutState?: FreeLayoutState;
+  onCollapse?: (remainingChild: Entry) => void;
+  onAdd?: () => void;
+  onLayoutChange?: (type: Layout) => void;
+  showToolbar?: boolean;
 }

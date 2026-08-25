@@ -299,7 +299,12 @@ export function createFloatingFrameEngine(
 
     captureLayout(): readonly FrameLayout[] {
       const normalized = normalizeForSave(frames);
-      return [...normalized.values()].sort((a, b) => a.order - b.order);
+      return [...normalized.values()]
+        .sort((a, b) => a.order - b.order)
+        .map(layout => {
+          const containerTree = backend.captureContainerTree(layout.key);
+          return containerTree ? { ...layout, containerTree } : layout;
+        });
     },
 
     restoreLayout(saved: readonly FrameLayout[]) {

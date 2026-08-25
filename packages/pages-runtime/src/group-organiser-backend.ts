@@ -2,6 +2,7 @@ import type {
   FrameLayout,
   FrameTabConfig,
   ContentFactory,
+  ContainerState,
 } from "@casehubio/pages-component";
 import type {
   FloatingFrameBackend,
@@ -10,6 +11,9 @@ import type {
 } from "./floating-frame-backend.js";
 import {
   createContainer,
+  containerizeEntry,
+  DEFAULT_POLICY,
+  SPLIT_POLICY,
   type Container,
   type ContainerConfig,
   type Entry,
@@ -19,6 +23,17 @@ import {
 } from "./frame-sandbox/index.js";
 import { detectEdgeZone, edgeToDirection, type EdgeZone } from "./frame-boundaries.js";
 import { injectFrameChrome, updatePinVisual } from "./frame-chrome.js";
+import { createFrameShell, createFrameTitlebar, createFrameResizeHandles, wireTitlebarDrag } from "./frame-shell.js";
+import {
+  isSplitLayout,
+  findLeafContainer,
+  findContainerWithTab,
+  forEachLeafContainer,
+  findParentOf,
+  captureContainerState,
+  restoreContainerFromState,
+} from "./container-tree-ops.js";
+import type { FrameState } from "./frame-state.js";
 
 type MoveCb = (key: string, pos: { x: number; y: number }) => void;
 type ResizeCb = (
@@ -36,97 +51,6 @@ type DragMoveCb = (key: string, pos: { x: number; y: number }) => void;
 type TabRemovedCb = (frameKey: string, tabKey: string) => void;
 type LayoutChangeCb = (frameKey: string, layout: Layout) => void;
 
-interface FrameState {
-  readonly key: string;
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  frameEl: HTMLElement;
-  rootContainer: Container;
-  tabContentEl: HTMLElement;
-  childContainers: Map<string, Container>;
-}
-
-// --- Container tree helpers ---
-
-function isSplitLayout(layout: Layout): boolean {
-  return layout === "splith" || layout === "splitv";
-}
-
-function findLeafContainer(
-  container: Container,
-  childMap: Map<string, Container>,
-  predicate?: (c: Container) => boolean,
-): Container | null {
-  const layout = container.organiser.type;
-  if (isSplitLayout(layout)) {
-    for (const entry of container.entries) {
-      const child = childMap.get(entry.key);
-      if (child) {
-        const found = findLeafContainer(child, childMap, predicate);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-  if (!predicate || predicate(container)) return container;
-  return null;
-}
-
-function findContainerWithTab(
-  container: Container,
-  tabKey: string,
-  childMap: Map<string, Container>,
-): Container | null {
-  const layout = container.organiser.type;
-  if (isSplitLayout(layout)) {
-    for (const entry of container.entries) {
-      const child = childMap.get(entry.key);
-      if (child) {
-        const found = findContainerWithTab(child, tabKey, childMap);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-  if (container.entries.some(e => e.key === tabKey)) return container;
-  return null;
-}
-
-function forEachLeafContainer(
-  container: Container,
-  childMap: Map<string, Container>,
-  callback: (container: Container, paneKey?: string) => void,
-  paneKey?: string,
-): void {
-  const layout = container.organiser.type;
-  if (isSplitLayout(layout)) {
-    for (const entry of container.entries) {
-      const child = childMap.get(entry.key);
-      if (child) forEachLeafContainer(child, childMap, callback, entry.key);
-    }
-    return;
-  }
-  callback(container, paneKey);
-}
-
-function findParentSplitEntry(
-  root: Container,
-  childMap: Map<string, Container>,
-  targetContainer: Container,
-): { parent: Container; entryKey: string } | null {
-  const layout = root.organiser.type;
-  if (!isSplitLayout(layout)) return null;
-  for (const entry of root.entries) {
-    const child = childMap.get(entry.key);
-    if (child === targetContainer) return { parent: root, entryKey: entry.key };
-    if (child) {
-      const found = findParentSplitEntry(child, childMap, targetContainer);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
 const D = (...args: unknown[]) => console.debug("[compositor]", ...args);
 
 export function createGroupOrganiserBackend(): FloatingFrameBackend {
@@ -136,6 +60,8 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
 
   const frames = new Map<string, FrameState>();
   let zOrder: string[] = [];
+  let lastContainerSize: { width: number; height: number } | null = null;
+  let resizeObserver: ResizeObserver | null = null;
 
   const moveCbs: MoveCb[] = [];
   const resizeCbs: ResizeCb[] = [];
@@ -183,6 +109,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     frameKey: string;
     zone: EdgeZone;
     overlay: HTMLElement;
+    targetLeaf?: Container;
   } | null = null;
 
   const EDGE_THRESHOLD = 40;
@@ -194,7 +121,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     }
   }
 
-  function showEdgeSplitOverlay(frameKey: string, zone: EdgeZone, targetEl: HTMLElement): void {
+  function showEdgeSplitOverlay(frameKey: string, zone: EdgeZone, targetEl: HTMLElement, targetLeaf?: Container): void {
     const state = frames.get(frameKey);
     if (!state) return;
 
@@ -232,7 +159,9 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     }
 
     state.frameEl.appendChild(overlay);
-    edgeSplitPreview = { frameKey, zone, overlay };
+    edgeSplitPreview = targetLeaf
+      ? { frameKey, zone, overlay, targetLeaf }
+      : { frameKey, zone, overlay };
     D("edge-highlight", { frame: frameKey, zone });
   }
 
@@ -241,16 +170,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     return `pane-${String(++paneCounter)}`;
   }
 
-  function addChildToFrame(frameKey: string): void {
-    const state = frames.get(frameKey);
-    if (!state) return;
-    const leaf = findLeafContainer(state.rootContainer, state.childContainers);
-    if (!leaf) return;
-    const key = `entry-${String(Date.now())}-${String(Math.random().toString(36).slice(2, 6))}`;
-    const entry: Entry = { key, label: `Tab ${String(leaf.entries.length + 1)}` };
-    (entry as any)._content = { type: "html", props: { content: `<div style="padding:12px"><h3>New Tab</h3><p>Empty workspace tab.</p></div>` } };
-    leaf.addEntry(entry);
-  }
+  const FRAME_POLICY = { allowedLayouts: ["free" as Layout, "tabbed" as Layout, "accordion" as Layout], maxDepth: DEFAULT_POLICY.maxDepth };
 
   function createLeafContainer(frameKey: string, entries: Entry[]): Container {
     const callbacks = createTabCallbacksForFrame(frameKey);
@@ -259,10 +179,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       layout: "tabbed" as Layout,
       contentFactory: wrapContentFactory(frameKey),
       callbacks,
-      policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 3 },
-      onAdd: () => {
-        addChildToFrame(frameKey);
-      },
+      policy: FRAME_POLICY,
       onLayoutChange: (type) => {
         for (const cb of layoutChangeCbs) cb(frameKey, type);
       },
@@ -273,38 +190,55 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     frameKey: string,
     direction: "splith" | "splitv",
     childEntries: Array<{ key: string; child: Container }>,
-    state: FrameState,
   ): Container {
-    const entries: Entry[] = childEntries.map(({ key }) => ({ key, label: key }));
-    for (const { key, child } of childEntries) {
-      state.childContainers.set(key, child);
-    }
+    const entries: Entry[] = childEntries.map(({ key, child }) => ({
+      key,
+      label: key,
+      childContainer: child,
+    }));
 
     return createContainer({
       entries,
       layout: direction,
       contentFactory: (entry: Entry) => {
-        const child = state.childContainers.get(entry.key);
-        if (child) {
+        if (entry.childContainer) {
+          const child = entry.childContainer;
           const el = document.createElement("div");
           el.style.cssText = "display:flex;flex-direction:column;height:100%;";
           child.mount(el);
-          return { element: el, dispose: () => child.dispose() };
+          return { element: el, dispose: () => { child.dispose(); } };
         }
         return { element: document.createElement("div") };
       },
-      policy: { allowedLayouts: ["free", "tabbed", "accordion", "splith", "splitv"], maxDepth: 10 },
+      policy: SPLIT_POLICY,
+      showToolbar: false,
       onCollapse: (remainingEntry) => {
-        const remainingChild = state.childContainers.get(remainingEntry.key);
-        if (remainingChild) {
+        const state = frames.get(frameKey);
+        if (!state) return;
+        const remainingChild = remainingEntry.childContainer;
+        if (!remainingChild) return;
+
+        const collapsingContainer = findContainerWithTab(state.rootContainer, remainingEntry.key);
+
+        if (collapsingContainer === state.rootContainer) {
           remainingChild.unmount();
-          state.childContainers.delete(remainingEntry.key);
+          remainingEntry.childContainer = undefined;
           while (state.tabContentEl.firstChild) {
             state.tabContentEl.removeChild(state.tabContentEl.firstChild);
           }
           state.rootContainer = remainingChild;
           remainingChild.mount(state.tabContentEl);
-          D("split-collapse", { frame: frameKey, surviving: remainingEntry.key });
+          D("split-collapse root", { frame: frameKey, surviving: remainingEntry.key });
+        } else if (collapsingContainer) {
+          const parentInfo = findParentOf(state.rootContainer, collapsingContainer);
+          if (parentInfo) {
+            remainingChild.unmount();
+            remainingEntry.childContainer = undefined;
+            parentInfo.entry.childContainer = remainingChild;
+            parentInfo.entry.contentDispose = undefined;
+            parentInfo.container.refreshEntry(parentInfo.entry.key);
+            D("split-collapse nested", { frame: frameKey, surviving: remainingEntry.key, parent: parentInfo.entry.key });
+          }
         }
       },
     });
@@ -325,11 +259,10 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       return;
     }
 
-    const parentInfo = findParentSplitEntry(state.rootContainer, state.childContainers, leafContainer);
+    const parentInfo = findParentOf(state.rootContainer, leafContainer);
     if (parentInfo) {
-      D("empty-source → remove pane", { frame: frameKey, paneKey: parentInfo.entryKey });
-      state.childContainers.delete(parentInfo.entryKey);
-      parentInfo.parent.removeEntry(parentInfo.entryKey);
+      D("empty-source → remove pane", { frame: frameKey, paneKey: parentInfo.entry.key });
+      parentInfo.container.removeEntry(parentInfo.entry.key);
     }
   }
 
@@ -355,12 +288,14 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
           const targetState = frames.get(targetKey);
           const sourceState = frames.get(frameKey);
 
+          const targetLeaf = targetState ? findDropTargetContainer(targetState) : null;
+
           cleanupCrossFramePreview();
           cleanupEdgeSplitPreview();
           dragState = null;
 
           if (sourceState && targetState) {
-            const sourceContainer = findContainerWithTab(sourceState.rootContainer, tabKey, sourceState.childContainers);
+            const sourceContainer = findContainerWithTab(sourceState.rootContainer, tabKey);
             if (!sourceContainer) return;
             const entry = sourceContainer.entries.find(e => e.key === tabKey);
             if (!entry) return;
@@ -368,8 +303,6 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
             suppressEntryClose = true;
             sourceContainer.removeEntry(tabKey);
             suppressEntryClose = false;
-
-            const targetLeaf = findDropTargetContainer(targetState);
             if (targetLeaf) {
               const targetIdx = insertIdx >= 0 && insertIdx <= targetLeaf.entries.length
                 ? insertIdx : targetLeaf.entries.length;
@@ -394,13 +327,13 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
             }
           }
         } else if (edgeSplitPreview) {
-          const { frameKey: targetFrame, zone } = edgeSplitPreview;
+          const { frameKey: targetFrame, zone, targetLeaf: paneLeaf } = edgeSplitPreview;
           const tabKey = dragState?.tabKey ?? "";
           D("drop-on-edge", { tab: tabKey, from: frameKey, target: targetFrame, zone });
           cleanupEdgeSplitPreview();
           cleanupCrossFramePreview();
           dragState = null;
-          splitFrame(frameKey, tabKey, targetFrame, zone);
+          splitFrame(frameKey, tabKey, targetFrame, zone, paneLeaf);
           for (const cb of edgeSplitCbs) cb(frameKey, tabKey, targetFrame, zone);
         } else {
           D("drag-cancelled", { frame: frameKey, tab: dragState?.tabKey });
@@ -428,7 +361,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
         D("tab-close", { frame: frameKey, tab: tabKey });
         const state = frames.get(frameKey);
         if (!state) return;
-        const leaf = findContainerWithTab(state.rootContainer, tabKey, state.childContainers);
+        const leaf = findContainerWithTab(state.rootContainer, tabKey);
         if (leaf) {
           leaf.removeEntry(tabKey);
           for (const cb of tabRemovedCbs) cb(frameKey, tabKey);
@@ -444,7 +377,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
 
   function findDropTargetContainer(state: FrameState): Container | null {
     if (isSplitLayout(state.rootContainer.organiser.type)) {
-      return findLeafContainer(state.rootContainer, state.childContainers, (c) => {
+      return findLeafContainer(state.rootContainer, (c) => {
         const el = getContainerElement(state, c);
         if (!el) return false;
         return !!el.querySelector("[data-tab-strip] [data-tab-preview]");
@@ -455,11 +388,10 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
 
   function getContainerElement(state: FrameState, container: Container): HTMLElement | null {
     if (container === state.rootContainer) return state.tabContentEl;
-    for (const [key, child] of state.childContainers) {
-      if (child === container) {
-        const pane = state.tabContentEl.querySelector(`[data-split-pane="${key}"]`);
-        return pane as HTMLElement | null;
-      }
+    const parentInfo = findParentOf(state.rootContainer, container);
+    if (parentInfo) {
+      const pane = state.tabContentEl.querySelector(`[data-split-pane="${parentInfo.entry.key}"]`);
+      return pane as HTMLElement | null;
     }
     return null;
   }
@@ -469,6 +401,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     tabKey: string,
     targetFrameKey: string,
     zone: EdgeZone,
+    targetLeaf?: Container,
   ): void {
     const targetState = frames.get(targetFrameKey);
     if (!targetState) return;
@@ -476,7 +409,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     const sourceState = frames.get(fromFrameKey);
     if (!sourceState) return;
 
-    const sourceContainer = findContainerWithTab(sourceState.rootContainer, tabKey, sourceState.childContainers);
+    const sourceContainer = findContainerWithTab(sourceState.rootContainer, tabKey);
     if (!sourceContainer) return;
     const entryIdx = sourceContainer.entries.findIndex(e => e.key === tabKey);
     if (entryIdx === -1) return;
@@ -491,29 +424,38 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     }
 
     const direction: Layout = (zone === "left" || zone === "right") ? "splith" : "splitv";
-
-    targetState.rootContainer.unmount();
-
-    const originalKey = nextPaneKey();
     const droppedKey = nextPaneKey();
-
+    const originalKey = nextPaneKey();
     const droppedContainer = createLeafContainer(targetFrameKey, [droppedEntry]);
 
-    const originalContainer = targetState.rootContainer;
-
-    const children = (zone === "left" || zone === "top")
-      ? [{ key: droppedKey, child: droppedContainer }, { key: originalKey, child: originalContainer }]
-      : [{ key: originalKey, child: originalContainer }, { key: droppedKey, child: droppedContainer }];
-
-    const splitContainer = createSplitContainer(targetFrameKey, direction as "splith" | "splitv", children, targetState);
-    targetState.rootContainer = splitContainer;
-    splitContainer.mount(targetState.tabContentEl);
-
-    if (fromFrameKey === targetFrameKey && sourceContainer.entries.length === 0 && sourceContainer !== originalContainer) {
-      handleEmptyLeaf(targetFrameKey, sourceContainer);
+    if (targetLeaf && targetLeaf !== targetState.rootContainer) {
+      const parentInfo = findParentOf(targetState.rootContainer, targetLeaf);
+      if (parentInfo) {
+        targetLeaf.unmount();
+        const children = (zone === "left" || zone === "top")
+          ? [{ key: droppedKey, child: droppedContainer }, { key: originalKey, child: targetLeaf }]
+          : [{ key: originalKey, child: targetLeaf }, { key: droppedKey, child: droppedContainer }];
+        const newSplit = createSplitContainer(targetFrameKey, direction as "splith" | "splitv", children);
+        parentInfo.entry.childContainer = newSplit;
+        parentInfo.entry.contentDispose = undefined;
+        parentInfo.container.refreshEntry(parentInfo.entry.key);
+        D("splitFrame pane-level", { frame: targetFrameKey, dir: direction, pane: parentInfo.entry.key });
+      }
+    } else {
+      targetState.rootContainer.unmount();
+      const originalContainer = targetState.rootContainer;
+      const children = (zone === "left" || zone === "top")
+        ? [{ key: droppedKey, child: droppedContainer }, { key: originalKey, child: originalContainer }]
+        : [{ key: originalKey, child: originalContainer }, { key: droppedKey, child: droppedContainer }];
+      const splitContainer = createSplitContainer(targetFrameKey, direction as "splith" | "splitv", children);
+      targetState.rootContainer = splitContainer;
+      splitContainer.mount(targetState.tabContentEl);
+      D("splitFrame root-level", { frame: targetFrameKey, dir: direction });
     }
 
-    D("splitFrame done", { frame: targetFrameKey, dir: direction });
+    if (fromFrameKey === targetFrameKey && sourceContainer.entries.length === 0 && sourceContainer !== (targetLeaf ?? targetState.rootContainer)) {
+      handleEmptyLeaf(targetFrameKey, sourceContainer);
+    }
   }
 
   function handleCrossFrameDragMove(
@@ -528,7 +470,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
 
       if (isSplitLayout(state.rootContainer.organiser.type)) {
         const dragTabKey = dragState?.tabKey ?? "";
-        forEachLeafContainer(state.rootContainer, state.childContainers, (leaf) => {
+        forEachLeafContainer(state.rootContainer, (leaf) => {
           if (leaf.entries.some(e => e.key === dragTabKey)) return;
           const el = getContainerElement(state, leaf);
           if (!el) return;
@@ -559,7 +501,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
         const sourceState = frames.get(sourceFrame);
         let dragEntry: Entry | undefined;
         if (sourceState) {
-          const srcContainer = findContainerWithTab(sourceState.rootContainer, dragState?.tabKey ?? "", sourceState.childContainers);
+          const srcContainer = findContainerWithTab(sourceState.rootContainer, dragState?.tabKey ?? "");
           dragEntry = srcContainer?.entries.find(e => e.key === dragState?.tabKey);
         }
         placeholder.textContent = dragEntry?.label ?? dragState?.tabKey ?? "";
@@ -570,7 +512,12 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
           "opacity:0.5;pointer-events:none;" +
           "border-bottom:2px solid transparent;" +
           "transition:all 0.15s ease;";
-        matchedStrip.appendChild(placeholder);
+        const sentinel = matchedStrip.querySelector("[data-container-toolbar], [data-toolbar-actions]");
+        if (sentinel) {
+          matchedStrip.insertBefore(placeholder, sentinel);
+        } else {
+          matchedStrip.appendChild(placeholder);
+        }
         crossFramePreview = { frameKey: key, placeholder, insertIndex: -1 };
       }
 
@@ -591,7 +538,10 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       if (insertBefore) {
         matchedStrip.insertBefore(placeholder, insertBefore);
       } else {
-        if (placeholder.nextSibling) {
+        const toolbarSentinel = matchedStrip.querySelector("[data-container-toolbar], [data-toolbar-actions]");
+        if (toolbarSentinel) {
+          matchedStrip.insertBefore(placeholder, toolbarSentinel);
+        } else if (placeholder.nextSibling) {
           matchedStrip.appendChild(placeholder);
         }
       }
@@ -602,13 +552,13 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     if (!foundTarget) {
       cleanupCrossFramePreview();
 
-      let edgeHit: { frameKey: string; zone: EdgeZone; targetEl: HTMLElement } | null = null;
+      let edgeHit: { frameKey: string; zone: EdgeZone; targetEl: HTMLElement; targetLeaf?: Container } | null = null;
 
       for (const [key, state] of frames) {
         if (key === sourceFrame && !isSplitLayout(state.rootContainer.organiser.type) && state.rootContainer.entries.length < 2) continue;
 
         if (isSplitLayout(state.rootContainer.organiser.type)) {
-          forEachLeafContainer(state.rootContainer, state.childContainers, (leaf) => {
+          forEachLeafContainer(state.rootContainer, (leaf) => {
             if (edgeHit) return;
 
             const dragTabKey = dragState?.tabKey ?? "";
@@ -623,7 +573,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
             const contentRect = contentEl.getBoundingClientRect();
             const zone = detectEdgeZone({ x, y }, contentRect, EDGE_THRESHOLD);
             if (zone) {
-              edgeHit = { frameKey: key, zone, targetEl: contentEl };
+              edgeHit = { frameKey: key, zone, targetEl: contentEl, targetLeaf: leaf };
             }
           });
         } else {
@@ -641,7 +591,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       }
 
       if (edgeHit) {
-        showEdgeSplitOverlay(edgeHit.frameKey, edgeHit.zone, edgeHit.targetEl);
+        showEdgeSplitOverlay(edgeHit.frameKey, edgeHit.zone, edgeHit.targetEl, edgeHit.targetLeaf);
       } else {
         cleanupEdgeSplitPreview();
       }
@@ -659,6 +609,45 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     }
   }
 
+  function computeFrameBounds(): { width: number; height: number } {
+    let maxRight = 0;
+    let maxBottom = 0;
+    for (const state of frames.values()) {
+      const right = state.position.x + state.size.width;
+      const bottom = state.position.y + state.size.height;
+      if (right > maxRight) maxRight = right;
+      if (bottom > maxBottom) maxBottom = bottom;
+    }
+    return { width: maxRight + 20, height: maxBottom + 20 };
+  }
+
+  function handleContainerResize(newWidth: number, newHeight: number): void {
+    if (!lastContainerSize || lastContainerSize.width === 0 || lastContainerSize.height === 0 || frames.size === 0) {
+      const bounds = computeFrameBounds();
+      lastContainerSize = bounds.width > 20 ? bounds : { width: newWidth, height: newHeight };
+      if (Math.abs(newWidth - lastContainerSize.width) < 1 && Math.abs(newHeight - lastContainerSize.height) < 1) return;
+    }
+    const scaleX = newWidth / lastContainerSize.width;
+    const scaleY = newHeight / lastContainerSize.height;
+    if (Math.abs(scaleX - 1) < 0.01 && Math.abs(scaleY - 1) < 0.01) return;
+
+    for (const state of frames.values()) {
+      state.position = {
+        x: Math.round(state.position.x * scaleX),
+        y: Math.round(state.position.y * scaleY),
+      };
+      state.size = {
+        width: Math.round(state.size.width * scaleX),
+        height: Math.round(state.size.height * scaleY),
+      };
+      state.frameEl.style.left = `${state.position.x}px`;
+      state.frameEl.style.top = `${state.position.y}px`;
+      state.frameEl.style.width = `${state.size.width}px`;
+      state.frameEl.style.height = `${state.size.height}px`;
+    }
+    lastContainerSize = { width: newWidth, height: newHeight };
+  }
+
   function bringToFrontInternal(key: string): void {
     zOrder = zOrder.filter((k) => k !== key);
     zOrder.push(key);
@@ -666,142 +655,66 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
   }
 
   function wrapContentFactory(frameKey: string): SandboxContentFactory {
-    return (entry: Entry) => {
+    return (entry: Entry): { element: HTMLElement; dispose?: () => void } => {
       if (!contentFactory) {
-        const el = document.createElement("div");
-        return { element: el };
+        return { element: document.createElement("div") };
       }
+
+      if (entry.childContainer) {
+        const child = entry.childContainer;
+        const el = document.createElement("div");
+        el.style.cssText = "display:flex;flex-direction:column;height:100%;";
+        child.mount(el);
+        return { element: el, dispose: () => { child.dispose(); } };
+      }
+
       const tabConfig: FrameTabConfig = {
         key: entry.key,
         label: entry.label,
-        content: (entry as any)._content ?? { type: "html", props: {} },
+        content: entry.component ?? { type: "html", props: {} },
       };
-      return contentFactory(tabConfig);
-    };
-  }
+      const result = contentFactory(tabConfig);
 
-  function createFrameElement(
-    key: string,
-    pos: { x: number; y: number },
-    size: { width: number; height: number },
-  ): HTMLElement {
-    const frame = document.createElement("div");
-    frame.setAttribute("data-frame-key", key);
-    frame.style.cssText =
-      `position:absolute;pointer-events:auto;` +
-      `left:${pos.x}px;top:${pos.y}px;` +
-      `width:${size.width}px;height:${size.height}px;` +
-      `display:flex;flex-direction:column;` +
-      `background:var(--pages-neutral-2,#1e1e1e);` +
-      `border:1px solid var(--pages-neutral-4,#333);` +
-      `border-radius:6px;overflow:hidden;`;
-    return frame;
-  }
+      const wrapper = document.createElement("div");
+      wrapper.setAttribute("data-content-wrapper", "");
+      wrapper.style.cssText = "position:relative;height:100%;overflow:auto;";
+      wrapper.appendChild(result.element);
 
-  function createResizeHandles(
-    frameEl: HTMLElement,
-    state: FrameState,
-  ): void {
-    const handles = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
-    const cursors: Record<string, string> = {
-      n: "ns-resize",
-      s: "ns-resize",
-      e: "ew-resize",
-      w: "ew-resize",
-      ne: "nesw-resize",
-      nw: "nwse-resize",
-      se: "nwse-resize",
-      sw: "nesw-resize",
-    };
-
-    for (const dir of handles) {
-      const handle = document.createElement("div");
-      handle.setAttribute("data-resize-handle", dir);
-      handle.style.cssText = `position:absolute;z-index:10;cursor:${cursors[dir]};`;
-
-      const sz = "8px";
-      const offset = "-3px";
-      if (dir.includes("n")) {
-        handle.style.top = offset;
-        handle.style.height = sz;
-      }
-      if (dir.includes("s")) {
-        handle.style.bottom = offset;
-        handle.style.height = sz;
-      }
-      if (dir.includes("e")) {
-        handle.style.right = offset;
-        handle.style.width = sz;
-      }
-      if (dir.includes("w")) {
-        handle.style.left = offset;
-        handle.style.width = sz;
-      }
-      if (dir === "n" || dir === "s") {
-        handle.style.left = sz;
-        handle.style.right = sz;
-      }
-      if (dir === "e" || dir === "w") {
-        handle.style.top = sz;
-        handle.style.bottom = sz;
-      }
-      if (dir.length === 2) {
-        handle.style.width = sz;
-        handle.style.height = sz;
-      }
-
-      handle.addEventListener("pointerdown", (startEvt) => {
-        startEvt.stopPropagation();
-        startEvt.preventDefault();
-        document.body.style.userSelect = "none";
-        const startX = startEvt.clientX;
-        const startY = startEvt.clientY;
-        const startW = state.size.width;
-        const startH = state.size.height;
-        const startLeft = state.position.x;
-        const startTop = state.position.y;
-
-        const onMove = (e: PointerEvent) => {
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-
-          let newW = startW;
-          let newH = startH;
-          let newX = startLeft;
-          let newY = startTop;
-
-          if (dir.includes("e")) newW = Math.max(100, startW + dx);
-          if (dir.includes("w")) {
-            newW = Math.max(100, startW - dx);
-            newX = startLeft + (startW - newW);
-          }
-          if (dir.includes("s")) newH = Math.max(80, startH + dy);
-          if (dir.includes("n")) {
-            newH = Math.max(80, startH - dy);
-            newY = startTop + (startH - newH);
-          }
-
-          state.size = { width: newW, height: newH };
-          state.position = { x: newX, y: newY };
-          frameEl.style.left = `${newX}px`;
-          frameEl.style.top = `${newY}px`;
-          frameEl.style.width = `${newW}px`;
-          frameEl.style.height = `${newH}px`;
-        };
-
-        const onUp = () => {
-          document.body.style.userSelect = "";
-          document.removeEventListener("pointermove", onMove);
-          document.removeEventListener("pointerup", onUp);
-          for (const cb of resizeCbs) cb(state.key, { ...state.size });
-        };
-
-        document.addEventListener("pointermove", onMove);
-        document.addEventListener("pointerup", onUp);
+      const btn = document.createElement("button");
+      btn.setAttribute("data-nest-button", "");
+      btn.setAttribute("role", "button");
+      btn.setAttribute("aria-label", "Nest content into tabbed container");
+      btn.textContent = "⊞";
+      btn.title = "Nest";
+      btn.style.cssText = "position:absolute;bottom:8px;right:8px;z-index:10;padding:4px 8px;border:1px solid var(--pages-border-1,#333);background:var(--pages-surface-2,#222);color:var(--pages-text-2,#aaa);border-radius:4px;cursor:pointer;font-size:14px;opacity:0.5;transition:opacity 0.15s ease;";
+      btn.addEventListener("mouseenter", () => { btn.style.opacity = "1"; });
+      btn.addEventListener("mouseleave", () => { btn.style.opacity = "0.5"; });
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentState = frames.get(frameKey);
+        if (!currentState) return;
+        const parentContainer = findContainerWithTab(currentState.rootContainer, entry.key);
+        if (!parentContainer) return;
+        try {
+          containerizeEntry(entry, parentContainer, wrapContentFactory(frameKey));
+        } catch { D("nest blocked — depth limit", { frame: frameKey, entry: entry.key }); return; }
+        btn.remove();
+        while (wrapper.firstChild) wrapper.removeChild(wrapper.firstChild);
+        if (entry.childContainer) {
+          const el = document.createElement("div");
+          el.style.cssText = "display:flex;flex-direction:column;height:100%;";
+          entry.childContainer.mount(el);
+          wrapper.appendChild(el);
+        }
+        entry.contentElement = wrapper;
+        entry.contentDispose = () => { entry.childContainer?.dispose(); };
       });
+      wrapper.appendChild(btn);
 
-      frameEl.appendChild(handle);
-    }
+      const ret: { element: HTMLElement; dispose?: () => void } = { element: wrapper };
+      if (result.dispose) ret.dispose = result.dispose;
+      return ret;
+    };
   }
 
   const backend: FloatingFrameBackend = {
@@ -809,9 +722,20 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       containerEl = container;
       contentFactory = factory;
       extraButtons = options?.extraButtons ?? [];
+      lastContainerSize = null;
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0) handleContainerResize(width, height);
+        }
+      });
+      resizeObserver.observe(container);
     },
 
     detach() {
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      lastContainerSize = null;
       containerEl = null;
       contentFactory = null;
     },
@@ -820,7 +744,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       if (!containerEl) return;
       D("frame-create", { key: layout.key, tabs: layout.tabs.map(t => t.label) });
 
-      const frameEl = createFrameElement(
+      const frameEl = createFrameShell(
         layout.key,
         layout.position,
         layout.size,
@@ -832,27 +756,12 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
         { capture: true },
       );
 
-      const titlebar = document.createElement("div");
-      titlebar.setAttribute("data-frame-titlebar", "");
-      titlebar.style.cssText =
-        "display:flex;align-items:center;padding:4px 8px;" +
-        "background:var(--pages-surface-2,#2a2a2a);cursor:grab;" +
-        "user-select:none;border-bottom:1px solid var(--pages-border-1,#333);";
+      const titlebar = createFrameTitlebar();
 
       const tabContentEl = document.createElement("div");
+      tabContentEl.setAttribute("data-frame-body", "");
       tabContentEl.style.cssText =
         "flex:1;display:flex;flex-direction:column;overflow:hidden;";
-
-      const tabEntries: Entry[] = layout.tabs.map((tab) => {
-        const entry: Entry & { _content?: unknown } = {
-          key: tab.key,
-          label: tab.label,
-        };
-        (entry as any)._content = tab.content;
-        return entry;
-      });
-
-      const initialLayout: Layout = layout.viewMode === "accordion" ? "accordion" : "tabbed";
 
       const state: FrameState = {
         key: layout.key,
@@ -861,20 +770,43 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
         frameEl,
         rootContainer: null!,
         tabContentEl,
-        childContainers: new Map(),
       };
 
-      const rootContainer = createContainer({
-        entries: tabEntries,
-        layout: initialLayout,
-        contentFactory: wrapContentFactory(layout.key),
-        callbacks: createTabCallbacksForFrame(layout.key),
-        policy: { allowedLayouts: ["free", "tabbed", "accordion"], maxDepth: 3 },
-        onAdd: () => { addChildToFrame(layout.key); },
-        onLayoutChange: (type) => {
-          for (const cb of layoutChangeCbs) cb(layout.key, type);
-        },
-      });
+      let rootContainer: Container;
+
+      if (layout.containerTree) {
+        rootContainer = restoreContainerFromState(
+          layout.containerTree,
+          layout.key,
+          wrapContentFactory(layout.key),
+          createTabCallbacksForFrame(layout.key),
+          1,
+          createLeafContainer,
+          createSplitContainer,
+        );
+      } else {
+        const tabEntries: Entry[] = layout.tabs.map((tab) => {
+          const entry: Entry = {
+            key: tab.key,
+            label: tab.label,
+          };
+          entry.component = tab.content ?? undefined;
+          return entry;
+        });
+
+        const initialLayout: Layout = layout.viewMode === "accordion" ? "accordion" : "tabbed";
+
+        rootContainer = createContainer({
+          entries: tabEntries,
+          layout: initialLayout,
+          contentFactory: wrapContentFactory(layout.key),
+          callbacks: createTabCallbacksForFrame(layout.key),
+          policy: FRAME_POLICY,
+          onLayoutChange: (type) => {
+            for (const cb of layoutChangeCbs) cb(layout.key, type);
+          },
+        });
+      }
 
       (state as { rootContainer: Container }).rootContainer = rootContainer;
 
@@ -918,55 +850,6 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
 
       rootContainer.mount(tabContentEl);
 
-      // Inject ☰ and + buttons into the tab strip (D16: single row)
-      const strip = tabContentEl.querySelector("[data-tab-strip]") as HTMLElement | null;
-      if (strip) {
-        const actions = document.createElement("span");
-        actions.setAttribute("data-toolbar-actions", "");
-        actions.style.cssText = "margin-left:auto;display:flex;align-items:center;gap:2px;";
-
-        const modeBtn = document.createElement("span");
-        modeBtn.setAttribute("data-toolbar-mode", "");
-        modeBtn.textContent = "☰";
-        modeBtn.title = "Cycle view mode";
-        modeBtn.style.cssText = "cursor:pointer;padding:2px 6px;font-size:12px;opacity:0.5;";
-        modeBtn.addEventListener("mouseenter", () => { modeBtn.style.opacity = "1"; });
-        modeBtn.addEventListener("mouseleave", () => { modeBtn.style.opacity = "0.5"; });
-        modeBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const currentType = state.rootContainer.organiser.type;
-          const modes: Layout[] = ["tabbed", "accordion"];
-          const idx = modes.indexOf(currentType);
-          const next = modes[(idx + 1) % modes.length]!;
-          try { state.rootContainer.setLayout(next); } catch { /* not allowed */ }
-        });
-
-        const addBtn = document.createElement("span");
-        addBtn.setAttribute("data-toolbar-add", "");
-        addBtn.textContent = "+";
-        addBtn.title = "Add tab";
-        addBtn.style.cssText = "cursor:pointer;padding:2px 6px;font-size:14px;font-weight:bold;opacity:0.5;";
-        addBtn.addEventListener("mouseenter", () => { addBtn.style.opacity = "1"; });
-        addBtn.addEventListener("mouseleave", () => { addBtn.style.opacity = "0.5"; });
-        addBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          addChildToFrame(layout.key);
-        });
-
-        actions.appendChild(modeBtn);
-        actions.appendChild(addBtn);
-        strip.appendChild(actions);
-      }
-
-      // In tabbed mode, strip actions (☰ +) handle everything — hide the
-      // Container's built-in toolbar to avoid a duplicate + that misleadingly
-      // adds a sibling tab instead of a nested child. The Container toolbar
-      // re-appears in accordion/free mode where it adds layout-appropriate children.
-      const builtinToolbar = tabContentEl.querySelector("[data-container-toolbar]") as HTMLElement | null;
-      if (builtinToolbar && initialLayout === "tabbed") {
-        builtinToolbar.style.display = "none";
-      }
-
       if (layout.activeTabKey) {
         const btns = tabContentEl.querySelectorAll("[data-tab-key]");
         for (const btn of btns) {
@@ -1005,7 +888,9 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
         })),
       );
 
-      createResizeHandles(frameEl, state);
+      createFrameResizeHandles(frameEl, state, (k, w, h) => {
+        for (const cb of resizeCbs) cb(k, { width: w, height: h });
+      }, layout.key);
 
       frames.set(layout.key, state);
       zOrder.push(layout.key);
@@ -1018,10 +903,6 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       if (!state) return;
       D("frame-remove", { key });
       state.rootContainer.dispose();
-      for (const child of state.childContainers.values()) {
-        child.dispose();
-      }
-      state.childContainers.clear();
       state.frameEl.remove();
       frames.delete(key);
       zOrder = zOrder.filter((k) => k !== key);
@@ -1052,13 +933,13 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       const state = frames.get(frameKey);
       if (!state) return;
       D("tab-add", { frame: frameKey, tab: tab.label || tab.key });
-      const entry: Entry & { _content?: unknown } = {
+      const entry: Entry = {
         key: tab.key,
         label: tab.label,
       };
-      (entry as any)._content = tab.content;
+      entry.component = tab.content ?? undefined;
 
-      const leaf = findLeafContainer(state.rootContainer, state.childContainers);
+      const leaf = findLeafContainer(state.rootContainer);
       if (leaf) {
         leaf.addEntry(entry);
         const btn = state.tabContentEl.querySelector(
@@ -1076,7 +957,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
       if (!state) return;
       D("tab-remove (backend)", { frame: frameKey, tab: tabKey });
       suppressEntryClose = true;
-      const leaf = findContainerWithTab(state.rootContainer, tabKey, state.childContainers);
+      const leaf = findContainerWithTab(state.rootContainer, tabKey);
       if (leaf) {
         leaf.removeEntry(tabKey);
         if (leaf.entries.length === 0 && leaf !== state.rootContainer) {
@@ -1152,7 +1033,7 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     setFrameLayout(frameKey, layout) {
       const state = frames.get(frameKey);
       if (!state) return;
-      const leaf = findLeafContainer(state.rootContainer, state.childContainers);
+      const leaf = findLeafContainer(state.rootContainer);
       if (leaf) {
         try { leaf.setLayout(layout as Layout); } catch { /* layout not allowed by policy */ }
       }
@@ -1175,19 +1056,29 @@ export function createGroupOrganiserBackend(): FloatingFrameBackend {
     getTabContentElement(frameKey, tabKey) {
       const state = frames.get(frameKey);
       if (!state) return null;
-      const leaf = findContainerWithTab(state.rootContainer, tabKey, state.childContainers);
+      const leaf = findContainerWithTab(state.rootContainer, tabKey);
       if (!leaf) return null;
       const entry = leaf.entries.find(e => e.key === tabKey);
       return entry?.contentElement ?? null;
     },
 
+    captureContainerTree(frameKey: string): ContainerState | undefined {
+      const state = frames.get(frameKey);
+      if (!state) return undefined;
+      return captureContainerState(state.rootContainer);
+    },
+
+    getRootContainer(frameKey: string): Container | null {
+      const state = frames.get(frameKey);
+      return state?.rootContainer ?? null;
+    },
+
     dispose() {
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      lastContainerSize = null;
       for (const state of frames.values()) {
         state.rootContainer.dispose();
-        for (const child of state.childContainers.values()) {
-          child.dispose();
-        }
-        state.childContainers.clear();
         state.frameEl.remove();
       }
       frames.clear();
