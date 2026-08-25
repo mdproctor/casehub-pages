@@ -42,7 +42,41 @@ export function createSplitStrategy(
     const isHorizontal = direction === "horizontal";
     divider.style.cssText =
       `flex:0 0 4px;cursor:${isHorizontal ? "col-resize" : "row-resize"};` +
-      `background:var(--pages-border-1,#333);`;
+      `background:var(--pages-border-1,#333);z-index:1;`;
+
+    divider.addEventListener("pointerdown", (startEvt) => {
+      startEvt.preventDefault();
+      if (!flexContainer) return;
+      const totalSize = isHorizontal ? flexContainer.clientWidth : flexContainer.clientHeight;
+      if (totalSize === 0) return;
+      const startPos = isHorizontal ? startEvt.clientX : startEvt.clientY;
+      const startRatioLeft = ratios[index]!;
+      const startRatioRight = ratios[index + 1]!;
+      const combinedRatio = startRatioLeft + startRatioRight;
+
+      const onMove = (moveEvt: PointerEvent) => {
+        const delta = (isHorizontal ? moveEvt.clientX : moveEvt.clientY) - startPos;
+        const ratioDelta = (delta / totalSize) * ratios.reduce((a, b) => a + b, 0);
+        const newLeft = Math.max(0.02, Math.min(combinedRatio - 0.02, startRatioLeft + ratioDelta));
+        ratios[index] = newLeft;
+        ratios[index + 1] = combinedRatio - newLeft;
+        const panes = flexContainer!.querySelectorAll("[data-split-pane]");
+        (panes[index] as HTMLElement).style.flex = String(ratios[index]);
+        (panes[index + 1] as HTMLElement).style.flex = String(ratios[index + 1]);
+      };
+
+      const onUp = () => {
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", onUp);
+        document.body.style.userSelect = "";
+        callbacks?.onStateChange?.();
+      };
+
+      document.body.style.userSelect = "none";
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
+    });
+
     return divider;
   }
 
