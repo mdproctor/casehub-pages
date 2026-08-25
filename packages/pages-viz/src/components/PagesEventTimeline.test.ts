@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import type { DataSet, TypedDataSet, ColumnType, ColumnId } from "@casehubio/pages-data";
+import type { DataSet, TypedDataSet, ColumnType, ColumnId, DataSetId } from "@casehubio/pages-data";
 import { toTypedDataSet } from "@casehubio/pages-data";
 import type { EventTimelineNode, EventTimelineStrategy } from "./event-timeline-types.js";
 import { PagesEventTimeline } from "./PagesEventTimeline.js";
@@ -45,7 +45,7 @@ describe("PagesEventTimeline", () => {
   it("renders nodes from strategy with direct data", async () => {
     el.strategy = testStrategy;
     el.data = testNodes;
-    el.props = { lookup: { dataSetId: "test", operations: [] } };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] } };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -58,7 +58,7 @@ describe("PagesEventTimeline", () => {
   it("applies status class to nodes", async () => {
     el.strategy = testStrategy;
     el.data = testNodes;
-    el.props = { lookup: { dataSetId: "test", operations: [] } };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] } };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -69,7 +69,7 @@ describe("PagesEventTimeline", () => {
   });
 
   it("renders nodes from DataSet when no direct data", async () => {
-    el.props = { lookup: { dataSetId: "test", operations: [] } };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] } };
     document.body.appendChild(el);
     await el.updateComplete;
 
@@ -93,7 +93,7 @@ describe("PagesEventTimeline", () => {
   it("toggles node expansion on click", async () => {
     el.strategy = testStrategy;
     el.data = [{ ...testNodes[0]!, detail: { info: "extra" } }];
-    el.props = { lookup: { dataSetId: "test", operations: [] } };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] } };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -112,7 +112,7 @@ describe("PagesEventTimeline", () => {
     el.strategy = testStrategy;
     el.data = testNodes;
     el.activeFilters = new Set(["lifecycle"]);
-    el.props = { lookup: { dataSetId: "test", operations: [] } };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] } };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -125,7 +125,7 @@ describe("PagesEventTimeline", () => {
   it("renders filter bar when strategy has filterCategories", async () => {
     el.strategy = testStrategy;
     el.data = testNodes;
-    el.props = { lookup: { dataSetId: "test", operations: [] } };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] } };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -140,7 +140,7 @@ describe("PagesEventTimeline", () => {
   it("shows empty state when no nodes", async () => {
     el.strategy = { toNodes: () => [], defaultLayout: "vertical" };
     el.data = [];
-    el.props = { lookup: { dataSetId: "test", operations: [] } };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] } };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -157,7 +157,7 @@ describe("PagesEventTimeline", () => {
     });
 
     el.data = testNodes;
-    el.props = { lookup: { dataSetId: "test", operations: [] }, strategyKey: "test-sort" };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] }, strategyKey: "test-sort" };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -176,7 +176,7 @@ describe("PagesEventTimeline", () => {
     };
     el.strategy = horizontalStrategy;
     el.data = testNodes;
-    el.props = { lookup: { dataSetId: "test", operations: [] }, layout: "horizontal" };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] }, layout: "horizontal" };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);
@@ -194,7 +194,7 @@ describe("PagesEventTimeline", () => {
   it("renders compact layout when props.layout is 'compact'", async () => {
     el.strategy = testStrategy;
     el.data = testNodes;
-    el.props = { lookup: { dataSetId: "test", operations: [] }, layout: "compact" };
+    el.props = { lookup: { dataSetId: "test" as DataSetId, operations: [] }, layout: "compact" };
     document.body.appendChild(el);
     await el.updateComplete;
     el.dataSet = makeDataSet([["key", "LABEL"]], [["dummy"]]);

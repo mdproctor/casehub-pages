@@ -1087,7 +1087,7 @@ describe("dockWorkbench builder", () => {
 
   describe("masterDetail()", () => {
     it("creates a split with wired selection and selectionSource", () => {
-      const master = dataTable({ lookup: { dataSetId: "strategies", operations: [] } });
+      const master = dataTable({ lookup: { dataSetId: dataSetId("strategies"), operations: [] } });
       const detail = hostPanel("strategy-detail");
       const result = masterDetail({ master, detail });
 
@@ -1099,7 +1099,7 @@ describe("dockWorkbench builder", () => {
     });
 
     it("respects custom direction and ratio", () => {
-      const master = dataTable({ lookup: { dataSetId: "s", operations: [] } });
+      const master = dataTable({ lookup: { dataSetId: dataSetId("s"), operations: [] } });
       const detail = hostPanel("d");
       const result = masterDetail({ master, detail, direction: "vertical", ratio: [30, 70] });
 
@@ -1107,7 +1107,7 @@ describe("dockWorkbench builder", () => {
     });
 
     it("defaults to horizontal direction", () => {
-      const master = dataTable({ lookup: { dataSetId: "s", operations: [] } });
+      const master = dataTable({ lookup: { dataSetId: dataSetId("s"), operations: [] } });
       const detail = hostPanel("d");
       const result = masterDetail({ master, detail });
 
@@ -1115,7 +1115,7 @@ describe("dockWorkbench builder", () => {
     });
 
     it("freezes returned component", () => {
-      const master = dataTable({ lookup: { dataSetId: "s", operations: [] } });
+      const master = dataTable({ lookup: { dataSetId: dataSetId("s"), operations: [] } });
       const detail = hostPanel("d");
       const result = masterDetail({ master, detail });
       expect(Object.isFrozen(result)).toBe(true);
