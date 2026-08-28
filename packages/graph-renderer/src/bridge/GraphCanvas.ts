@@ -7,6 +7,8 @@ import type { GraphModel } from '@casehubio/graph-core';
 import { nodeById } from '@casehubio/graph-core';
 import type { EditPolicy } from '../editing/types.js';
 import type { GraphEdit } from '../editing/types.js';
+import { createNodeMoveCoordinator } from '../editing/node-move-coordinator.js';
+import type { NodeMoveCoordinator, DragEndResult } from '../editing/node-move-coordinator.js';
 import { applyTheme, getTheme } from '@casehubio/pages-ui-tokens';
 import { ReactFlowApp, type ReactFlowAppProps } from './ReactFlowApp.js';
 import { getNodeTypes } from '../registry/stencil-registry.js';
@@ -34,6 +36,10 @@ export class GraphCanvas extends LitElement {
   private _layoutGeneration = 0;
   private _reactFlowInstance: ReactFlowInstance | undefined;
   private _connectSourceNodeId: string | undefined;
+  private _connectStartPos: { x: number; y: number } | undefined;
+  private _moveCoordinator: NodeMoveCoordinator | null = null;
+  private _moveWasActive = false;
+  private _pointerDownHandler: ((e: PointerEvent) => void) | undefined;
 
   screenToFlow(screenX: number, screenY: number): { x: number; y: number } | undefined {
     return this._reactFlowInstance?.screenToFlowPosition({ x: screenX, y: screenY });
@@ -62,6 +68,23 @@ export class GraphCanvas extends LitElement {
 
     this.appendChild(this._container);
 
+    this._pointerDownHandler = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      const nodeEl = target.closest('.react-flow__node') as HTMLElement | null;
+      const nodeId = nodeEl?.dataset['id'];
+      if (!nodeId || !this.model || !this.editPolicy) return;
+
+      if (!this._moveCoordinator) {
+        this._moveCoordinator = createNodeMoveCoordinator({
+          editPolicy: this.editPolicy,
+          containerEl: this._container!,
+          onResult: (result: DragEndResult) => this._handleMoveResult(result),
+        });
+      }
+      this._moveCoordinator.startDrag(nodeId, e, this.model);
+    };
+    this._container.addEventListener('pointerdown', this._pointerDownHandler);
+
     this._root = createRoot(this._container);
     this._renderReact();
 
@@ -79,6 +102,12 @@ export class GraphCanvas extends LitElement {
       document.documentElement.removeEventListener('pages-theme-change', this._themeListener);
       this._themeListener = undefined;
     }
+    this._moveCoordinator?.dispose();
+    this._moveCoordinator = null;
+    if (this._pointerDownHandler && this._container) {
+      this._container.removeEventListener('pointerdown', this._pointerDownHandler);
+    }
+    this._pointerDownHandler = undefined;
     this._root?.unmount();
     this._root = undefined;
     this._container?.remove();
@@ -117,6 +146,18 @@ export class GraphCanvas extends LitElement {
       this._edges = edges;
       emitPagesEvent(this, 'graph:layout:error', {
         error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  private _handleMoveResult(result: DragEndResult): void {
+    this._moveWasActive = true;
+    if (result.type === 'splice') {
+      this.onMutation?.({
+        type: 'moveNodeToEdge',
+        nodeId: result.nodeId,
+        edgeId: result.edgeId,
+        sourceCleanup: result.sourceCleanup,
       });
     }
   }
@@ -178,13 +219,22 @@ export class GraphCanvas extends LitElement {
         onReactFlowReady: (instance: ReactFlowInstance) => {
           this._reactFlowInstance = instance;
         },
-        onConnectStart: (_event: MouseEvent | TouchEvent, params: { nodeId: string | null }) => {
+        onConnectStart: (event: MouseEvent | TouchEvent, params: { nodeId: string | null }) => {
           this._connectSourceNodeId = params.nodeId ?? undefined;
+          this._connectStartPos = event instanceof MouseEvent
+            ? { x: event.clientX, y: event.clientY }
+            : { x: event.touches[0]?.clientX ?? 0, y: event.touches[0]?.clientY ?? 0 };
           this.classList.add('graph-connecting');
         },
         onConnectEnd: (event: MouseEvent | TouchEvent) => {
           const sourceId = this._connectSourceNodeId;
+          const startPos = this._connectStartPos;
           this._connectSourceNodeId = undefined;
+          this._connectStartPos = undefined;
+
+          const wasMoveActive = this._moveCoordinator?.isActive || this._moveWasActive;
+          this._moveWasActive = false;
+          if (wasMoveActive) { this.classList.remove('graph-connecting'); return; }
           if (!sourceId || !this.model) { this.classList.remove('graph-connecting'); return; }
 
           const pos = event instanceof MouseEvent
@@ -213,6 +263,9 @@ export class GraphCanvas extends LitElement {
             }
             return;
           }
+
+          const canvasRect = this._container?.getBoundingClientRect();
+          if (canvasRect && (pos.x < canvasRect.left || pos.x > canvasRect.right || pos.y < canvasRect.top || pos.y > canvasRect.bottom)) return;
 
           emitPagesEvent(this, 'graph:connect:end-on-empty', { ...pos, sourceNodeId: sourceId });
         },

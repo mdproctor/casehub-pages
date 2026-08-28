@@ -15,7 +15,7 @@ export class PagesDiagramPalette extends LitElement {
     }
     .palette-search:focus { outline: 2px solid var(--pages-accent-9, #5470c6); outline-offset: -2px; }
     .palette-item {
-      display: flex; align-items: center; gap: var(--pages-space-2, 8px);
+      display: flex; align-items: flex-start; gap: var(--pages-space-2, 8px);
       padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
       border-radius: var(--pages-radius-sm, 4px); cursor: pointer;
       border: none; background: transparent; color: var(--pages-neutral-12, #333);
@@ -40,15 +40,16 @@ export class PagesDiagramPalette extends LitElement {
       color: var(--pages-neutral-11, #374151);
     }
     .palette-toolbar {
-      display: flex; justify-content: flex-end; margin-bottom: var(--pages-space-2, 8px);
+      display: flex; justify-content: flex-end; margin-bottom: 0; position: absolute; top: 2px; right: 2px;
     }
+    :host { position: relative; }
     .mode-toggle {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 28px; height: 28px; border: 1px solid var(--pages-neutral-4, #e5e7eb);
+      width: 22px; height: 22px; border: none;
       border-radius: var(--pages-radius-sm, 4px); background: transparent;
-      color: var(--pages-neutral-11, #374151); cursor: pointer; font-size: 14px;
+      color: var(--pages-neutral-9, #9ca3af); cursor: pointer; font-size: 12px; opacity: 0.7;
     }
-    .mode-toggle:hover { background: var(--pages-neutral-3, #f3f4f6); }
+    .mode-toggle:hover { background: var(--pages-neutral-3, #f3f4f6); opacity: 1; }
     .mode-toggle:focus-visible { outline: 2px solid var(--pages-accent-9, #5470c6); outline-offset: -2px; }
     .compact-column {
       display: flex; flex-direction: column; align-items: center; gap: var(--pages-space-1, 4px);

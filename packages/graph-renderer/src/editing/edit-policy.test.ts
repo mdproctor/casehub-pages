@@ -14,6 +14,7 @@ vi.mock('@xyflow/react', () => ({
 import { registerStencil, clearRegistry } from '../registry/stencil-registry.js';
 import { defaultEditPolicy } from './edit-policy.js';
 import { applyGraphEdit } from './apply-graph-edit.js';
+import { defaultCanSpliceOntoEdge } from './splice-validation.js';
 
 const dummyRender = () => html`<div>test</div>`;
 
@@ -292,5 +293,210 @@ describe('applyGraphEdit', () => {
     });
     expect(result.model.edges).toHaveLength(1);
     expect(result.model.nodes).toHaveLength(3);
+  });
+});
+
+describe('canSpliceOntoEdge', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+    clearRegistry();
+  });
+
+  afterEach(() => {
+    clearGrammarRegistry();
+    clearRegistry();
+  });
+
+  it('returns true when both directions are grammar-valid', () => {
+    registerGrammar(makeGrammar('start', 10, []));
+    registerGrammar(makeGrammar('worker', 10, []));
+    registerGrammar(makeGrammar('end', 0, []));
+
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+      ],
+      edges: [{ id: 'e1', type: 'default', source: 'a', target: 'b' }],
+    };
+    const edge = m.edges[0]!;
+    const nodeX = m.nodes[2]!;
+    const policy = defaultEditPolicy();
+    expect(policy.canSpliceOntoEdge!(edge, nodeX, m)).toBe(true);
+  });
+
+  it('returns false when source grammar forbids connection to node type', () => {
+    registerGrammar(makeGrammar('start', 10, ['end']));
+    registerGrammar(makeGrammar('worker', 10, []));
+    registerGrammar(makeGrammar('end', 0, []));
+
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+      ],
+      edges: [{ id: 'e1', type: 'default', source: 'a', target: 'b' }],
+    };
+    const policy = defaultEditPolicy();
+    expect(policy.canSpliceOntoEdge!(m.edges[0]!, m.nodes[2]!, m)).toBe(false);
+  });
+
+  it('returns true when source is at outbound max — projected model frees the slot', () => {
+    registerGrammar(makeGrammar('start', 1, []));
+    registerGrammar(makeGrammar('worker', 10, []));
+    registerGrammar(makeGrammar('end', 0, []));
+
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+      ],
+      edges: [{ id: 'e1', type: 'default', source: 'a', target: 'b' }],
+    };
+    const policy = defaultEditPolicy();
+    expect(policy.canSpliceOntoEdge!(m.edges[0]!, m.nodes[2]!, m)).toBe(true);
+  });
+
+  it('defaultCanSpliceOntoEdge fallback respects custom canConnect', () => {
+    registerGrammar(makeGrammar('start', 10, []));
+    registerGrammar(makeGrammar('worker', 10, []));
+    registerGrammar(makeGrammar('end', 0, []));
+
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+      ],
+      edges: [{ id: 'e1', type: 'default', source: 'a', target: 'b' }],
+    };
+
+    const customPolicy = {
+      ...defaultEditPolicy(),
+      canConnect: () => false,
+    };
+    delete (customPolicy as any).canSpliceOntoEdge;
+
+    expect(defaultCanSpliceOntoEdge(customPolicy, m.edges[0]!, m.nodes[2]!, m)).toBe(false);
+  });
+});
+
+describe('applyGraphEdit moveNodeToEdge', () => {
+  beforeEach(() => {
+    clearGrammarRegistry();
+    clearRegistry();
+  });
+
+  afterEach(() => {
+    clearGrammarRegistry();
+    clearRegistry();
+  });
+
+  it('splices node onto edge with auto-join at source', () => {
+    registerGrammar(makeGrammar('start', 10, []));
+    registerGrammar(makeGrammar('worker', 10, []));
+    registerGrammar(makeGrammar('end', 0, []));
+
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+        { id: 'p', type: 'start', properties: {} },
+        { id: 'q', type: 'end', properties: {} },
+      ],
+      edges: [
+        { id: 'e-ax', type: 'default', source: 'a', target: 'x' },
+        { id: 'e-xb', type: 'default', source: 'x', target: 'b' },
+        { id: 'e-pq', type: 'flow', source: 'p', target: 'q' },
+      ],
+    };
+
+    const result = applyGraphEdit(m, {
+      type: 'moveNodeToEdge',
+      nodeId: 'x',
+      edgeId: 'e-pq',
+      sourceCleanup: 'auto-join',
+    });
+
+    expect(result.model.edges.find(e => e.id === 'e-ax')).toBeUndefined();
+    expect(result.model.edges.find(e => e.id === 'e-xb')).toBeUndefined();
+    const joinEdge = result.model.edges.find(e => e.source === 'a' && e.target === 'b');
+    expect(joinEdge).toBeTruthy();
+    expect(joinEdge!.type).toBe('default');
+
+    expect(result.model.edges.find(e => e.id === 'e-pq')).toBeUndefined();
+    const preEdge = result.model.edges.find(e => e.source === 'p' && e.target === 'x');
+    const postEdge = result.model.edges.find(e => e.source === 'x' && e.target === 'q');
+    expect(preEdge).toBeTruthy();
+    expect(postEdge).toBeTruthy();
+    expect(preEdge!.type).toBe('flow');
+    expect(postEdge!.type).toBe('flow');
+  });
+
+  it('splices with disconnect at source — removes all edges', () => {
+    const m: GraphModel = {
+      nodes: [
+        { id: 'a', type: 'start', properties: {} },
+        { id: 'x', type: 'worker', properties: {} },
+        { id: 'b', type: 'end', properties: {} },
+        { id: 'c', type: 'end', properties: {} },
+        { id: 'p', type: 'start', properties: {} },
+        { id: 'q', type: 'end', properties: {} },
+      ],
+      edges: [
+        { id: 'e-ax', type: 'default', source: 'a', target: 'x' },
+        { id: 'e-xb', type: 'default', source: 'x', target: 'b' },
+        { id: 'e-xc', type: 'default', source: 'x', target: 'c' },
+        { id: 'e-pq', type: 'flow', source: 'p', target: 'q' },
+      ],
+    };
+
+    const result = applyGraphEdit(m, {
+      type: 'moveNodeToEdge',
+      nodeId: 'x',
+      edgeId: 'e-pq',
+      sourceCleanup: 'disconnect',
+    });
+
+    expect(result.model.edges.find(e => e.id === 'e-ax')).toBeUndefined();
+    expect(result.model.edges.find(e => e.id === 'e-xb')).toBeUndefined();
+    expect(result.model.edges.find(e => e.id === 'e-xc')).toBeUndefined();
+    expect(result.model.edges.find(e => e.source === 'a' && e.target === 'b')).toBeUndefined();
+
+    const preEdge = result.model.edges.find(e => e.source === 'p' && e.target === 'x');
+    const postEdge = result.model.edges.find(e => e.source === 'x' && e.target === 'q');
+    expect(preEdge).toBeTruthy();
+    expect(postEdge).toBeTruthy();
+  });
+
+  it('splices disconnected node — only target-side splice happens', () => {
+    const m: GraphModel = {
+      nodes: [
+        { id: 'x', type: 'worker', properties: {} },
+        { id: 'p', type: 'start', properties: {} },
+        { id: 'q', type: 'end', properties: {} },
+      ],
+      edges: [
+        { id: 'e-pq', type: 'flow', source: 'p', target: 'q' },
+      ],
+    };
+
+    const result = applyGraphEdit(m, {
+      type: 'moveNodeToEdge',
+      nodeId: 'x',
+      edgeId: 'e-pq',
+      sourceCleanup: 'disconnect',
+    });
+
+    expect(result.model.edges.find(e => e.id === 'e-pq')).toBeUndefined();
+    const preEdge = result.model.edges.find(e => e.source === 'p' && e.target === 'x');
+    const postEdge = result.model.edges.find(e => e.source === 'x' && e.target === 'q');
+    expect(preEdge).toBeTruthy();
+    expect(postEdge).toBeTruthy();
+    expect(preEdge!.type).toBe('flow');
   });
 });

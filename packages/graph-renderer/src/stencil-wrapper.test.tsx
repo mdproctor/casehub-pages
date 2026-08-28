@@ -7,8 +7,8 @@ import type { GraphNode, NodeDecoration } from '@casehubio/graph-core';
 import { registerGrammar, clearGrammarRegistry } from '@casehubio/graph-core';
 
 vi.mock('@xyflow/react', () => ({
-  Handle: ({ type, position }: { type: string; position: string }) =>
-    React.createElement('div', { 'data-handletype': type, 'data-handlepos': position }),
+  Handle: ({ type, position, style, className }: { type: string; position: string; style?: React.CSSProperties; className?: string }) =>
+    React.createElement('div', { 'data-handletype': type, 'data-handlepos': position, style, className }),
   Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
 }));
 
@@ -166,6 +166,21 @@ describe('createStencilNodeComponent', () => {
     const handles = Array.from(container.querySelectorAll('[data-handletype]'));
     expect(handles).toHaveLength(1);
     expect(handles.every(h => h.getAttribute('data-handletype') === 'target')).toBe(true);
+    unmount();
+  });
+
+  it('renders both source and target handles as full-node', () => {
+    const renderFn: StencilRenderFn = () => html`<div>node</div>`;
+    const Component = createStencilNodeComponent(renderFn);
+    const { container, unmount } = mountWithProps(Component, defaultNodeProps);
+    const sourceHandle = container.querySelector('[data-handletype="source"]') as HTMLElement;
+    const targetHandle = container.querySelector('[data-handletype="target"]') as HTMLElement;
+    expect(sourceHandle).toBeTruthy();
+    expect(sourceHandle.style.width).toBe('100%');
+    expect(sourceHandle.style.height).toBe('100%');
+    expect(targetHandle).toBeTruthy();
+    expect(targetHandle.style.width).toBe('100%');
+    expect(targetHandle.style.height).toBe('100%');
     unmount();
   });
 

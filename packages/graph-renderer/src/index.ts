@@ -31,4 +31,7 @@ export { validateEdgeRouting } from './edge-routing-validator.js';
 export type { ValidationResult } from './edge-routing-validator.js';
 export { defaultEditPolicy } from './editing/edit-policy.js';
 export { applyGraphEdit } from './editing/apply-graph-edit.js';
-export type { EditPolicy, GraphEdit, StencilTypeInfo, DeleteStrategy, DeleteOption } from './editing/types.js';
+export type { EditPolicy, GraphEdit, StencilTypeInfo, DeleteStrategy, DeleteOption, SourceCleanupStrategy } from './editing/types.js';
+export { createNodeMoveCoordinator } from './editing/node-move-coordinator.js';
+export type { NodeMoveCoordinator, NodeMoveCoordinatorOptions, DragEndResult } from './editing/node-move-coordinator.js';
+export { defaultCanSpliceOntoEdge, buildProjectedModel } from './editing/splice-validation.js';

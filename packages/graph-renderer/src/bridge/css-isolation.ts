@@ -84,6 +84,24 @@ ${pluginStyles}
   box-shadow: 0 0 8px 2px var(--pages-success-9, #16a34a);
   border-radius: 8px;
 }
+.node-move-active .react-flow__connectionline {
+  display: none !important;
+}
+.node-move-active .react-flow__edge-interaction {
+  stroke-width: 30px !important;
+  pointer-events: stroke !important;
+}
+.node-move-ghost .stencil-decoration-wrapper {
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+.edge-splice-valid .react-flow__edge-path {
+  stroke: var(--pages-success-9, #16a34a) !important;
+  stroke-width: 4px !important;
+  filter: drop-shadow(0 0 8px var(--pages-success-9, #16a34a)) drop-shadow(0 0 16px var(--pages-success-9, #16a34a));
+  transition: stroke-width 100ms, filter 100ms;
+}
 `.trim();
 }
 

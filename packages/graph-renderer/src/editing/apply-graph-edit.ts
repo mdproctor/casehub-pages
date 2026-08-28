@@ -58,8 +58,52 @@ export function applyGraphEdit(model: GraphModel, edit: GraphEdit): EditResult {
       };
       return splitEdge(model, edit.edgeId, insertNode);
     }
-    case 'moveNodeToEdge':
-      throw new Error('moveNodeToEdge requires domain adapter — not executable at graph-core level');
+    case 'moveNodeToEdge': {
+      let result: EditResult = { model, violations: [] };
+
+      // Source-side cleanup
+      if (edit.sourceCleanup === 'auto-join') {
+        const inEdges = inboundEdges(model, edit.nodeId);
+        const outEdges = outboundEdges(model, edit.nodeId);
+        for (const e of [...inEdges, ...outEdges]) {
+          result = removeEdge(result.model, e.id);
+        }
+        if (inEdges.length === 1 && outEdges.length === 1) {
+          const joinEdge: GraphEdge = {
+            id: nextId('edge'),
+            type: inEdges[0]!.type,
+            source: inEdges[0]!.source,
+            target: outEdges[0]!.target,
+          };
+          result = addEdge(result.model, joinEdge);
+        }
+      } else {
+        const connected = [...inboundEdges(model, edit.nodeId), ...outboundEdges(model, edit.nodeId)];
+        for (const e of connected) {
+          result = removeEdge(result.model, e.id);
+        }
+      }
+
+      // Target-side splice
+      const targetEdge = model.edges.find(e => e.id === edit.edgeId);
+      if (!targetEdge) throw new Error(`Edge ${edit.edgeId} not found`);
+
+      result = removeEdge(result.model, edit.edgeId);
+      result = addEdge(result.model, {
+        id: nextId('edge'),
+        type: targetEdge.type,
+        source: targetEdge.source,
+        target: edit.nodeId,
+      });
+      result = addEdge(result.model, {
+        id: nextId('edge'),
+        type: targetEdge.type,
+        source: edit.nodeId,
+        target: targetEdge.target,
+      });
+
+      return result;
+    }
     case 'compound': {
       let result: EditResult = { model, violations: [] };
       for (const subEdit of edit.edits) {

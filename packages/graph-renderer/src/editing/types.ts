@@ -23,7 +23,10 @@ export interface EditPolicy {
   getCreatableTypes(nearNode: GraphNode | null, model: GraphModel): StencilTypeInfo[];
   canDelete(node: GraphNode, model: GraphModel): boolean;
   getDeleteStrategy(node: GraphNode, model: GraphModel, deletionSet?: ReadonlySet<string>): DeleteStrategy;
+  canSpliceOntoEdge?(edge: GraphEdge, node: GraphNode, model: GraphModel): boolean;
 }
+
+export type SourceCleanupStrategy = 'auto-join' | 'disconnect';
 
 export type GraphEdit =
   | { readonly type: 'addNode'; readonly nodeType: string; readonly id?: string; readonly properties?: Readonly<Record<string, unknown>> }
@@ -32,5 +35,5 @@ export type GraphEdit =
   | { readonly type: 'removeEdge'; readonly edgeId: string }
   | { readonly type: 'reconnectEdge'; readonly edgeId: string; readonly endpoints: { readonly source?: string; readonly target?: string } }
   | { readonly type: 'splitEdge'; readonly edgeId: string; readonly insertNodeType: string }
-  | { readonly type: 'moveNodeToEdge'; readonly nodeId: string; readonly edgeId: string }
+  | { readonly type: 'moveNodeToEdge'; readonly nodeId: string; readonly edgeId: string; readonly sourceCleanup: SourceCleanupStrategy }
   | { readonly type: 'compound'; readonly edits: readonly GraphEdit[] };
