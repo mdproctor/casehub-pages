@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 90,
+  "totalSamples": 91,
   "categories": [
     {
       "category": "Charts",
@@ -394,6 +394,13 @@
     {
       "category": "Custom Components",
       "samples": [
+        {
+          "name": "Case Definition Editor",
+          "path": "Custom Components/Case Definition Editor.dash.yaml",
+          "category": "Custom Components",
+          "file": "Case Definition Editor.dash.yaml",
+          "tsPath": "Custom Components/Case Definition Editor.ts"
+        },
         {
           "name": "Code Editor",
           "path": "Custom Components/Code Editor.dash.yaml",
