@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public record HierarchicalStep(String name, String label, String target,
                                String actor, Trigger trigger,
-                               Object forEach, String when,
+                               io.casehub.yaml.core.foreach.ForEachDirective forEach, String when,
                                NarrativeContent content,
                                List<ScenarioCommand> commands) {
     public HierarchicalStep {

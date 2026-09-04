@@ -11,32 +11,9 @@ import java.util.Map;
 
 public final class ScenarioStepAdapter implements ForEachAdapter<HierarchicalStep> {
 
-    private final Map<String, CsvDataSource>  csvSources;
-    private final Map<String, IterationGroup> iterationGroups;
-
-    public ScenarioStepAdapter(Map<String, CsvDataSource> csvSources,
-                               Map<String, IterationGroup> iterationGroups) {
-        this.csvSources      = csvSources;
-        this.iterationGroups = iterationGroups;
-    }
-
     @Override
     public HierarchicalStep stamp(HierarchicalStep template, String stampedId,
                                   VariableResolver scopedResolver) {
-        Object forEach        = template.forEach();
-        String dataSourceName = resolveDataSourceName(forEach);
-        if (dataSourceName != null) {
-            CsvDataSource csv = csvSources.get(dataSourceName);
-            if (csv != null) {
-                String              as    = resolveAs(forEach);
-                String              value = extractStampValue(stampedId);
-                Map<String, Object> row   = findRowByFirstColumn(csv, value);
-                if (row != null) {
-                    scopedResolver = scopedResolver.withEachRowContext(Map.of(as, row));
-                }
-            }
-        }
-
         List<ScenarioCommand> resolvedCommands = resolveCommands(template.commands(), scopedResolver, stampedId);
         return new HierarchicalStep(template.name(), template.label(), template.target(),
                                     template.actor(), template.trigger(), null, null,
@@ -44,13 +21,8 @@ public final class ScenarioStepAdapter implements ForEachAdapter<HierarchicalSte
     }
 
     @Override
-    public Object getForEach(HierarchicalStep element) {
+    public io.casehub.yaml.core.foreach.ForEachDirective getForEach(HierarchicalStep element) {
         return element.forEach();
-    }
-
-    @Override
-    public String getId(HierarchicalStep element) {
-        return element.name() != null ? element.name() : slugify(element.label());
     }
 
     @Override
@@ -67,44 +39,52 @@ public final class ScenarioStepAdapter implements ForEachAdapter<HierarchicalSte
             if (value != null && value.contains("${")) {
                 value = resolver.resolveString(value, context);
             }
-            resolved.add(new ScenarioCommand(cmd.action(), cmd.target(), value,
+            AriaTarget          ariaTarget = resolveAriaTarget(cmd.target(), resolver, context);
+            Map<String, Object> callParams = resolveCallParams(cmd.callParams(), resolver, context);
+            resolved.add(new ScenarioCommand(cmd.action(), ariaTarget, value,
                                              cmd.data(), cmd.domain(), cmd.await(), cmd.timeout(),
                                              cmd.mode(), cmd.source(), cmd.interval(),
-                                             cmd.script(), cmd.callParams()));
+                                             cmd.script(), callParams));
         }
         return resolved;
     }
 
-    private static String resolveDataSourceName(Object forEach) {
-        if (forEach instanceof String s) {return s;}
-        if (forEach instanceof Map<?, ?> m) {
-            Object in = m.get("in");
-            return in instanceof String s ? s : null;
+    private static AriaTarget resolveAriaTarget(AriaTarget target,
+                                                VariableResolver resolver,
+                                                String context) {
+        if (target == null) {return null;}
+        String name = target.name();
+        if (name != null && name.contains("${")) {
+            name = resolver.resolveString(name, context);
         }
-        return null;
+        String index = target.index();
+        if (index != null && index.contains("${")) {
+            index = resolver.resolveString(index, context);
+        }
+        AriaTarget within = resolveAriaTarget(target.within(), resolver, context);
+        if (name == target.name() && index == target.index() && within == target.within()) {
+            return target;
+        }
+        return new AriaTarget(target.role(), name, index, within);
     }
 
-    private String resolveAs(Object forEach) {
-        if (forEach instanceof String groupRef) {
-            IterationGroup group = iterationGroups.get(groupRef);
-            return group != null ? group.as() : groupRef;
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> resolveCallParams(Map<String, Object> params,
+                                                         VariableResolver resolver,
+                                                         String context) {
+        if (params == null) {return null;}
+        Map<String, Object> resolved = new java.util.LinkedHashMap<>();
+        boolean             changed  = false;
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            Object val = entry.getValue();
+            if (val instanceof String s && s.contains("${")) {
+                resolved.put(entry.getKey(), resolver.resolveString(s, context));
+                changed = true;
+            } else {
+                resolved.put(entry.getKey(), val);
+            }
         }
-        if (forEach instanceof Map<?, ?> m) {return (String) m.get("as");}
-        return null;
-    }
-
-    private static String extractStampValue(String stampedId) {
-        int dot = stampedId.lastIndexOf('.');
-        return dot >= 0 ? stampedId.substring(dot + 1) : stampedId;
-    }
-
-    private static Map<String, Object> findRowByFirstColumn(CsvDataSource csv, String value) {
-        if (csv.columns().isEmpty()) {return null;}
-        String firstCol = csv.columns().get(0).name();
-        for (Map<String, Object> row : csv.rows()) {
-            if (value.equals(String.valueOf(row.get(firstCol)))) {return row;}
-        }
-        return null;
+        return changed ? Map.copyOf(resolved) : params;
     }
 
     static String slugify(String label) {

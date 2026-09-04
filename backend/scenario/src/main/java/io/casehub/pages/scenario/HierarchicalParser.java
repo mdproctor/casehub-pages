@@ -112,19 +112,22 @@ public final class HierarchicalParser {
         String actor  = node.path("actor").asText(null);
         Trigger trigger = node.has("trigger")
                           ? parseTrigger(node.get("trigger")) : null;
-        Object forEach = node.has("forEach")
-                         ? parseForEach(node.get("forEach")) : null;
+        io.casehub.yaml.core.foreach.ForEachDirective forEach = node.has("forEach")
+                                                                ? parseForEach(node.get("forEach")) : null;
         String when = node.path("when").asText(null);
         NarrativeContent content = node.has("content")
                                    ? parseContent(node.get("content")) : null;
         List<ScenarioCommand> commands = parseCommands(node.get("commands"));
         return new HierarchicalStep(name, label, target, actor, trigger,
-                                    forEach, when, content, commands);}
+                                    forEach, when, content, commands);
+    }
 
     @SuppressWarnings("unchecked")
-    private static Object parseForEach(JsonNode node) {
-        if (node.isTextual()) {return node.asText();}
-        if (node.isObject()) {return YAML.convertValue(node, Map.class);}
+    private static io.casehub.yaml.core.foreach.ForEachDirective parseForEach(JsonNode node) {
+        if (node.isTextual()) {return io.casehub.yaml.core.foreach.ForEachDirective.parse(node.asText());}
+        if (node.isObject()) {
+            return io.casehub.yaml.core.foreach.ForEachDirective.parse(YAML.convertValue(node, Map.class));
+        }
         throw new IllegalArgumentException("forEach must be a string or object, got: " + node.getNodeType());
     }
 
