@@ -1,6 +1,6 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
-import { EditorView, lineNumbers as cmLineNumbers, keymap } from '@codemirror/view';
+import { EditorView, lineNumbers as cmLineNumbers, keymap, drawSelection } from '@codemirror/view';
 import { EditorState, Compartment, type Extension } from '@codemirror/state';
 import { indentUnit, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { yaml } from '@codemirror/lang-yaml';
@@ -45,8 +45,9 @@ const pagesTheme = EditorView.theme({
     outline: '2px solid var(--pages-accent-8, #adc8ff)',
     outlineOffset: '-2px',
   },
-  '.cm-cursor': {
+  '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: 'var(--pages-neutral-12, #1a1a1a)',
+    borderLeftWidth: '2px',
   },
   '.cm-selectionBackground': {
     backgroundColor: 'var(--pages-accent-4, #e1ecff) !important',
@@ -156,6 +157,7 @@ export class PagesCodeEditor extends LitElement {
               this.label ? { 'aria-label': this.label } : {}
             )
           ),
+          drawSelection(),
           keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
           history(),
           pagesTheme,
