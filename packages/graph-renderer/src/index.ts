@@ -32,3 +32,5 @@ export type { EditPolicy, GraphEdit, StencilTypeInfo, DeleteStrategy, DeleteOpti
 export { createNodeMoveCoordinator } from './editing/node-move-coordinator.js';
 export type { NodeMoveCoordinator, NodeMoveCoordinatorOptions, DragEndResult } from './editing/node-move-coordinator.js';
 export { defaultCanSpliceOntoEdge, buildProjectedModel } from './editing/splice-validation.js';
+export { exportDiagram, computeNodeBounds, computeExportViewport } from './diagram-export.js';
+export type { ExportFormat, ExportBounds, ExportViewport } from './diagram-export.js';

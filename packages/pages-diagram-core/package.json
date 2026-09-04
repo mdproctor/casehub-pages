@@ -23,7 +23,6 @@
     "@casehubio/graph-renderer": "workspace:*",
     "@casehubio/pages-diagram-palette": "workspace:*",
     "@casehubio/pages-property-palette": "workspace:*",
-    "html-to-image": "1.11.11",
     "lit": "^3.3.3",
     "yaml": "^2.7.0"
   },
