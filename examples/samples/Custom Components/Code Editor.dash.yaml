@@ -1,0 +1,86 @@
+pages:
+- name: index
+  rows:
+  - properties:
+      margin-bottom: 0px
+    columns:
+    - components:
+      - type: markdown
+        properties:
+          text: |
+            ## pages-code-editor
+
+            A reusable code editor component built on [CodeMirror 6](https://codemirror.net/).
+            Supports YAML and JSON syntax highlighting, editable and read-only modes,
+            line numbers, and theming via `--pages-*` design tokens.
+
+            **Edit the YAML below** to see the dashboard update live.
+  - properties:
+      margin-top: 0px
+    columns:
+    - span: 6
+      components:
+      - type: html
+        properties:
+          html: |
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--pages-neutral-11,#333);">
+                <strong>YAML Source</strong>
+                <span style="margin-left:auto; font-size:12px; color:var(--pages-neutral-8,#999);">
+                  Edit to update the preview →
+                </span>
+              </div>
+              <pages-code-editor
+                id="live-editor"
+                language="yaml"
+                label="Dashboard YAML source"
+                style="height:500px;"
+              ></pages-code-editor>
+            </div>
+    - span: 6
+      components:
+      - type: html
+        properties:
+          html: |
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--pages-neutral-11,#333);">
+                <strong>Live Preview</strong>
+                <span id="preview-status" style="margin-left:auto; font-size:12px; color:var(--pages-success-11,#18794e);">✓ Valid</span>
+              </div>
+              <div id="preview-target" style="border:1px solid var(--pages-neutral-4,#e0e0e0); border-radius:6px; padding:12px; min-height:500px; background:var(--pages-neutral-1,#fafafa); overflow:auto;"></div>
+            </div>
+  - columns:
+    - components:
+      - type: markdown
+        properties:
+          text: |
+            ---
+
+            ### Read-Only Mode
+
+            Set `readonly` to display highlighted code without editing.
+  - columns:
+    - span: 6
+      components:
+      - type: html
+        properties:
+          html: |
+            <pages-code-editor
+              id="readonly-editor"
+              language="json"
+              readonly
+              label="JSON configuration (read-only)"
+              style="height:200px;"
+            ></pages-code-editor>
+    - span: 6
+      components:
+      - type: html
+        properties:
+          html: |
+            <pages-code-editor
+              id="yaml-readonly"
+              language="yaml"
+              readonly
+              label="YAML configuration (read-only)"
+              style="height:200px;"
+            ></pages-code-editor>

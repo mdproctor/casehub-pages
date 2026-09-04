@@ -10,6 +10,7 @@ import "@casehubio/pages-ui-components/status-dot";
 import "@casehubio/pages-viz";
 import "@casehubio/pages-aria/dist/controller";
 import "@casehubio/graph-renderer";
+import "@casehubio/pages-code-editor";
 import "@casehubio/pages-property-palette";
 import "@casehubio/pages-diagram-palette";
 import { createBasicPipelineModel, PIPELINE_SCHEMAS } from "./pipeline-stencils";

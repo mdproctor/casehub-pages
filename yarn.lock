@@ -1522,7 +1522,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@casehubio/pages-code-editor@workspace:packages/pages-code-editor":
+"@casehubio/pages-code-editor@workspace:*, @casehubio/pages-code-editor@workspace:packages/pages-code-editor":
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-code-editor@workspace:packages/pages-code-editor"
   dependencies:
@@ -1699,6 +1699,7 @@ __metadata:
     "@casehubio/graph-core": "workspace:*"
     "@casehubio/graph-renderer": "workspace:*"
     "@casehubio/pages-aria": "workspace:*"
+    "@casehubio/pages-code-editor": "workspace:*"
     "@casehubio/pages-data": "workspace:*"
     "@casehubio/pages-diagram-palette": "workspace:*"
     "@casehubio/pages-property-palette": "workspace:*"

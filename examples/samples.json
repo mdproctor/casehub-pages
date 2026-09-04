@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 89,
+  "totalSamples": 90,
   "categories": [
     {
       "category": "Charts",
@@ -394,6 +394,13 @@
     {
       "category": "Custom Components",
       "samples": [
+        {
+          "name": "Code Editor",
+          "path": "Custom Components/Code Editor.dash.yaml",
+          "category": "Custom Components",
+          "file": "Code Editor.dash.yaml",
+          "tsPath": "Custom Components/Code Editor.ts"
+        },
         {
           "name": "Iframe Components",
           "path": "Custom Components/Iframe Components.dash.yaml",

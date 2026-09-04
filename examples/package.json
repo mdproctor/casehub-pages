@@ -21,6 +21,7 @@
     "@casehubio/graph-core": "workspace:*",
     "@casehubio/graph-renderer": "workspace:*",
     "@casehubio/pages-aria": "workspace:*",
+    "@casehubio/pages-code-editor": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-diagram-palette": "workspace:*",
     "@casehubio/pages-property-palette": "workspace:*",
