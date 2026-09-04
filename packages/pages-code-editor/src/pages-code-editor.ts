@@ -7,6 +7,8 @@ import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { tags } from '@lezer/highlight';
+import { yamlLinter } from './yaml-lint.js';
+import { yamlCompletion } from './yaml-completion.js';
 
 const pagesHighlightStyle = HighlightStyle.define([
   { tag: tags.propertyName, color: 'var(--pages-accent-11, #3451b2)' },
@@ -54,8 +56,9 @@ const pagesTheme = EditorView.theme({
   },
 });
 
-function languageExtension(lang: string): Extension {
-  return lang === 'json' ? json() : yaml();
+function languageExtension(lang: string): Extension[] {
+  if (lang === 'json') return [json()];
+  return [yaml(), yamlLinter, yamlCompletion];
 }
 
 export class PagesCodeEditor extends LitElement {
