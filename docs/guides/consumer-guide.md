@@ -28,6 +28,7 @@ UI foundation for CaseHub applications. Enables non-developers to author interac
 | `@casehubio/pages-table` | Data table component (`<pages-table>`) -- three display modes (auto/paginated/scroll), virtual scroll engine, CSS Grid rendering, `TableColumnConfig`/`ColumnRenderer` data model, cell spanning (`SpanMap` with `cellSpan`/`mergeRows`), variable row heights, column resizing, multi-mode selection, sorting (multi-column sort stack), client-side filtering with `FilterConfig`, row-detail expansion (`detailMode: single/multi`), jump-to-page, tree/hierarchical data (`getChildren`, `buildTreeIndex` with hierarchy-preserving client filter), CSV export, conditional row accent (`RowAccentConfig` with column-based colour mapping), auto-hiding pagination, 2D keyboard navigation via `RovingTabindexMixin`, ARIA grid. Depends on `lit`. |
 | `@casehubio/pages-runtime` | Site orchestrator: `loadSite()` API, navigation (`PageIndex`, `buildPageIndex`), data pipeline (`createDataPipeline`), cross-filter state (`FilterState`), component view state, dataset scope resolution, layout serialization (`LayoutStore`, `createLocalLayoutStore`, `createRestLayoutStore`), panel registry (`registerPanel`), dev auth support. URL serialization/deserialization. |
 | `@casehubio/pages-ui-components` | Standalone Lit web components styled with design tokens: `PagesInput`, `PagesSelect`, `PagesTextarea`, `PagesCheckbox`, `PagesButton` (with xs size variant), `PagesBadge` (semantic status pill/tag), `PagesStatusDot` (coloured indicator). Each component available as a separate import path (e.g. `@casehubio/pages-ui-components/input`). Consumed by `pages-viz` schema-form and available for direct use. |
+| `@casehubio/pages-code-editor` | Code editor web component (`<pages-code-editor>`) wrapping CodeMirror 6 with syntax highlighting for YAML and JSON. Supports editable/readonly modes, line numbers, configurable tab size, pluggable CodeMirror extensions (for future LSP integration). Styled with `--pages-*` design tokens. |
 | `@casehubio/pages-tsconfig` | Shared TypeScript config base (project references, maximum strict mode: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `verbatimModuleSyntax`). |
 | `@casehubio/pages-webpack-base` | Shared Webpack config presets for iframe components. |
 
@@ -36,7 +37,7 @@ UI foundation for CaseHub applications. Enables non-developers to author interac
 | Package | Purpose |
 |---------|---------|
 | `@casehubio/graph-core` | Domain-agnostic graph model: `GraphNode`, `GraphEdge`, `GraphModel`. Stencil grammar system (`StencilGrammar` with containment/connection rules, `StencilDescriptor`, `StencilRegistry` with validation). Edit operations (`GraphEdit`: add/remove/replace node, update properties, add/remove edge). `DomainAdapter<T>` for model/edit translation. `PersistenceBackend` SPI (read/write with optimistic concurrency). Runtime overlay (`NodeDecoration` with badges, heatmap intensity, highlight; `RuntimeState`). |
-| `@casehubio/graph-renderer` | React Flow bridge via Lit web component: `<casehub-diagram-canvas>` (`CasehubDiagramCanvas`). Consumes `GraphModel` + `RuntimeState`, renders via React Flow in light DOM. ELK layout integration planned. Depends on `@casehubio/graph-core`, React Flow 11, ELK.js, Lit 3. |
+| `@casehubio/graph-renderer` | React Flow bridge via Lit web component: `<pages-graph-canvas>` (`GraphCanvas`). Consumes `GraphModel` + `RuntimeState`, renders via React Flow in light DOM. ELK layout engine (`computeElkLayout`). Diagram export (`exportDiagram` -- SVG/PNG via `html-to-image`). Stencil registry, edit policy, node move coordination. Depends on `@casehubio/graph-core`, React Flow 12, ELK.js, Lit 3. |
 | `@casehubio/graph-work-registry` | Marketplace work stencil discovery: `WorkStencilDescriptor` (name, category, icon, async flag, properties/input/output JSON schemas), `WorkStencilCategory`, `WorkRegistry` (YAML-based loader). Depends on `@casehubio/graph-core`. |
 
 ### Iframe Component API (`packages/`)
@@ -234,6 +235,23 @@ Unified data provider interface in `@casehubio/pages-data`. Three core types:
 - Template references: `#{row.fieldName}`, `#{context.key}`
 - String literals (single/double quotes), numeric literals, `true`/`false`/`null`
 - Numeric type coercion when both operands parse as finite numbers
+
+### Diagram Export
+
+Export diagrams as SVG or PNG using `exportDiagram()` from `@casehubio/graph-renderer`:
+
+```typescript
+import { exportDiagram } from '@casehubio/graph-renderer';
+
+// Export the canvas as PNG (2x pixel ratio)
+const canvasElement = document.querySelector('pages-graph-canvas');
+exportDiagram(canvasElement, nodes, 'png');
+
+// Export as SVG with custom filename
+exportDiagram(canvasElement, nodes, 'svg', 'my-diagram.svg');
+```
+
+Helper functions `computeNodeBounds(nodes)` and `computeExportViewport(bounds, width, height, padding)` are also available for custom export workflows. Uses `html-to-image@1.11.11` (pinned for stability).
 
 ---
 
