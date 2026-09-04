@@ -6,8 +6,8 @@ import type { PersistenceBackend, GraphModel, NodeDecoration } from '@casehubio/
 import type { Node, Edge } from '@xyflow/react';
 import type { PropertyPaletteSource, EditorResolver } from '@casehubio/pages-property-palette';
 import type { PaletteItem, PaletteSelectDetail } from '@casehubio/pages-diagram-palette';
-import { exportDiagram } from './diagram-export.js';
-import type { ExportFormat } from './diagram-export.js';
+import { exportDiagram } from '@casehubio/graph-renderer';
+import type { ExportFormat } from '@casehubio/graph-renderer';
 import { getPropertySchema } from './schema-registry.js';
 import '@casehubio/pages-property-palette';
 import '@casehubio/pages-diagram-palette';
