@@ -1,0 +1,190 @@
+pages:
+- name: index
+  rows:
+  - properties:
+      margin-bottom: 0px
+    columns:
+    - components:
+      - type: markdown
+        properties:
+          content: |
+            ## pages-code-editor
+
+            A reusable code editor component built on [CodeMirror 6](https://codemirror.net/).
+            Supports YAML and JSON syntax highlighting, editable and read-only modes,
+            line numbers, and theming via `--pages-*` design tokens.
+
+            **Edit the YAML below** to see the dashboard update live.
+  - properties:
+      margin-top: 0px
+    columns:
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--pages-neutral-11,#333);">
+                <strong>YAML Source</strong>
+                <span style="margin-left:auto; font-size:12px; color:var(--pages-neutral-8,#999);">
+                  Edit to update the preview →
+                </span>
+              </div>
+              <pages-code-editor
+                id="live-editor"
+                language="yaml"
+                label="Dashboard YAML source"
+                style="height:500px;"
+              ></pages-code-editor>
+            </div>
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--pages-neutral-11,#333);">
+                <strong>Live Preview</strong>
+                <span id="preview-status" style="margin-left:auto; font-size:12px; color:var(--pages-success-11,#18794e);">✓ Valid</span>
+              </div>
+              <div id="preview-target" style="border:1px solid var(--pages-neutral-4,#e0e0e0); border-radius:6px; padding:12px; min-height:500px; background:var(--pages-neutral-1,#fafafa); overflow:auto;"></div>
+            </div>
+  - columns:
+    - components:
+      - type: html
+        properties:
+          content: |
+            <pre id="sample-yaml-data" style="display:none">pages:
+            - name: index
+              rows:
+              - columns:
+                - span: 4
+                  components:
+                  - type: metric
+                    properties:
+                      text: Revenue
+                      value: "$48,200"
+                - span: 4
+                  components:
+                  - type: metric
+                    properties:
+                      text: Orders
+                      value: "1,247"
+                - span: 4
+                  components:
+                  - type: metric
+                    properties:
+                      text: Customers
+                      value: "892"
+              - columns:
+                - span: 8
+                  components:
+                  - type: bar-chart
+                    properties:
+                      chart:
+                        title: Monthly Sales
+                      lookup:
+                        uuid: sales
+                        group:
+                        - columnGroup:
+                            source: Month
+                          functions:
+                          - source: Month
+                          - source: Revenue
+                          - source: Orders
+                - span: 4
+                  components:
+                  - type: pie-chart
+                    properties:
+                      chart:
+                        title: Sales by Region
+                      lookup:
+                        uuid: regions
+                        group:
+                        - columnGroup:
+                            source: Region
+                          functions:
+                          - source: Region
+                          - source: Revenue
+            datasets:
+            - uuid: sales
+              content: >-
+                [["Jan", 4200, 120], ["Feb", 3800, 105], ["Mar", 5100, 145],
+                 ["Apr", 4700, 132], ["May", 5500, 158], ["Jun", 6200, 175]]
+              columns:
+              - id: Month
+                type: LABEL
+              - id: Revenue
+                type: NUMBER
+              - id: Orders
+                type: NUMBER
+            - uuid: regions
+              content: >-
+                [["North", 15200], ["South", 12400], ["East", 10800], ["West", 9800]]
+              columns:
+              - id: Region
+                type: LABEL
+              - id: Revenue
+                type: NUMBER
+            </pre>
+            <pre id="sample-json-data" style="display:none">{
+              "component": "pages-code-editor",
+              "version": "0.1.0",
+              "features": {
+                "languages": ["yaml", "json"],
+                "modes": ["editable", "readonly"],
+                "theming": "pages design tokens",
+                "accessibility": "CodeMirror 6 built-in ARIA",
+                "future": "LSP integration via extensions property"
+              },
+              "codemirror": "^6.x"
+            }</pre>
+            <pre id="sample-yaml-readonly-data" style="display:none"># Component Configuration
+            pages-code-editor:
+              properties:
+                value: string        # document content
+                language: yaml|json  # syntax highlighting
+                readonly: boolean    # read-only mode
+                line-numbers: boolean # show line numbers
+                tab-size: number     # spaces per tab
+                label: string        # accessible label
+                extensions: Extension[] # CodeMirror plugins
+              events:
+                input: "fires on every change"
+                change: "fires on blur after edit"
+            </pre>
+  - columns:
+    - components:
+      - type: markdown
+        properties:
+          content: |
+            ---
+
+            ### Read-Only Mode
+
+            Set `readonly` to display highlighted code without editing.
+  - columns:
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <pages-code-editor
+              id="readonly-editor"
+              language="json"
+              readonly
+              label="JSON configuration (read-only)"
+              style="height:200px;"
+            ></pages-code-editor>
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <pages-code-editor
+              id="yaml-readonly"
+              language="yaml"
+              readonly
+              label="YAML configuration (read-only)"
+              style="height:200px;"
+            ></pages-code-editor>

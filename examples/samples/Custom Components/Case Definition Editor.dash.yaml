@@ -1,0 +1,38 @@
+pages:
+- name: index
+  rows:
+  - properties:
+      margin-bottom: 0px
+    columns:
+    - components:
+      - type: markdown
+        properties:
+          content: |
+            ## Case Definition Editor
+
+            CaseHub Case Definitions are authored in YAML with a
+            [formal JSON Schema](https://github.com/casehubio/engine/tree/main/schema).
+            This editor provides syntax highlighting for case definition YAML.
+            Schema-driven completion is tracked in [#408](https://github.com/casehubio/casehub-pages/issues/408).
+
+  - properties:
+      margin-top: 0px
+    columns:
+    - components:
+      - type: html
+        properties:
+          content: |
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--pages-neutral-11,#333);">
+                <strong>Employee Onboarding &mdash; Sequential Case Definition</strong>
+                <span style="margin-left:auto; font-size:12px; color:var(--pages-neutral-8,#999);">
+                  Capabilities, workers, bindings, milestones, goals
+                </span>
+              </div>
+              <pages-code-editor
+                id="case-editor"
+                language="yaml"
+                label="Case definition YAML"
+                style="height:700px;"
+              ></pages-code-editor>
+            </div>
