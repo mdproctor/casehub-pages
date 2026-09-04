@@ -60,10 +60,15 @@ module.exports = (env = {}) => {
           test: /pages-diagram-palette[\/]dist[\/]/,
           sideEffects: true,
         },
+        {
+          test: /pages-code-editor[\/]dist[\/]/,
+          sideEffects: true,
+        },
       ],
     },
     entry: {
       "casehub-bundle": path.resolve(__dirname, "src/casehub-entry.ts"),
+      "diagram-export-tool": path.resolve(__dirname, "src/diagram-export-tool.ts"),
     },
     output: {
       path: path.resolve(__dirname, "dist"),
@@ -115,6 +120,7 @@ module.exports = (env = {}) => {
         "@casehubio/pages-ui-components/validation": path.resolve(__dirname, "../packages/pages-ui-components/dist/validation"),
         "@casehubio/pages-ui-components/types": path.resolve(__dirname, "../packages/pages-ui-components/dist/types"),
         "@casehubio/pages-ui-components": path.resolve(__dirname, "../packages/pages-ui-components"),
+        "@casehubio/pages-code-editor": path.resolve(__dirname, "../packages/pages-code-editor"),
         "@casehubio/graph-core": path.resolve(__dirname, "../packages/graph-core"),
         "@casehubio/graph-renderer": path.resolve(__dirname, "../packages/graph-renderer"),
         "@casehubio/pages-property-palette": path.resolve(__dirname, "../packages/pages-property-palette"),
