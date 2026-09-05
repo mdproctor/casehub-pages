@@ -25,8 +25,7 @@ class ScenarioCompilerTest {
     void compile_missingRequiredParam_throws() {
         assertThatThrownBy(() -> ScenarioCompiler.compile(
                 fixture("parameterized-onboard.yaml"), Map.of()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("projectName");
+                .isInstanceOf(io.casehub.yaml.core.module.ParameterValidationException.class);
     }
 
     @Test

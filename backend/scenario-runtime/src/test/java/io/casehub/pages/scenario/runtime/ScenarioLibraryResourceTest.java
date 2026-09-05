@@ -127,4 +127,41 @@ class ScenarioLibraryResourceTest {
         assertThatThrownBy(() -> resource.delete("nonexistent"))
                 .isInstanceOf(NotFoundException.class);
     }
+
+// --- GraphQL API ---
+
+    @Test
+    void graphql_scriptLibrary_delegates_to_registry() {
+        var registry = new ScriptRegistry(
+                new BundledScriptSource(java.util.List.of()),
+                new UploadedScriptSource(java.nio.file.Path.of(System.getProperty("java.io.tmpdir"), "test-gql-" + System.nanoTime())));
+        var graphql = new ScenarioLibraryGraphQL(registry);
+
+
+        var result = graphql.scriptLibrary(null, null);
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void graphql_uploadScript_returns_descriptor() {
+        var registry = new ScriptRegistry(
+                new BundledScriptSource(java.util.List.of()),
+                new UploadedScriptSource(java.nio.file.Path.of(System.getProperty("java.io.tmpdir"), "test-scripts-" + System.nanoTime())));
+        var graphql = new ScenarioLibraryGraphQL(registry);
+
+        String yaml = "scenario: graphql-test\nsteps:\n  - label: test\n    target: browser\n    commands:\n      - action: click\n        target: {role: button, name: Go}\n";
+        var    desc = graphql.uploadScript(yaml);
+        assertThat(desc.name()).isEqualTo("graphql-test");
+    }
+
+    @Test
+    void graphql_deleteScript_returns_false_for_unknown() {
+        var registry = new ScriptRegistry(
+                new BundledScriptSource(java.util.List.of()),
+                new UploadedScriptSource(java.nio.file.Path.of(System.getProperty("java.io.tmpdir"), "test-gql-" + System.nanoTime())));
+        var graphql = new ScenarioLibraryGraphQL(registry);
+
+        assertThat(graphql.deleteScript("nonexistent")).isFalse();
+    }
 }

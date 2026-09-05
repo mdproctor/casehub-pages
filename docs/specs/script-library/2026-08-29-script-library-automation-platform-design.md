@@ -599,30 +599,33 @@ The scenario compilation pipeline consumes these types from `casehub-platform-ya
 
 | Type | Package | Purpose |
 |---|---|---|
-| `VariableResolver` | `resolver` | `${prefix.name}` resolution with pluggable `VariableSource` chain, `withEachContext()` for simple iteration, `withEachRowContext()` for CSV row iteration, `withScope()` for caller context inheritance |
-| `VariableSource` | `resolver` | `@FunctionalInterface` — `resolve(name) → String`. Static `chain()` composes ordered sources |
-| `ForEachExpander` | `foreach` | Generic `<E> expand(elements, groups, resolver, adapter, maxExpansion)`. Domain provides `ForEachAdapter<E>` |
-| `ForEachAdapter<E>` | `foreach` | `stamp()`, `getForEach()`, `getId()`, `getWhen()` — scenario provides `ScenarioStepAdapter` |
-| `IterationGroup` | `foreach` | `record(as, in)` — named iteration group |
+| `VariableResolver` | `resolver` | `${prefix.name}` resolution — pure prefix→source dispatcher, `withScope()` for scoped sources, `forParams()` factory for parameterized modules |
+| `VariableSource` | `resolver` | `@FunctionalInterface` — `resolve(name) → String`. Factories: `chain()`, `nested()` (hierarchical dot-path), `forEachContext()` (simple + row iteration), `lenient()` (null→"") |
+| `ForEachExpander` | `foreach` | Generic `<E> expand(elements, groups, dataSources, resolver, adapter, maxExpansion)`. CSV-aware overload handles row context + index automatically |
+| `ForEachDirective` | `foreach` | Sealed: `GroupRef(groupName, as)`, `InlineIteration(as, in)`. `parse(Object)` factory from raw YAML |
+| `ForEachAdapter<E>` | `foreach` | `stamp()`, `getForEach()`, `getWhen()` — scenario provides `ScenarioStepAdapter` |
+| `IterationGroup` | `foreach` | `record(as, in)` — `fromBlock()` factory parses raw iterations YAML |
 | `ExpansionResult<E>` | `foreach` | `record(elements, excludedIds)` — expansion output |
 | `CsvParser` | `data` | `parse(name, csvContent) → CsvDataSource` — header parsing, type validation |
-| `CsvDataSource` | `data` | `record(name, columns, rows)` — parsed CSV with typed rows |
+| `CsvDataSource` | `data` | `record(name, columns, rows)` — `fromDataBlock()` factory extracts inline CSV from data block |
 | `CsvColumn` | `data` | `record(name, type)` |
-| `CsvColumnType` | `data` | `STRING, INTEGER, BOOLEAN, DECIMAL` with `parse()` method |
+| `CsvColumnType` | `data` | `STRING, INTEGER, BOOLEAN, NUMBER` with `parse()` method |
 | `Truthiness` | `condition` | `isTruthy(String) → boolean` — shared `when` evaluation |
+| `ParameterType` | `module` | `STRING, INTEGER, NUMBER, BOOLEAN, LIST` — `fromString()` with DECIMAL alias |
+| `YamlModuleParameter` | `module` | Typed param with constraints — `fromDescriptors()` factory for scenario-style param declarations |
+| `ParameterValidator` | `module` | `validateOrThrow(declared, provided)` — type, range, pattern, enum validation |
 
 The scenario `ScenarioCompiler` wires these as:
 ```java
-var paramSource = VariableSource.chain(
-    callerParams::get,          // caller-supplied
-    preferences::get,           // platform preferences
-    scriptDefaults::get,        // params[].default
-    config::getOptionalValue    // MicroProfile Config
-);
-var resolver = new VariableResolver(
-    Map.of("params", paramSource, "var", paramSource),
-    Set.of("step")              // deferred — resolved at execution time
-);
+var declaredParams = toModuleParams(scenario.params());
+ParameterValidator.validateOrThrow(declaredParams, callerParams);
+var resolver = VariableResolver.forParams(declaredParams, callerParams, Set.of("step"));
+
+var csvSources = CsvDataSource.fromDataBlock(scenario.data());
+var iterationGroups = IterationGroup.fromBlock(scenario.iterations());
+
+var expanded = ForEachExpander.expand(
+    stepMap, iterationGroups, csvSources, resolver, adapter, MAX_EXPANSION);
 ```
 
 ## 8. Non-Goals

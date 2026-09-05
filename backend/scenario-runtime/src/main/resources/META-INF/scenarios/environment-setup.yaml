@@ -1,0 +1,40 @@
+scenario: environment-setup
+meta:
+  description: "Provision environments across regions with parameterized configuration"
+  labels:
+    - capability:provisioning
+  tags:
+    - operations
+    - multi-region
+params:
+  - name: project
+    type: string
+    required: true
+  - name: tier
+    type: integer
+    default: 1
+    enum: [1, 2, 3]
+iterations:
+  regions:
+    as: region
+    in: ["us-east", "eu-west"]
+steps:
+  - label: "Create project"
+    target: browser
+    commands:
+      - action: fill
+        target: {role: textbox, name: "Project Name"}
+        value: "${params.project}"
+      - action: click
+        target: {role: button, name: "Create"}
+  - label: "Provision region"
+    target: browser
+    forEach: regions
+    commands:
+      - action: navigate
+        value: "#deploy/${each.region}"
+      - action: select
+        target: {role: combobox, name: "Tier"}
+        value: "${params.tier}"
+      - action: click
+        target: {role: button, name: "Deploy"}

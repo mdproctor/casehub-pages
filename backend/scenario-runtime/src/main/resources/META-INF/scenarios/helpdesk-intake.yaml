@@ -1,0 +1,32 @@
+scenario: helpdesk-intake
+meta:
+  description: "Demonstrate ticket intake workflow with form filling and submission"
+  labels:
+    - domain:helpdesk
+    - capability:intake
+  tags:
+    - demo
+    - getting-started
+steps:
+  - label: "Navigate to intake form"
+    target: browser
+    commands:
+      - action: navigate
+        value: "#intake"
+  - label: "Fill ticket subject"
+    target: browser
+    commands:
+      - action: fill
+        target: {role: textbox, name: "Subject"}
+        value: "Network connectivity issue"
+  - label: "Select priority"
+    target: browser
+    commands:
+      - action: select
+        target: {role: combobox, name: "Priority"}
+        value: "high"
+  - label: "Submit ticket"
+    target: browser
+    commands:
+      - action: click
+        target: {role: button, name: "Submit"}
