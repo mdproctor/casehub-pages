@@ -125,7 +125,7 @@ const sortColumnSchema = z.object({
   order: col.order ?? col.sortOrder ?? ("ASCENDING" as const),
 }));
 
-const lookupSchema = z.object({
+export const lookupSchema = z.object({
   uuid: z.string().optional(),
   dataSetUuid: z.string().optional(),
   filter: z.array(filterNodeSchema).optional(),

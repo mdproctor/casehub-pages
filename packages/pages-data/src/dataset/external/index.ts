@@ -22,7 +22,7 @@ export { HttpMethod, LOCAL_CAPABILITIES, isServiceCapabilities, parseRefreshTime
 export type { DatasetContract } from "../contract.js";
 
 // Schema
-export { parseExternalDataSetDef } from "./schema.js";
+export { parseExternalDataSetDef, externalDataSetDefSchema } from "./schema.js";
 export type { ParsedExternalDataSetDef } from "./schema.js";
 
 // Parsers

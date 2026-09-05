@@ -1,2 +1,2 @@
 export { PagesCodeEditor } from './pages-code-editor.js';
-export { yamlCompletion } from './yaml-completion.js';
+export { createSchemaCompletion, navigateSchema, schemaToCompletions, buildYamlContext } from './schema-completion.js';
