@@ -100,11 +100,76 @@ export class PagesLibraryView extends LitElement {
       color: var(--pages-neutral-8, #999);
       text-align: center; font-style: italic;
     }
+    .header-bar {
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+    }
+    .upload-btn {
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      background: var(--pages-neutral-3, #f5f5f5); color: var(--pages-neutral-11, #333);
+      border: 1px solid var(--pages-neutral-5, #ddd); border-radius: var(--pages-radius-sm, 4px);
+      cursor: pointer; font-size: var(--pages-font-size-sm, 12px);
+    }
+    .upload-btn:hover { background: var(--pages-neutral-4, #e5e5e5); }
+    .upload-panel {
+      padding: var(--pages-space-2, 8px);
+      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+      background: var(--pages-neutral-2, #fafafa);
+    }
+    .upload-panel textarea {
+      width: 100%; box-sizing: border-box; min-height: 80px;
+      padding: var(--pages-space-2, 8px);
+      border: 1px solid var(--pages-neutral-5, #ddd); border-radius: var(--pages-radius-sm, 4px);
+      font-family: monospace; font-size: var(--pages-font-size-sm, 12px);
+      background: var(--pages-neutral-1, #fff); color: var(--pages-neutral-12, #1a1a1a);
+      resize: vertical;
+    }
+    .upload-actions {
+      display: flex; gap: var(--pages-space-2, 8px); margin-top: var(--pages-space-1, 4px);
+      align-items: center;
+    }
+    .submit-btn {
+      padding: var(--pages-space-1, 4px) var(--pages-space-2, 8px);
+      background: var(--pages-accent-9, #2563eb); color: white;
+      border: none; border-radius: var(--pages-radius-sm, 4px);
+      cursor: pointer; font-size: var(--pages-font-size-sm, 12px);
+    }
+    .submit-btn:hover { background: var(--pages-accent-10, #1d4ed8); }
+    .submit-btn:disabled { opacity: 0.5; cursor: default; }
+    .edit-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--pages-neutral-8, #999); font-size: 12px; padding: 2px 4px;
+    }
+    .edit-btn:hover { color: var(--pages-accent-9, #2563eb); }
+    .meta-editor {
+      padding: var(--pages-space-2, 8px);
+      background: var(--pages-neutral-2, #fafafa);
+      border-top: 1px solid var(--pages-neutral-4, #e5e5e5);
+    }
+    .meta-editor label {
+      display: block; font-size: 10px; color: var(--pages-neutral-9, #777);
+      margin-top: var(--pages-space-1, 4px);
+    }
+    .meta-editor input {
+      width: 100%; box-sizing: border-box;
+      padding: 2px var(--pages-space-1, 4px);
+      border: 1px solid var(--pages-neutral-5, #ddd); border-radius: 2px;
+      font-size: var(--pages-font-size-sm, 12px);
+      background: var(--pages-neutral-1, #fff); color: var(--pages-neutral-12, #1a1a1a);
+    }
+    .meta-editor-actions { margin-top: var(--pages-space-1, 4px); }
   `;
 
   @property() baseUrl = '';
   @state() searchText = '';
   @state() filterLabels: string[] = [];
+  @state() private _showUpload = false;
+  @state() private _uploadYaml = '';
+  @state() private _editingScript: string | null = null;
+  @state() private _editDesc = '';
+  @state() private _editLabels = '';
+  @state() private _editTags = '';
 
   @state() private _scripts: ScriptDescriptor[] = [];
   @state() private _readiness = new Map<string, ReadinessStatus>();
@@ -154,6 +219,23 @@ export class PagesLibraryView extends LitElement {
 
   override render(): TemplateResult {
     return html`
+      <div class="header-bar">
+        <button class="upload-btn" aria-label="Upload script"
+                @click=${() => { this._showUpload = !this._showUpload; }}>Upload</button>
+      </div>
+      ${this._showUpload ? html`
+        <div class="upload-panel">
+          <textarea placeholder="Paste YAML here..." aria-label="Script YAML"
+                    @input=${(e: Event) => { this._uploadYaml = (e.target as HTMLTextAreaElement).value; }}></textarea>
+          <div class="upload-actions">
+            <button class="submit-btn" aria-label="Submit upload"
+                    ?disabled=${!this._uploadYaml.trim()}
+                    @click=${() => { void this._submitUpload(); }}>Upload</button>
+            <input type="file" accept=".yaml,.yml" aria-label="Upload YAML file"
+                   @change=${(e: Event) => { void this._handleFileUpload(e); }}>
+          </div>
+        </div>
+      ` : nothing}
       <div class="search">
         <input type="text" placeholder="Search scripts..."
                .value=${this.searchText}
@@ -178,6 +260,7 @@ export class PagesLibraryView extends LitElement {
 
   private _renderScript(script: ScriptDescriptor): TemplateResult {
     const status = this._readiness.get(script.name) ?? 'unknown';
+    const editing = this._editingScript === script.name;
     return html`
       <div class="script-item">
         <span class="readiness readiness-${status}">${status}</span>
@@ -189,9 +272,36 @@ export class PagesLibraryView extends LitElement {
             ${script.tags.map(t => html`<span class="label-chip">${t}</span>`)}
             <span class="provenance">${script.provenance.toLowerCase()}</span>
           </div>
+          ${editing ? this._renderMetaEditor(script) : nothing}
         </div>
+        <button class="edit-btn" aria-label="Edit ${script.name} metadata"
+                @click=${() => { this._startEdit(script); }}>&#9998;</button>
         <button class="run-btn" @click=${() => { this._selectScript(script); }}
                 aria-label="Run ${script.name}">Run</button>
+      </div>
+    `;
+  }
+
+  private _renderMetaEditor(script: ScriptDescriptor): TemplateResult {
+    return html`
+      <div class="meta-editor">
+        <label>Description
+          <input type="text" .value=${this._editDesc}
+                 @input=${(e: Event) => { this._editDesc = (e.target as HTMLInputElement).value; }}>
+        </label>
+        <label>Labels (comma-separated)
+          <input type="text" .value=${this._editLabels}
+                 @input=${(e: Event) => { this._editLabels = (e.target as HTMLInputElement).value; }}>
+        </label>
+        <label>Tags (comma-separated)
+          <input type="text" .value=${this._editTags}
+                 @input=${(e: Event) => { this._editTags = (e.target as HTMLInputElement).value; }}>
+        </label>
+        <div class="meta-editor-actions">
+          <button class="submit-btn" aria-label="Save metadata"
+                  @click=${() => { void this._saveMeta(script.name); }}>Save</button>
+          <button class="edit-btn" @click=${() => { this._editingScript = null; }}>Cancel</button>
+        </div>
       </div>
     `;
   }
@@ -202,6 +312,57 @@ export class PagesLibraryView extends LitElement {
     } else {
       this.filterLabels = [...this.filterLabels, label];
     }
+  }
+
+  private async _submitUpload(): Promise<void> {
+    if (!this._uploadYaml.trim()) return;
+    try {
+      const resp = await fetch(`${this.baseUrl}/scenario/library`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/yaml' },
+        body: this._uploadYaml,
+      });
+      if (resp.ok) {
+        this._uploadYaml = '';
+        this._showUpload = false;
+        await this.loadLibrary();
+      }
+    } catch { /* ignore */ }
+  }
+
+  private async _handleFileUpload(e: Event): Promise<void> {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    this._uploadYaml = text;
+    await this._submitUpload();
+  }
+
+  private _startEdit(script: ScriptDescriptor): void {
+    if (this._editingScript === script.name) {
+      this._editingScript = null;
+      return;
+    }
+    this._editingScript = script.name;
+    this._editDesc = script.description ?? '';
+    this._editLabels = script.labels.join(', ');
+    this._editTags = script.tags.join(', ');
+  }
+
+  private async _saveMeta(name: string): Promise<void> {
+    const labels = this._editLabels.split(',').map(s => s.trim()).filter(Boolean);
+    const tags = this._editTags.split(',').map(s => s.trim()).filter(Boolean);
+    try {
+      const resp = await fetch(`${this.baseUrl}/scenario/library/${name}/meta`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: this._editDesc, labels, tags }),
+      });
+      if (resp.ok) {
+        this._editingScript = null;
+        await this.loadLibrary();
+      }
+    } catch { /* ignore */ }
   }
 
   private _selectScript(script: ScriptDescriptor): void {

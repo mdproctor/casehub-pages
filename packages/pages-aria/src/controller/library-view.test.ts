@@ -44,7 +44,19 @@ function createView(baseUrl = 'http://localhost:8080'): PagesLibraryView {
 describe('pages-library-view', () => {
   beforeEach(() => {
     document.body.innerHTML = '<button aria-label="Submit">Submit</button>';
-    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      if (opts?.method === 'POST' && url.includes('/scenario/library')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ name: 'new-script', labels: [], tags: [], params: [], calls: [], provenance: 'UPLOADED', firstStepTargets: [] }),
+        });
+      }
+      if (opts?.method === 'PUT' && url.includes('/meta')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ name: 'onboard-team', description: 'Updated', labels: [], tags: [], params: [], calls: [], provenance: 'BUNDLED', firstStepTargets: [] }),
+        });
+      }
       if (url.includes('/scenario/library') && !url.includes('/yaml')) {
         return Promise.resolve({
           ok: true,
@@ -188,6 +200,102 @@ describe('pages-library-view', () => {
     const items = el.shadowRoot?.querySelectorAll('.script-item');
     expect(items?.length).toBe(1);
     expect(el.shadowRoot?.textContent).toContain('resolve-ticket');
+    el.remove();
+  });
+
+  // --- Upload / Paste ---
+
+  it('shows upload button', async () => {
+    const el = createView();
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const btn = el.shadowRoot?.querySelector('[aria-label="Upload script"]');
+    expect(btn).not.toBeNull();
+    el.remove();
+  });
+
+  it('toggles upload panel on button click', async () => {
+    const el = createView();
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    expect(el.shadowRoot?.querySelector('.upload-panel')).toBeNull();
+
+    const btn = el.shadowRoot?.querySelector('[aria-label="Upload script"]') as HTMLButtonElement;
+    btn.click();
+    await el.updateComplete;
+
+    expect(el.shadowRoot?.querySelector('.upload-panel')).not.toBeNull();
+    expect(el.shadowRoot?.querySelector('.upload-panel textarea')).not.toBeNull();
+    el.remove();
+  });
+
+  it('uploads pasted YAML via POST', async () => {
+    const el = createView();
+    document.body.appendChild(el);
+    await el.updateComplete;
+    await el.loadLibrary();
+    await el.updateComplete;
+
+    const btn = el.shadowRoot?.querySelector('[aria-label="Upload script"]') as HTMLButtonElement;
+    btn.click();
+    await el.updateComplete;
+
+    (el as any)._uploadYaml = 'scenario: new-script\nsteps: []';
+    await el.updateComplete;
+
+    const submitBtn = el.shadowRoot?.querySelector('[aria-label="Submit upload"]') as HTMLButtonElement;
+    submitBtn.click();
+    await new Promise(r => setTimeout(r, 0));
+    await el.updateComplete;
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/scenario/library',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    el.remove();
+  });
+
+  // --- Metadata editing ---
+
+  it('opens metadata editor on edit click', async () => {
+    const el = createView();
+    document.body.appendChild(el);
+    await el.updateComplete;
+    await el.loadLibrary();
+    await el.updateComplete;
+
+    const editBtn = el.shadowRoot?.querySelector('[aria-label="Edit onboard-team metadata"]') as HTMLButtonElement;
+    expect(editBtn).not.toBeNull();
+    editBtn.click();
+    await el.updateComplete;
+
+    const editor = el.shadowRoot?.querySelector('.meta-editor');
+    expect(editor).not.toBeNull();
+    el.remove();
+  });
+
+  it('saves metadata via PUT', async () => {
+    const el = createView();
+    document.body.appendChild(el);
+    await el.updateComplete;
+    await el.loadLibrary();
+    await el.updateComplete;
+
+    const editBtn = el.shadowRoot?.querySelector('[aria-label="Edit onboard-team metadata"]') as HTMLButtonElement;
+    editBtn.click();
+    await el.updateComplete;
+
+    const saveBtn = el.shadowRoot?.querySelector('[aria-label="Save metadata"]') as HTMLButtonElement;
+    expect(saveBtn).not.toBeNull();
+    saveBtn.click();
+    await el.updateComplete;
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/scenario/library/onboard-team/meta',
+      expect.objectContaining({ method: 'PUT' }),
+    );
     el.remove();
   });
 
