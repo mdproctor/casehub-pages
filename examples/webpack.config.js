@@ -121,6 +121,7 @@ module.exports = (env = {}) => {
         "@casehubio/pages-ui-components/types": path.resolve(__dirname, "../packages/pages-ui-components/dist/types"),
         "@casehubio/pages-ui-components": path.resolve(__dirname, "../packages/pages-ui-components"),
         "@casehubio/pages-code-editor": path.resolve(__dirname, "../packages/pages-code-editor"),
+        "@casehubio/pages-schema": path.resolve(__dirname, "../packages/pages-schema"),
         "@casehubio/graph-core": path.resolve(__dirname, "../packages/graph-core"),
         "@casehubio/graph-renderer": path.resolve(__dirname, "../packages/graph-renderer"),
         "@casehubio/pages-property-palette": path.resolve(__dirname, "../packages/pages-property-palette"),

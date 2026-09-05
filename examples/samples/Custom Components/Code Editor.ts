@@ -10,6 +10,9 @@ var previewStatus = document.getElementById('preview-status');
 
 if (editor) {
   (editor as any).value = SAMPLE_DASHBOARD;
+  if ((window as any).casehubPages?.yamlCompletion) {
+    (editor as any).extensions = [(window as any).casehubPages.yamlCompletion];
+  }
 }
 if (readonlyEditor) {
   (readonlyEditor as any).value = SAMPLE_JSON;

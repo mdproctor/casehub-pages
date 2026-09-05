@@ -19,7 +19,7 @@ const serverPaginationConfigSchema = z.object({
   totalPath: z.string().optional(),
 });
 
-const externalDataSetDefSchema = z.object({
+export const externalDataSetDefSchema = z.object({
   uuid: z.string().min(1),
   name: z.string().optional(),
 

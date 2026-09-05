@@ -21,7 +21,7 @@ export { applyOps, validateOpOrder } from "./dataset/ops.js";
 
 export type { DataSetLookup } from "./dataset/lookup.js";
 export { createLookup } from "./dataset/lookup.js";
-export { parseLookup } from "./dataset/lookup-parser.js";
+export { parseLookup, lookupSchema } from "./dataset/lookup-parser.js";
 
 export type { Aggregation, GroupingKey, GroupStrategy, GroupOp, ResultColumn, FixedCalendarUnit } from "./dataset/group.js";
 
@@ -63,6 +63,7 @@ export {
   parseRefreshTime,
   type ParsedExternalDataSetDef,
   parseExternalDataSetDef,
+  externalDataSetDefSchema,
   type CsvParseOptions,
   type CsvParseResult,
   parseCsv,

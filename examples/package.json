@@ -26,6 +26,7 @@
     "@casehubio/pages-diagram-palette": "workspace:*",
     "@casehubio/pages-property-palette": "workspace:*",
     "@casehubio/pages-runtime": "workspace:*",
+    "@casehubio/pages-schema": "workspace:*",
     "@casehubio/pages-ui": "workspace:*",
     "@casehubio/pages-ui-tokens": "workspace:*",
     "@casehubio/pages-viz": "workspace:*",
