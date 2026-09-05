@@ -141,6 +141,43 @@ async function runSteps(steps, delayMs) {
   showTicketCreated();
 }
 
+// Mock fetch for standalone demo — intercepts upload/meta calls
+var _origFetch = window.fetch;
+window.fetch = function(url, opts) {
+  var urlStr = typeof url === 'string' ? url : url.toString();
+  if (opts && opts.method === 'POST' && urlStr.includes('/scenario/library')) {
+    var yaml = opts.body || '';
+    var nameMatch = yaml.match(/scenario:\s*(.+)/);
+    var descMatch = yaml.match(/description:\s*"?([^"\n]+)"?/);
+    var labelsMatch = yaml.match(/labels:\s*\n((?:\s+-\s+.+\n?)*)/);
+    var tagsMatch = yaml.match(/tags:\s*\n((?:\s+-\s+.+\n?)*)/);
+    var newScript = {
+      name: nameMatch ? nameMatch[1].trim() : 'uploaded-' + Date.now(),
+      description: descMatch ? descMatch[1].trim() : undefined,
+      labels: labelsMatch ? labelsMatch[1].match(/- (.+)/g).map(function(m) { return m.replace(/^- /, '').trim(); }) : [],
+      tags: tagsMatch ? tagsMatch[1].match(/- (.+)/g).map(function(m) { return m.replace(/^- /, '').trim(); }) : [],
+      params: [], calls: [], provenance: 'UPLOADED', firstStepTargets: [],
+    };
+    SCRIPTS.push(newScript);
+    if (libraryView) libraryView.scripts = SCRIPTS.slice();
+    return Promise.resolve({ ok: true, json: function() { return Promise.resolve(newScript); } });
+  }
+  if (opts && opts.method === 'PUT' && urlStr.includes('/meta')) {
+    var parts = urlStr.split('/');
+    var scriptName = parts[parts.length - 2];
+    var meta = JSON.parse(opts.body || '{}');
+    var target = SCRIPTS.find(function(s) { return s.name === scriptName; });
+    if (target) {
+      if (meta.description !== undefined) target.description = meta.description;
+      if (meta.labels) target.labels = meta.labels;
+      if (meta.tags) target.tags = meta.tags;
+      if (libraryView) libraryView.scripts = SCRIPTS.slice();
+    }
+    return Promise.resolve({ ok: true, json: function() { return Promise.resolve(target || {}); } });
+  }
+  return _origFetch.apply(window, arguments);
+};
+
 // Wire up the real <pages-library-view> component
 var libraryView = document.getElementById('library-view');
 if (libraryView) {

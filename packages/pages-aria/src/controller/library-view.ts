@@ -226,11 +226,14 @@ export class PagesLibraryView extends LitElement {
       ${this._showUpload ? html`
         <div class="upload-panel">
           <textarea placeholder="Paste YAML here..." aria-label="Script YAML"
+                    .value=${this._uploadYaml}
                     @input=${(e: Event) => { this._uploadYaml = (e.target as HTMLTextAreaElement).value; }}></textarea>
           <div class="upload-actions">
             <button class="submit-btn" aria-label="Submit upload"
                     ?disabled=${!this._uploadYaml.trim()}
                     @click=${() => { void this._submitUpload(); }}>Upload</button>
+            <button class="upload-btn" aria-label="Try example"
+                    @click=${() => { this._loadExample(); }}>Try example</button>
             <input type="file" accept=".yaml,.yml" aria-label="Upload YAML file"
                    @change=${(e: Event) => { void this._handleFileUpload(e); }}>
           </div>
@@ -312,6 +315,64 @@ export class PagesLibraryView extends LitElement {
     } else {
       this.filterLabels = [...this.filterLabels, label];
     }
+  }
+
+  private _loadExample(): void {
+    this._uploadYaml = `scenario: deploy-environments
+meta:
+  description: "Deploy to multiple regions with health checks"
+  labels:
+    - domain:devops
+    - capability:deployment
+  tags:
+    - multi-region
+    - operations
+params:
+  - name: project
+    type: string
+    required: true
+  - name: tier
+    type: integer
+    default: 1
+    enum: [1, 2, 3]
+data:
+  regions:
+    inline: |
+      name:string,endpoint:string,production:boolean
+      us-east,us-east.example.com,true
+      eu-west,eu-west.example.com,true
+      ap-south,ap-south.example.com,false
+steps:
+  - label: "Create project"
+    target: browser
+    commands:
+      - action: fill
+        target: {role: textbox, name: "Project Name"}
+        value: "\${params.project}"
+      - action: click
+        target: {role: button, name: "Create"}
+  - label: "Deploy to region"
+    target: browser
+    forEach:
+      as: region
+      in: regions
+    commands:
+      - action: navigate
+        value: "#deploy/\${each.region.name}"
+      - action: fill
+        target: {role: textbox, name: "Endpoint"}
+        value: "\${each.region.endpoint}"
+      - action: click
+        target: {role: button, name: "Deploy"}
+  - label: "Verify production"
+    target: browser
+    forEach:
+      as: region
+      in: regions
+    when: "\${each.region.production}"
+    commands:
+      - action: click
+        target: {role: button, name: "Run Health Check"}`;
   }
 
   private async _submitUpload(): Promise<void> {

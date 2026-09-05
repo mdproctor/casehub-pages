@@ -1,0 +1,55 @@
+scenario: onboard-team-members
+meta:
+  description: "Onboard team members from CSV data with conditional admin access"
+  labels:
+    - domain:hr
+    - capability:onboarding
+  tags:
+    - data-driven
+    - getting-started
+params:
+  - name: teamName
+    type: string
+    required: true
+  - name: grantAdmin
+    type: boolean
+    default: true
+data:
+  members:
+    inline: |
+      name:string,email:string,role:string,admin:boolean
+      Alice Chen,alice@example.com,Developer,true
+      Bob Martin,bob@example.com,Viewer,false
+      Carol White,carol@example.com,Lead,true
+steps:
+  - label: "Navigate to team page"
+    target: browser
+    commands:
+      - action: navigate
+        value: "#teams/${params.teamName}"
+  - label: "Create member account"
+    target: browser
+    forEach:
+      as: member
+      in: members
+    commands:
+      - action: fill
+        target: {role: textbox, name: "Full Name"}
+        value: "${each.member.name}"
+      - action: fill
+        target: {role: textbox, name: "Email"}
+        value: "${each.member.email}"
+      - action: select
+        target: {role: combobox, name: "Role"}
+        value: "${each.member.role}"
+      - action: click
+        target: {role: button, name: "Create"}
+  - label: "Grant admin access"
+    target: browser
+    forEach:
+      as: member
+      in: members
+    when: "${each.member.admin}"
+    commands:
+      - action: click
+        target: {role: button, name: "Grant Admin"}
