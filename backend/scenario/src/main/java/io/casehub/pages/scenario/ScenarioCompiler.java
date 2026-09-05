@@ -39,8 +39,8 @@ public final class ScenarioCompiler {
         Map<String, io.casehub.yaml.core.data.CsvDataSource> csvSources      = io.casehub.yaml.core.data.CsvDataSource.fromDataBlock(scenario.data());
         Map<String, IterationGroup>                          iterationGroups = IterationGroup.fromBlock(scenario.iterations());
 
-        List<HierarchicalStep> allSteps = scenario.allSteps().toList();
-        LinkedHashMap<String, HierarchicalStep> stepMap = new LinkedHashMap<>();
+        List<HierarchicalStep>                  allSteps = scenario.allSteps().toList();
+        LinkedHashMap<String, HierarchicalStep> stepMap  = new LinkedHashMap<>();
         for (HierarchicalStep step : allSteps) {
             stepMap.put(step.name() != null ? step.name() : ScenarioStepAdapter.slugify(step.label()), step);
         }
