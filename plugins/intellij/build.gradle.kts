@@ -26,7 +26,7 @@ kotlin {
 
 intellijPlatform {
     pluginConfiguration {
-        id = "io.casehub.yaml"
+        id = "io.casehub.pages"
         name = providers.gradleProperty("pluginName")
         version = providers.gradleProperty("pluginVersion")
         ideaVersion {

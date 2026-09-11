@@ -1,13 +1,15 @@
-# CaseHub YAML — IntelliJ Plugin
+# CaseHub Pages — IntelliJ Plugin
 
-Language intelligence for CaseHub YAML formats, powered by the `pages-lsp` server.
+Language intelligence for CaseHub Page YAML, powered by the `pages-lsp` server.
+
+For all five CaseHub YAML formats (Page, CaseDefinition, SWF, HTN, Org), install **CaseHub YAML** from `blocks-ui/plugins/intellij-casehub/` instead — it supersedes this plugin.
 
 ## Features
 
 - **Completion** — schema-driven property suggestions, discriminated union narrowing
 - **Diagnostics** — YAML syntax errors and schema validation
 - **Hover** — property descriptions, types, and allowed values
-- **Rename** — symbol rename across files (datasets, components, capabilities)
+- **Rename** — symbol rename across files (datasets, components)
 - **Find references / Go to definition** — cross-file navigation
 - **jq expression intelligence** — syntax validation and path completion in expression fields
 
@@ -17,10 +19,6 @@ Language intelligence for CaseHub YAML formats, powered by the `pages-lsp` serve
 |-----------|--------|
 | `*.page.yaml` | Page definitions |
 | `*.dash.yaml` | Page definitions (transition) |
-| `*.case.yaml` | Case definitions |
-| `*.swf.yaml` | Serverless Workflow |
-| `*.htn.yaml` | HTN task networks |
-| `*.org.yaml` | Org structure |
 
 ## Requirements
 

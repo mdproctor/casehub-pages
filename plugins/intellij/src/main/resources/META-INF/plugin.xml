@@ -1,19 +1,19 @@
 <idea-plugin>
-    <id>io.casehub.yaml</id>
-    <name>CaseHub YAML</name>
+    <id>io.casehub.pages</id>
+    <name>CaseHub Pages</name>
     <vendor url="https://github.com/casehubio">CaseHub</vendor>
     <description><![CDATA[
-    <p>Language intelligence for CaseHub YAML formats — completion, diagnostics, hover,
+    <p>Language intelligence for CaseHub Page YAML — completion, diagnostics, hover,
     rename, find references — powered by the pages-lsp server.</p>
 
     <h3>Supported formats</h3>
     <ul>
         <li><b>*.page.yaml</b> — Page definitions</li>
-        <li><b>*.case.yaml</b> — Case definitions</li>
-        <li><b>*.swf.yaml</b> — Serverless Workflow</li>
-        <li><b>*.htn.yaml</b> — HTN task networks</li>
-        <li><b>*.org.yaml</b> — Org structure</li>
+        <li><b>*.dash.yaml</b> — Page definitions (transition)</li>
     </ul>
+
+    <p>For all five CaseHub YAML formats (Page, CaseDefinition, SWF, HTN, Org),
+    install <b>CaseHub YAML</b> instead — it supersedes this plugin.</p>
 
     <h3>Requirements</h3>
     <ul>
@@ -26,7 +26,7 @@
     <h3>0.1.0</h3>
     <ul>
         <li>Initial release — LSP client via LSP4IJ</li>
-        <li>Schema-driven completion, diagnostics, hover for all five CaseHub YAML formats</li>
+        <li>Schema-driven completion, diagnostics, hover for Page YAML format</li>
         <li>Rename, find references, go to definition</li>
         <li>jq expression intelligence</li>
     </ul>
@@ -36,20 +36,17 @@
     <depends>com.redhat.devtools.lsp4ij</depends>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
-        <server id="casehub-yaml"
-                name="CaseHub YAML"
+        <server id="casehub-pages"
+                name="CaseHub Pages"
                 factoryClass="io.casehub.intellij.lsp.CaseHubLanguageServerFactory">
             <description><![CDATA[
-            LSP server for CaseHub YAML formats — Page, CaseDefinition, SWF, HTN, Org Structure.
+            LSP server for CaseHub Page YAML format.
             Provides schema-driven completion, diagnostics, hover, rename, and cross-file references.
             ]]></description>
         </server>
 
         <fileNamePatternMapping patterns="*.page.yaml;*.dash.yaml"
-                                serverId="casehub-yaml"
-                                languageId="yaml"/>
-        <fileNamePatternMapping patterns="*.case.yaml;*.swf.yaml;*.htn.yaml;*.org.yaml"
-                                serverId="casehub-yaml"
+                                serverId="casehub-pages"
                                 languageId="yaml"/>
     </extensions>
 </idea-plugin>
