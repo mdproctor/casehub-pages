@@ -13,7 +13,8 @@ class CaseHubLanguageServer(private val project: Project) : OSProcessStreamConne
     init {
         val node = findNode()
             ?: throw IllegalStateException(
-                "Node.js not found on PATH. Install Node.js 18+ to use CaseHub YAML intelligence."
+                "Node.js not found. Install Node.js 18+ and ensure it is on PATH, " +
+                "or place it in /usr/local/bin or /opt/homebrew/bin."
             )
 
         val serverPath = extractServer()
@@ -25,9 +26,18 @@ class CaseHubLanguageServer(private val project: Project) : OSProcessStreamConne
     }
 
     private fun findNode(): String? {
-        val names = if (System.getProperty("os.name").lowercase().contains("win"))
-            listOf("node.exe") else listOf("node")
-        val pathDirs = System.getenv("PATH")?.split(File.pathSeparator) ?: return null
+        val isWin = System.getProperty("os.name").lowercase().contains("win")
+        val names = if (isWin) listOf("node.exe") else listOf("node")
+
+        val pathDirs = (System.getenv("PATH")?.split(File.pathSeparator) ?: emptyList())
+            .toMutableList()
+
+        if (!isWin) {
+            for (fallback in listOf("/usr/local/bin", "/opt/homebrew/bin", "/opt/homebrew/opt/node/bin")) {
+                if (fallback !in pathDirs) pathDirs.add(fallback)
+            }
+        }
+
         for (dir in pathDirs) {
             for (name in names) {
                 val f = File(dir, name)
