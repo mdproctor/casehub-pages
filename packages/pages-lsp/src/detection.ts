@@ -31,7 +31,7 @@ function createInspector(content: string): DocumentInspector {
 
 const EXTENSION_MAP: Record<string, string> = {
   '.page.yaml': 'page',
-  '.dash.yaml': 'page',
+
   '.case.yaml': 'case-definition',
   '.swf.yaml': 'swf',
   '.htn.yaml': 'htn',

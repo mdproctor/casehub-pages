@@ -4,7 +4,7 @@ import { pageSymbolExtractor } from '../refactoring/page-symbols.js';
 
 export const pageFormat: FormatRegistration = {
   formatId: 'page',
-  extensions: ['.page.yaml', '.dash.yaml'],
+  extensions: ['.page.yaml'],
   contentDetector: (inspector) =>
     inspector.hasKey(['pages']) || inspector.hasKey(['datasets']),
   documentSchema: dashboardSchema,

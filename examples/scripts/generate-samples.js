@@ -39,7 +39,7 @@ function findSamples(dir, baseDir = dir) {
     if (stat.isDirectory()) {
       if (file === 'includes') continue;
       samples.push(...findSamples(filePath, baseDir));
-    } else if (file.endsWith('.dash.yaml') || file.endsWith('.dash.yml') || file.endsWith('.yml') || file.endsWith('.yaml')) {
+    } else if (file.endsWith('.page.yaml') || file.endsWith('.dash.yml') || file.endsWith('.yml') || file.endsWith('.yaml')) {
       const relativePath = path.relative(baseDir, filePath);
       const name = file.replace(/\.(dash\.yaml|dash\.yml|yml|yaml)$/, '');
       const category = path.dirname(relativePath).split(path.sep)[0];

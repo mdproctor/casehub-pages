@@ -172,7 +172,7 @@ Generation counter pattern for ECharts rendering. Each render tagged with a gene
 
 | Module | Purpose |
 |--------|---------|
-| `plugins/intellij` | Kotlin/Gradle IntelliJ plugin — thin LSP client shell via LSP4IJ (Red Hat). Bundles `server-node.bundle.cjs` as a plugin resource, extracts on first run, launches via Node.js stdio. File patterns: `*.page.yaml`, `*.dash.yaml`, `*.case.yaml`, `*.swf.yaml`, `*.htn.yaml`, `*.org.yaml`. Requires JDK 21 to build, IntelliJ 2024.2+, LSP4IJ plugin installed. Build: `JAVA_HOME=<jdk21> ./gradlew buildPlugin`. |
+| `plugins/intellij` | Kotlin/Gradle IntelliJ plugin — thin LSP client shell via LSP4IJ (Red Hat). Bundles `server-node.bundle.cjs` as a plugin resource, extracts on first run, launches via Node.js stdio. File pattern: `*.page.yaml`. Requires JDK 21 to build, IntelliJ 2024.2+, LSP4IJ plugin installed. Build: `JAVA_HOME=<jdk21> ./gradlew buildPlugin`. |
 
 ### Graph Packages (`packages/`) -- Visual Diagram Editor
 

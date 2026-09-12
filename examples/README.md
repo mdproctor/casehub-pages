@@ -58,7 +58,7 @@ This will:
 - Live reload the browser when changes are detected
 - Open the gallery in your default browser
 
-Just edit any `.dash.yaml` file and see changes instantly.
+Just edit any `.page.yaml` file and see changes instantly.
 
 The BrowserSync UI (for advanced control) is available at http://localhost:8081
 
@@ -102,7 +102,7 @@ examples/
 
 ## Adding New Examples
 
-Simply add new `.dash.yaml` or `.yml` files to the `samples/` directory. They will be automatically discovered when you run `npm run build`.
+Simply add new `.page.yaml` or `.yml` files to the `samples/` directory. They will be automatically discovered when you run `npm run build`.
 
 The file structure in `samples/` will determine the category organization in the gallery.
 

@@ -18,7 +18,7 @@ const fs = require('fs');
 const SAMPLES_DIR = path.join(__dirname, '../samples');
 const DIST_DIR = path.join(__dirname, '../dist');
 const WATCH_PATTERNS = [
-  path.join(SAMPLES_DIR, '**/*.dash.yaml'),
+  path.join(SAMPLES_DIR, '**/*.page.yaml'),
   path.join(SAMPLES_DIR, '**/*.dash.yml'),
   path.join(SAMPLES_DIR, '**/*.yml'),
   path.join(SAMPLES_DIR, '**/*.yaml')
@@ -77,7 +77,7 @@ browserSync.init({
   console.log(`   Local: http://localhost:8080`);
   console.log(`   UI: http://localhost:8081`);
   console.log(`\n👀 Watching sample files in: ${SAMPLES_DIR}`);
-  console.log('   Edit any .dash.yaml file to see changes instantly!\n');
+  console.log('   Edit any .page.yaml file to see changes instantly!\n');
 });
 
 // Watch sample files

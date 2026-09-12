@@ -9,7 +9,6 @@
     <h3>Supported formats</h3>
     <ul>
         <li><b>*.page.yaml</b> — Page definitions</li>
-        <li><b>*.dash.yaml</b> — Page definitions (transition)</li>
     </ul>
 
     <p>For all five CaseHub YAML formats (Page, CaseDefinition, SWF, HTN, Org),
@@ -45,7 +44,7 @@
             ]]></description>
         </server>
 
-        <fileNamePatternMapping patterns="*.page.yaml;*.dash.yaml"
+        <fileNamePatternMapping patterns="*.page.yaml"
                                 serverId="casehub-pages"
                                 languageId="yaml"/>
     </extensions>

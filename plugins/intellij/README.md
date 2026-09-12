@@ -18,7 +18,6 @@ For all five CaseHub YAML formats (Page, CaseDefinition, SWF, HTN, Org), install
 | Extension | Format |
 |-----------|--------|
 | `*.page.yaml` | Page definitions |
-| `*.dash.yaml` | Page definitions (transition) |
 
 ## Requirements
 

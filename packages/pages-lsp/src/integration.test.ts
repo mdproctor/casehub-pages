@@ -20,10 +20,10 @@ describe('integration: Page YAML', () => {
     expect(detected?.formatId).toBe('page');
   });
 
-  it('detects .dash.yaml by transition extension', () => {
+  it('detects .page.yaml by transition extension', () => {
     const registry = createSchemaRegistry();
     registry.register(pageFormat);
-    const detected = registry.detect('file:///app/old.dash.yaml', '');
+    const detected = registry.detect('file:///app/old.page.yaml', '');
     expect(detected?.formatId).toBe('page');
   });
 
@@ -124,9 +124,9 @@ describe('integration: Page YAML', () => {
   it('produces no syntax errors for a real example', () => {
     const registry = createSchemaRegistry();
     registry.register(pageFormat);
-    const content = loadExample('Charts/Charts.dash.yaml');
+    const content = loadExample('Charts/Charts.page.yaml');
     const diagnostics = computeDiagnostics(
-      'file:///example.dash.yaml', content, registry,
+      'file:///example.page.yaml', content, registry,
     );
     const syntaxErrors = diagnostics.filter(d => d.source === 'casehub-yaml');
     expect(syntaxErrors).toHaveLength(0);

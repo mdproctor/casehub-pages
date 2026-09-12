@@ -10,7 +10,7 @@ const pageSchema = z.object({
 
 const pageFormat: FormatRegistration = {
   formatId: 'page',
-  extensions: ['.page.yaml', '.dash.yaml'],
+  extensions: ['.page.yaml', '.page.yaml'],
   contentDetector: (inspector) =>
     inspector.hasKey(['pages']) || inspector.hasKey(['datasets']),
   documentSchema: pageSchema,
@@ -30,10 +30,10 @@ describe('SchemaRegistry', () => {
     expect(detected?.formatId).toBe('page');
   });
 
-  it('detects format by .dash.yaml transition extension', () => {
+  it('detects format by .page.yaml transition extension', () => {
     const registry = createSchemaRegistry();
     registry.register(pageFormat);
-    const detected = registry.detect('file:///app/old.dash.yaml', '');
+    const detected = registry.detect('file:///app/old.page.yaml', '');
     expect(detected?.formatId).toBe('page');
   });
 

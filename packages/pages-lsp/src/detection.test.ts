@@ -6,8 +6,8 @@ describe('detectFormat', () => {
     expect(detectFormat('app.page.yaml', '')).toBe('page');
   });
 
-  it('detects Page by .dash.yaml extension (transition)', () => {
-    expect(detectFormat('old.dash.yaml', '')).toBe('page');
+  it('detects Page by .page.yaml extension (transition)', () => {
+    expect(detectFormat('old.page.yaml', '')).toBe('page');
   });
 
   it('detects Page by content (pages key)', () => {
