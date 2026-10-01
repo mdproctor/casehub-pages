@@ -14,12 +14,21 @@ import { DefaultOrcFlag } from './flag.js';
 import { DefaultOrcAccumulator } from './accumulator.js';
 import { DefaultOrcMap } from './orc-map.js';
 import { DefaultSpawnedTask } from './spawned-task.js';
+import type { SpeedMultiplier } from './speed-multiplier.js';
+import { DefaultSpeedMultiplier } from './speed-multiplier.js';
 
 export class DefaultScenarioScope implements ScenarioScope {
   private readonly _primitives = new Map<string, unknown>();
   private _resultStore?: DefaultStepResultStore;
+  private readonly _speedMultiplier: SpeedMultiplier;
 
-  constructor(private readonly _parent?: DefaultScenarioScope) {}
+  constructor(parent?: DefaultScenarioScope, sm?: SpeedMultiplier);
+  constructor(parent?: DefaultScenarioScope, sm?: SpeedMultiplier) {
+    this._parent = parent;
+    this._speedMultiplier = sm ?? parent?._speedMultiplier ?? new DefaultSpeedMultiplier();
+  }
+
+  private readonly _parent?: DefaultScenarioScope;
   private _deadlineMs?: number;
   private _deadlineStart?: number;
   private _deadlineExpired = false;
@@ -90,11 +99,11 @@ export class DefaultScenarioScope implements ScenarioScope {
   }
 
   childScope(name: string): ScenarioScope {
-    return this._getOrCreate(name, () => new DefaultScenarioScope(this));
+    return this._getOrCreate(name, () => new DefaultScenarioScope(this, this._speedMultiplier));
   }
 
   withDeadline(deadlineMs: number, onDeadline?: () => void): ScenarioScope {
-    const child = new DefaultScenarioScope();
+    const child = new DefaultScenarioScope(undefined, this._speedMultiplier);
     child._deadlineMs = deadlineMs;
     child._deadlineStart = Date.now();
     if (onDeadline) {
@@ -116,6 +125,10 @@ export class DefaultScenarioScope implements ScenarioScope {
     if (this._deadlineMs === undefined || this._deadlineStart === undefined) return undefined;
     const remaining = this._deadlineMs - (Date.now() - this._deadlineStart);
     return remaining > 0 ? remaining : 0;
+  }
+
+  speedMultiplier(): SpeedMultiplier {
+    return this._speedMultiplier;
   }
 
   close(): void {

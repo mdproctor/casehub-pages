@@ -71,5 +71,6 @@ export interface ScenarioScope {
   withDeadline(deadlineMs: number, onDeadline?: () => void): ScenarioScope;
   isDeadlineExpired(): boolean;
   remainingTime(): number | undefined;
+  speedMultiplier(): import('./speed-multiplier.js').SpeedMultiplier;
   close(): void;
 }

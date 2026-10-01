@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DefaultScenarioScope } from './scenario-scope.js';
+import { DefaultSpeedMultiplier, FixedSpeedMultiplier } from './speed-multiplier.js';
 
 describe('DefaultScenarioScope', () => {
   it('creates semaphore by name', () => {
@@ -52,5 +53,35 @@ describe('DefaultScenarioScope', () => {
     scope.close();
     await expect(ch.receive()).rejects.toThrow();
     expect(sig.isSignalled()).toBe(true);
+  });
+
+  it('speedMultiplier defaults to 1x', () => {
+    const scope = new DefaultScenarioScope();
+    expect(scope.speedMultiplier().currentSpeed()).toBe(1);
+    scope.close();
+  });
+
+  it('speedMultiplier accepts custom multiplier', () => {
+    const sm = new FixedSpeedMultiplier(5);
+    const scope = new DefaultScenarioScope(undefined, sm);
+    expect(scope.speedMultiplier().currentSpeed()).toBe(5);
+    scope.close();
+  });
+
+  it('childScope inherits speedMultiplier', () => {
+    const sm = new FixedSpeedMultiplier(3);
+    const parent = new DefaultScenarioScope(undefined, sm);
+    const child = parent.childScope('inner') as DefaultScenarioScope;
+    expect(child.speedMultiplier().currentSpeed()).toBe(3);
+    parent.close();
+  });
+
+  it('withDeadline propagates speedMultiplier', () => {
+    const sm = new FixedSpeedMultiplier(10);
+    const scope = new DefaultScenarioScope(undefined, sm);
+    const deadline = scope.withDeadline(1000) as DefaultScenarioScope;
+    expect(deadline.speedMultiplier().currentSpeed()).toBe(10);
+    scope.close();
+    deadline.close();
   });
 });

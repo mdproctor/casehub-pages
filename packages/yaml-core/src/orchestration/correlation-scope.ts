@@ -235,10 +235,7 @@ export function correlationScopeForScope<K, V>(
   keyExtractor: (value: V) => K,
 ): DefaultCorrelationScope<K, V> {
   const channel = scope.channel<V>(name + '.correlation');
-  const sm = 'speedMultiplier' in scope && typeof scope.speedMultiplier === 'function'
-    ? (scope as { speedMultiplier(): SpeedMultiplier }).speedMultiplier()
-    : undefined;
-  const cs = new DefaultCorrelationScope<K, V>(channel, keyExtractor, sm);
+  const cs = new DefaultCorrelationScope<K, V>(channel, keyExtractor, scope.speedMultiplier());
   if (scope instanceof DefaultScenarioScope) {
     scope.registerPrimitive(name, cs);
   }
