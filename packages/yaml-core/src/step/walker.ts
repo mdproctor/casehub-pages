@@ -281,8 +281,16 @@ export class Walker {
       const cases: ResolvedMatchCase[] = casesRaw.map((c, i) => {
         let pattern: MatchPattern;
         let caseSteps: ResolvedStep[];
-        const casePath = 'default' in c ? `${stepPath} → default` : `${stepPath} → case ${i}`;
-        if ('default' in c) {
+        const isDefault = 'default' in c;
+        const hasPattern = 'pattern' in c || 'when' in c;
+        if (isDefault && hasPattern) {
+          throw new Error(`${stepPath} → case ${i}: pattern and default are mutually exclusive`);
+        }
+        if (!isDefault && !hasPattern) {
+          throw new Error(`${stepPath} → case ${i}: case must have 'pattern', 'when', or 'default'`);
+        }
+        const casePath = isDefault ? `${stepPath} → default` : `${stepPath} → case ${i}`;
+        if (isDefault) {
           pattern = { type: 'default' };
           caseSteps = Walker.resolveAtDepth(
             (c['default'] as Record<string, unknown>[] | undefined) ?? [], catalog, depth + 1, casePath, seenNames);
@@ -420,7 +428,7 @@ export class Walker {
   }
 
   private static parsePattern(raw: unknown): MatchPattern {
-    if (raw === undefined || raw === null || raw === 'default' || raw === '_') {
+    if (raw === undefined || raw === null) {
       return { type: 'default' };
     }
     if (Array.isArray(raw)) {

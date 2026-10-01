@@ -256,6 +256,44 @@ describe('Walker', () => {
     });
   });
 
+  describe('match case validation', () => {
+    it('throws when case has neither pattern nor default', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      const steps = [
+        { match: 'v', cases: [{ doA: {} }] },
+      ];
+      expect(() => Walker.resolve(steps, catalog)).toThrow(/must have.*pattern.*when.*default/i);
+    });
+
+    it('throws when case has both pattern and default', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      const steps = [
+        { match: 'v', cases: [{ pattern: 'x', default: [{ doA: {} }] }] },
+      ];
+      expect(() => Walker.resolve(steps, catalog)).toThrow(/mutually exclusive/i);
+    });
+
+    it('treats string "default" and "_" as literal values, not default markers', () => {
+      const catalog = makeCatalog({ doA: makeEntry('doA') });
+      const steps = [
+        {
+          match: 'v',
+          cases: [
+            { pattern: 'default', doA: {} },
+            { pattern: '_', doA: {} },
+            { default: [] },
+          ],
+        },
+      ];
+      const resolved = Walker.resolve(steps, catalog);
+      if (resolved[0]!.kind === 'match') {
+        expect(resolved[0]!.cases[0]!.pattern).toEqual({ type: 'value', value: 'default' });
+        expect(resolved[0]!.cases[1]!.pattern).toEqual({ type: 'value', value: '_' });
+        expect(resolved[0]!.cases[2]!.pattern.type).toBe('default');
+      }
+    });
+  });
+
   describe('removed keys', () => {
     it('rejects steps key with clear error', () => {
       const catalog = makeCatalog({ doA: makeEntry('doA') });
