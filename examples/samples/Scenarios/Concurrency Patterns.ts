@@ -81,25 +81,25 @@ var CC_EXAMPLES = [
   {
     name: 'Correlation Scope',
     tags: ['correlation', 'request-reply', 'async'],
-    description: 'Async request/response correlation — register expected responses by pattern, fire off async requests, then match incoming deliveries to their correlations. Simulates a multi-service call-and-wait pattern.',
+    description: 'Async request/response correlation — register expected responses by key on a channel, send messages to the channel, then await correlated responses. The scope routes incoming messages by extracted key.',
     yaml: [
       'steps:',
-      '  - corr-expect: { id: "order-42", pattern: 42 }',
-      '  - corr-expect: { id: "order-99", pattern: 99 }',
+      '  - corr-expect: { id: "order-42", timeout: 1000 }',
+      '  - corr-expect: { id: "order-99", timeout: 1000 }',
       '  - log: { message: "Expectations registered" }',
-      '  - corr-deliver: { orderId: 99, status: "shipped" }',
-      '  - corr-deliver: { orderId: 42, status: "confirmed" }',
-      '  - corr-await: { id: "order-42", timeout: 1000 }',
-      '  - corr-await: { id: "order-99", timeout: 1000 }',
+      '  - corr-send: { orderId: "order-99", status: "shipped" }',
+      '  - corr-send: { orderId: "order-42", status: "confirmed" }',
+      '  - corr-await: { id: "order-42" }',
+      '  - corr-await: { id: "order-99" }',
     ].join('\n'),
     steps: [
-      { 'corr-expect': { id: 'order-42', pattern: 42 } },
-      { 'corr-expect': { id: 'order-99', pattern: 99 } },
+      { 'corr-expect': { id: 'order-42', timeout: 1000 } },
+      { 'corr-expect': { id: 'order-99', timeout: 1000 } },
       { log: { message: 'Expectations registered' } },
-      { 'corr-deliver': { orderId: 99, status: 'shipped' } },
-      { 'corr-deliver': { orderId: 42, status: 'confirmed' } },
-      { 'corr-await': { id: 'order-42', timeout: 1000 } },
-      { 'corr-await': { id: 'order-99', timeout: 1000 } },
+      { 'corr-send': { orderId: 'order-99', status: 'shipped' } },
+      { 'corr-send': { orderId: 'order-42', status: 'confirmed' } },
+      { 'corr-await': { id: 'order-42' } },
+      { 'corr-await': { id: 'order-99' } },
     ],
   },
   {
@@ -232,6 +232,7 @@ async function ccRunExample(idx) {
   var outputs = [];
   var spawnedTasks = {};
   var deadlineScopes = {};
+  var corrChannel = null;
   var corrScope = null;
 
   var runner = cp.createStepRunner([
@@ -418,15 +419,16 @@ async function ccRunExample(idx) {
     },
     {
       name: 'corr-expect',
-      inputs: { id: { type: 'STRING', required: true }, pattern: { type: 'NUMBER', required: true } },
+      inputs: { id: { type: 'STRING', required: true }, timeout: { type: 'NUMBER', required: true } },
       execute: async function(params) {
         ccStepCount++;
         if (ccCountEl) ccCountEl.textContent = String(ccStepCount);
-        if (!corrScope) {
-          corrScope = new cp.DefaultCorrelationScope(function(item) { return item.orderId; });
+        if (!corrChannel) {
+          corrChannel = new cp.DefaultOrcChannel();
+          corrScope = new cp.DefaultCorrelationScope(corrChannel, function(item) { return item.orderId; });
         }
-        corrScope.expect(params.id, { type: 'value', value: params.pattern });
-        var msg = 'expect(' + params.id + ') pattern=' + params.pattern;
+        corrScope.expectResponse(params.id, params.timeout);
+        var msg = 'expect(' + params.id + ') timeout=' + params.timeout + 'ms';
         outputs.push(msg);
         ccTrace(msg, '✓');
         await ccDelay(100);
@@ -434,26 +436,26 @@ async function ccRunExample(idx) {
       }
     },
     {
-      name: 'corr-deliver',
-      inputs: { orderId: { type: 'NUMBER', required: true }, status: { type: 'STRING', required: true } },
+      name: 'corr-send',
+      inputs: { orderId: { type: 'STRING', required: true }, status: { type: 'STRING', required: true } },
       execute: async function(params) {
         ccStepCount++;
         if (ccCountEl) ccCountEl.textContent = String(ccStepCount);
-        if (!corrScope) {
-          ccTrace('no correlation scope', '✗');
-          return runner.stepFailure('no scope');
+        if (!corrChannel) {
+          ccTrace('no correlation channel', '✗');
+          return runner.stepFailure('no channel');
         }
-        var matched = corrScope.deliver({ orderId: params.orderId, status: params.status });
-        var msg = 'deliver(orderId=' + params.orderId + ', status=' + params.status + ') → ' + (matched ? 'matched' : 'no match');
+        await corrChannel.send({ orderId: params.orderId, status: params.status });
+        var msg = 'send(orderId=' + params.orderId + ', status=' + params.status + ')';
         outputs.push(msg);
-        ccTrace(msg, matched ? '✓' : '⚠');
+        ccTrace(msg, '✓');
         await ccDelay(100);
-        return runner.stepSuccess({ matched: matched });
+        return runner.stepSuccess({ orderId: params.orderId });
       }
     },
     {
       name: 'corr-await',
-      inputs: { id: { type: 'STRING', required: true }, timeout: { type: 'NUMBER', required: true } },
+      inputs: { id: { type: 'STRING', required: true } },
       execute: async function(params) {
         ccStepCount++;
         if (ccCountEl) ccCountEl.textContent = String(ccStepCount);
@@ -462,7 +464,7 @@ async function ccRunExample(idx) {
           return runner.stepFailure('no scope');
         }
         try {
-          var item = await corrScope.await(params.id, params.timeout);
+          var item = await corrScope.awaitResponse(params.id);
           var msg = 'await(' + params.id + ') → orderId=' + item.orderId + ' status=' + item.status;
           outputs.push(msg);
           ccTrace(msg, '✓');
@@ -574,6 +576,7 @@ async function ccRunExample(idx) {
   ]);
 
   try {
+    corrChannel = null;
     corrScope = null;
     var results = await runner.run(ex.steps);
 
@@ -603,6 +606,9 @@ async function ccRunExample(idx) {
 
   if (corrScope) {
     try { corrScope.close(); } catch (e) { /* ignore */ }
+  }
+  if (corrChannel) {
+    try { corrChannel.close(); } catch (e) { /* ignore */ }
   }
   for (var dn in deadlineScopes) {
     try { deadlineScopes[dn].close(); } catch (e) { /* ignore */ }

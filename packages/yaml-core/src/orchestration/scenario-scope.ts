@@ -140,6 +140,10 @@ export class DefaultScenarioScope implements ScenarioScope {
     this._primitives.clear();
   }
 
+  registerPrimitive(name: string, instance: unknown): void {
+    this._primitives.set(name, instance);
+  }
+
   private _getOrCreate<T>(name: string, factory: () => T): T {
     let existing = this._primitives.get(name) as T | undefined;
     if (existing !== undefined) return existing;
