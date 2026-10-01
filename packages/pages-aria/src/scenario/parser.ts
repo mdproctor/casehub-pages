@@ -112,9 +112,6 @@ function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog)
 
 export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
   const parsed = parse(yamlString) as Record<string, unknown>;
-  if (!parsed['scenario']) {
-    throw new Error('Invalid scenario: must have "scenario" name');
-  }
 
   const hasSteps = Array.isArray(parsed['steps']);
   const hasSections = Array.isArray(parsed['sections']);
@@ -141,14 +138,16 @@ export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
         steps,
       };
     });
-    const result: SectionedScenario = { scenario: parsed['scenario'] as string, sections };
+    const result: SectionedScenario = { sections };
+    if (parsed['scenario']) result.scenario = parsed['scenario'] as string;
     if (meta) result.meta = meta;
     if (orchestration) result.orchestration = orchestration;
     return result;
   }
 
   const steps = resolveStepArray(parsed['steps'] as Record<string, unknown>[], catalog);
-  const result: FlatScenario = { scenario: parsed['scenario'] as string, steps };
+  const result: FlatScenario = { steps };
+  if (parsed['scenario']) result.scenario = parsed['scenario'] as string;
   if (meta) result.meta = meta;
   if (orchestration) result.orchestration = orchestration;
   return result;

@@ -159,8 +159,14 @@ steps:
     expect(() => parseScenario('scenario: test', catalog)).toThrow('must have');
   });
 
-  it('throws on invalid scenario — missing name', () => {
-    expect(() => parseScenario('steps: []', catalog)).toThrow('must have "scenario"');
+  it('parses without scenario name — steps only', () => {
+    const yaml = `
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    expect(scenario.scenario).toBeUndefined();
+    expect(scenario.steps).toHaveLength(1);
   });
 
   it('throws on unknown step key', () => {

@@ -32,7 +32,7 @@ export interface TutorialSection {
 }
 
 export interface ScenarioBase {
-  scenario: string;
+  scenario?: string;
   meta?: TutorialMeta;
   orchestration?: OrchestrationBlock;
 }
