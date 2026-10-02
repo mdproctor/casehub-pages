@@ -91,6 +91,7 @@ export async function executeStep(
     case 'wait': return waitFor(step.target!, step['state'] as Partial<AriaState>, (step['timeout'] as number) ?? 5000);
     case 'navigate': window.location.href = step['value'] as string; return;
     case 'spotlight': return spotlightStep(step, _speed);
+    case 'scroll-to-row': return scrollToRowStep(step);
     case 'show-markdown': return showMarkdownStep(step, _eventTarget);
     case 'editor-insert': return editorInsert(step.target!, step['value'] as string, step['typing'] as string ?? 'progressive', _speed, step['line'] as number, step['col'] as number);
     case 'editor-set-content': return editorSetContent(step.target!, step['value'] as string, step['typing'] as string ?? 'progressive', _speed);
@@ -223,6 +224,44 @@ async function spotlightStep(step: Record<string, unknown>, speed: number): Prom
     also: step['also'] as any,
   };
   await showSpotlight(config);
+}
+
+async function scrollToRowStep(step: Record<string, unknown>): Promise<void> {
+  const target = step.target as AriaTarget | undefined;
+  if (!target) throw new Error('scroll-to-row requires a target');
+
+  const el = resolveTarget(target) as any;
+  if (typeof el.scrollToRow !== 'function') {
+    throw new Error(`Target ${target.role} "${target.name}" does not support scrollToRow`);
+  }
+
+  let predicate: (row: any) => boolean;
+  const key = step['key'] as string | undefined;
+  const column = step['column'] as string | undefined;
+  const value = step['value'] as string | undefined;
+  const idx = step['index'] as number | undefined;
+
+  if (key != null) {
+    predicate = (row: any) => {
+      if (typeof el.getRowKey === 'function') return el.getRowKey(row) === key;
+      return false;
+    };
+  } else if (column != null && value != null) {
+    predicate = (row: any) => {
+      const cell = row.cell(column);
+      return cell && cell.type !== 'NULL' && String(cell.value) === value;
+    };
+  } else if (idx != null) {
+    let current = 0;
+    predicate = () => current++ === idx;
+  } else {
+    throw new Error('scroll-to-row requires key, column+value, or index');
+  }
+
+  const found = await el.scrollToRow(predicate);
+  if (!found) {
+    throw new Error(`No matching row found in ${target.role} "${target.name}"`);
+  }
 }
 
 function showMarkdownStep(step: Record<string, unknown>, eventTarget?: EventTarget): void {

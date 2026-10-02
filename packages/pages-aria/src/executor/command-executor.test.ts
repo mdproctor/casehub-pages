@@ -174,4 +174,48 @@ describe('ARIA command executor', () => {
       ); }).not.toThrow();
     });
   });
+
+  describe('scroll-to-row', () => {
+    it('calls scrollToRow on the resolved table element', async () => {
+      const scrollToRow = vi.fn().mockResolvedValue(true);
+      document.body.innerHTML = '<div role="grid" aria-label="Cases"></div>';
+      const table = document.querySelector('[role="grid"]')! as any;
+      table.scrollToRow = scrollToRow;
+      table.getRowKey = (row: any) => row.key;
+
+      const { executeStep } = await import('./command-executor.js');
+      await executeStep({
+        action: 'scroll-to-row',
+        target: { role: 'grid', name: 'Cases' },
+        key: 'Bob',
+      });
+
+      expect(scrollToRow).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws when target has no scrollToRow method', async () => {
+      document.body.innerHTML = '<div role="grid" aria-label="Cases"></div>';
+
+      const { executeStep } = await import('./command-executor.js');
+      await expect(executeStep({
+        action: 'scroll-to-row',
+        target: { role: 'grid', name: 'Cases' },
+        key: 'Bob',
+      })).rejects.toThrow('does not support scrollToRow');
+    });
+
+    it('throws when no matching row found', async () => {
+      const scrollToRow = vi.fn().mockResolvedValue(false);
+      document.body.innerHTML = '<div role="grid" aria-label="Cases"></div>';
+      const table = document.querySelector('[role="grid"]')! as any;
+      table.scrollToRow = scrollToRow;
+
+      const { executeStep } = await import('./command-executor.js');
+      await expect(executeStep({
+        action: 'scroll-to-row',
+        target: { role: 'grid', name: 'Cases' },
+        key: 'Nobody',
+      })).rejects.toThrow('No matching row');
+    });
+  });
 });
