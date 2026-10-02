@@ -27,7 +27,7 @@ export { CompositeCatalog, ImportScopedCatalog } from './catalog.js';
 
 export { ValidatingAction } from './action.js';
 
-export { DecoratorChain } from './decorator-chain.js';
+export { DecoratorChain, withResolver } from './decorator-chain.js';
 export type { Context, DecoratedExecution } from './decorator-chain.js';
 
 export { StructuralEvaluator } from './structural-evaluator.js';
