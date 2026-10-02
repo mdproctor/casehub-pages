@@ -283,4 +283,24 @@ describe('expand', () => {
     expect((pages['dash.dev.main'] as any).name).toBe('dev-dashboard');
     expect((pages['dash.prod.main'] as any).name).toBe('prod-dashboard');
   });
+
+  it('filters steps imports from module expansion', () => {
+    const input: Record<string, unknown> = {
+      modules: {
+        dashboard: {
+          parameters: { title: {} },
+          sections: { pages: { main: { title: '${module.title}' } } },
+        },
+      },
+      imports: [
+        { module: 'dashboard', as: 'dash', parameters: { title: 'Home' } },
+        { steps: 'login-flow', as: 'login', parameters: {} },
+      ],
+      pages: {},
+    };
+    const result = expand(input);
+    const pages = result.map['pages'] as Record<string, unknown>;
+    expect(pages['dash.main']).toBeDefined();
+    expect(pages['login.main']).toBeUndefined();
+  });
 });
