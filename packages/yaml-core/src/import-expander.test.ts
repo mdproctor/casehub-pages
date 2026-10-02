@@ -173,6 +173,73 @@ describe('ImportExpander', () => {
       ];
       expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/nonexistent/);
     });
+
+    it('filters out steps-based imports', () => {
+      const imports: YamlImport[] = [
+        { module: 'dashboard', as: 'dash', parameters: {} },
+        { steps: 'login-flow', as: 'login', parameters: {} },
+        { module: 'footer', as: 'footer', parameters: {} },
+      ];
+      const result = ImportExpander.expand(imports, {}, {});
+      expect(result).toHaveLength(2);
+      expect(result.map(r => r.as)).toEqual(['dash', 'footer']);
+    });
+
+    it('filters out steps-based imports with forEach', () => {
+      const imports: YamlImport[] = [
+        {
+          steps: 'flow',
+          as: 'flow',
+          parameters: { env: '${each.env}' },
+          forEach: { as: 'env', in: ['us', 'eu'] },
+        },
+      ];
+      const result = ImportExpander.expand(imports, {}, {});
+      expect(result).toHaveLength(0);
+    });
+
+    it('throws when forEach value contains dot separator', () => {
+      const imports: YamlImport[] = [
+        {
+          module: 'mod',
+          as: 'region',
+          parameters: {},
+          forEach: { as: 'env', in: ['us.east'] },
+        },
+      ];
+      expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/us\.east/);
+    });
+
+    it('throws on duplicate stamped alias across imports', () => {
+      const imports: YamlImport[] = [
+        {
+          module: 'mod-a',
+          as: 'item',
+          parameters: {},
+          forEach: { as: 'x', in: ['one'] },
+        },
+        {
+          module: 'mod-b',
+          as: 'item',
+          parameters: {},
+          forEach: { as: 'x', in: ['one'] },
+        },
+      ];
+      expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/item\.one/);
+    });
+
+    it('throws on duplicate alias between expanded and non-expanded', () => {
+      const imports: YamlImport[] = [
+        { module: 'base', as: 'region.us', parameters: {} },
+        {
+          module: 'regional',
+          as: 'region',
+          parameters: {},
+          forEach: { as: 'env', in: ['us'] },
+        },
+      ];
+      expect(() => ImportExpander.expand(imports, {}, {})).toThrow(/region\.us/);
+    });
   });
 
   describe('expand with CSV', () => {

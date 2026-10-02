@@ -55,17 +55,21 @@ export class ImportExpander {
     iterationGroups: Record<string, IterationGroup>,
     dataSources: Record<string, CsvDataSource>,
   ): YamlImport[] {
-    const hasExpansion = imports.some(imp => imp.forEach != null || imp.loop != null);
-    if (!hasExpansion) return imports;
+    const moduleImports = imports.filter(imp => imp.steps == null);
+
+    const hasExpansion = moduleImports.some(imp => imp.forEach != null || imp.loop != null);
+    if (!hasExpansion) return moduleImports;
 
     const result: YamlImport[] = [];
+    const seenAliases = new Set<string>();
     const resolver = new VariableResolver({}, new Set());
     const hasCsv = Object.keys(dataSources).length > 0;
 
-    for (const rawImp of imports) {
+    for (const rawImp of moduleImports) {
       const imp = normaliseForEach(rawImp);
 
       if (imp.forEach == null) {
+        validateUniqueAlias(imp.as, seenAliases);
         result.push(imp);
         continue;
       }
@@ -77,11 +81,27 @@ export class ImportExpander {
         ? ForEachExpander.expandWithCsv(elements, iterationGroups, dataSources, resolver, importAdapter, MAX_IMPORT_EXPANSION)
         : ForEachExpander.expand(elements, iterationGroups, resolver, importAdapter, MAX_IMPORT_EXPANSION);
 
-      for (const stampedImport of expanded.elements.values()) {
+      for (const [stampedId, stampedImport] of expanded.elements) {
+        const value = stampedId.substring(imp.as.length + 1);
+        if (value.includes('.')) {
+          throw new Error(
+            `Import '${imp.as}' forEach value '${value}' contains '.', which is reserved as the ID separator.`,
+          );
+        }
+        validateUniqueAlias(stampedId, seenAliases);
         result.push(stampedImport);
       }
     }
 
     return result;
   }
+}
+
+function validateUniqueAlias(alias: string, seen: Set<string>): void {
+  if (seen.has(alias)) {
+    throw new Error(
+      `Duplicate stamped import alias '${alias}'. forEach values must be unique.`,
+    );
+  }
+  seen.add(alias);
 }

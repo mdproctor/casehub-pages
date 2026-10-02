@@ -86,6 +86,7 @@ function parseImports(rawImports: unknown): YamlImport[] {
   return rawImports.map((raw) => ({
     module: raw.module as string | undefined,
     actions: raw.actions as string | undefined,
+    steps: raw.steps as string | undefined,
     as: raw.as as string,
     condition: raw.if as string | undefined,
     parameters: (raw.parameters ?? {}) as Record<string, string>,
