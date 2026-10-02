@@ -37,6 +37,13 @@ export { DefaultDeadlineContext, QuorumTracker, ScopeUtils } from './runner.js';
 
 export { SchemaComposer } from './schema-composer.js';
 
+export { ScenarioParser, ScenarioValidator, ScenarioCompiler } from './scenario/index.js';
+export type {
+  ScenarioDefinition, StateDefinition, EventTransition, MatchCase,
+  ValidationError, CompiledScenario,
+} from './scenario/index.js';
+export { terminalState, completionDrivenState, eventDrivenState } from './scenario/index.js';
+
 export type { PluginRegistration } from './plugin-registry.js';
 export { PluginRegistry } from './plugin-registry.js';
 
