@@ -9,6 +9,7 @@ import { stepSuccess, stepFailure, MapServiceRegistry } from './walker.js';
 import { StructuralEvaluator } from './structural-evaluator.js';
 import type { Context } from './decorator-chain.js';
 import { DefaultScenarioScope } from '../orchestration/scenario-scope.js';
+import { VariableResolver } from '../variable-resolver.js';
 import { defaultPattern, valuePattern } from '../match.js';
 import { createMockRestHandler, createMockMcpHandler } from './invoke/test-helpers.js';
 
@@ -30,6 +31,7 @@ function makeContext(overrides: Partial<Context> = {}): Context {
     services: new MapServiceRegistry(),
     scope: new DefaultScenarioScope(),
     stepName: 'root',
+    resolver: new VariableResolver({}, new Set()),
     ...overrides,
   };
 }
