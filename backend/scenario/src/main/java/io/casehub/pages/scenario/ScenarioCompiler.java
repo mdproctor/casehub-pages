@@ -9,6 +9,11 @@ import io.casehub.yaml.core.foreach.IterationGroup;
 import io.casehub.yaml.core.resolver.VariableResolver;
 import io.casehub.yaml.core.resolver.VariableSource;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,6 +34,26 @@ public final class ScenarioCompiler {
 
     public static CompiledScenario compile(String yaml, Map<String, String> callerParams,
                                            Function<String, Optional<String>> scriptResolver) {
+        return compile(yaml, callerParams, scriptResolver, null);
+    }
+
+    public static CompiledScenario compile(String yaml, Map<String, String> callerParams,
+                                           Function<String, Optional<String>> scriptResolver,
+                                           IncludeExpander.TemplateLoader templateLoader) {
+        if (templateLoader != null) {
+            try {
+                ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+                JsonNode root = yamlMapper.readTree(yaml);
+                if (root.has("includes")) {
+                    IncludeExpander expander = new IncludeExpander(templateLoader);
+                    root = expander.expand(root);
+                    yaml = yamlMapper.writeValueAsString(root);
+                }
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Failed to process includes", e);
+            }
+        }
+
         HierarchicalScenario scenario = HierarchicalParser.parse(yaml);
 
         Map<String, io.casehub.yaml.core.module.YamlModuleParameter> declaredParams = toModuleParams(scenario.params());

@@ -1,5 +1,7 @@
 package io.casehub.pages.scenario;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -88,6 +90,47 @@ class ScenarioCompilerCallTest {
                 fixture("caller-script.yaml"), Map.of());
         assertThat(compiled.steps()).hasSize(3);
         assertThat(compiled.callRefs()).containsExactly("callee-create-user");
+    }
+
+    @Test
+    void compile_expandsIncludesBeforeCalls() {
+        String seedTemplate = """
+                params:
+                  - name: user
+                    type: string
+                    required: true
+                steps:
+                  - label: "Create user"
+                    target: browser
+                    commands:
+                      - action: fill
+                        target: {role: textbox, name: "Name"}
+                        value: "${params.user}"
+                """;
+        String scenario = """
+                scenario: with-include
+                includes:
+                  - file: seeds/user.yaml
+                    params:
+                      user: Alice
+                steps:
+                  - label: "Done"
+                    target: browser
+                    commands:
+                      - action: click
+                        target: {role: button, name: Done}
+                """;
+
+        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+        IncludeExpander.TemplateLoader loader = path -> yamlMapper.readTree(seedTemplate);
+
+        var compiled = ScenarioCompiler.compile(
+                scenario, Map.of(), name -> Optional.empty(), loader);
+
+        assertThat(compiled.steps()).hasSize(2);
+        assertThat(compiled.steps().get(0).label()).isEqualTo("Create user");
+        assertThat(compiled.steps().get(0).commands().get(0).value()).isEqualTo("Alice");
+        assertThat(compiled.steps().get(1).label()).isEqualTo("Done");
     }
 
     private static String fixture(String name) {
