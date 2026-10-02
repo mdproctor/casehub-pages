@@ -1845,4 +1845,26 @@ describe('pages-data-table', () => {
       expect(el.style.height).toBe('');
     });
   });
+
+  describe('row aria-label', () => {
+    it('sets aria-label from getRowKey', async () => {
+      el.dataSet = testDataSet;
+      el.getRowKey = (row: TypedRow) => row.text(nameCol);
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows.length).toBe(3);
+      expect(rows[0]!.getAttribute('aria-label')).toBe('Alice');
+      expect(rows[1]!.getAttribute('aria-label')).toBe('Bob');
+      expect(rows[2]!.getAttribute('aria-label')).toBe('Carol');
+    });
+
+    it('omits aria-label when getRowKey is not set', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const rows = el.shadowRoot!.querySelectorAll('.row[role="row"]:not(.header)');
+      expect(rows[0]!.hasAttribute('aria-label')).toBe(false);
+    });
+  });
 });

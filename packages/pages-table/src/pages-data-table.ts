@@ -2845,6 +2845,7 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
         role="row"
         part="${part}"
         aria-rowindex="${ariaRowIndex}"
+        aria-label="${this.getRowKey ? this.getRowKey(row) : nothing}"
         aria-selected="${this.selection !== 'none' && isSelected ? 'true' : 'false'}"
         aria-level="${treeNode ? String(treeNode.depth + 1) : nothing}"
         aria-setsize="${treeNode ? String(treeNode.siblingCount) : nothing}"
