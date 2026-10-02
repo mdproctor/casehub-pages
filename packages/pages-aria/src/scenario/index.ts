@@ -1,4 +1,4 @@
-export { parseScenario } from './parser.js';
+export { parseScenario, parseScenarioWithIncludes } from './parser.js';
 export { createScheduler } from './scheduler.js';
 export { createScenarioCatalog } from './catalog-factory.js';
 export { isSectioned } from './types.js';

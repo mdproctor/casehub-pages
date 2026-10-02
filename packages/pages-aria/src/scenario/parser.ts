@@ -1,6 +1,8 @@
 import { parse } from 'yaml';
 import type { Catalog, ResolvedStep } from '@casehubio/yaml-core/step';
 import { Walker } from '@casehubio/yaml-core/step';
+import { IncludeExpander } from '@casehubio/yaml-core';
+import type { TemplateLoader } from '@casehubio/yaml-core';
 import type {
   Scenario, FlatScenario, SectionedScenario,
   TutorialMeta, TutorialSection, SectionContent,
@@ -112,7 +114,20 @@ function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog)
 
 export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
   const parsed = parse(yamlString) as Record<string, unknown>;
+  return parseScenarioFromParsed(parsed, catalog);
+}
 
+export async function parseScenarioWithIncludes(
+  yamlString: string,
+  catalog: Catalog,
+  loader: TemplateLoader,
+): Promise<Scenario> {
+  let parsed = parse(yamlString) as Record<string, unknown>;
+  parsed = await IncludeExpander.expand(parsed, loader);
+  return parseScenarioFromParsed(parsed, catalog);
+}
+
+function parseScenarioFromParsed(parsed: Record<string, unknown>, catalog: Catalog): Scenario {
   const hasSteps = Array.isArray(parsed['steps']);
   const hasSections = Array.isArray(parsed['sections']);
 
