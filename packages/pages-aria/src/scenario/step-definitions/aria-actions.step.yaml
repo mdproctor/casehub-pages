@@ -110,6 +110,20 @@ actions:
     invoke:
       aria: spotlight
 
+  scroll-to-row:
+    description: "Scroll a virtual-scroll table to bring a specific row into view"
+    inputs:
+      role: { type: string, required: true }
+      name: { type: string, required: true }
+      key: { type: string }
+      column: { type: string }
+      value: { type: string }
+      index: { type: integer }
+      within: { type: object }
+    outputs: {}
+    invoke:
+      aria: scroll-to-row
+
   editor-insert:
     description: "Insert text into a code editor"
     inputs:

@@ -22,6 +22,7 @@ const ARIA_ACTIONS: Definition[] = [
   ariaDef('wait', { ...TARGET_INPUTS, state: { type: 'object', required: true }, timeout: { type: 'integer' } }),
   ariaDef('show-markdown', { content: { type: 'string' }, file: { type: 'string' } }),
   ariaDef('spotlight', { role: { type: 'string' }, name: { type: 'string' }, index: { type: 'string' }, within: { type: 'object' }, content: { type: 'string' } }),
+  ariaDef('scroll-to-row', { ...TARGET_INPUTS, key: { type: 'string' }, column: { type: 'string' }, value: { type: 'string' }, index: { type: 'integer' } }),
   ariaDef('editor-insert', { ...TARGET_INPUTS, value: { type: 'string', required: true }, typing: { type: 'string' }, line: { type: 'integer' }, col: { type: 'integer' } }),
   ariaDef('editor-set-content', { ...TARGET_INPUTS, value: { type: 'string', required: true }, typing: { type: 'string' } }),
   ariaDef('editor-replace', { ...TARGET_INPUTS, from: { type: 'object', required: true }, to: { type: 'object', required: true }, value: { type: 'string', required: true }, typing: { type: 'string' } }),
