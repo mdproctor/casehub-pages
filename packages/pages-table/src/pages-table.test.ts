@@ -1867,4 +1867,31 @@ describe('pages-data-table', () => {
       expect(rows[0]!.hasAttribute('aria-label')).toBe(false);
     });
   });
+
+  describe('scrollToRow', () => {
+    it('returns true when a matching row is found', async () => {
+      el.dataSet = testDataSet;
+      el.getRowKey = (row: TypedRow) => row.text(nameCol);
+      await el.updateComplete;
+
+      const table = el as any;
+      const result = await table.scrollToRow(
+        (row: TypedRow) => row.text(nameCol) === 'Bob'
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('returns false when no row matches', async () => {
+      el.dataSet = testDataSet;
+      await el.updateComplete;
+
+      const table = el as any;
+      const result = await table.scrollToRow(
+        (row: TypedRow) => row.text(nameCol) === 'Nobody'
+      );
+
+      expect(result).toBe(false);
+    });
+  });
 });

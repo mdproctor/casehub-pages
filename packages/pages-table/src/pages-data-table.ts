@@ -2125,6 +2125,14 @@ export class PagesDataTable extends RovingTabindexMixin(LitElement) {
     }
   }
 
+  async scrollToRow(predicate: (row: TypedRow) => boolean): Promise<boolean> {
+    const index = this._effectiveRows.findIndex(predicate);
+    if (index < 0) return false;
+    this._scrollToRowIfNeeded(index);
+    await this.updateComplete;
+    return true;
+  }
+
   private async _focusRow(index: number): Promise<void> {
     await this.updateComplete;
     const rows = this.shadowRoot?.querySelectorAll('.row[role="row"]:not(.header)');
