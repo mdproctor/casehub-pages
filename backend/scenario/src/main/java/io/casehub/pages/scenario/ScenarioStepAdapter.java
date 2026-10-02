@@ -26,7 +26,7 @@ public final class ScenarioStepAdapter implements ForEachAdapter<HierarchicalSte
     }
 
     @Override
-    public String getWhen(HierarchicalStep element) {
+    public String getCondition(HierarchicalStep element) {
         return element.when();
     }
 

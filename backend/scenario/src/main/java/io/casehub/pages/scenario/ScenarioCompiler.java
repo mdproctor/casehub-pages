@@ -69,7 +69,7 @@ public final class ScenarioCompiler {
             List<ParamDescriptor> params) {
         var result = new LinkedHashMap<String, io.casehub.yaml.core.module.YamlModuleParameter>();
         for (var p : params) {
-            var type = io.casehub.yaml.core.module.ParameterType.fromString(
+            var type = io.casehub.yaml.plugin.api.ParameterType.fromString(
                     p.type() != null ? p.type() : "string");
             var allowed    = p.enumValues().stream().map(String::valueOf).toList();
             var defaultVal = p.defaultValue() != null ? String.valueOf(p.defaultValue()) : null;
