@@ -15,20 +15,14 @@ interface CommandPayload {
   timeout?: number;
 }
 
-interface ScenarioCommand {
-  action: string;
-  target?: AriaTarget;
-  value?: string;
-  data?: Record<string, unknown>;
-  state?: Record<string, unknown>;
-  timeout?: number;
-}
-
 interface DispatchStep {
   name: string;
-  label: string;
+  label?: string;
   actor?: string;
-  commands: ScenarioCommand[];
+  action: string;
+  params: Record<string, unknown>;
+  await?: { match?: Record<string, unknown>; timeout?: number; interval?: number; status?: number };
+  mode?: string;
 }
 
 interface DispatchSequence {
@@ -42,7 +36,7 @@ interface DispatchSequence {
 interface ExecutorControl {
   op: 'executor-control';
   sessionId: string;
-  command: 'pause' | 'resume' | 'step' | 'speed';
+  command: 'pause' | 'resume' | 'step' | 'speed' | 'stop';
   speed?: number;
 }
 
@@ -626,8 +620,19 @@ async function progressiveFill(
   finish();
 }
 
-function executeAriaCommand(cmd: ScenarioCommand, currentSpeed: number, isPaused: boolean, calloutMsPerChar: number, narrativeTarget: EventTarget): void | Promise<void> {
-  const { action, target, value, state, timeout } = cmd;
+function buildAriaTarget(params: Record<string, unknown>): AriaTarget | undefined {
+  if (!params.role) return undefined;
+  return {
+    role: params.role as string,
+    name: params.name as string,
+    ...(params.index !== undefined ? { index: params.index as number } : {}),
+    ...(params.within !== undefined ? { within: params.within as string } : {}),
+  };
+}
+
+function executeAriaAction(action: string, params: Record<string, unknown>, currentSpeed: number, isPaused: boolean, calloutMsPerChar: number, narrativeTarget: EventTarget): void | Promise<void> {
+  const target = buildAriaTarget(params);
+  const value = params.value as string | undefined;
   const fastMode = currentSpeed >= 100;
 
   injectStyles();
@@ -673,25 +678,31 @@ function executeAriaCommand(cmd: ScenarioCommand, currentSpeed: number, isPaused
       el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       return;
     }
-    case 'assert':
-      assertState(target!, toAriaState(state ?? cmd.data ?? {}));
+    case 'assert': {
+      const stateFields = { ...params };
+      delete stateFields.role; delete stateFields.name; delete stateFields.index; delete stateFields.within;
+      assertState(target!, toAriaState(stateFields));
       return;
-    case 'wait':
-      return waitFor(target!, toAriaState(state ?? cmd.data ?? {}), timeout ?? (cmd.data?.timeout as number) ?? 5000);
+    }
+    case 'wait': {
+      const stateFields = { ...params };
+      delete stateFields.role; delete stateFields.name; delete stateFields.index; delete stateFields.within;
+      delete stateFields.timeout;
+      return waitFor(target!, toAriaState(stateFields), (params.timeout as number) ?? 5000);
+    }
     case 'ready':
       return;
     case 'spotlight': {
-      const props = state ?? cmd.data ?? {};
-      const alsoRaw = props.also as Array<{role: string; name: string; content?: string; position?: string}> | undefined;
+      const alsoRaw = params.also as Array<{role: string; name: string; content?: string; position?: string}> | undefined;
       if (fastMode) return;
-      const reqDur = typeof props.duration === 'number' ? props.duration : 0;
-      const contentText = value ?? (props.content as string) ?? '';
+      const reqDur = typeof params.duration === 'number' ? params.duration : 0;
+      const contentText = (value ?? (params.content as string)) ?? '';
       const wordCount = contentText.split(/\s+/).filter(Boolean).length;
       const dur = reqDur === 0 && !isPaused ? Math.max(2000, wordCount * 250 / currentSpeed) : reqDur;
       return showSpotlight({
         target: target!,
-        content: value ?? (props.content as string) ?? '',
-        position: (props.position as 'top' | 'right' | 'bottom' | 'left' | 'auto') ?? 'auto',
+        content: contentText,
+        position: (params.position as 'top' | 'right' | 'bottom' | 'left' | 'auto') ?? 'auto',
         duration: dur,
         also: alsoRaw?.map(t => ({
           role: t.role, name: t.name,
@@ -701,14 +712,12 @@ function executeAriaCommand(cmd: ScenarioCommand, currentSpeed: number, isPaused
       });
     }
     case 'show-markdown': {
-      const props = state ?? cmd.data ?? {};
-      const display = (props.display as string) ?? 'panel';
-      const markdown = value ?? (props.content as string) ?? '';
-      const filePath = props.file as string | undefined;
-      const section = props.section as string | undefined;
+      const display = (params.display as string) ?? 'panel';
+      const markdown = (value ?? (params.content as string)) ?? '';
+      const filePath = params.file as string | undefined;
+      const section = params.section as string | undefined;
 
       if (display === 'modal') {
-        // Modal slide deck — handled by executeSequence deck collection
         return;
       }
 
@@ -734,6 +743,7 @@ export function createScenarioHandler(
   void connection.listen(['scenario:exec']);
 
   let paused = false;
+  let stopped = false;
   let speed = 1.0;
   let sessionId: string | null = null;
   let stepQueue: DispatchStep[] = [];
@@ -754,6 +764,7 @@ export function createScenarioHandler(
 
     try {
       while (stepQueue.length > 0) {
+        if (stopped) break;
         if (paused) {
           await new Promise<void>((resolve) => { resumeResolve = resolve; });
           continue;
@@ -762,13 +773,11 @@ export function createScenarioHandler(
         const step = stepQueue.shift()!;
 
         try {
-          const firstCmd = step.commands[0];
-          if (firstCmd?.action === 'show-markdown') {
-            const firstProps = firstCmd.state ?? firstCmd.data ?? {};
-            if ((firstProps.display as string) === 'modal') {
+          if (step.action === 'show-markdown') {
+            if ((step.params.display as string) === 'modal') {
               showOrExtendModalDeck(
                 {
-                  markdown: firstCmd.value ?? (firstProps.content as string) ?? '',
+                  markdown: ((step.params.value ?? step.params.content) as string) ?? '',
                   label: step.label ?? step.name,
                 },
                 eventTarget,
@@ -793,25 +802,18 @@ export function createScenarioHandler(
             activeDeck.dismiss();
           }
 
-          let stepOk = true;
-          let stepError: string | null = null;
-
-          for (const cmd of step.commands) {
-            try {
-              const result = executeAriaCommand(cmd, speed, paused, calloutMsPerChar, eventTarget);
-              if (result) await result;
-            } catch (err) {
-              stepOk = false;
-              stepError = (err as Error).message;
-              break;
-            }
+          try {
+            const result = executeAriaAction(step.action, step.params, speed, paused, calloutMsPerChar, eventTarget);
+            if (result) await result;
+            sendStepResult(connection, sessionId!, step.name, true, null);
+          } catch (err) {
+            sendStepResult(connection, sessionId!, step.name, false, (err as Error).message);
           }
-          sendStepResult(connection, sessionId!, step.name, stepOk, stepError);
         } catch {
           sendStepResult(connection, sessionId!, step.name, false, 'step execution error');
         }
 
-        if (stepQueue.length > 0 && !paused && speed < 1000) {
+        if (stepQueue.length > 0 && !paused && speed > 0 && speed < 1000) {
           const delay = Math.max(10, 1000 / speed);
           await new Promise<void>((resolve) => setTimeout(resolve, delay));
         }
@@ -828,6 +830,7 @@ export function createScenarioHandler(
     if (isNewSession) {
       paused = detail.paused;
       speed = detail.speed;
+      stopped = false;
     }
     stepQueue.push(...detail.steps);
     void executeSequence();
@@ -867,6 +870,20 @@ export function createScenarioHandler(
       case 'speed':
         if (detail.speed !== undefined) speed = detail.speed;
         break;
+      case 'stop':
+        stopped = true;
+        dismissAllSpotlights();
+        completeTypingNow();
+        if (activeDeck) activeDeck.dismiss();
+        for (const pending of stepQueue) {
+          sendStepResult(connection, sessionId!, pending.name, false, 'stopped');
+        }
+        stepQueue.length = 0;
+        if (resumeResolve) {
+          resumeResolve();
+          resumeResolve = null;
+        }
+        break;
     }
   }
 
@@ -877,8 +894,17 @@ export function createScenarioHandler(
     const cmd = detail.payload as CommandPayload;
     if (!cmd?.id || !cmd?.action) return;
 
+    const flatParams: Record<string, unknown> = {};
+    if (cmd.target) {
+      flatParams.role = cmd.target.role;
+      flatParams.name = cmd.target.name;
+    }
+    if (cmd.value !== undefined) flatParams.value = cmd.value;
+    if (cmd.state) Object.assign(flatParams, cmd.state);
+    if (cmd.timeout !== undefined) flatParams.timeout = cmd.timeout;
+
     try {
-      const result = executeAriaCommand(cmd, speed, paused, calloutMsPerChar, eventTarget);
+      const result = executeAriaAction(cmd.action, flatParams, speed, paused, calloutMsPerChar, eventTarget);
       if (result) {
         result
           .then(() => { sendResult(connection, cmd.id, true, null); })
@@ -910,6 +936,7 @@ export function createScenarioHandler(
       void connection.unlisten(['scenario:exec']);
       stepQueue = [];
       paused = false;
+      stopped = false;
       if (resumeResolve) {
         resumeResolve();
         resumeResolve = null;

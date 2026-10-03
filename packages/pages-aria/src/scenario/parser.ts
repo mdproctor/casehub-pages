@@ -107,9 +107,24 @@ function mergeSteps(resolved: ResolvedStep[], preExtracted: PreExtractedStep[], 
   return result;
 }
 
+export function deriveStepName(step: ResolvedStep, index: number): string {
+  if (step.name) return step.name;
+  const label = step.decorators?.label as string | undefined;
+  if (label) {
+    return label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  const action = 'entry' in step ? step.entry.name : step.kind;
+  return `${action}-${index}`;
+}
+
 function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog): SchedulerStep[] {
   const { walkerSteps, preExtracted, slotTypes } = preExtract(rawSteps);
   const resolved = Walker.resolve(walkerSteps, catalog);
+  for (let i = 0; i < resolved.length; i++) {
+    if (!resolved[i].name) {
+      (resolved[i] as { name: string | null }).name = deriveStepName(resolved[i], i);
+    }
+  }
   return mergeSteps(resolved, preExtracted, slotTypes);
 }
 

@@ -219,7 +219,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'ready-step',
           label: 'Ready check',
-          commands: [{ action: 'ready' }],
+          action: 'ready',
+          params: {},
         }],
         speed: 1.0,
         paused: false,
@@ -248,8 +249,8 @@ describe('ScenarioHandler sequence protocol', () => {
         op: 'dispatch-sequence',
         sessionId: 's-001',
         steps: [
-          { name: 'step-1', label: 'First', commands: [{ action: 'ready' }] },
-          { name: 'step-2', label: 'Second', commands: [{ action: 'ready' }] },
+          { name: 'step-1', label: 'First', action: 'ready', params: {} },
+          { name: 'step-2', label: 'Second', action: 'ready', params: {} },
         ],
         speed: 1000,
         paused: false,
@@ -277,8 +278,8 @@ describe('ScenarioHandler sequence protocol', () => {
         op: 'dispatch-sequence',
         sessionId: 's-001',
         steps: [
-          { name: 'step-1', label: 'First', commands: [{ action: 'ready' }] },
-          { name: 'step-2', label: 'Second', commands: [{ action: 'ready' }] },
+          { name: 'step-1', label: 'First', action: 'ready', params: {} },
+          { name: 'step-2', label: 'Second', action: 'ready', params: {} },
         ],
         speed: 1000,
         paused: true,
@@ -310,11 +311,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'fill-name',
           label: 'Fill name',
-          commands: [{
-            action: 'fill',
-            target: { role: 'textbox', name: 'Your name' },
-            value: 'Alice',
-          }],
+          action: 'fill',
+          params: { role: 'textbox', name: 'Your name', value: 'Alice' },
         }],
         speed: 1000,
         paused: false,
@@ -353,11 +351,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'fill-paused',
           label: 'Fill paused',
-          commands: [{
-            action: 'fill',
-            target: { role: 'textbox', name: 'Test field' },
-            value: 'Stepped',
-          }],
+          action: 'fill',
+          params: { role: 'textbox', name: 'Test field', value: 'Stepped' },
         }],
         speed: 1000,
         paused: true,
@@ -398,10 +393,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'fail-step',
           label: 'Will fail',
-          commands: [{
-            action: 'click',
-            target: { role: 'button', name: 'Nonexistent-Seq-Test' },
-          }],
+          action: 'click',
+          params: { role: 'button', name: 'Nonexistent-Seq-Test' },
         }],
         speed: 1000,
         paused: false,
@@ -437,11 +430,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'spot-step',
           label: 'Show spotlight',
-          commands: [{
-            action: 'spotlight',
-            target: { role: 'region', name: 'Spotlight target' },
-            data: { content: 'Test callout', position: 'right', duration: 0 },
-          }],
+          action: 'spotlight',
+          params: { role: 'region', name: 'Spotlight target', content: 'Test callout', position: 'right', duration: 0 },
         }],
         speed: 1,
         paused: false,
@@ -490,11 +480,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'type-step',
           label: 'Type text',
-          commands: [{
-            action: 'fill',
-            target: { role: 'textbox', name: 'Long text' },
-            value: 'abcdefghij',
-          }],
+          action: 'fill',
+          params: { role: 'textbox', name: 'Long text', value: 'abcdefghij' },
         }],
         speed: 1,
         paused: false,
@@ -541,11 +528,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'after-runto',
           label: 'After runTo',
-          commands: [{
-            action: 'spotlight',
-            target: { role: 'region', name: 'RunTo target' },
-            data: { content: 'Should be visible', duration: 0 },
-          }],
+          action: 'spotlight',
+          params: { role: 'region', name: 'RunTo target', content: 'Should be visible', duration: 0 },
         }],
         speed: 1,
         paused: false,
@@ -584,11 +568,8 @@ describe('ScenarioHandler sequence protocol', () => {
         steps: [{
           name: 'type-after-runto',
           label: 'Type after runTo',
-          commands: [{
-            action: 'fill',
-            target: { role: 'textbox', name: 'RunTo input' },
-            value: 'abcdefghij',
-          }],
+          action: 'fill',
+          params: { role: 'textbox', name: 'RunTo input', value: 'abcdefghij' },
         }],
         speed: 1,
         paused: false,
@@ -614,7 +595,7 @@ describe('ScenarioHandler sequence protocol', () => {
         speed: 1, paused: false,
         steps: [{
           name: 'slide-1', label: 'Slide 1',
-          commands: [{ action: 'show-markdown', value: '## Slide 1', state: { display: 'modal', content: '## Slide 1' } }],
+          action: 'show-markdown', params: { display: 'modal', value: '## Slide 1' },
         }],
       },
     }));
@@ -638,8 +619,8 @@ describe('ScenarioHandler sequence protocol', () => {
         sessionId: 'test-deck',
         speed: 1, paused: false,
         steps: [
-          { name: 's1', label: 'Intro', commands: [{ action: 'show-markdown', value: '## Slide 1', state: { display: 'modal', content: '## Slide 1' } }] },
-          { name: 's2', label: 'Details', commands: [{ action: 'show-markdown', value: '## Slide 2', state: { display: 'modal', content: '## Slide 2' } }] },
+          { name: 's1', label: 'Intro', action: 'show-markdown', params: { display: 'modal', value: '## Slide 1' } },
+          { name: 's2', label: 'Details', action: 'show-markdown', params: { display: 'modal', value: '## Slide 2' } },
         ],
       },
     }));
@@ -665,7 +646,7 @@ describe('ScenarioHandler sequence protocol', () => {
         op: 'dispatch-sequence',
         sessionId: 'test-esc',
         speed: 1, paused: false,
-        steps: [{ name: 's1', label: 'Slide', commands: [{ action: 'show-markdown', value: '## Test', state: { display: 'modal', content: '## Test' } }] }],
+        steps: [{ name: 's1', label: 'Slide', action: 'show-markdown', params: { display: 'modal', value: '## Test' } }],
       },
     }));
 
@@ -683,7 +664,7 @@ describe('ScenarioHandler sequence protocol', () => {
         op: 'dispatch-sequence',
         sessionId: 'test-single',
         speed: 1, paused: false,
-        steps: [{ name: 's1', label: 'Solo', commands: [{ action: 'show-markdown', value: '## Solo', state: { display: 'modal', content: '## Solo' } }] }],
+        steps: [{ name: 's1', label: 'Solo', action: 'show-markdown', params: { display: 'modal', value: '## Solo' } }],
       },
     }));
 
@@ -695,5 +676,67 @@ describe('ScenarioHandler sequence protocol', () => {
     });
 
     document.querySelector('.scenario-modal-overlay')?.remove();
+  });
+
+  it('stop control clears queue and sends failure results', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-stop',
+        steps: [
+          { name: 'step-1', label: 'First', action: 'ready', params: {} },
+          { name: 'step-2', label: 'Second', action: 'ready', params: {} },
+          { name: 'step-3', label: 'Third', action: 'ready', params: {} },
+        ],
+        speed: 1000,
+        paused: true,
+      },
+    }));
+
+    await new Promise((r) => setTimeout(r, 50));
+
+    eventTarget.dispatchEvent(new CustomEvent('scenario-control', {
+      detail: { op: 'executor-control', sessionId: 's-stop', command: 'stop' },
+    }));
+
+    await new Promise((r) => setTimeout(r, 50));
+    const results = conn.sent.filter(
+      (m) => (m as Record<string, unknown>).op === 'step-result');
+    expect(results.length).toBeGreaterThan(0);
+    for (const r of results) {
+      expect((r as Record<string, unknown>).ok).toBe(false);
+      expect((r as Record<string, unknown>).error).toBe('stopped');
+    }
+  });
+
+  it('speed <= 0 skips inter-step delay', async () => {
+    const conn = mockConnection();
+    createScenarioHandler(conn, eventTarget);
+
+    const start = performance.now();
+    eventTarget.dispatchEvent(new CustomEvent('scenario-dispatch', {
+      detail: {
+        op: 'dispatch-sequence',
+        sessionId: 's-nodelay',
+        steps: [
+          { name: 'step-1', label: 'First', action: 'ready', params: {} },
+          { name: 'step-2', label: 'Second', action: 'ready', params: {} },
+        ],
+        speed: -1,
+        paused: false,
+      },
+    }));
+
+    await vi.waitFor(() => {
+      const results = conn.sent.filter(
+        (m) => (m as Record<string, unknown>).op === 'step-result');
+      expect(results).toHaveLength(2);
+    });
+
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(500);
   });
 });
