@@ -1,90 +1,5 @@
-var EXAMPLES = {
-  'signal-await': {
-    title: 'Signal / Await',
-    tags: ['signal', 'await', 'concurrent'],
-    description: 'One-way dependency between branches. Sender signals after a click, receiver blocks until the signal arrives.',
-    yaml: [
-      'scenario: signal-await-demo',
-      'steps:',
-      '  - concurrent:',
-      '      sender:',
-      '        - click: { role: button, name: "A" }',
-      '        - signal: go',
-      '      receiver:',
-      '        - await: { signal: go }',
-      '        - click: { role: button, name: "B" }',
-    ].join('\n'),
-  },
-  'mutex': {
-    title: 'Mutex',
-    tags: ['mutex', 'decorator', 'concurrent'],
-    description: 'Mutual exclusion via decorator. Steps tagged with the same mutex never run simultaneously across branches.',
-    yaml: [
-      'scenario: mutex-demo',
-      'steps:',
-      '  - concurrent:',
-      '      branch-a:',
-      '        - click: { role: button, name: "A" }',
-      '          mutex: db-write',
-      '        - click: { role: button, name: "B" }',
-      '          mutex: db-write',
-      '      branch-b:',
-      '        - click: { role: button, name: "C" }',
-      '          mutex: db-write',
-      '        - click: { role: button, name: "D" }',
-      '          mutex: db-write',
-    ].join('\n'),
-  },
-  'barrier': {
-    title: 'Barrier',
-    tags: ['barrier', 'await', 'delay', 'orchestration block', 'concurrent'],
-    description: 'N-way sync point. Three branches with staggered delays converge at a barrier — fast and medium block until slow arrives, then all proceed.',
-    yaml: [
-      'scenario: barrier-demo',
-      'orchestration:',
-      '  barriers:',
-      '    all-ready: { count: 3 }',
-      'steps:',
-      '  - concurrent:',
-      '      fast:',
-      '        - click: { role: button, name: "A" }',
-      '        - await: { barrier: all-ready }',
-      '        - click: { role: button, name: "D" }',
-      '      medium:',
-      '        - click: { role: button, name: "B" }',
-      '        - delay: 1000ms',
-      '        - await: { barrier: all-ready }',
-      '        - click: { role: button, name: "E" }',
-      '      slow:',
-      '        - click: { role: button, name: "C" }',
-      '        - delay: 2000ms',
-      '        - await: { barrier: all-ready }',
-      '        - click: { role: button, name: "F" }',
-    ].join('\n'),
-  },
-  'channel': {
-    title: 'Channel (via Signal)',
-    tags: ['signal', 'await', 'orchestration block', 'concurrent'],
-    description: 'Two-way handshake. Producer signals data-ready, consumer processes and acks — round-trip coordination using signal pairs.',
-    yaml: [
-      'scenario: channel-demo',
-      'orchestration:',
-      '  signals: [data-ready, ack]',
-      'steps:',
-      '  - concurrent:',
-      '      producer:',
-      '        - click: { role: button, name: "A" }',
-      '        - signal: data-ready',
-      '        - await: { signal: ack }',
-      '        - click: { role: button, name: "C" }',
-      '      consumer:',
-      '        - await: { signal: data-ready }',
-      '        - click: { role: button, name: "B" }',
-      '        - signal: ack',
-      '        - click: { role: button, name: "D" }',
-    ].join('\n'),
-  },
-};
+var EXAMPLES = {};
+var EXAMPLE_KEYS = [];
 
 var stateEl = document.getElementById('orch-state');
 var queuesEl = document.getElementById('orch-queues');
@@ -262,15 +177,6 @@ function runExample(key) {
   runner.play();
 }
 
-if (examplePicker) {
-  showYaml(examplePicker.value);
-  examplePicker.addEventListener('change', function() {
-    if (currentRunner) { currentRunner.dispose(); currentRunner = null; }
-    resetUI();
-    showYaml(examplePicker.value);
-  });
-}
-
 var coordSpeedSlider = document.getElementById('speed-slider');
 var coordSpeedLabel = document.getElementById('speed-label');
 if (coordSpeedSlider) {
@@ -280,8 +186,49 @@ if (coordSpeedSlider) {
   });
 }
 
-if (runBtn) {
-  runBtn.addEventListener('click', function() {
-    runExample(examplePicker.value);
+// Load scenarios from shared files
+fetch('../../scenarios/manifest.json')
+  .then(function(r) { return r.json(); })
+  .then(function(manifest) {
+    var cat = null;
+    for (var i = 0; i < manifest.categories.length; i++) {
+      if (manifest.categories[i].key === 'coordination') { cat = manifest.categories[i]; break; }
+    }
+    if (!cat) return;
+    var fetches = cat.scenarios.map(function(entry) {
+      return fetch('../../scenarios/' + entry.file)
+        .then(function(r) { return r.text(); })
+        .then(function(yamlText) {
+          var slug = entry.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          return { key: slug, title: entry.title, tags: entry.tags, description: entry.description, yaml: yamlText };
+        });
+    });
+    return Promise.all(fetches);
+  })
+  .then(function(loaded) {
+    if (!loaded) return;
+    loaded.forEach(function(ex) {
+      EXAMPLES[ex.key] = ex;
+      EXAMPLE_KEYS.push(ex.key);
+    });
+    if (examplePicker) {
+      examplePicker.innerHTML = '';
+      EXAMPLE_KEYS.forEach(function(key) {
+        var opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = EXAMPLES[key].title;
+        examplePicker.appendChild(opt);
+      });
+      showYaml(examplePicker.value);
+      examplePicker.addEventListener('change', function() {
+        if (currentRunner) { currentRunner.dispose(); currentRunner = null; }
+        resetUI();
+        showYaml(examplePicker.value);
+      });
+    }
+    if (runBtn) {
+      runBtn.addEventListener('click', function() {
+        runExample(examplePicker.value);
+      });
+    }
   });
-}

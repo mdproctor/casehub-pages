@@ -1,84 +1,4 @@
-var DD_EXAMPLES = [
-  {
-    name: 'Simulated Data',
-    tags: ['simulated', 'data injection'],
-    description: 'The simulated delivery type injects data directly into a named dataset without any server call. Use it to pre-populate tables and charts in demos.',
-    yaml: [
-      'scenario: simulated-demo',
-      'steps:',
-      '  - simulated:',
-      '      dataset: orders',
-      '      data:',
-      '        id: 1001',
-      '        product: "Widget Pro"',
-      '        quantity: 25',
-      '        status: shipped',
-      '  - simulated:',
-      '      dataset: orders',
-      '      data:',
-      '        id: 1002',
-      '        product: "Gadget X"',
-      '        quantity: 10',
-      '        status: pending',
-      '  - simulated:',
-      '      dataset: metrics',
-      '      data:',
-      '        cpu: 72',
-      '        memory: 4096',
-      '        disk_io: 340',
-    ].join('\n'),
-  },
-  {
-    name: 'Mixed Delivery',
-    tags: ['simulated', 'click', 'concurrent', 'mixed'],
-    description: 'Scenarios can mix delivery types. Simulated steps inject data while ARIA steps interact with UI — they compose naturally in concurrent branches.',
-    yaml: [
-      'scenario: mixed-delivery-demo',
-      'steps:',
-      '  - concurrent:',
-      '      data-pump:',
-      '        - simulated:',
-      '            dataset: events',
-      '            data:',
-      '              type: login',
-      '              user: alice',
-      '        - delay: 500ms',
-      '        - simulated:',
-      '            dataset: events',
-      '            data:',
-      '              type: purchase',
-      '              user: alice',
-      '              amount: 49.99',
-      '      ui-flow:',
-      '        - click: { role: button, name: "Submit" }',
-      '        - delay: 800ms',
-      '        - click: { role: button, name: "Reset" }',
-    ].join('\n'),
-  },
-  {
-    name: 'GraphQL Operation',
-    tags: ['graphql', 'domain', 'operation'],
-    description: 'The graphql delivery type executes a domain operation via GraphQL. The domain and operation name route to a server-side resolver; params pass as variables.',
-    yaml: [
-      'scenario: graphql-demo',
-      'steps:',
-      '  - graphql:',
-      '      name: create-order',
-      '      domain: orders',
-      '      operation: createOrder',
-      '      params:',
-      '        product: "Widget Pro"',
-      '        quantity: 5',
-      '  - graphql:',
-      '      name: update-status',
-      '      domain: orders',
-      '      operation: updateOrderStatus',
-      '      params:',
-      '        orderId: "1001"',
-      '        status: shipped',
-    ].join('\n'),
-  },
-];
+var DD_EXAMPLES = [];
 
 var ddLogEl = document.getElementById('dd-event-log');
 var ddStateEl = document.getElementById('dd-state');
@@ -254,4 +174,35 @@ if (ddRunBtn) {
   });
 }
 
-ddShowExample(0);
+// Load scenarios from shared files
+fetch('../../scenarios/manifest.json')
+  .then(function(r) { return r.json(); })
+  .then(function(manifest) {
+    var cat = null;
+    for (var i = 0; i < manifest.categories.length; i++) {
+      if (manifest.categories[i].key === 'data-delivery') { cat = manifest.categories[i]; break; }
+    }
+    if (!cat) return;
+    var fetches = cat.scenarios.map(function(entry) {
+      return fetch('../../scenarios/' + entry.file)
+        .then(function(r) { return r.text(); })
+        .then(function(yamlText) {
+          return { name: entry.title, tags: entry.tags, description: entry.description, yaml: yamlText };
+        });
+    });
+    return Promise.all(fetches);
+  })
+  .then(function(loaded) {
+    if (!loaded) return;
+    DD_EXAMPLES = loaded;
+    if (ddPicker) {
+      ddPicker.innerHTML = '';
+      DD_EXAMPLES.forEach(function(ex, i) {
+        var opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = ex.name;
+        ddPicker.appendChild(opt);
+      });
+    }
+    ddShowExample(0);
+  });

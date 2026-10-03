@@ -1,144 +1,18 @@
-var COMP_EXAMPLES = {
-  'data-trigger': {
-    yaml: [
-      'scenario: data-trigger-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '  - click: { role: button, name: "B" }',
-      '  - trigger:',
-      '      type: data',
-      '      channel: trades',
-      '    block:',
-      '      - click: { role: button, name: "C" }',
-      '      - click: { role: button, name: "D" }',
-    ].join('\n'),
-    tags: ['trigger', 'data channel', 'concurrent'],
-    description: 'External data activates a suspended queue. Main steps run first; the trigger queue waits until data arrives on the channel. Click Send to inject data.',
-    triggers: [{ name: 'trades', type: 'data' }],
-  },
-  'time-trigger': {
-    yaml: [
-      'scenario: time-trigger-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '  - trigger:',
-      '      type: time',
-      '      delay: 2s',
-      '    block:',
-      '      - click: { role: button, name: "C" }',
-      '      - click: { role: button, name: "D" }',
-      '  - click: { role: button, name: "B" }',
-    ].join('\n'),
-    tags: ['trigger', 'time', 'delay'],
-    description: 'Time-based activation. A suspended queue activates after virtual time elapses. The main branch continues while the timer counts down.',
-    triggers: [{ name: 'timer', type: 'time', delay: '2s' }],
-  },
-  'orchestration-block': {
-    yaml: [
-      'scenario: orchestration-block-demo',
-      'orchestration:',
-      '  barriers:',
-      '    sync: { count: 2 }',
-      '  signals: [ready]',
-      'steps:',
-      '  - concurrent:',
-      '      init:',
-      '        - click: { role: button, name: "A" }',
-      '        - delay: 1500ms',
-      '        - signal: ready',
-      '        - await: { barrier: sync }',
-      '        - click: { role: button, name: "C" }',
-      '      worker:',
-      '        - await: { signal: ready }',
-      '        - click: { role: button, name: "B" }',
-      '        - await: { barrier: sync }',
-      '        - click: { role: button, name: "D" }',
-    ].join('\n'),
-    tags: ['orchestration block', 'signal', 'await', 'barrier', 'delay', 'concurrent'],
-    description: 'Top-level orchestration block pre-declares barriers and signals. Init delays then signals, worker awaits, both sync at a barrier before proceeding.',
-    triggers: [],
-  },
-  'modules': {
-    yaml: [
-      '# ── Module definition ──────────────────',
-      '# Reusable building block with typed',
-      '# parameters and named outputs.',
-      '',
-      'name: status-panel',
-      'parameters:',
-      '  title:',
-      '    type: "STRING"',
-      '    required: true',
-      '  dataset:',
-      '    type: "STRING"',
-      '    required: true',
-      '  threshold:',
-      '    type: "NUMBER"',
-      '    required: false',
-      '    defaultValue: "80"',
-      'outputs:',
-      '  panelId:',
-      '    type: "STRING"',
-      '    value: "${params.title}-panel"',
-      'sections:',
-      '  pages:',
-      '    panel:',
-      '      name: "${params.title}"',
-      '      properties:',
-      '        dataset: "${params.dataset}"',
-      '        threshold: "${params.threshold}"',
-      '',
-      '# ── Page importing the module ──────────',
-      '# Two instances with different parameters.',
-      '# Outputs chain between modules.',
-      '',
-      'imports:',
-      '  - module: status-panel',
-      '    as: sales',
-      '    parameters:',
-      '      title: "Sales Overview"',
-      '      dataset: sales-daily',
-      '      threshold: "90"',
-      '  - module: status-panel',
-      '    as: ops',
-      '    parameters:',
-      '      title: "Operations"',
-      '      dataset: ops-metrics',
-      '  - module: status-panel',
-      '    as: combined',
-      '    when: "${module.sales.panelId}"',
-      '    parameters:',
-      '      title: "Combined View"',
-      '      dataset: "${module.ops.panelId}-feed"',
-    ].join('\n'),
-    tags: ['module', 'imports', 'parameters', 'outputs', 'when'],
-    description: 'Reusable modules with typed parameters and outputs. One module, three imports — each stamped with its alias. Outputs chain between modules via ${module.alias.output}.',
-    triggers: [],
-  },
-  'foreach': {
-    yaml: [
-      '# ── forEach expansion ─────────────────',
-      '# Stamp a template once per item in a',
-      '# list. Each stamp gets a scoped variable.',
-      '',
-      'pages:',
-      '  - name: "${each.region} Dashboard"',
-      '    forEach:',
-      '      as: region',
-      '      in: [us-east, eu-west, ap-south]',
-      '    rows:',
-      '      - columns:',
-      '        - components:',
-      '          - type: metric',
-      '            properties:',
-      '              title: "${each.region} Latency"',
-      '              dataset: "latency-${each.region}"',
-    ].join('\n'),
-    tags: ['forEach', 'expansion', 'variables'],
-    description: 'forEach stamps a template for each item in a list. One page definition expands to three region-specific dashboards with scoped ${each.*} variables.',
-    triggers: [],
-  },
-};
+var COMP_EXAMPLES = {};
+var COMP_KEYS = [];
+
+function compDetectTriggers(yamlText) {
+  var triggers = [];
+  var re = /- trigger:\s*\n\s+type:\s*(\w+)\s*\n\s+(?:channel:\s*(\w+)|delay:\s*(\S+))/g;
+  var m;
+  while ((m = re.exec(yamlText)) !== null) {
+    var t = { type: m[1] };
+    if (m[2]) { t.name = m[2]; }
+    else { t.name = 'timer'; if (m[3]) t.delay = m[3]; }
+    triggers.push(t);
+  }
+  return triggers;
+}
 
 function compFormatTime(ms) {
   var s = Math.floor(ms / 1000);
@@ -240,7 +114,7 @@ function compShowYaml(key) {
   var interactive = document.getElementById('comp-interactive');
   var runBtn = document.getElementById('comp-run-btn');
   var speedRow = document.getElementById('comp-speed-slider');
-  var isYamlOnly = (key === 'modules' || key === 'foreach');
+  var isYamlOnly = example && !example.runnable;
   if (interactive) interactive.style.display = isYamlOnly ? 'none' : '';
   if (runBtn) runBtn.style.display = isYamlOnly ? 'none' : '';
   if (speedRow) speedRow.parentElement.style.display = isYamlOnly ? 'none' : '';
@@ -359,17 +233,6 @@ function compRunExample(key) {
   }
 }
 
-// Wire up picker
-var compPicker = document.getElementById('comp-example-picker');
-if (compPicker) {
-  compShowYaml(compPicker.value);
-  compPicker.addEventListener('change', function() {
-    if (compCurrentRunner) { compCurrentRunner.dispose(); compCurrentRunner = null; }
-    compResetUI();
-    compShowYaml(compPicker.value);
-  });
-}
-
 // Wire up speed slider
 var compSpeedSlider = document.getElementById('comp-speed-slider');
 var compSpeedLabel = document.getElementById('comp-speed-label');
@@ -380,14 +243,56 @@ if (compSpeedSlider) {
   });
 }
 
-// Wire up run button
-var compRunBtn = document.getElementById('comp-run-btn');
-if (compRunBtn) {
-  compRunBtn.addEventListener('click', function() {
-    var picker = document.getElementById('comp-example-picker');
-    if (picker) compRunExample(picker.value);
+// Load scenarios from shared files
+fetch('../../scenarios/manifest.json')
+  .then(function(r) { return r.json(); })
+  .then(function(manifest) {
+    var cat = null;
+    for (var i = 0; i < manifest.categories.length; i++) {
+      if (manifest.categories[i].key === 'composition') { cat = manifest.categories[i]; break; }
+    }
+    if (!cat) return;
+    var fetches = cat.scenarios.map(function(entry) {
+      return fetch('../../scenarios/' + entry.file)
+        .then(function(r) { return r.text(); })
+        .then(function(yamlText) {
+          var slug = entry.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          return {
+            key: slug, title: entry.title, tags: entry.tags,
+            description: entry.description, yaml: yamlText,
+            runnable: entry.runnable, triggers: compDetectTriggers(yamlText),
+          };
+        });
+    });
+    return Promise.all(fetches);
+  })
+  .then(function(loaded) {
+    if (!loaded) return;
+    loaded.forEach(function(ex) {
+      COMP_EXAMPLES[ex.key] = ex;
+      COMP_KEYS.push(ex.key);
+    });
+    var compPicker = document.getElementById('comp-example-picker');
+    if (compPicker) {
+      compPicker.innerHTML = '';
+      COMP_KEYS.forEach(function(key) {
+        var opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = COMP_EXAMPLES[key].title;
+        compPicker.appendChild(opt);
+      });
+      compShowYaml(compPicker.value);
+      compPicker.addEventListener('change', function() {
+        if (compCurrentRunner) { compCurrentRunner.dispose(); compCurrentRunner = null; }
+        compResetUI();
+        compShowYaml(compPicker.value);
+      });
+    }
+    var compRunBtn = document.getElementById('comp-run-btn');
+    if (compRunBtn) {
+      compRunBtn.addEventListener('click', function() {
+        var picker = document.getElementById('comp-example-picker');
+        if (picker) compRunExample(picker.value);
+      });
+    }
   });
-}
-
-// Show initial YAML
-compShowYaml('data-trigger');

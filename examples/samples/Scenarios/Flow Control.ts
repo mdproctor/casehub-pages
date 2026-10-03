@@ -1,131 +1,4 @@
-var EXAMPLES = [
-  {
-    name: 'Sequential',
-    tags: ['steps'],
-    description: 'Steps execute one after another in declaration order.',
-    yaml: [
-      'scenario: sequential-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '  - click: { role: button, name: "B" }',
-      '  - click: { role: button, name: "C" }',
-      '  - click: { role: button, name: "D" }',
-    ].join('\n'),
-  },
-  {
-    name: 'Concurrent',
-    tags: ['concurrent'],
-    description: 'Two branches execute in parallel — the scheduler interleaves steps from each branch on every tick.',
-    yaml: [
-      'scenario: concurrent-demo',
-      'steps:',
-      '  - concurrent:',
-      '      branch-a:',
-      '        - click: { role: button, name: "A" }',
-      '        - click: { role: button, name: "C" }',
-      '      branch-b:',
-      '        - click: { role: button, name: "B" }',
-      '        - click: { role: button, name: "D" }',
-    ].join('\n'),
-  },
-  {
-    name: 'Delay',
-    tags: ['delay'],
-    description: 'A virtual-time delay pauses the queue — the clock advances but no steps execute during the gap.',
-    yaml: [
-      'scenario: delay-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '  - delay: 1000ms',
-      '  - click: { role: button, name: "B" }',
-      '  - delay: 500ms',
-      '  - click: { role: button, name: "C" }',
-    ].join('\n'),
-  },
-  {
-    name: 'Loop',
-    tags: ['loop', 'decorator'],
-    description: 'The loop decorator repeats a step N times before advancing.',
-    yaml: [
-      'scenario: loop-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '    loop: 3',
-      '  - click: { role: button, name: "B" }',
-    ].join('\n'),
-  },
-  {
-    name: 'When Guard',
-    tags: ['when', 'decorator'],
-    description: 'The when decorator conditionally skips a step based on a guard expression. B executes (when: true), C is skipped (when: false).',
-    yaml: [
-      'scenario: when-guard-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '  - click: { role: button, name: "B" }',
-      '    when: true',
-      '  - click: { role: button, name: "C" }',
-      '    when: false',
-      '  - click: { role: button, name: "D" }',
-    ].join('\n'),
-  },
-  {
-    name: 'Delay (decorator)',
-    tags: ['delay', 'decorator'],
-    description: 'Delay in decorator form pauses AFTER the step completes. Compare with standalone delay which is its own step between actions.',
-    yaml: [
-      'scenario: delay-decorator-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '    delay: 1000ms',
-      '  - click: { role: button, name: "B" }',
-      '    delay: 500ms',
-      '  - click: { role: button, name: "C" }',
-    ].join('\n'),
-  },
-  {
-    name: 'Loop (until)',
-    tags: ['loop', 'decorator'],
-    description: 'Loop with count and until condition. Repeats up to N times or until the condition is met. Button "A" loops 3 times, button "B" loops until "true" (runs once).',
-    yaml: [
-      'scenario: loop-until-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '    loop: { count: 3 }',
-      '  - click: { role: button, name: "B" }',
-      '    loop: { count: 5, until: true }',
-      '  - click: { role: button, name: "C" }',
-    ].join('\n'),
-  },
-  {
-    name: 'Retry',
-    tags: ['retry', 'decorator'],
-    description: 'Retry decorator re-executes a step on failure up to N times. If the executor throws, the scheduler retries before advancing or failing the queue.',
-    yaml: [
-      'scenario: retry-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '    retry: 3',
-      '  - click: { role: button, name: "B" }',
-      '    retry: { max: 2 }',
-      '  - click: { role: button, name: "C" }',
-    ].join('\n'),
-  },
-  {
-    name: 'Timeout',
-    tags: ['timeout', 'decorator'],
-    description: 'Timeout decorator sets a maximum duration for a step. If the step takes longer, it is aborted.',
-    yaml: [
-      'scenario: timeout-demo',
-      'steps:',
-      '  - click: { role: button, name: "A" }',
-      '    timeout: 5s',
-      '  - click: { role: button, name: "B" }',
-      '    timeout: 2s',
-      '  - click: { role: button, name: "C" }',
-    ].join('\n'),
-  },
-];
+var EXAMPLES = [];
 
 var logEl = document.getElementById('event-log');
 var stateEl = document.getElementById('orch-state');
@@ -335,4 +208,35 @@ if (runBtn) {
   });
 }
 
-showExample(0);
+// Load scenarios from shared files
+fetch('../../scenarios/manifest.json')
+  .then(function(r) { return r.json(); })
+  .then(function(manifest) {
+    var cat = null;
+    for (var i = 0; i < manifest.categories.length; i++) {
+      if (manifest.categories[i].key === 'flow-control') { cat = manifest.categories[i]; break; }
+    }
+    if (!cat) return;
+    var fetches = cat.scenarios.map(function(entry) {
+      return fetch('../../scenarios/' + entry.file)
+        .then(function(r) { return r.text(); })
+        .then(function(yamlText) {
+          return { name: entry.title, tags: entry.tags, description: entry.description, yaml: yamlText };
+        });
+    });
+    return Promise.all(fetches);
+  })
+  .then(function(loaded) {
+    if (!loaded) return;
+    EXAMPLES = loaded;
+    if (picker) {
+      picker.innerHTML = '';
+      EXAMPLES.forEach(function(ex, i) {
+        var opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = ex.name;
+        picker.appendChild(opt);
+      });
+    }
+    showExample(0);
+  });
