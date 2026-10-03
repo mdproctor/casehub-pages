@@ -28,6 +28,7 @@ export interface SectionContent {
 export interface TutorialSection {
   title: string;
   content?: SectionContent;
+  scenarioRef?: string;
   steps: SchedulerStep[];
 }
 

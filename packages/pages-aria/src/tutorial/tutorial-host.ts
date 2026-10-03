@@ -53,6 +53,30 @@ export class PagesTutorialHost extends LitElement {
     .slide-counter {
       font-size: 12px; color: var(--pages-neutral-8, #999);
     }
+    .scenario-ref-panel {
+      margin-bottom: 16px; border: 1px solid var(--pages-neutral-4, #e5e5e5);
+      border-radius: var(--pages-radius-sm, 4px); overflow: hidden;
+    }
+    .scenario-ref-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; background: var(--pages-neutral-2, #fafafa);
+      border-bottom: 1px solid var(--pages-neutral-4, #e5e5e5);
+      font-size: 12px; color: var(--pages-neutral-9, #737373);
+    }
+    .scenario-ref-run {
+      padding: 4px 12px; font-size: 11px; font-weight: 600;
+      background: var(--pages-accent-3); color: var(--pages-accent-9);
+      border: 1px solid var(--pages-accent-6); border-radius: 3px;
+      cursor: pointer;
+    }
+    .scenario-ref-run:hover { background: var(--pages-accent-4); }
+    .scenario-ref-yaml {
+      padding: 12px; font-family: monospace; font-size: 12px;
+      white-space: pre; overflow-x: auto; line-height: 1.5;
+      color: var(--pages-neutral-12, #1a1a1a);
+      background: var(--pages-neutral-1, #fff);
+      max-height: 300px; overflow-y: auto;
+    }
   `;
 
   @property({ attribute: false }) registry: TutorialDescriptor[] = [];
@@ -70,6 +94,9 @@ export class PagesTutorialHost extends LitElement {
   private _runner: ScenarioRunner | null = null;
   private _eventTarget: EventTarget | null = null;
   private _sectionTitles: string[] = [];
+  private _scenarioRefCache: Map<string, string> = new Map();
+  @state() private _scenarioRefYaml: string | null = null;
+  private _parsedSections: import('../scenario/types.js').TutorialSection[] = [];
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -83,8 +110,10 @@ export class PagesTutorialHost extends LitElement {
     }
     this._eventTarget = null;
     this._sectionTitles = [];
+    this._parsedSections = [];
     this._currentSection = 0;
     this._totalSections = 0;
+    this._scenarioRefYaml = null;
   }
 
   private _trackState(): void {
@@ -95,7 +124,10 @@ export class PagesTutorialHost extends LitElement {
       const section = detail.payload?.section as string | null;
       if (section && this._sectionTitles.length > 0) {
         const idx = this._sectionTitles.indexOf(section);
-        if (idx >= 0) this._currentSection = idx;
+        if (idx >= 0) {
+          this._currentSection = idx;
+          void this._loadCurrentSectionScenarioRef();
+        }
       }
     });
   }
@@ -153,14 +185,17 @@ export class PagesTutorialHost extends LitElement {
 
       this._disposeRunner();
       this._eventTarget = new EventTarget();
+      this._parsedSections = parsed.sections;
       this._sectionTitles = parsed.sections.map(s => s.title);
       this._totalSections = parsed.sections.length;
       this._currentSection = 0;
+      this._scenarioRefYaml = null;
       this._view = 'tutorial';
 
       await this.updateComplete;
       await new Promise(r => setTimeout(r, 50));
       this._trackState();
+      void this._loadCurrentSectionScenarioRef();
 
       const tutorialDir = basePath.replace(/\/[^/]+$/, '');
       this._runner = createScheduler(parsed, {
@@ -177,6 +212,40 @@ export class PagesTutorialHost extends LitElement {
       this._error = err instanceof Error ? err.message : String(err);
       this._view = 'tutorial';
     }
+  }
+
+  private async _loadCurrentSectionScenarioRef(): Promise<void> {
+    const section = this._parsedSections[this._currentSection];
+    if (section?.scenarioRef) {
+      this._scenarioRefYaml = await this._loadScenarioRef(section.scenarioRef);
+    } else {
+      this._scenarioRefYaml = null;
+    }
+  }
+
+  private async _loadScenarioRef(ref: string): Promise<string | null> {
+    if (this._scenarioRefCache.has(ref)) return this._scenarioRefCache.get(ref)!;
+    try {
+      const base = this.contentBase ? `${this.contentBase}/../../scenarios/` : 'scenarios/';
+      const resp = await fetch(`${base}${ref}`);
+      if (!resp.ok) return null;
+      const text = await resp.text();
+      this._scenarioRefCache.set(ref, text);
+      return text;
+    } catch {
+      return null;
+    }
+  }
+
+  private _runScenarioRef(yamlText: string): void {
+    const cp = (window as unknown as Record<string, unknown>)['casehubPages'] as
+      Record<string, Function> | undefined;
+    if (!cp?.parseScenario || !cp?.createScheduler || !cp?.createScenarioCatalog) return;
+    const catalog = (cp.createScenarioCatalog as Function)();
+    const scenario = (cp.parseScenario as Function)(yamlText, catalog);
+    const et = new EventTarget();
+    const runner = (cp.createScheduler as Function)(scenario, { eventTarget: et, speed: 1, startPaused: false });
+    runner.play();
   }
 
   private _onBack(): void {
@@ -233,6 +302,16 @@ export class PagesTutorialHost extends LitElement {
           </div>
         ` : nothing}
         <div class="tutorial-main">
+          ${this._scenarioRefYaml ? html`
+            <div class="scenario-ref-panel">
+              <div class="scenario-ref-header">
+                <span>Scenario YAML</span>
+                <button class="scenario-ref-run"
+                  @click=${() => { this._runScenarioRef(this._scenarioRefYaml!); }}>▶ Run</button>
+              </div>
+              <div class="scenario-ref-yaml">${this._scenarioRefYaml}</div>
+            </div>
+          ` : nothing}
           <pages-scenario-narrative
             .eventTarget=${this._eventTarget}
             htmlMode="sanitized"

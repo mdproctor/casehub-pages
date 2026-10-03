@@ -166,6 +166,7 @@ function parseScenarioFromParsed(parsed: Record<string, unknown>, catalog: Catal
       return {
         title: (sec['label'] ?? sec['title']) as string,
         content: sec['content'] as SectionContent | undefined,
+        scenarioRef: sec['scenario-ref'] as string | undefined,
         steps,
       };
     });

@@ -144,4 +144,61 @@ describe('pages-tutorial-host', () => {
     const narrative = el.shadowRoot?.querySelector('pages-scenario-narrative');
     expect(narrative?.htmlMode).toBe('sanitized');
   });
+
+  it('renders scenario-ref panel when section has scenarioRef', async () => {
+    const SCENARIO_REF_YAML = `
+scenario: ref-tutorial
+meta:
+  title: With Ref
+  description: Test
+  area: test
+sections:
+  - title: Intro
+    content:
+      type: inline
+      markdown: "# Welcome"
+    steps: []
+  - title: Demo
+    scenario-ref: flow-control/sequential.scenario.yaml
+    content:
+      type: inline
+      markdown: "# Watch this"
+    steps: []
+`;
+    const SCENARIO_YAML = `scenario: sequential-demo
+meta:
+  title: Sequential
+steps:
+  - click: { role: button, name: "A" }
+`;
+
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('sequential.scenario.yaml')) {
+        return Promise.resolve({ ok: true, text: () => Promise.resolve(SCENARIO_YAML) });
+      }
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(SCENARIO_REF_YAML) });
+    });
+
+    el.registry = [{
+      scenario: 'ref-tutorial', title: 'With Ref', description: 'Test',
+      area: 'test', labels: [], tags: [], estimated: '5 min',
+      prerequisites: [], path: 'tutorials/ref/tutorial.yaml',
+      contentType: 'slides-only',
+    }];
+    await el.updateComplete;
+
+    const catalog = el.shadowRoot?.querySelector('pages-tutorial-catalog');
+    catalog?.dispatchEvent(new CustomEvent('tutorial-select', {
+      detail: { scenario: 'ref-tutorial' },
+      bubbles: true, composed: true,
+    }));
+
+    await el.updateComplete;
+    await new Promise(r => setTimeout(r, 200));
+    await el.updateComplete;
+
+    // Initially on section 0 (Intro) — no scenario-ref panel
+    const panelBefore = el.shadowRoot?.querySelector('.scenario-ref-panel');
+    expect(panelBefore).toBeNull();
+  });
 });
