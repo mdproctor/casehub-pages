@@ -4,13 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.casehub.pages.push.PushMessage;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -60,10 +56,11 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "create", "label", "Create ticket",
-                "commands", List.of(Map.of("action", "create-ticket",
-                    "data", Map.of("subject", "Laptop broken")))),
+                "action", "create-ticket",
+                "params", Map.of("subject", "Laptop broken")),
             Map.of("name", "verify", "label", "Verify ticket",
-                "commands", List.of(Map.of("action", "verify-ticket")))
+                "action", "verify-ticket",
+                "params", Map.of())
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-001", "helpdesk",
@@ -100,7 +97,8 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "fail", "label", "Will fail",
-                "commands", List.of(Map.of("action", "fail-action")))
+                "action", "fail-action",
+                "params", Map.of())
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-001", "helpdesk",
@@ -112,26 +110,23 @@ class ScenarioExecutorClientTest {
     }
 
     @Test
-    void handlesMultipleCommandsInOneStep() throws Exception {
+    void singleActionPerStep() throws Exception {
         var actions = new TestActions();
         var sent = new CopyOnWriteArrayList<String>();
         var client = ScenarioExecutorClient.create("helpdesk",
             List.of(actions), sent::add);
 
         String stepsJson = JSON.writeValueAsString(List.of(
-            Map.of("name", "both", "label", "Create and verify",
-                "commands", List.of(
-                    Map.of("action", "create-ticket",
-                        "data", Map.of("subject", "Test")),
-                    Map.of("action", "verify-ticket")))
+            Map.of("name", "create", "label", "Create only",
+                "action", "create-ticket",
+                "params", Map.of("subject", "Test"))
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-001", "helpdesk",
             stepsJson, 1000.0, false));
 
         awaitStepResults(sent, 1);
-        assertThat(actions.invoked).containsExactly(
-            "create-ticket:Test", "verify-ticket");
+        assertThat(actions.invoked).containsExactly("create-ticket:Test");
     }
 
     @Test
@@ -164,7 +159,8 @@ class ScenarioExecutorClientTest {
             JSON.writeValueAsString(List.of(
                 Map.of("name", "s1", "label", "Check",
                     "actor", "hw-specialist",
-                    "commands", List.of(Map.of("action", "check-actor"))))),
+                    "action", "check-actor",
+                    "params", Map.of()))),
             1000.0, false));
 
         awaitStepResults(sent, 1);
@@ -179,8 +175,8 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "s1", "label", "Step 1",
-                "commands", List.of(Map.of("action", "create-ticket",
-                    "data", Map.of("subject", "Paused"))))
+                "action", "create-ticket",
+                "params", Map.of("subject", "Paused"))
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-001", "helpdesk",
@@ -203,10 +199,11 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "s1", "label", "Step 1",
-                "commands", List.of(Map.of("action", "create-ticket",
-                    "data", Map.of("subject", "First")))),
+                "action", "create-ticket",
+                "params", Map.of("subject", "First")),
             Map.of("name", "s2", "label", "Step 2",
-                "commands", List.of(Map.of("action", "verify-ticket")))
+                "action", "verify-ticket",
+                "params", Map.of())
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-001", "helpdesk",
@@ -216,7 +213,6 @@ class ScenarioExecutorClientTest {
         client.onMessage(PushMessage.executorControl("s-001", "pause", null));
 
         Thread.sleep(300);
-        int afterPause = stepResults(sent).size();
 
         client.onMessage(PushMessage.executorControl("s-001", "resume", null));
         awaitStepResults(sent, 2);
@@ -232,10 +228,11 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "s1", "label", "Step 1",
-                "commands", List.of(Map.of("action", "create-ticket",
-                    "data", Map.of("subject", "Speed")))),
+                "action", "create-ticket",
+                "params", Map.of("subject", "Speed")),
             Map.of("name", "s2", "label", "Step 2",
-                "commands", List.of(Map.of("action", "verify-ticket")))
+                "action", "verify-ticket",
+                "params", Map.of())
         ));
 
         long start = System.currentTimeMillis();
@@ -265,12 +262,11 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "bulk-step", "label", "Bulk ingest",
-                "commands", List.of(Map.of(
-                    "action", "ingest",
-                    "mode", "bulk",
-                    "data", List.of(
-                        Map.of("id", 1, "name", "Alice"),
-                        Map.of("id", 2, "name", "Bob")))))
+                "action", "ingest",
+                "mode", "bulk",
+                "params", List.of(
+                    Map.of("id", 1, "name", "Alice"),
+                    Map.of("id", 2, "name", "Bob")))
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-bulk", "test",
@@ -297,13 +293,12 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "stepped-step", "label", "Stepped",
-                "commands", List.of(Map.of(
-                    "action", "process",
-                    "mode", "stepped",
-                    "data", List.of(
-                        Map.of("ticket", "T-001"),
-                        Map.of("ticket", "T-002"),
-                        Map.of("ticket", "T-003")))))
+                "action", "process",
+                "mode", "stepped",
+                "params", List.of(
+                    Map.of("ticket", "T-001"),
+                    Map.of("ticket", "T-002"),
+                    Map.of("ticket", "T-003")))
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-stepped", "test",
@@ -336,12 +331,12 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "poll-step", "label", "Poll",
-                "commands", List.of(Map.of(
-                    "action", "poll-action",
-                    "await", Map.of(
-                        "match", Map.of("status", "TRIAGED", "category", "HARDWARE"),
-                        "timeout", 5000,
-                        "interval", 100))))
+                "action", "poll-action",
+                "params", Map.of(),
+                "await", Map.of(
+                    "match", Map.of("status", "TRIAGED", "category", "HARDWARE"),
+                    "timeout", 5000,
+                    "interval", 100))
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-poll", "test",
@@ -366,12 +361,12 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "timeout-step", "label", "Timeout",
-                "commands", List.of(Map.of(
-                    "action", "never-match",
-                    "await", Map.of(
-                        "match", Map.of("status", "TRIAGED"),
-                        "timeout", 500,
-                        "interval", 100))))
+                "action", "never-match",
+                "params", Map.of(),
+                "await", Map.of(
+                    "match", Map.of("status", "TRIAGED"),
+                    "timeout", 500,
+                    "interval", 100))
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-timeout", "test",
@@ -399,12 +394,12 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "flaky-step", "label", "Flaky",
-                "commands", List.of(Map.of(
-                    "action", "flaky-action",
-                    "await", Map.of(
-                        "match", Map.of("ready", "true"),
-                        "timeout", 5000,
-                        "interval", 100))))
+                "action", "flaky-action",
+                "params", Map.of(),
+                "await", Map.of(
+                    "match", Map.of("ready", "true"),
+                    "timeout", 5000,
+                    "interval", 100))
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-flaky", "test",
@@ -431,7 +426,8 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "single", "label", "Single",
-                "commands", List.of(Map.of("action", "single-shot")))
+                "action", "single-shot",
+                "params", Map.of())
         ));
 
         client.onMessage(PushMessage.dispatchSequence("s-single", "test",
@@ -457,13 +453,12 @@ class ScenarioExecutorClientTest {
 
         String stepsJson = JSON.writeValueAsString(List.of(
             Map.of("name", "stream-step", "label", "Stream",
-                "commands", List.of(Map.of(
-                    "action", "emit",
-                    "mode", "stream",
-                    "interval", 100,
-                    "data", List.of(
-                        Map.of("event", "A"),
-                        Map.of("event", "B")))))
+                "action", "emit",
+                "mode", "stream",
+                "interval", 100,
+                "params", List.of(
+                    Map.of("event", "A"),
+                    Map.of("event", "B")))
         ));
 
         long start = System.currentTimeMillis();

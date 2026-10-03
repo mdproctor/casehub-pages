@@ -118,6 +118,16 @@ public class ScenarioExecutorClient {
                 double newSpeed = root.path("speed").asDouble(1.0);
                 speed = Math.max(0.01, newSpeed);
             }
+            case "stop" -> {
+                lock.lock();
+                try {
+                    paused = false;
+                    sessionId = null;
+                    resumeCondition.signalAll();
+                } finally {
+                    lock.unlock();
+                }
+            }
         }
     }
 
@@ -149,7 +159,7 @@ public class ScenarioExecutorClient {
     }
 
     private void sleepForSpeed() {
-        if (speed >= 1000) return;
+        if (speed <= 0 || speed >= 1000) return;
         long delayMs = Math.max(10, (long) (1000 / speed));
         try {
             Thread.sleep(delayMs);
@@ -161,47 +171,41 @@ public class ScenarioExecutorClient {
     private void executeStep(String sessionId, JsonNode stepNode) {
         String stepName = stepNode.path("name").asText("unknown");
         String actor = stepNode.path("actor").asText(null);
-        JsonNode commandsNode = stepNode.get("commands");
+        String action = stepNode.path("action").asText(null);
 
-        if (commandsNode == null || !commandsNode.isArray()) {
+        if (action == null || action.isBlank()) {
             sendStepResult(sessionId, stepName, true, null, Map.of());
             return;
         }
 
-        Map<String, Object> lastResult = Map.of();
-        for (JsonNode cmdNode : commandsNode) {
-            String action = cmdNode.path("action").asText();
-            String mode = cmdNode.path("mode").asText("single").toUpperCase();
-            Map<String, Object> awaitMatch = Map.of();
-            if (cmdNode.has("await") && cmdNode.get("await").has("match")) {
-                awaitMatch = toMap(cmdNode.get("await").get("match"));
-            }
-
-            try {
-                lastResult = switch (mode) {
-                    case "BULK" -> executeBulk(action, actor, cmdNode, awaitMatch);
-                    case "STEPPED" -> executeStepped(action, actor, cmdNode, awaitMatch);
-                    case "STREAM" -> executeStream(action, actor, cmdNode, awaitMatch);
-                    default -> executeSingle(action, actor, cmdNode, awaitMatch);
-                };
-            } catch (Exception e) {
-                sendStepResult(sessionId, stepName, false, e.getMessage(), Map.of());
-                return;
-            }
+        String mode = stepNode.path("mode").asText("single").toUpperCase();
+        Map<String, Object> awaitMatch = Map.of();
+        if (stepNode.has("await") && stepNode.get("await").has("match")) {
+            awaitMatch = toMap(stepNode.get("await").get("match"));
         }
 
-        sendStepResult(sessionId, stepName, true, null, lastResult);
+        try {
+            Map<String, Object> result = switch (mode) {
+                case "BULK" -> executeBulk(action, actor, stepNode, awaitMatch);
+                case "STEPPED" -> executeStepped(action, actor, stepNode, awaitMatch);
+                case "STREAM" -> executeStream(action, actor, stepNode, awaitMatch);
+                default -> executeSingle(action, actor, stepNode, awaitMatch);
+            };
+            sendStepResult(sessionId, stepName, true, null, result);
+        } catch (Exception e) {
+            sendStepResult(sessionId, stepName, false, e.getMessage(), Map.of());
+        }
     }
 
     private Map<String, Object> executeSingle(String action, String actor,
-                                               JsonNode cmdNode,
+                                               JsonNode stepNode,
                                                Map<String, Object> awaitMatch) throws Exception {
-        Map<String, Object> data = cmdNode.has("data") ? toMap(cmdNode.get("data")) : Map.of();
+        Map<String, Object> data = stepNode.has("params") ? toMap(stepNode.get("params")) : Map.of();
 
-        int timeoutMs = cmdNode.has("await") && cmdNode.get("await").has("timeout")
-                ? cmdNode.get("await").get("timeout").asInt(5000) : 0;
-        int intervalMs = cmdNode.has("await") && cmdNode.get("await").has("interval")
-                ? cmdNode.get("await").get("interval").asInt(500) : 500;
+        int timeoutMs = stepNode.has("await") && stepNode.get("await").has("timeout")
+                ? stepNode.get("await").get("timeout").asInt(5000) : 0;
+        int intervalMs = stepNode.has("await") && stepNode.get("await").has("interval")
+                ? stepNode.get("await").get("interval").asInt(500) : 500;
 
         if (!awaitMatch.isEmpty() && timeoutMs > 0) {
             long deadline = System.currentTimeMillis() + timeoutMs;
@@ -233,18 +237,18 @@ public class ScenarioExecutorClient {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> executeBulk(String action, String actor,
-                                             JsonNode cmdNode,
+                                             JsonNode stepNode,
                                              Map<String, Object> awaitMatch) throws Exception {
-        List<Object> items = resolveItems(cmdNode);
+        List<Object> items = resolveItems(stepNode);
         Map<String, Object> bulkData = Map.of("items", items, "mode", "bulk");
         return actionRegistry.invoke(action, ActionContext.of(actor, bulkData, awaitMatch));
     }
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> executeStepped(String action, String actor,
-                                                JsonNode cmdNode,
+                                                JsonNode stepNode,
                                                 Map<String, Object> awaitMatch) throws Exception {
-        List<Object> items = resolveItems(cmdNode);
+        List<Object> items = resolveItems(stepNode);
         Map<String, Object> lastResult = Map.of();
         for (int i = 0; i < items.size(); i++) {
             waitIfPaused();
@@ -265,10 +269,10 @@ public class ScenarioExecutorClient {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> executeStream(String action, String actor,
-                                               JsonNode cmdNode,
+                                               JsonNode stepNode,
                                                Map<String, Object> awaitMatch) throws Exception {
-        List<Object> items = resolveItems(cmdNode);
-        int intervalMs = cmdNode.path("interval").asInt(1000);
+        List<Object> items = resolveItems(stepNode);
+        int intervalMs = stepNode.path("interval").asInt(1000);
         Map<String, Object> lastResult = Map.of();
         for (int i = 0; i < items.size(); i++) {
             waitIfPaused();
@@ -290,13 +294,13 @@ public class ScenarioExecutorClient {
     }
 
     @SuppressWarnings("unchecked")
-    private List<Object> resolveItems(JsonNode cmdNode) {
-        if (cmdNode.has("data")) {
-            JsonNode dataNode = cmdNode.get("data");
-            if (dataNode.isArray()) {
-                return JSON.convertValue(dataNode, List.class);
+    private List<Object> resolveItems(JsonNode stepNode) {
+        if (stepNode.has("params")) {
+            JsonNode paramsNode = stepNode.get("params");
+            if (paramsNode.isArray()) {
+                return JSON.convertValue(paramsNode, List.class);
             }
-            Object items = toMap(dataNode).get("items");
+            Object items = toMap(paramsNode).get("items");
             if (items instanceof List<?> list) {
                 return (List<Object>) list;
             }
