@@ -7,15 +7,13 @@ params:
     type: boolean
     default: true
 steps:
-  - label: "Create project"
-    target: browser
-    commands:
-      - action: fill
-        target: {role: textbox, name: "Project Name"}
-        value: "${params.projectName}"
-  - label: "Enable CI"
-    target: browser
+  - fill:
+      role: textbox
+      name: "Project Name"
+      value: "${params.projectName}"
+    label: "Create project"
+  - click:
+      role: button
+      name: "Enable CI"
+    label: "Enable CI"
     when: "${params.enableCI}"
-    commands:
-      - action: click
-        target: {role: button, name: "Enable CI"}

@@ -6,21 +6,19 @@ data:
       Alice,Developer,true
       Bob,Viewer,false
 steps:
-  - label: "Create member"
-    target: browser
+  - fill:
+      role: textbox
+      name: "Full Name"
+      value: "${each.member.name}"
+    label: "Create member"
     forEach:
       as: member
       in: members
-    commands:
-      - action: fill
-        target: {role: textbox, name: "Full Name"}
-        value: "${each.member.name}"
-  - label: "Grant admin"
-    target: browser
+  - click:
+      role: button
+      name: "Grant Admin"
+    label: "Grant admin"
     forEach:
       as: member
       in: members
     when: "${each.member.admin}"
-    commands:
-      - action: click
-        target: {role: button, name: "Grant Admin"}
