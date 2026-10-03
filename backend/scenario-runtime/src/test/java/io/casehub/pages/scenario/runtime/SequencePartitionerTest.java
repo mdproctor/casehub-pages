@@ -1,10 +1,11 @@
 package io.casehub.pages.scenario.runtime;
 
-import io.casehub.pages.scenario.HierarchicalStep;
+import io.casehub.pages.scenario.CompactStep;
 import io.casehub.pages.scenario.Trigger;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -81,7 +82,7 @@ class SequencePartitionerTest {
         var initial = SequencePartitioner.partitionInitial(steps);
         assertThat(initial).hasSize(1);
         assertThat(initial.getFirst().steps()).hasSize(1);
-        assertThat(initial.getFirst().steps().getFirst().label()).isEqualTo("load-data");
+        assertThat((String) initial.getFirst().steps().getFirst().decorator("label")).isEqualTo("load-data");
     }
 
     @Test
@@ -96,19 +97,21 @@ class SequencePartitionerTest {
         var initial = SequencePartitioner.partitionInitial(steps);
         assertThat(initial).hasSize(2);
         assertThat(initial.get(0).target()).isEqualTo("browser");
-        assertThat(initial.get(0).steps()).extracting(HierarchicalStep::label)
+        assertThat(initial.get(0).steps()).extracting(s -> (String) s.decorator("label"))
             .containsExactly("A", "B");
         assertThat(initial.get(1).target()).isEqualTo("helpdesk");
-        assertThat(initial.get(1).steps()).extracting(HierarchicalStep::label)
+        assertThat(initial.get(1).steps()).extracting(s -> (String) s.decorator("label"))
             .containsExactly("D");
     }
 
-    private static HierarchicalStep step(String label, String target) {
-        return new HierarchicalStep(null, label, target, null, null, List.of());
+    private static CompactStep step(String label, String target) {
+        return new CompactStep("click", Map.of(), null, null, null,
+            Map.of("label", label, "target", target));
     }
 
-    private static HierarchicalStep triggeredStep(String label, String target, String after) {
-        return new HierarchicalStep(label, label, target, null,
-            new Trigger.AfterTrigger(after, 0), List.of());
+    private static CompactStep triggeredStep(String label, String target, String after) {
+        return new CompactStep("click", Map.of(), null,
+            new Trigger.AfterTrigger(after, 0), null,
+            Map.of("label", label, "target", target, "step", label));
     }
 }

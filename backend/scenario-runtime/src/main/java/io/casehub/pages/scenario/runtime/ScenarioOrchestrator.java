@@ -6,9 +6,9 @@ import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.PushMessage;
 import io.casehub.pages.push.PushRequest;
 import io.casehub.pages.push.SessionSender;
-import io.casehub.pages.scenario.HierarchicalParser;
-import io.casehub.pages.scenario.HierarchicalScenario;
-import io.casehub.pages.scenario.HierarchicalStep;
+import io.casehub.pages.scenario.CompactStep;
+import io.casehub.pages.scenario.ScenarioEnvelope;
+import io.casehub.pages.scenario.ScenarioEnvelopeParser;
 import io.casehub.pages.scenario.NarrativeContent;
 import io.casehub.pages.scenario.OutlineNode;
 import io.casehub.pages.scenario.SimulationSpec;
@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -46,9 +47,10 @@ public class ScenarioOrchestrator {
     private volatile SimulationOverlay activeOverlay;
 
     private volatile String                             sessionId;
-    private volatile HierarchicalScenario               scenario;
-    private volatile List<HierarchicalStep>             allSteps;
+    private volatile ScenarioEnvelope                   envelope;
+    private volatile List<CompactStep>                  allSteps;
     private final    ConcurrentHashMap<String, Boolean> completedSteps = new ConcurrentHashMap<>();
+    private final    AtomicBoolean                      callbackFired  = new AtomicBoolean(false);
     private volatile boolean                            paused;
     private volatile double                             speed          = 1.0;
     private volatile String                             runToTarget;
@@ -69,15 +71,16 @@ public class ScenarioOrchestrator {
     }
 
     public void start(String yaml, boolean startPaused) {
-        this.scenario  = HierarchicalParser.parse(yaml);
-        this.allSteps  = scenario.allSteps().toList();
+        this.envelope  = ScenarioEnvelopeParser.parse(yaml);
+        this.allSteps  = envelope.allSteps();
         this.sessionId = UUID.randomUUID().toString();
         this.completedSteps.clear();
+        this.callbackFired.set(false);
         this.paused      = startPaused;
-        this.speed       = scenario.speed();
+        this.speed       = envelope.speed();
         this.runToTarget = null;
 
-        activateSimulation(this.scenario.simulation());
+        activateSimulation(this.envelope.simulation());
         validateExecutors();
         dispatchAllSequences();
         broadcastState();
@@ -99,7 +102,7 @@ public class ScenarioOrchestrator {
         stopTemporalDrivers();
         broadcastControl("stop", null);
         this.sessionId = null;
-        this.scenario  = null;
+        this.envelope  = null;
         this.allSteps  = List.of();
         this.completedSteps.clear();
         this.stepResults.clear();
@@ -157,7 +160,7 @@ public class ScenarioOrchestrator {
     }
 
     public ScenarioState state() {
-        if (scenario == null) {return ScenarioState.idle();}
+        if (envelope == null) {return ScenarioState.idle();}
 
         String currentChapter = null;
         String currentSection = null;
@@ -167,7 +170,7 @@ public class ScenarioOrchestrator {
         NarrativeContent content   = null;
         if (!allSteps.isEmpty() && completed < allSteps.size()) {
             var step = allSteps.get(completed);
-            currentStep    = step.label();
+            currentStep    = step.decorator("label");
             currentSection = findSectionLabel(completed);
             currentChapter = findChapterLabel(completed);
             content        = resolveContent(completed);
@@ -176,9 +179,9 @@ public class ScenarioOrchestrator {
         double progress = allSteps.isEmpty() ? 1.0
                                              : (double) completed / allSteps.size();
 
-        return new ScenarioState(scenario.scenario(), currentChapter,
+        return new ScenarioState(envelope.scenario(), currentChapter,
                                  currentSection, currentStep, paused, speed, progress,
-                                 content, scenario.slides());
+                                 content, envelope.slides());
     }
 
     public String sessionId() {
@@ -186,8 +189,8 @@ public class ScenarioOrchestrator {
     }
 
     public List<OutlineNode> outline() {
-        if (scenario == null) {return List.of();}
-        return buildOutline(scenario);
+        if (envelope == null) {return List.of();}
+        return buildOutline(envelope);
     }
 
     public void onExecutorRegister(String connectionId, PushRequest.ExecutorRegister reg) {
@@ -206,15 +209,18 @@ public class ScenarioOrchestrator {
 
     private void redispatchPending(String target) {
         if (allSteps == null) return;
-        for (var step : allSteps) {
-            if (!target.equals(step.target())) continue;
-            if (completedSteps.containsKey(step.name() != null ? step.name() : step.label())) continue;
+        for (int i = 0; i < allSteps.size(); i++) {
+            var step = allSteps.get(i);
+            String stepTarget = step.decorator("target");
+            if (!target.equals(stepTarget)) continue;
+            String stepName = ScenarioEnvelopeParser.deriveStepName(step, i);
+            if (completedSteps.containsKey(stepName)) continue;
             boolean triggerSatisfied = step.trigger() == null
                 || (step.trigger() instanceof io.casehub.pages.scenario.Trigger.AfterTrigger after
                     && completedSteps.containsKey(after.step()));
             if (triggerSatisfied) {
                 dispatchSequence(new SequencePartitioner.StepSequence(
-                    step.target(), List.of(step)));
+                    stepTarget, List.of(step)));
                 break;
             }
         }
@@ -227,7 +233,7 @@ public class ScenarioOrchestrator {
             stepResults.put(result.stepName(), result.result());
         }
 
-        if (!result.ok() && scenario != null && "stop".equals(scenario.onError())) {
+        if (!result.ok() && envelope != null && "stop".equals(envelope.onError())) {
             broadcastControl("stop", null);
             fireCallback(true, "Step '" + result.stepName() + "' failed: " + result.error());
             broadcastState();
@@ -237,7 +243,7 @@ public class ScenarioOrchestrator {
         String stepLabel = resolveLabel(result.stepName());
         if (runToTarget != null && (runToTarget.equals(result.stepName()) || runToTarget.equals(stepLabel))) {
             runToTarget = null;
-            this.speed  = scenario != null ? scenario.speed() : 1.0;
+            this.speed  = envelope != null ? envelope.speed() : 1.0;
             broadcastControl("speed", this.speed);
             pause();
         } else {
@@ -247,7 +253,7 @@ public class ScenarioOrchestrator {
             dispatchTriggeredSteps(result.stepName());
         }
 
-        if (completedSteps.size() == allSteps.size()) {
+        if (completedSteps.size() == allSteps.size() && callbackFired.compareAndSet(false, true)) {
             boolean anyFailed = completedSteps.values().stream().anyMatch(ok -> !ok);
             fireCallback(anyFailed, anyFailed ? "One or more steps failed" : null);
         }
@@ -289,7 +295,8 @@ public class ScenarioOrchestrator {
     private void validateExecutors() {
         var missingExecutors = allSteps.stream()
                                        .filter(s -> s.temporal() == null)
-                                       .map(HierarchicalStep::target)
+                                       .map(s -> (String) s.decorator("target"))
+                                       .filter(java.util.Objects::nonNull)
                                        .distinct()
                                        .filter(t -> !executorRegistry.hasExecutor(t))
                                        .toList();
@@ -300,9 +307,10 @@ public class ScenarioOrchestrator {
     }
 
     private void dispatchAllSequences() {
-        for (var step : allSteps) {
+        for (int i = 0; i < allSteps.size(); i++) {
+            var step = allSteps.get(i);
             if (step.temporal() != null && step.trigger() == null) {
-                handleTemporalStep(step);
+                handleTemporalStep(step, i);
                 continue;
             }
         }
@@ -316,29 +324,32 @@ public class ScenarioOrchestrator {
     }
 
     private void dispatchTriggeredSteps(String completedStepName) {
-        for (var step : allSteps) {
+        for (int i = 0; i < allSteps.size(); i++) {
+            var step = allSteps.get(i);
+            final int stepIndex = i;
             if (step.trigger() instanceof io.casehub.pages.scenario.Trigger.AfterTrigger after
                 && after.step().equals(completedStepName)) {
                 long delay = after.delayMs();
+                String stepTarget = step.decorator("target");
                 if (step.temporal() != null) {
                     if (delay > 0) {
                         Thread.ofVirtual().start(() -> {
                             try {Thread.sleep(delay);} catch (InterruptedException e) {return;}
-                            handleTemporalStep(step);
+                            handleTemporalStep(step, stepIndex);
                         });
                     } else {
-                        handleTemporalStep(step);
+                        handleTemporalStep(step, stepIndex);
                     }
                 } else {
                     if (delay > 0) {
                         Thread.ofVirtual().start(() -> {
                             try {Thread.sleep(delay);} catch (InterruptedException e) {return;}
                             dispatchSequence(new SequencePartitioner.StepSequence(
-                                    step.target(), List.of(step)));
+                                    stepTarget, List.of(step)));
                         });
                     } else {
                         dispatchSequence(new SequencePartitioner.StepSequence(
-                                step.target(), List.of(step)));
+                                stepTarget, List.of(step)));
                     }
                 }
             }
@@ -355,27 +366,22 @@ public class ScenarioOrchestrator {
         sender.send(executor.connectionId(), msg);
     }
 
-    private String serializeSteps(List<HierarchicalStep> steps) {
+    private String serializeSteps(List<CompactStep> steps) {
         var stepMaps = new ArrayList<Map<String, Object>>();
-        for (var step : steps) {
+        for (int i = 0; i < steps.size(); i++) {
+            var step = steps.get(i);
             var map = new java.util.LinkedHashMap<String, Object>();
-            map.put("name", step.name() != null ? step.name() : step.label());
-            map.put("label", step.label());
-            if (step.actor() != null) {map.put("actor", step.actor());}
-
-            var cmdMaps = new ArrayList<Map<String, Object>>();
-            for (var cmd : step.commands()) {
-                var cmdMap = new java.util.LinkedHashMap<String, Object>();
-                cmdMap.put("action", cmd.action());
-                if (cmd.target() != null) {
-                    cmdMap.put("target", serializeAriaTarget(cmd.target()));
-                }
-                if (cmd.value() != null) {cmdMap.put("value", cmd.value());}
-                if (cmd.data() != null) {cmdMap.put("data", cmd.data());}
-                if (cmd.domain() != null) {cmdMap.put("domain", cmd.domain());}
-                cmdMaps.add(cmdMap);
-            }
-            map.put("commands", cmdMaps);
+            map.put("name", ScenarioEnvelopeParser.deriveStepName(step, i));
+            String label = step.decorator("label");
+            if (label != null) map.put("label", label);
+            String actor = step.decorator("actor");
+            if (actor != null) map.put("actor", actor);
+            map.put("action", step.action());
+            map.put("params", step.params());
+            Object await = step.decorator("await");
+            if (await != null) map.put("await", await);
+            String mode = step.decorator("mode");
+            if (mode != null) map.put("mode", mode);
             stepMaps.add(map);
         }
         try {
@@ -385,16 +391,6 @@ public class ScenarioOrchestrator {
         }
     }
 
-    private Map<String, Object> serializeAriaTarget(io.casehub.pages.scenario.AriaTarget target) {
-        var map = new java.util.LinkedHashMap<String, Object>();
-        map.put("role", target.role());
-        map.put("name", target.name());
-        if (target.within() != null) {
-            map.put("within", serializeAriaTarget(target.within()));
-        }
-        return map;
-    }
-
     private void broadcastControl(String command, Double controlSpeed) {
         String msg = PushMessage.executorControl(sessionId, command, controlSpeed);
         for (var executor : executorRegistry.all()) {
@@ -402,9 +398,9 @@ public class ScenarioOrchestrator {
         }
     }
 
-    private List<OutlineNode> buildOutline(HierarchicalScenario s) {
-        if (s.chapters() != null) {
-            return s.chapters().stream()
+    private List<OutlineNode> buildOutline(ScenarioEnvelope env) {
+        if (!env.chapters().isEmpty()) {
+            return env.chapters().stream()
                     .map(c -> new OutlineNode(c.label(),
                                               c.sections().stream()
                                                .map(sec -> new OutlineNode(sec.label(),
@@ -414,56 +410,60 @@ public class ScenarioOrchestrator {
                                                .toList()))
                     .toList();
         }
-        if (s.sections() != null) {
-            return s.sections().stream()
+        if (!env.sections().isEmpty()) {
+            return env.sections().stream()
                     .map(sec -> new OutlineNode(sec.label(),
                                                 sec.steps().stream()
                                                    .map(this::stepToOutline)
                                                    .toList()))
                     .toList();
         }
-        if (s.steps() != null) {
-            return s.steps().stream()
+        if (!env.steps().isEmpty()) {
+            return env.steps().stream()
                     .map(this::stepToOutline)
                     .toList();
         }
         return List.of();
     }
 
-    private OutlineNode stepToOutline(HierarchicalStep st) {
-        String action = st.commands().isEmpty() ? null : st.commands().get(0).action();
-        return new OutlineNode(st.label(), st.target(), action);
+    private OutlineNode stepToOutline(CompactStep st) {
+        return new OutlineNode(st.decorator("label"), st.decorator("target"), st.action());
     }
 
     private String resolveLabel(String stepName) {
         if (allSteps == null) return stepName;
-        for (var step : allSteps) {
-            String name = step.name() != null ? step.name() : step.label();
-            if (name.equals(stepName)) return step.label();
+        for (int i = 0; i < allSteps.size(); i++) {
+            var step = allSteps.get(i);
+            String name = ScenarioEnvelopeParser.deriveStepName(step, i);
+            if (name.equals(stepName)) {
+                String label = step.decorator("label");
+                return label != null ? label : stepName;
+            }
         }
         return stepName;
     }
 
     private int findStepIndex(String label) {
         for (int i = 0; i < allSteps.size(); i++) {
-            if (label.equals(allSteps.get(i).label())) {return i;}
+            String stepLabel = allSteps.get(i).decorator("label");
+            if (label.equals(stepLabel)) {return i;}
         }
         return -1;
     }
 
     private String findSectionLabel(int stepIndex) {
-        if (scenario.sections() != null) {
+        if (!envelope.sections().isEmpty()) {
             int offset = 0;
-            for (var section : scenario.sections()) {
+            for (var section : envelope.sections()) {
                 if (stepIndex < offset + section.steps().size()) {
                     return section.label();
                 }
                 offset += section.steps().size();
             }
         }
-        if (scenario.chapters() != null) {
+        if (!envelope.chapters().isEmpty()) {
             int offset = 0;
-            for (var chapter : scenario.chapters()) {
+            for (var chapter : envelope.chapters()) {
                 for (var section : chapter.sections()) {
                     if (stepIndex < offset + section.steps().size()) {
                         return section.label();
@@ -476,9 +476,9 @@ public class ScenarioOrchestrator {
     }
 
     private String findChapterLabel(int stepIndex) {
-        if (scenario.chapters() == null) {return null;}
+        if (envelope.chapters().isEmpty()) {return null;}
         int offset = 0;
-        for (var chapter : scenario.chapters()) {
+        for (var chapter : envelope.chapters()) {
             int chapterSize = chapter.sections().stream()
                                      .mapToInt(s -> s.steps().size()).sum();
             if (stepIndex < offset + chapterSize) {
@@ -491,24 +491,25 @@ public class ScenarioOrchestrator {
 
     private NarrativeContent resolveContent(int stepIndex) {
         var step = allSteps.get(stepIndex);
-        if (step.content() != null) {return step.content();}
+        String stepContent = step.decorator("content");
+        if (stepContent != null) {return new NarrativeContent.Inline(stepContent);}
 
-        if (scenario.sections() != null) {
+        if (!envelope.sections().isEmpty()) {
             int offset = 0;
-            for (var section : scenario.sections()) {
+            for (var section : envelope.sections()) {
                 if (stepIndex < offset + section.steps().size()) {
-                    return section.content();
+                    return section.content() != null ? new NarrativeContent.Inline(section.content()) : null;
                 }
                 offset += section.steps().size();
             }
         }
-        if (scenario.chapters() != null) {
+        if (!envelope.chapters().isEmpty()) {
             int offset = 0;
-            for (var chapter : scenario.chapters()) {
+            for (var chapter : envelope.chapters()) {
                 for (var section : chapter.sections()) {
                     if (stepIndex < offset + section.steps().size()) {
-                        if (section.content() != null) {return section.content();}
-                        return chapter.content();
+                        if (section.content() != null) {return new NarrativeContent.Inline(section.content());}
+                        return chapter.content() != null ? new NarrativeContent.Inline(chapter.content()) : null;
                     }
                     offset += section.steps().size();
                 }
@@ -552,7 +553,7 @@ public class ScenarioOrchestrator {
     }
 
 
-    private void handleTemporalStep(HierarchicalStep step) {
+    private void handleTemporalStep(CompactStep step, int stepIndex) {
         if (!temporalDriverServiceInstance.isResolvable()) {
             throw new IllegalStateException("TemporalDriverService not available");
         }
@@ -574,7 +575,7 @@ public class ScenarioOrchestrator {
             case SET_SPEED -> service.setSpeed(
                     new TemporalDriverSpeedRequest(spec.effectiveName(), spec.speed()));
         }
-        String stepName = step.name() != null ? step.name() : step.label();
+        String stepName = ScenarioEnvelopeParser.deriveStepName(step, stepIndex);
         completedSteps.put(stepName, true);
         broadcastState();
         dispatchTriggeredSteps(stepName);
