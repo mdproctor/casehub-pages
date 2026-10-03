@@ -1,0 +1,21 @@
+scenario: mutex-demo
+meta:
+  title: "Mutex"
+  description: "Mutual exclusion via decorator. Steps tagged with the same mutex never run simultaneously across branches."
+  tags:
+    - mutex
+    - decorator
+    - concurrent
+    - coordination
+steps:
+  - concurrent:
+      branch-a:
+        - click: { role: button, name: "A" }
+          mutex: db-write
+        - click: { role: button, name: "B" }
+          mutex: db-write
+      branch-b:
+        - click: { role: button, name: "C" }
+          mutex: db-write
+        - click: { role: button, name: "D" }
+          mutex: db-write

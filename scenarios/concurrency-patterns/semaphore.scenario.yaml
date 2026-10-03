@@ -1,0 +1,14 @@
+meta:
+  title: "Semaphore"
+  description: "Rate-limited parallel workers — a semaphore with 2 permits gates 4 parallel tasks. Each worker acquires a permit before proceeding, blocking when none are available. Watch the trace to see only 2 workers active at a time."
+  tags:
+    - semaphore
+    - rate-limit
+    - permits
+    - concurrency-patterns
+---
+- parallel:
+  - sem-worker: { name: "pool", permits: 2, worker: "A", duration: 400 }
+  - sem-worker: { name: "pool", permits: 2, worker: "B", duration: 300 }
+  - sem-worker: { name: "pool", permits: 2, worker: "C", duration: 500 }
+  - sem-worker: { name: "pool", permits: 2, worker: "D", duration: 200 }

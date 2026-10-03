@@ -1,0 +1,12 @@
+scenario: loop-demo
+meta:
+  title: "Loop"
+  description: "The loop decorator repeats a step N times before advancing."
+  tags:
+    - loop
+    - decorator
+    - flow-control
+steps:
+  - click: { role: button, name: "A" }
+    loop: 3
+  - click: { role: button, name: "B" }

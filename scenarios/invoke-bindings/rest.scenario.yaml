@@ -1,0 +1,20 @@
+meta:
+  title: "REST"
+  description: "REST binding — invoke an HTTP endpoint. Supports GET, POST, PUT, DELETE with headers and body. The mock executor simulates a GET request to a users API and a POST to create an order."
+  tags:
+    - rest
+    - http
+    - request
+    - invoke-bindings
+---
+- rest-request:
+    method: GET
+    url: /api/users
+    headers: { Accept: application/json }
+- log: { message: "Fetched user list" }
+- rest-request:
+    method: POST
+    url: /api/orders
+    headers: { Content-Type: application/json }
+    body: { item: "widget", qty: 5 }
+- log: { message: "Order created" }

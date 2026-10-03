@@ -1,0 +1,29 @@
+scenario: simulated-demo
+meta:
+  title: "Simulated Data"
+  description: "The simulated delivery type injects data directly into a named dataset without any server call. Use it to pre-populate tables and charts in demos."
+  tags:
+    - simulated
+    - data injection
+    - data-delivery
+steps:
+  - simulated:
+      dataset: orders
+      data:
+        id: 1001
+        product: "Widget Pro"
+        quantity: 25
+        status: shipped
+  - simulated:
+      dataset: orders
+      data:
+        id: 1002
+        product: "Gadget X"
+        quantity: 10
+        status: pending
+  - simulated:
+      dataset: metrics
+      data:
+        cpu: 72
+        memory: 4096
+        disk_io: 340

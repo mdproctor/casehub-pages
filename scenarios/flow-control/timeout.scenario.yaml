@@ -1,0 +1,14 @@
+scenario: timeout-demo
+meta:
+  title: "Timeout"
+  description: "Timeout decorator sets a maximum duration for a step. If the step takes longer, it is aborted."
+  tags:
+    - timeout
+    - decorator
+    - flow-control
+steps:
+  - click: { role: button, name: "A" }
+    timeout: 5s
+  - click: { role: button, name: "B" }
+    timeout: 2s
+  - click: { role: button, name: "C" }

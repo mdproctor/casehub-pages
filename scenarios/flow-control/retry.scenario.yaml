@@ -1,0 +1,14 @@
+scenario: retry-demo
+meta:
+  title: "Retry"
+  description: "Retry decorator re-executes a step on failure up to N times. If the executor throws, the scheduler retries before advancing or failing the queue."
+  tags:
+    - retry
+    - decorator
+    - flow-control
+steps:
+  - click: { role: button, name: "A" }
+    retry: 3
+  - click: { role: button, name: "B" }
+    retry: { max: 2 }
+  - click: { role: button, name: "C" }

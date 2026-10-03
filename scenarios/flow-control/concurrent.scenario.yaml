@@ -1,0 +1,15 @@
+scenario: concurrent-demo
+meta:
+  title: "Concurrent"
+  description: "Two branches execute in parallel — the scheduler interleaves steps from each branch on every tick."
+  tags:
+    - concurrent
+    - flow-control
+steps:
+  - concurrent:
+      branch-a:
+        - click: { role: button, name: "A" }
+        - click: { role: button, name: "C" }
+      branch-b:
+        - click: { role: button, name: "B" }
+        - click: { role: button, name: "D" }

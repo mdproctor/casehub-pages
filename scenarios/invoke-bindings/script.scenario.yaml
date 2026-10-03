@@ -1,0 +1,19 @@
+meta:
+  title: "Script"
+  description: "Script binding — execute an inline script in a specified runtime (python3, node). The mock executor simulates running a Python data-processing script and a Node.js validation script."
+  tags:
+    - script
+    - inline
+    - runtime
+    - invoke-bindings
+---
+- script-run:
+    runtime: python3
+    script: "import json; print(json.dumps({'status': 'ok'}))"
+    timeout: 30s
+- log: { message: "Python script done" }
+- script-run:
+    runtime: node
+    script: "console.log(JSON.stringify({ valid: true }))"
+    timeout: 10s
+- log: { message: "Node script done" }

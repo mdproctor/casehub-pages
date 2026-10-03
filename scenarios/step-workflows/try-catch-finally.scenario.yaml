@@ -1,0 +1,17 @@
+meta:
+  title: "Try / Catch / Finally"
+  description: "Structured error handling. Try-steps execute first; if any fails, catch-steps run. Finally-steps always execute regardless of outcome."
+  tags:
+    - try
+    - catch
+    - finally
+    - error handling
+    - step-workflows
+---
+- try:
+    - log: { message: "Attempting risky operation" }
+    - fail: { message: "Something went wrong" }
+  catch:
+    - log: { message: "Caught error — recovering" }
+  finally:
+    - log: { message: "Cleanup — always runs" }

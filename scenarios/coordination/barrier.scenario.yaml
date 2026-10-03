@@ -1,0 +1,30 @@
+scenario: barrier-demo
+meta:
+  title: "Barrier"
+  description: "N-way sync point. Three branches with staggered delays converge at a barrier — fast and medium block until slow arrives, then all proceed."
+  tags:
+    - barrier
+    - await
+    - delay
+    - orchestration block
+    - concurrent
+    - coordination
+orchestration:
+  barriers:
+    all-ready: { count: 3 }
+steps:
+  - concurrent:
+      fast:
+        - click: { role: button, name: "A" }
+        - await: { barrier: all-ready }
+        - click: { role: button, name: "D" }
+      medium:
+        - click: { role: button, name: "B" }
+        - delay: 1000ms
+        - await: { barrier: all-ready }
+        - click: { role: button, name: "E" }
+      slow:
+        - click: { role: button, name: "C" }
+        - delay: 2000ms
+        - await: { barrier: all-ready }
+        - click: { role: button, name: "F" }

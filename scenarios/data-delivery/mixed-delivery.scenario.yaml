@@ -1,0 +1,29 @@
+scenario: mixed-delivery-demo
+meta:
+  title: "Mixed Delivery"
+  description: "Scenarios can mix delivery types. Simulated steps inject data while ARIA steps interact with UI — they compose naturally in concurrent branches."
+  tags:
+    - simulated
+    - click
+    - concurrent
+    - mixed
+    - data-delivery
+steps:
+  - concurrent:
+      data-pump:
+        - simulated:
+            dataset: events
+            data:
+              type: login
+              user: alice
+        - delay: 500ms
+        - simulated:
+            dataset: events
+            data:
+              type: purchase
+              user: alice
+              amount: 49.99
+      ui-flow:
+        - click: { role: button, name: "Submit" }
+        - delay: 800ms
+        - click: { role: button, name: "Reset" }

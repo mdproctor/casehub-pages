@@ -1,0 +1,624 @@
+{
+  "version": "1.0.0",
+  "categories": [
+    {
+      "name": "Flow Control",
+      "key": "flow-control",
+      "scenarios": [
+        {
+          "file": "flow-control/concurrent.scenario.yaml",
+          "title": "Concurrent",
+          "description": "Two branches execute in parallel — the scheduler interleaves steps from each branch on every tick.",
+          "tags": [
+            "concurrent",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/delay-decorator.scenario.yaml",
+          "title": "Delay (decorator)",
+          "description": "Delay in decorator form pauses AFTER the step completes. Compare with standalone delay which is its own step between actions.",
+          "tags": [
+            "delay",
+            "decorator",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/delay.scenario.yaml",
+          "title": "Delay",
+          "description": "A virtual-time delay pauses the queue — the clock advances but no steps execute during the gap.",
+          "tags": [
+            "delay",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/loop-until.scenario.yaml",
+          "title": "Loop (until)",
+          "description": "Loop with count and until condition. Repeats up to N times or until the condition is met. Button \"A\" loops 3 times, button \"B\" loops until \"true\" (runs once).",
+          "tags": [
+            "loop",
+            "decorator",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/loop.scenario.yaml",
+          "title": "Loop",
+          "description": "The loop decorator repeats a step N times before advancing.",
+          "tags": [
+            "loop",
+            "decorator",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/retry.scenario.yaml",
+          "title": "Retry",
+          "description": "Retry decorator re-executes a step on failure up to N times. If the executor throws, the scheduler retries before advancing or failing the queue.",
+          "tags": [
+            "retry",
+            "decorator",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/sequential.scenario.yaml",
+          "title": "Sequential",
+          "description": "Steps execute one after another in declaration order.",
+          "tags": [
+            "steps",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/timeout.scenario.yaml",
+          "title": "Timeout",
+          "description": "Timeout decorator sets a maximum duration for a step. If the step takes longer, it is aborted.",
+          "tags": [
+            "timeout",
+            "decorator",
+            "flow-control"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "flow-control/when-guard.scenario.yaml",
+          "title": "When Guard",
+          "description": "The when decorator conditionally skips a step based on a guard expression. B executes (when: true), C is skipped (when: false).",
+          "tags": [
+            "when",
+            "decorator",
+            "flow-control"
+          ],
+          "runnable": true
+        }
+      ]
+    },
+    {
+      "name": "Coordination",
+      "key": "coordination",
+      "scenarios": [
+        {
+          "file": "coordination/barrier.scenario.yaml",
+          "title": "Barrier",
+          "description": "N-way sync point. Three branches with staggered delays converge at a barrier — fast and medium block until slow arrives, then all proceed.",
+          "tags": [
+            "barrier",
+            "await",
+            "delay",
+            "orchestration block",
+            "concurrent",
+            "coordination"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "coordination/channel.scenario.yaml",
+          "title": "Channel (via Signal)",
+          "description": "Two-way handshake. Producer signals data-ready, consumer processes and acks — round-trip coordination using signal pairs.",
+          "tags": [
+            "signal",
+            "await",
+            "orchestration block",
+            "concurrent",
+            "coordination"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "coordination/mutex.scenario.yaml",
+          "title": "Mutex",
+          "description": "Mutual exclusion via decorator. Steps tagged with the same mutex never run simultaneously across branches.",
+          "tags": [
+            "mutex",
+            "decorator",
+            "concurrent",
+            "coordination"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "coordination/signal-await.scenario.yaml",
+          "title": "Signal / Await",
+          "description": "One-way dependency between branches. Sender signals after a click, receiver blocks until the signal arrives.",
+          "tags": [
+            "signal",
+            "await",
+            "concurrent",
+            "coordination"
+          ],
+          "runnable": true
+        }
+      ]
+    },
+    {
+      "name": "Coordination Primitives",
+      "key": "coordination-primitives",
+      "scenarios": [
+        {
+          "file": "coordination-primitives/accumulator.scenario.yaml",
+          "title": "Accumulator",
+          "description": "Reduce-style aggregation — feeds values through a binary operator (sum, product, min, max). The accumulator starts at an identity value and applies the operator for each accumulate call.",
+          "tags": [
+            "accumulator",
+            "reduce",
+            "aggregate",
+            "coordination-primitives"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "coordination-primitives/counter.scenario.yaml",
+          "title": "Counter",
+          "description": "Atomic counter — increment, decrement, add, and read. Each named counter is a singleton within the scope, so multiple steps share the same state.",
+          "tags": [
+            "counter",
+            "atomic",
+            "increment",
+            "coordination-primitives"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "coordination-primitives/flag.scenario.yaml",
+          "title": "Flag",
+          "description": "Atomic boolean flag — set, clear, toggle, and check. Useful for signalling state changes between steps without passing data.",
+          "tags": [
+            "flag",
+            "boolean",
+            "toggle",
+            "coordination-primitives"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "coordination-primitives/gauge.scenario.yaml",
+          "title": "Gauge",
+          "description": "Typed value holder with atomic compare-and-set. Unlike a counter, a gauge holds any value — use it for temperatures, levels, thresholds.",
+          "tags": [
+            "gauge",
+            "value",
+            "compare-and-set",
+            "coordination-primitives"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "coordination-primitives/latch.scenario.yaml",
+          "title": "Latch",
+          "description": "Countdown latch — starts at N, each countDown() decrements by 1. When count reaches zero, all waiters are released. Unlike a barrier, a latch is one-shot: once tripped it stays open.",
+          "tags": [
+            "latch",
+            "countdown",
+            "barrier",
+            "coordination-primitives"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "coordination-primitives/state-machine.scenario.yaml",
+          "title": "State Machine",
+          "description": "Declarative state machine with transitions, guards, and lifecycle handlers. Define states and allowed transitions, then drive the machine through its lifecycle.",
+          "tags": [
+            "state-machine",
+            "transitions",
+            "guards",
+            "coordination-primitives"
+          ],
+          "runnable": false
+        }
+      ]
+    },
+    {
+      "name": "Concurrency Patterns",
+      "key": "concurrency-patterns",
+      "scenarios": [
+        {
+          "file": "concurrency-patterns/channel.scenario.yaml",
+          "title": "Channel",
+          "description": "Producer-consumer pattern — a bounded channel with capacity 2 connects a producer that sends 4 items to a consumer that receives them. The producer blocks when the channel is full until the consumer drains it.",
+          "tags": [
+            "channel",
+            "producer",
+            "consumer",
+            "concurrency-patterns"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "concurrency-patterns/combined-pipeline.scenario.yaml",
+          "title": "Combined Pipeline",
+          "description": "Rate-limited pipeline with deadline — composes semaphore, channel, spawned task, concurrent map, and deadline into a single workflow. A producer feeds items through a bounded channel, rate-limited workers process them under a semaphore gate, results accumulate in a concurrent map, and a deadline scopes the entire pipeline.",
+          "tags": [
+            "combined",
+            "pipeline",
+            "multi-primitive",
+            "concurrency-patterns"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "concurrency-patterns/concurrent-map.scenario.yaml",
+          "title": "Concurrent Map",
+          "description": "Concurrent map with atomic operations — parallel workers write to a shared map using put, putIfAbsent, merge, and computeIfAbsent. Each operation is atomic, preventing data races.",
+          "tags": [
+            "orc-map",
+            "atomic",
+            "concurrent",
+            "concurrency-patterns"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "concurrency-patterns/correlation-scope.scenario.yaml",
+          "title": "Correlation Scope",
+          "description": "Async request/response correlation — register expected responses by key on a channel, send messages to the channel, then await correlated responses. The scope routes incoming messages by extracted key.",
+          "tags": [
+            "correlation",
+            "request-reply",
+            "async",
+            "concurrency-patterns"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "concurrency-patterns/deadline-context.scenario.yaml",
+          "title": "Deadline Context",
+          "description": "Scoped deadline with cancellation — create a child scope with a deadline, run steps within it, and observe deadline expiry. The deadline fires a callback and marks remaining time as expired.",
+          "tags": [
+            "deadline",
+            "timeout",
+            "cancellation",
+            "concurrency-patterns"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "concurrency-patterns/semaphore.scenario.yaml",
+          "title": "Semaphore",
+          "description": "Rate-limited parallel workers — a semaphore with 2 permits gates 4 parallel tasks. Each worker acquires a permit before proceeding, blocking when none are available. Watch the trace to see only 2 workers active at a time.",
+          "tags": [
+            "semaphore",
+            "rate-limit",
+            "permits",
+            "concurrency-patterns"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "concurrency-patterns/spawned-task.scenario.yaml",
+          "title": "Spawned Task",
+          "description": "Background task lifecycle — spawn a long-running task, do other work in the foreground, then join the background task. Shows isDone/isFailed polling and join with timeout.",
+          "tags": [
+            "spawn",
+            "background",
+            "async",
+            "concurrency-patterns"
+          ],
+          "runnable": false
+        }
+      ]
+    },
+    {
+      "name": "Composition",
+      "key": "composition",
+      "scenarios": [
+        {
+          "file": "composition/data-trigger.scenario.yaml",
+          "title": "Data Trigger",
+          "description": "External data activates a suspended queue. Main steps run first; the trigger queue waits until data arrives on the channel. Click Send to inject data.",
+          "tags": [
+            "trigger",
+            "data channel",
+            "concurrent",
+            "composition"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "composition/foreach.scenario.yaml",
+          "title": "ForEach",
+          "description": "forEach stamps a template for each item in a list. One page definition expands to three region-specific dashboards with scoped ${each.*} variables.",
+          "tags": [
+            "forEach",
+            "expansion",
+            "variables",
+            "composition"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "composition/modules.scenario.yaml",
+          "title": "Modules",
+          "description": "Reusable modules with typed parameters and outputs. One module, three imports — each stamped with its alias. Outputs chain between modules via ${module.alias.output}.",
+          "tags": [
+            "module",
+            "imports",
+            "parameters",
+            "outputs",
+            "when",
+            "composition"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "composition/orchestration-block.scenario.yaml",
+          "title": "Orchestration Block",
+          "description": "Top-level orchestration block pre-declares barriers and signals. Init delays then signals, worker awaits, both sync at a barrier before proceeding.",
+          "tags": [
+            "orchestration block",
+            "signal",
+            "await",
+            "barrier",
+            "delay",
+            "concurrent",
+            "composition"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "composition/time-trigger.scenario.yaml",
+          "title": "Time Trigger",
+          "description": "Time-based activation. A suspended queue activates after virtual time elapses. The main branch continues while the timer counts down.",
+          "tags": [
+            "trigger",
+            "time",
+            "delay",
+            "composition"
+          ],
+          "runnable": true
+        }
+      ]
+    },
+    {
+      "name": "Data Delivery",
+      "key": "data-delivery",
+      "scenarios": [
+        {
+          "file": "data-delivery/graphql-operation.scenario.yaml",
+          "title": "GraphQL Operation",
+          "description": "The graphql delivery type executes a domain operation via GraphQL. The domain and operation name route to a server-side resolver; params pass as variables.",
+          "tags": [
+            "graphql",
+            "domain",
+            "operation",
+            "data-delivery"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "data-delivery/mixed-delivery.scenario.yaml",
+          "title": "Mixed Delivery",
+          "description": "Scenarios can mix delivery types. Simulated steps inject data while ARIA steps interact with UI — they compose naturally in concurrent branches.",
+          "tags": [
+            "simulated",
+            "click",
+            "concurrent",
+            "mixed",
+            "data-delivery"
+          ],
+          "runnable": true
+        },
+        {
+          "file": "data-delivery/simulated-data.scenario.yaml",
+          "title": "Simulated Data",
+          "description": "The simulated delivery type injects data directly into a named dataset without any server call. Use it to pre-populate tables and charts in demos.",
+          "tags": [
+            "simulated",
+            "data injection",
+            "data-delivery"
+          ],
+          "runnable": true
+        }
+      ]
+    },
+    {
+      "name": "Invoke Bindings",
+      "key": "invoke-bindings",
+      "scenarios": [
+        {
+          "file": "invoke-bindings/agent.scenario.yaml",
+          "title": "Agent",
+          "description": "Agent binding — delegate work to an AI agent. The mock executor simulates dispatching a summarisation task and a code-generation task, returning structured output.",
+          "tags": [
+            "agent",
+            "delegation",
+            "llm",
+            "invoke-bindings"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "invoke-bindings/graphql.scenario.yaml",
+          "title": "GraphQL",
+          "description": "GraphQL binding — execute a query or mutation against a GraphQL endpoint. The mock executor simulates a users query and a createUser mutation with realistic response shapes.",
+          "tags": [
+            "graphql",
+            "query",
+            "mutation",
+            "invoke-bindings"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "invoke-bindings/mcp.scenario.yaml",
+          "title": "MCP",
+          "description": "MCP binding — invoke a Model Context Protocol tool. The mock executor simulates calling a file_search tool and a code_review tool, returning structured results.",
+          "tags": [
+            "mcp",
+            "tool-call",
+            "model-context",
+            "invoke-bindings"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "invoke-bindings/process.scenario.yaml",
+          "title": "Process",
+          "description": "Process binding — execute an OS process. The mock executor simulates running ls and git status commands, capturing stdout and exit codes.",
+          "tags": [
+            "process",
+            "os",
+            "command",
+            "invoke-bindings"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "invoke-bindings/rest.scenario.yaml",
+          "title": "REST",
+          "description": "REST binding — invoke an HTTP endpoint. Supports GET, POST, PUT, DELETE with headers and body. The mock executor simulates a GET request to a users API and a POST to create an order.",
+          "tags": [
+            "rest",
+            "http",
+            "request",
+            "invoke-bindings"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "invoke-bindings/script.scenario.yaml",
+          "title": "Script",
+          "description": "Script binding — execute an inline script in a specified runtime (python3, node). The mock executor simulates running a Python data-processing script and a Node.js validation script.",
+          "tags": [
+            "script",
+            "inline",
+            "runtime",
+            "invoke-bindings"
+          ],
+          "runnable": false
+        }
+      ]
+    },
+    {
+      "name": "Step Workflows",
+      "key": "step-workflows",
+      "scenarios": [
+        {
+          "file": "step-workflows/barrier.scenario.yaml",
+          "title": "Barrier",
+          "description": "A barrier blocks until all named steps have completed. Use it to express \"wait for A and B before proceeding.\"",
+          "tags": [
+            "barrier",
+            "await",
+            "dependency",
+            "step-workflows"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/block-sequential.scenario.yaml",
+          "title": "Block (sequential)",
+          "description": "A block groups steps that execute sequentially. Each step runs only after the previous one succeeds.",
+          "tags": [
+            "block",
+            "sequential",
+            "step-workflows"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/if-else.scenario.yaml",
+          "title": "If / Else",
+          "description": "Conditional branching — evaluates a condition, runs then-steps if truthy, else-steps otherwise. Conditions use the truthiness evaluator.",
+          "tags": [
+            "if",
+            "else",
+            "conditional",
+            "step-workflows"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/match-cases.scenario.yaml",
+          "title": "Match / Cases",
+          "description": "Pattern matching with value, structural, any-of, and default patterns. The first matching case executes; later cases are skipped.",
+          "tags": [
+            "match",
+            "pattern matching",
+            "cases",
+            "step-workflows"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/parallel.scenario.yaml",
+          "title": "Parallel",
+          "description": "Parallel runs multiple steps concurrently. All branches execute simultaneously — the step completes when all branches finish.",
+          "tags": [
+            "parallel",
+            "concurrent",
+            "step-workflows"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/quorum.scenario.yaml",
+          "title": "Quorum",
+          "description": "Quorum succeeds when N of M named steps have completed — does not require all. Use for \"any 2 of 3\" patterns.",
+          "tags": [
+            "quorum",
+            "n-of-m",
+            "partial completion",
+            "step-workflows"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/select.scenario.yaml",
+          "title": "Select (first-to-complete)",
+          "description": "Select races multiple branches — the first to complete wins. Wait branches block on named signals; the first signal to fire determines which branch executes.",
+          "tags": [
+            "select",
+            "race",
+            "first-to-complete",
+            "step-workflows"
+          ],
+          "runnable": false
+        },
+        {
+          "file": "step-workflows/try-catch-finally.scenario.yaml",
+          "title": "Try / Catch / Finally",
+          "description": "Structured error handling. Try-steps execute first; if any fails, catch-steps run. Finally-steps always execute regardless of outcome.",
+          "tags": [
+            "try",
+            "catch",
+            "finally",
+            "error handling",
+            "step-workflows"
+          ],
+          "runnable": false
+        }
+      ]
+    }
+  ]
+}

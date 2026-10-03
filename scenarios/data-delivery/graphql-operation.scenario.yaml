@@ -1,0 +1,24 @@
+scenario: graphql-demo
+meta:
+  title: "GraphQL Operation"
+  description: "The graphql delivery type executes a domain operation via GraphQL. The domain and operation name route to a server-side resolver; params pass as variables."
+  tags:
+    - graphql
+    - domain
+    - operation
+    - data-delivery
+steps:
+  - graphql:
+      name: create-order
+      domain: orders
+      operation: createOrder
+      params:
+        product: "Widget Pro"
+        quantity: 5
+  - graphql:
+      name: update-status
+      domain: orders
+      operation: updateOrderStatus
+      params:
+        orderId: "1001"
+        status: shipped

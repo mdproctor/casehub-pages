@@ -1,0 +1,15 @@
+meta:
+  title: "Latch"
+  description: "Countdown latch — starts at N, each countDown() decrements by 1. When count reaches zero, all waiters are released. Unlike a barrier, a latch is one-shot: once tripped it stays open."
+  tags:
+    - latch
+    - countdown
+    - barrier
+    - coordination-primitives
+---
+- latch-create: { name: "init-gate", count: 3 }
+- latch-countdown: { name: "init-gate" }
+- latch-status: { name: "init-gate" }
+- latch-countdown: { name: "init-gate" }
+- latch-countdown: { name: "init-gate" }
+- latch-status: { name: "init-gate" }

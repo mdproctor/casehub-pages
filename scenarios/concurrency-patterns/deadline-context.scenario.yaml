@@ -1,0 +1,16 @@
+meta:
+  title: "Deadline Context"
+  description: "Scoped deadline with cancellation — create a child scope with a deadline, run steps within it, and observe deadline expiry. The deadline fires a callback and marks remaining time as expired."
+  tags:
+    - deadline
+    - timeout
+    - cancellation
+    - concurrency-patterns
+---
+steps:
+  - deadline-create: { name: "batch", deadlineMs: 600 }
+  - deadline-check: { name: "batch" }
+  - deadline-work: { name: "batch", duration: 300, label: "phase-1" }
+  - deadline-check: { name: "batch" }
+  - deadline-work: { name: "batch", duration: 400, label: "phase-2" }
+  - deadline-check: { name: "batch" }

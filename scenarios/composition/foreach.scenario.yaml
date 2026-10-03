@@ -1,0 +1,25 @@
+meta:
+  title: "ForEach"
+  description: "forEach stamps a template for each item in a list. One page definition expands to three region-specific dashboards with scoped ${each.*} variables."
+  tags:
+    - forEach
+    - expansion
+    - variables
+    - composition
+---
+# ── forEach expansion ─────────────────
+# Stamp a template once per item in a
+# list. Each stamp gets a scoped variable.
+
+pages:
+  - name: "${each.region} Dashboard"
+    forEach:
+      as: region
+      in: [us-east, eu-west, ap-south]
+    rows:
+      - columns:
+        - components:
+          - type: metric
+            properties:
+              title: "${each.region} Latency"
+              dataset: "latency-${each.region}"

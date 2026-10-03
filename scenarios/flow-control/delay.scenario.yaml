@@ -1,0 +1,13 @@
+scenario: delay-demo
+meta:
+  title: "Delay"
+  description: "A virtual-time delay pauses the queue — the clock advances but no steps execute during the gap."
+  tags:
+    - delay
+    - flow-control
+steps:
+  - click: { role: button, name: "A" }
+  - delay: 1000ms
+  - click: { role: button, name: "B" }
+  - delay: 500ms
+  - click: { role: button, name: "C" }

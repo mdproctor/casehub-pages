@@ -1,0 +1,14 @@
+meta:
+  title: "Select (first-to-complete)"
+  description: "Select races multiple branches — the first to complete wins. Wait branches block on named signals; the first signal to fire determines which branch executes."
+  tags:
+    - select
+    - race
+    - first-to-complete
+    - step-workflows
+---
+- select:
+  - wait: fast-signal
+    log: { message: "Fast branch won the race" }
+  - wait: slow-signal
+    log: { message: "Slow branch won the race" }

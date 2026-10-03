@@ -1,0 +1,14 @@
+scenario: loop-until-demo
+meta:
+  title: "Loop (until)"
+  description: "Loop with count and until condition. Repeats up to N times or until the condition is met. Button \"A\" loops 3 times, button \"B\" loops until \"true\" (runs once)."
+  tags:
+    - loop
+    - decorator
+    - flow-control
+steps:
+  - click: { role: button, name: "A" }
+    loop: { count: 3 }
+  - click: { role: button, name: "B" }
+    loop: { count: 5, until: true }
+  - click: { role: button, name: "C" }

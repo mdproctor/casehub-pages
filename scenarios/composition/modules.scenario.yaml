@@ -1,0 +1,61 @@
+meta:
+  title: "Modules"
+  description: "Reusable modules with typed parameters and outputs. One module, three imports — each stamped with its alias. Outputs chain between modules via ${module.alias.output}."
+  tags:
+    - module
+    - imports
+    - parameters
+    - outputs
+    - when
+    - composition
+---
+# ── Module definition ──────────────────
+# Reusable building block with typed
+# parameters and named outputs.
+
+name: status-panel
+parameters:
+  title:
+    type: "STRING"
+    required: true
+  dataset:
+    type: "STRING"
+    required: true
+  threshold:
+    type: "NUMBER"
+    required: false
+    defaultValue: "80"
+outputs:
+  panelId:
+    type: "STRING"
+    value: "${params.title}-panel"
+sections:
+  pages:
+    panel:
+      name: "${params.title}"
+      properties:
+        dataset: "${params.dataset}"
+        threshold: "${params.threshold}"
+
+# ── Page importing the module ──────────
+# Two instances with different parameters.
+# Outputs chain between modules.
+
+imports:
+  - module: status-panel
+    as: sales
+    parameters:
+      title: "Sales Overview"
+      dataset: sales-daily
+      threshold: "90"
+  - module: status-panel
+    as: ops
+    parameters:
+      title: "Operations"
+      dataset: ops-metrics
+  - module: status-panel
+    as: combined
+    when: "${module.sales.panelId}"
+    parameters:
+      title: "Combined View"
+      dataset: "${module.ops.panelId}-feed"

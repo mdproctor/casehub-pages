@@ -1,0 +1,21 @@
+meta:
+  title: "Agent"
+  description: "Agent binding — delegate work to an AI agent. The mock executor simulates dispatching a summarisation task and a code-generation task, returning structured output."
+  tags:
+    - agent
+    - delegation
+    - llm
+    - invoke-bindings
+---
+- agent-delegate:
+    descriptor: summarizer
+    model: claude-sonnet-5
+    structuredOutput: true
+    params: { text: "Long document content...", maxLength: 100 }
+- log: { message: "Summary generated" }
+- agent-delegate:
+    descriptor: code-gen
+    model: claude-opus-5
+    structuredOutput: true
+    params: { spec: "REST endpoint for user CRUD" }
+- log: { message: "Code generated" }

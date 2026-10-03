@@ -1,0 +1,15 @@
+meta:
+  title: "Concurrent Map"
+  description: "Concurrent map with atomic operations — parallel workers write to a shared map using put, putIfAbsent, merge, and computeIfAbsent. Each operation is atomic, preventing data races."
+  tags:
+    - orc-map
+    - atomic
+    - concurrent
+    - concurrency-patterns
+---
+- parallel:
+  - map-writer: { name: "registry", op: "put", key: "svc-a", value: "running" }
+  - map-writer: { name: "registry", op: "put", key: "svc-b", value: "starting" }
+  - map-writer: { name: "registry", op: "putIfAbsent", key: "svc-a", value: "duplicate" }
+  - map-writer: { name: "registry", op: "merge", key: "svc-b", value: "running" }
+- map-reader: { name: "registry" }

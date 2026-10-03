@@ -1,0 +1,15 @@
+meta:
+  title: "Counter"
+  description: "Atomic counter — increment, decrement, add, and read. Each named counter is a singleton within the scope, so multiple steps share the same state."
+  tags:
+    - counter
+    - atomic
+    - increment
+    - coordination-primitives
+---
+- counter-add: { name: "requests", delta: 1 }
+- counter-add: { name: "requests", delta: 1 }
+- counter-add: { name: "requests", delta: 3 }
+- counter-get: { name: "requests" }
+- counter-add: { name: "requests", delta: -2 }
+- counter-get: { name: "requests" }

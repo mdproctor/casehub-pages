@@ -1,0 +1,17 @@
+meta:
+  title: "Accumulator"
+  description: "Reduce-style aggregation — feeds values through a binary operator (sum, product, min, max). The accumulator starts at an identity value and applies the operator for each accumulate call."
+  tags:
+    - accumulator
+    - reduce
+    - aggregate
+    - coordination-primitives
+---
+- accumulate: { name: "total", op: "sum", value: 10 }
+- accumulate: { name: "total", op: "sum", value: 25 }
+- accumulate: { name: "total", op: "sum", value: 7 }
+- accumulate-get: { name: "total" }
+- accumulate: { name: "max-seen", op: "max", value: 42 }
+- accumulate: { name: "max-seen", op: "max", value: 17 }
+- accumulate: { name: "max-seen", op: "max", value: 99 }
+- accumulate-get: { name: "max-seen" }

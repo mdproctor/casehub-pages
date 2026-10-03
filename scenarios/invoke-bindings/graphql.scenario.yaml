@@ -1,0 +1,15 @@
+meta:
+  title: "GraphQL"
+  description: "GraphQL binding — execute a query or mutation against a GraphQL endpoint. The mock executor simulates a users query and a createUser mutation with realistic response shapes."
+  tags:
+    - graphql
+    - query
+    - mutation
+    - invoke-bindings
+---
+- graphql-exec:
+    query: "{ users { id name email } }"
+- log: { message: "Query executed" }
+- graphql-exec:
+    query: "mutation { createUser(name: \"Alice\") { id } }"
+- log: { message: "Mutation executed" }

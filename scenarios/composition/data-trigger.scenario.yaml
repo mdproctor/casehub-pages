@@ -1,0 +1,18 @@
+scenario: data-trigger-demo
+meta:
+  title: "Data Trigger"
+  description: "External data activates a suspended queue. Main steps run first; the trigger queue waits until data arrives on the channel. Click Send to inject data."
+  tags:
+    - trigger
+    - data channel
+    - concurrent
+    - composition
+steps:
+  - click: { role: button, name: "A" }
+  - click: { role: button, name: "B" }
+  - trigger:
+      type: data
+      channel: trades
+    block:
+      - click: { role: button, name: "C" }
+      - click: { role: button, name: "D" }

@@ -1,0 +1,12 @@
+meta:
+  title: "Channel"
+  description: "Producer-consumer pattern — a bounded channel with capacity 2 connects a producer that sends 4 items to a consumer that receives them. The producer blocks when the channel is full until the consumer drains it."
+  tags:
+    - channel
+    - producer
+    - consumer
+    - concurrency-patterns
+---
+- parallel:
+  - chan-produce: { name: "work", capacity: 2, items: 4, interval: 200 }
+  - chan-consume: { name: "work", expect: 4, interval: 300 }

@@ -1,0 +1,12 @@
+meta:
+  title: "Block (sequential)"
+  description: "A block groups steps that execute sequentially. Each step runs only after the previous one succeeds."
+  tags:
+    - block
+    - sequential
+    - step-workflows
+---
+- block:
+  - log: { message: "Step 1: initialize" }
+  - log: { message: "Step 2: process" }
+  - log: { message: "Step 3: finalize" }

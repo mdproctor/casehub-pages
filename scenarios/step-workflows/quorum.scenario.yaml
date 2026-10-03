@@ -1,0 +1,19 @@
+meta:
+  title: "Quorum"
+  description: "Quorum succeeds when N of M named steps have completed — does not require all. Use for \"any 2 of 3\" patterns."
+  tags:
+    - quorum
+    - n-of-m
+    - partial completion
+    - step-workflows
+---
+- step: primary
+  log: { message: "Primary completed" }
+- step: secondary
+  log: { message: "Secondary completed" }
+- step: tertiary
+  log: { message: "Tertiary completed" }
+- quorum:
+    required: 2
+    of: [primary, secondary, tertiary]
+- log: { message: "Quorum met — 2 of 3 done" }

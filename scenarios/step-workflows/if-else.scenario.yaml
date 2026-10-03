@@ -1,0 +1,19 @@
+meta:
+  title: "If / Else"
+  description: "Conditional branching — evaluates a condition, runs then-steps if truthy, else-steps otherwise. Conditions use the truthiness evaluator."
+  tags:
+    - if
+    - else
+    - conditional
+    - step-workflows
+---
+- if: true
+  then:
+    - log: { message: "Condition was true" }
+  else:
+    - log: { message: "Condition was false" }
+- if: false
+  then:
+    - log: { message: "This is skipped" }
+  else:
+    - log: { message: "False branch taken" }

@@ -1,0 +1,20 @@
+meta:
+  title: "Process"
+  description: "Process binding — execute an OS process. The mock executor simulates running ls and git status commands, capturing stdout and exit codes."
+  tags:
+    - process
+    - os
+    - command
+    - invoke-bindings
+---
+- process-exec:
+    command: ls
+    args: [-la, src/]
+    output: stdout
+    timeout: 10s
+- log: { message: "Directory listed" }
+- process-exec:
+    command: git
+    args: [status, --short]
+    output: stdout
+- log: { message: "Git status captured" }

@@ -1,0 +1,16 @@
+meta:
+  title: "Barrier"
+  description: "A barrier blocks until all named steps have completed. Use it to express \"wait for A and B before proceeding.\""
+  tags:
+    - barrier
+    - await
+    - dependency
+    - step-workflows
+---
+- step: fetch-data
+  log: { message: "Fetching data" }
+- step: load-config
+  log: { message: "Loading config" }
+- barrier:
+    await: [fetch-data, load-config]
+- log: { message: "Both done — proceeding" }

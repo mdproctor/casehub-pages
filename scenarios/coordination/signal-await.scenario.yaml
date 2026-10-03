@@ -1,0 +1,17 @@
+scenario: signal-await-demo
+meta:
+  title: "Signal / Await"
+  description: "One-way dependency between branches. Sender signals after a click, receiver blocks until the signal arrives."
+  tags:
+    - signal
+    - await
+    - concurrent
+    - coordination
+steps:
+  - concurrent:
+      sender:
+        - click: { role: button, name: "A" }
+        - signal: go
+      receiver:
+        - await: { signal: go }
+        - click: { role: button, name: "B" }

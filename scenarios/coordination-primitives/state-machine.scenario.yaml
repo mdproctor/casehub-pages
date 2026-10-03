@@ -1,0 +1,15 @@
+meta:
+  title: "State Machine"
+  description: "Declarative state machine with transitions, guards, and lifecycle handlers. Define states and allowed transitions, then drive the machine through its lifecycle."
+  tags:
+    - state-machine
+    - transitions
+    - guards
+    - coordination-primitives
+---
+- sm-create: { name: "order", states: [draft, submitted, approved, rejected], initial: draft }
+- sm-state: { name: "order" }
+- sm-transition: { name: "order", from: draft, to: submitted }
+- sm-state: { name: "order" }
+- sm-transition: { name: "order", from: submitted, to: approved }
+- sm-state: { name: "order" }

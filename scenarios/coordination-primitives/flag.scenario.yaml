@@ -1,0 +1,14 @@
+meta:
+  title: "Flag"
+  description: "Atomic boolean flag — set, clear, toggle, and check. Useful for signalling state changes between steps without passing data."
+  tags:
+    - flag
+    - boolean
+    - toggle
+    - coordination-primitives
+---
+- flag-check: { name: "ready" }
+- flag-set: { name: "ready" }
+- flag-check: { name: "ready" }
+- flag-toggle: { name: "ready" }
+- flag-check: { name: "ready" }

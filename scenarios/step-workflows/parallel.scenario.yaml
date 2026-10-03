@@ -1,0 +1,12 @@
+meta:
+  title: "Parallel"
+  description: "Parallel runs multiple steps concurrently. All branches execute simultaneously — the step completes when all branches finish."
+  tags:
+    - parallel
+    - concurrent
+    - step-workflows
+---
+- parallel:
+  - log: { message: "Branch A: fetching data" }
+  - log: { message: "Branch B: loading config" }
+  - log: { message: "Branch C: warming cache" }

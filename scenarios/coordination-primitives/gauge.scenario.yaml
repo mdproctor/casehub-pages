@@ -1,0 +1,15 @@
+meta:
+  title: "Gauge"
+  description: "Typed value holder with atomic compare-and-set. Unlike a counter, a gauge holds any value — use it for temperatures, levels, thresholds."
+  tags:
+    - gauge
+    - value
+    - compare-and-set
+    - coordination-primitives
+---
+- gauge-set: { name: "temp", value: 20 }
+- gauge-get: { name: "temp" }
+- gauge-set: { name: "temp", value: 35 }
+- gauge-get: { name: "temp" }
+- gauge-cas: { name: "temp", expect: 35, update: 42 }
+- gauge-get: { name: "temp" }

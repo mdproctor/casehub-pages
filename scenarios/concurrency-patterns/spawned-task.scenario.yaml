@@ -1,0 +1,15 @@
+meta:
+  title: "Spawned Task"
+  description: "Background task lifecycle — spawn a long-running task, do other work in the foreground, then join the background task. Shows isDone/isFailed polling and join with timeout."
+  tags:
+    - spawn
+    - background
+    - async
+    - concurrency-patterns
+---
+- spawn-task: { name: "indexer", duration: 800 }
+- task-poll: { name: "indexer" }
+- log: { message: "Foreground work while indexer runs" }
+- task-poll: { name: "indexer" }
+- task-join: { name: "indexer", timeout: 2000 }
+- task-poll: { name: "indexer" }

@@ -1,0 +1,17 @@
+meta:
+  title: "Correlation Scope"
+  description: "Async request/response correlation — register expected responses by key on a channel, send messages to the channel, then await correlated responses. The scope routes incoming messages by extracted key."
+  tags:
+    - correlation
+    - request-reply
+    - async
+    - concurrency-patterns
+---
+steps:
+  - corr-expect: { id: "order-42", timeout: 1000 }
+  - corr-expect: { id: "order-99", timeout: 1000 }
+  - log: { message: "Expectations registered" }
+  - corr-send: { orderId: "order-99", status: "shipped" }
+  - corr-send: { orderId: "order-42", status: "confirmed" }
+  - corr-await: { id: "order-42" }
+  - corr-await: { id: "order-99" }

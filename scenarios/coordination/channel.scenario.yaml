@@ -1,0 +1,24 @@
+scenario: channel-demo
+meta:
+  title: "Channel (via Signal)"
+  description: "Two-way handshake. Producer signals data-ready, consumer processes and acks — round-trip coordination using signal pairs."
+  tags:
+    - signal
+    - await
+    - orchestration block
+    - concurrent
+    - coordination
+orchestration:
+  signals: [data-ready, ack]
+steps:
+  - concurrent:
+      producer:
+        - click: { role: button, name: "A" }
+        - signal: data-ready
+        - await: { signal: ack }
+        - click: { role: button, name: "C" }
+      consumer:
+        - await: { signal: data-ready }
+        - click: { role: button, name: "B" }
+        - signal: ack
+        - click: { role: button, name: "D" }

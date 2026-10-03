@@ -1,0 +1,15 @@
+scenario: when-guard-demo
+meta:
+  title: "When Guard"
+  description: "The when decorator conditionally skips a step based on a guard expression. B executes (when: true), C is skipped (when: false)."
+  tags:
+    - when
+    - decorator
+    - flow-control
+steps:
+  - click: { role: button, name: "A" }
+  - click: { role: button, name: "B" }
+    when: true
+  - click: { role: button, name: "C" }
+    when: false
+  - click: { role: button, name: "D" }

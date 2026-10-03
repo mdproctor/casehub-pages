@@ -1,0 +1,12 @@
+scenario: sequential-demo
+meta:
+  title: "Sequential"
+  description: "Steps execute one after another in declaration order."
+  tags:
+    - steps
+    - flow-control
+steps:
+  - click: { role: button, name: "A" }
+  - click: { role: button, name: "B" }
+  - click: { role: button, name: "C" }
+  - click: { role: button, name: "D" }

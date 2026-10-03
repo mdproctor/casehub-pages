@@ -1,0 +1,17 @@
+meta:
+  title: "Match / Cases"
+  description: "Pattern matching with value, structural, any-of, and default patterns. The first matching case executes; later cases are skipped."
+  tags:
+    - match
+    - pattern matching
+    - cases
+    - step-workflows
+---
+- match: "warning"
+  cases:
+    - pattern: "error"
+      log: { message: "Matched: error" }
+    - pattern: "warning"
+      log: { message: "Matched: warning" }
+    - default:
+        - log: { message: "No match — default" }

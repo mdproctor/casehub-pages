@@ -1,0 +1,17 @@
+meta:
+  title: "MCP"
+  description: "MCP binding — invoke a Model Context Protocol tool. The mock executor simulates calling a file_search tool and a code_review tool, returning structured results."
+  tags:
+    - mcp
+    - tool-call
+    - model-context
+    - invoke-bindings
+---
+- mcp-call:
+    tool: file_search
+    params: { query: "authentication handler", limit: 5 }
+- log: { message: "Search complete" }
+- mcp-call:
+    tool: code_review
+    params: { file: "src/auth.ts", focus: "security" }
+- log: { message: "Review complete" }

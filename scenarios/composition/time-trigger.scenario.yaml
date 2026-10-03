@@ -1,0 +1,18 @@
+scenario: time-trigger-demo
+meta:
+  title: "Time Trigger"
+  description: "Time-based activation. A suspended queue activates after virtual time elapses. The main branch continues while the timer counts down."
+  tags:
+    - trigger
+    - time
+    - delay
+    - composition
+steps:
+  - click: { role: button, name: "A" }
+  - trigger:
+      type: time
+      delay: 2s
+    block:
+      - click: { role: button, name: "C" }
+      - click: { role: button, name: "D" }
+  - click: { role: button, name: "B" }
