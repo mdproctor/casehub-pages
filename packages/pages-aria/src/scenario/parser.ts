@@ -18,13 +18,14 @@ const WALKER_KNOWN_KEYS = new Set([
   'retry', 'timeout', 'delay', 'on-error', 'trigger',
   'transform', 'signal', 'publish', 'transition',
   'semaphore', 'barrier', 'quorum', 'race',
+  'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode',
 ]);
 
 type SlotType = 'walker' | 'pre' | 'skip';
 
 function hasActionKey(step: Record<string, unknown>): boolean {
   for (const key of Object.keys(step)) {
-    if (!WALKER_KNOWN_KEYS.has(key) && key !== 'concurrent' && key !== 'await') return true;
+    if (!WALKER_KNOWN_KEYS.has(key) && key !== 'concurrent') return true;
   }
   return false;
 }
@@ -148,7 +149,7 @@ function parseScenarioFromParsed(parsed: Record<string, unknown>, catalog: Catal
         ? resolveStepArray(sec['steps'] as Record<string, unknown>[], catalog)
         : [];
       return {
-        title: sec['title'] as string,
+        title: (sec['label'] ?? sec['title']) as string,
         content: sec['content'] as SectionContent | undefined,
         steps,
       };
