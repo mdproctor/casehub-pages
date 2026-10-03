@@ -19,22 +19,26 @@ iterations:
     as: region
     in: ["us-east", "eu-west"]
 steps:
-  - label: "Create project"
-    target: browser
-    commands:
-      - action: fill
-        target: {role: textbox, name: "Project Name"}
-        value: "${params.project}"
-      - action: click
-        target: {role: button, name: "Create"}
-  - label: "Provision region"
-    target: browser
+  - fill:
+      role: textbox
+      name: "Project Name"
+      value: "${params.project}"
+    label: "Fill project name"
+  - click:
+      role: button
+      name: "Create"
+    label: "Create project"
+  - navigate: "#deploy/${each.region}"
+    label: "Navigate to region"
     forEach: regions
-    commands:
-      - action: navigate
-        value: "#deploy/${each.region}"
-      - action: select
-        target: {role: combobox, name: "Tier"}
-        value: "${params.tier}"
-      - action: click
-        target: {role: button, name: "Deploy"}
+  - select:
+      role: combobox
+      name: "Tier"
+      value: "${params.tier}"
+    label: "Select tier"
+    forEach: regions
+  - click:
+      role: button
+      name: "Deploy"
+    label: "Deploy"
+    forEach: regions

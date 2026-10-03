@@ -9,7 +9,7 @@ steps:
       role: button
       name: "Submit"
   - name: inject-chat
-    delivery: graphql
+    target: graphql
     domain: connectors
     operation: injectChat
     params:
@@ -18,7 +18,7 @@ steps:
       channel: "support"
       text: "My laptop won't boot"
   - name: verify-classified
-    delivery: graphql
+    target: graphql
     domain: engine
     operation: caseContext
     params:

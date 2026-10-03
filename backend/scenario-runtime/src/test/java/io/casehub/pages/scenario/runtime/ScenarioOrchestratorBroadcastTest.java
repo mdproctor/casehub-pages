@@ -21,16 +21,14 @@ class ScenarioOrchestratorBroadcastTest {
     private static final String SIMPLE_YAML = """
             scenario: test-demo
             steps:
-              - label: "Step 1"
-                target: browser
-                commands:
-                  - action: click
-                    target: {role: button, name: Go}
-              - label: "Step 2"
-                target: browser
-                commands:
-                  - action: click
-                    target: {role: button, name: Next}
+              - click:
+                  role: button
+                  name: Go
+                label: "Step 1"
+              - click:
+                  role: button
+                  name: Next
+                label: "Step 2"
             """;
 
     private static final String CHAPTERS_YAML = """
@@ -40,27 +38,24 @@ class ScenarioOrchestratorBroadcastTest {
                 sections:
                   - label: "Section 1A"
                     steps:
-                      - label: "Step 1"
-                        target: browser
-                        commands:
-                          - action: click
-                            target: {role: button, name: Go}
+                      - click:
+                          role: button
+                          name: Go
+                        label: "Step 1"
                   - label: "Section 1B"
                     steps:
-                      - label: "Step 2"
-                        target: browser
-                        commands:
-                          - action: click
-                            target: {role: button, name: Next}
+                      - click:
+                          role: button
+                          name: Next
+                        label: "Step 2"
               - label: "Chapter 2"
                 sections:
                   - label: "Section 2A"
                     steps:
-                      - label: "Step 3"
-                        target: browser
-                        commands:
-                          - action: click
-                            target: {role: button, name: Done}
+                      - click:
+                          role: button
+                          name: Done
+                        label: "Step 3"
             """;
 
     private final List<Object> broadcastedStates = new ArrayList<>();

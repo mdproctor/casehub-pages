@@ -405,22 +405,17 @@ class ScenarioOrchestratorTest {
 
         var yaml = """
             scenario: run-to-test
+            speed: 1.0
             steps:
-              - label: "First step"
-                name: step-a
-                target: browser
-                commands:
-                  - action: click
-              - label: "Second step"
-                name: step-b
-                target: browser
-                commands:
-                  - action: fill
-              - label: "Third step"
-                name: step-c
-                target: browser
-                commands:
-                  - action: click
+              - click: {}
+                step: step-a
+                label: "First step"
+              - fill: {}
+                step: step-b
+                label: "Second step"
+              - click: {}
+                step: step-c
+                label: "Third step"
             """;
         orchestrator.start(yaml, true);
         String sessionId = orchestrator.sessionId();
@@ -457,23 +452,17 @@ class ScenarioOrchestratorTest {
             sections:
               - label: "Section A"
                 steps:
-                  - label: "Step one"
-                    name: step-1
-                    target: browser
-                    commands:
-                      - action: click
-                  - label: "Step two"
-                    name: step-2
-                    target: browser
+                  - click: {}
+                    step: step-1
+                    label: "Step one"
+                  - spotlight: {}
+                    step: step-2
+                    label: "Step two"
                     trigger: { after: step-1 }
-                    commands:
-                      - action: spotlight
-                  - label: "Step three"
-                    name: step-3
-                    target: browser
+                  - fill: {}
+                    step: step-3
+                    label: "Step three"
                     trigger: { after: step-2 }
-                    commands:
-                      - action: fill
             """;
         orchestrator.start(yaml, true);
         String sessionId = orchestrator.sessionId();

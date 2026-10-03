@@ -22,34 +22,44 @@ data:
       Bob Martin,bob@example.com,Viewer,false
       Carol White,carol@example.com,Lead,true
 steps:
-  - label: "Navigate to team page"
-    target: browser
-    commands:
-      - action: navigate
-        value: "#teams/${params.teamName}"
-  - label: "Create member account"
-    target: browser
+  - navigate: "#teams/${params.teamName}"
+    label: "Navigate to team page"
+  - fill:
+      role: textbox
+      name: "Full Name"
+      value: "${each.member.name}"
+    label: "Fill name"
     forEach:
       as: member
       in: members
-    commands:
-      - action: fill
-        target: {role: textbox, name: "Full Name"}
-        value: "${each.member.name}"
-      - action: fill
-        target: {role: textbox, name: "Email"}
-        value: "${each.member.email}"
-      - action: select
-        target: {role: combobox, name: "Role"}
-        value: "${each.member.role}"
-      - action: click
-        target: {role: button, name: "Create"}
-  - label: "Grant admin access"
-    target: browser
+  - fill:
+      role: textbox
+      name: "Email"
+      value: "${each.member.email}"
+    label: "Fill email"
+    forEach:
+      as: member
+      in: members
+  - select:
+      role: combobox
+      name: "Role"
+      value: "${each.member.role}"
+    label: "Select role"
+    forEach:
+      as: member
+      in: members
+  - click:
+      role: button
+      name: "Create"
+    label: "Create member"
+    forEach:
+      as: member
+      in: members
+  - click:
+      role: button
+      name: "Grant Admin"
+    label: "Grant admin access"
     forEach:
       as: member
       in: members
     when: "${each.member.admin}"
-    commands:
-      - action: click
-        target: {role: button, name: "Grant Admin"}

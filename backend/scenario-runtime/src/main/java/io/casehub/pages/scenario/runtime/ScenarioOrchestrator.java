@@ -542,7 +542,7 @@ public class ScenarioOrchestrator {
     }
 
     private void stopTemporalDrivers() {
-        if (!temporalDriverServiceInstance.isResolvable()) {return;}
+        if (temporalDriverServiceInstance == null || !temporalDriverServiceInstance.isResolvable()) {return;}
         var service = temporalDriverServiceInstance.get();
         for (var status : service.list()) {
             try {
@@ -554,7 +554,7 @@ public class ScenarioOrchestrator {
 
 
     private void handleTemporalStep(CompactStep step, int stepIndex) {
-        if (!temporalDriverServiceInstance.isResolvable()) {
+        if (temporalDriverServiceInstance == null || !temporalDriverServiceInstance.isResolvable()) {
             throw new IllegalStateException("TemporalDriverService not available");
         }
         var service = temporalDriverServiceInstance.get();

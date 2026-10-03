@@ -8,25 +8,19 @@ meta:
     - demo
     - getting-started
 steps:
-  - label: "Navigate to intake form"
-    target: browser
-    commands:
-      - action: navigate
-        value: "#intake"
-  - label: "Fill ticket subject"
-    target: browser
-    commands:
-      - action: fill
-        target: {role: textbox, name: "Subject"}
-        value: "Network connectivity issue"
-  - label: "Select priority"
-    target: browser
-    commands:
-      - action: select
-        target: {role: combobox, name: "Priority"}
-        value: "high"
-  - label: "Submit ticket"
-    target: browser
-    commands:
-      - action: click
-        target: {role: button, name: "Submit"}
+  - navigate: "#intake"
+    label: "Navigate to intake form"
+  - fill:
+      role: textbox
+      name: "Subject"
+      value: "Network connectivity issue"
+    label: "Fill ticket subject"
+  - select:
+      role: combobox
+      name: "Priority"
+      value: "high"
+    label: "Select priority"
+  - click:
+      role: button
+      name: "Submit"
+    label: "Submit ticket"

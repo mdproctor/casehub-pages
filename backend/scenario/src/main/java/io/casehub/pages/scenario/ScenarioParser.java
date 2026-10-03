@@ -86,6 +86,7 @@ public final class ScenarioParser {
         }
 
         String delivery = (String) fields.get("delivery");
+        if (delivery == null) delivery = (String) fields.get("target");
         if (delivery == null) {
             throw new IllegalArgumentException(
                     "Unknown step format — must be an ARIA shorthand or have a 'delivery' field. Found keys: " + fields.keySet());

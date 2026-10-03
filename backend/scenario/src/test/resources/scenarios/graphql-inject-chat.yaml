@@ -1,7 +1,7 @@
 scenario: graphql-inject-chat
 steps:
   - name: inject-chat
-    delivery: graphql
+    target: graphql
     domain: connectors
     operation: injectChat
     params:

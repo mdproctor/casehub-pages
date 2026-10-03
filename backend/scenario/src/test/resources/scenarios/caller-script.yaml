@@ -1,20 +1,13 @@
 scenario: caller-script
+includes:
+  - file: callee-create-user.yaml
+    params:
+      userName: "Alice"
+      userRole: "Admin"
 steps:
-  - label: "Navigate to users"
-    target: browser
-    commands:
-      - action: navigate
-        value: "#users"
-  - label: "Create Alice"
-    target: browser
-    commands:
-      - action: call
-        script: callee-create-user
-        params:
-          userName: "Alice"
-          userRole: "Admin"
-  - label: "Verify done"
-    target: browser
-    commands:
-      - action: click
-        target: {role: button, name: "Done"}
+  - navigate: "#users"
+    label: "Navigate to users"
+  - click:
+      role: button
+      name: "Done"
+    label: "Verify done"

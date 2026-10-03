@@ -21,7 +21,7 @@ steps:
       name: "Submit"
 
   - name: create-case
-    delivery: rest
+    target: rest
     method: POST
     url: /api/cases
     body:
@@ -42,7 +42,7 @@ steps:
       duration: 0
 
   - name: inject-chat
-    delivery: graphql
+    target: graphql
     domain: connectors
     operation: injectChat
     params:
@@ -62,7 +62,7 @@ steps:
       duration: 0
 
   - name: verify-classified
-    delivery: graphql
+    target: graphql
     domain: engine
     operation: caseContext
     params:
