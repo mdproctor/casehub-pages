@@ -1,8 +1,7 @@
 package io.casehub.pages.scenario.runtime;
 
-import io.casehub.pages.scenario.AriaTarget;
-import io.casehub.pages.scenario.Scenario;
-import io.casehub.pages.scenario.ScenarioStep;
+import io.casehub.pages.scenario.AwaitCondition;
+import io.casehub.pages.scenario.CompactStep;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,9 @@ public class ScenarioExecutor {
 
     private static final Set<String> NON_BATCHABLE_ACTIONS =
             Set.of("navigate", "wait", "assert");
+    private static final Set<String> GRAPHQL_ACTIONS = Set.of("graphql");
+    private static final Set<String> REST_ACTIONS = Set.of("rest");
+    private static final Set<String> SIMULATED_ACTIONS = Set.of("simulate");
 
     private final GraphQLDispatcher graphQLDispatcher;
     private final AriaDispatcher ariaDispatcher;
@@ -35,16 +37,15 @@ public class ScenarioExecutor {
         this(graphQLDispatcher, null, null);
     }
 
-    public List<ExecutionResult> execute(Scenario scenario, ScenarioConfig config) {
+    public List<ExecutionResult> execute(List<CompactStep> steps, ScenarioConfig config) {
         var context = new VariableContext();
         var results = new ArrayList<ExecutionResult>();
-        var steps = scenario.steps();
 
         int i = 0;
         while (i < steps.size()) {
-            ScenarioStep step = steps.get(i);
+            CompactStep step = steps.get(i);
 
-            if (step instanceof ScenarioStep.AriaStep as && isBatchable(as)) {
+            if (isAriaAction(step) && isBatchable(step)) {
                 var batch = collectBatch(steps, i);
                 ExecutionResult result = executeBatch(batch);
                 results.add(result);
@@ -53,15 +54,16 @@ public class ScenarioExecutor {
                 }
                 i += batch.size();
             } else {
+                String stepName = step.decorator("step");
                 ExecutionResult result = executeStep(step, config, context);
                 results.add(result);
                 if (!result.success()) {
-                    throw new RuntimeException("Step '" + step.name()
+                    throw new RuntimeException("Step '" + stepName
                                                + "' failed: " + result.error());
                 }
                 if (result.result() != null && !result.result().isEmpty()
-                        && step.name() != null) {
-                    context.put(step.name(), result.result());
+                        && stepName != null) {
+                    context.put(stepName, result.result());
                 }
                 i++;
             }
@@ -70,30 +72,36 @@ public class ScenarioExecutor {
         return results;
     }
 
-    private ExecutionResult executeStep(ScenarioStep step, ScenarioConfig config,
-                                        VariableContext context) {
-        return switch (step) {
-            case ScenarioStep.GraphQLStep gs -> executeGraphQL(gs, config, context);
-            case ScenarioStep.AriaStep as -> executeAria(as, context);
-            case ScenarioStep.SimulatedStep ss -> ExecutionResult.ok(ss.name(), Map.of());
-            case ScenarioStep.RestStep rs -> executeRest(rs, config, context);
-        };}
+    private boolean isAriaAction(CompactStep step) {
+        String action = step.action();
+        return !GRAPHQL_ACTIONS.contains(action)
+                && !REST_ACTIONS.contains(action)
+                && !SIMULATED_ACTIONS.contains(action);
+    }
 
-    private ExecutionResult executeAria(ScenarioStep.AriaStep step,
-                                         VariableContext context) {
+    private ExecutionResult executeStep(CompactStep step, ScenarioConfig config,
+                                        VariableContext context) {
+        String action = step.action();
+        if (GRAPHQL_ACTIONS.contains(action)) return executeGraphQL(step, config, context);
+        if (REST_ACTIONS.contains(action)) return executeRest(step, config, context);
+        if (SIMULATED_ACTIONS.contains(action)) return ExecutionResult.ok(step.decorator("step"), Map.of());
+        return executeAria(step, context);
+    }
+
+    private ExecutionResult executeAria(CompactStep step, VariableContext context) {
         if (ariaDispatcher == null) {
-            return ExecutionResult.ok(step.name(), Map.of());
+            return ExecutionResult.ok(step.decorator("step"), Map.of());
         }
         try {
-            var resolved  = resolveAriaStep(step, context);
-            var result    = ariaDispatcher.send(resolved);
+            var result = ariaDispatcher.send(step);
             var resultMap = result.result() != null ? result.result() : Map.<String, Object>of();
-            return ExecutionResult.ok(step.name(), resultMap);
+            return ExecutionResult.ok(step.decorator("step"), resultMap);
         } catch (AriaCommandException e) {
-            return ExecutionResult.fail(step.name(), e.getMessage());
-        }}
+            return ExecutionResult.fail(step.decorator("step"), e.getMessage());
+        }
+    }
 
-    private ExecutionResult executeBatch(List<ScenarioStep.AriaStep> batch) {
+    private ExecutionResult executeBatch(List<CompactStep> batch) {
         if (ariaDispatcher == null) {
             return ExecutionResult.ok(null, Map.of());
         }
@@ -106,93 +114,65 @@ public class ScenarioExecutor {
         }
     }
 
-    private ExecutionResult executeGraphQL(ScenarioStep.GraphQLStep step,
-                                           ScenarioConfig config,
+    private ExecutionResult executeGraphQL(CompactStep step, ScenarioConfig config,
                                            VariableContext context) {
         try {
-            String endpoint = config.graphQLEndpoint(step.domain());
+            String domain = (String) step.params().get("domain");
+            String endpoint = config.graphQLEndpoint(domain);
+            Object awaitRaw = step.decorator("await");
+            AwaitCondition await = awaitRaw instanceof AwaitCondition ac ? ac : null;
             Map<String, Object> result;
-            if (step.await() != null) {
+            if (await != null) {
                 var awaitEngine = new AwaitEngine(() ->
                         graphQLDispatcher.dispatch(step, endpoint, context));
-                result = awaitEngine.poll(step.await());
+                result = awaitEngine.poll(await);
             } else {
                 result = graphQLDispatcher.dispatch(step, endpoint, context);
             }
-            return ExecutionResult.ok(step.name(), result);
+            return ExecutionResult.ok(step.decorator("step"), result);
         } catch (Exception e) {
-            return ExecutionResult.fail(step.name(), e.getMessage());
+            return ExecutionResult.fail(step.decorator("step"), e.getMessage());
         }
     }
 
-    private ExecutionResult executeRest(ScenarioStep.RestStep step,
-                                         ScenarioConfig config,
+    private ExecutionResult executeRest(CompactStep step, ScenarioConfig config,
                                          VariableContext context) {
         if (restDispatcher == null) {
-            return ExecutionResult.ok(step.name(), Map.of());
+            return ExecutionResult.ok(step.decorator("step"), Map.of());
         }
         try {
             String baseUrl = config.restBaseUrl();
+            Object awaitRaw = step.decorator("await");
+            AwaitCondition await = awaitRaw instanceof AwaitCondition ac ? ac : null;
             Map<String, Object> result;
-            if (step.await() != null) {
+            if (await != null) {
                 var awaitEngine = new AwaitEngine(() ->
                         restDispatcher.dispatch(step, baseUrl, context));
-                result = awaitEngine.poll(step.await());
+                result = awaitEngine.poll(await);
             } else {
                 result = restDispatcher.dispatch(step, baseUrl, context);
             }
-            return ExecutionResult.ok(step.name(), result);
+            return ExecutionResult.ok(step.decorator("step"), result);
         } catch (Exception e) {
-            return ExecutionResult.fail(step.name(), e.getMessage());
+            return ExecutionResult.fail(step.decorator("step"), e.getMessage());
         }
     }
 
-    private boolean isBatchable(ScenarioStep.AriaStep step) {
-        return step.name() == null
+    private boolean isBatchable(CompactStep step) {
+        return step.decorator("step") == null
                 && !NON_BATCHABLE_ACTIONS.contains(step.action());
     }
 
-    private List<ScenarioStep.AriaStep> collectBatch(List<ScenarioStep> steps, int start) {
-        var batch = new ArrayList<ScenarioStep.AriaStep>();
+    private List<CompactStep> collectBatch(List<CompactStep> steps, int start) {
+        var batch = new ArrayList<CompactStep>();
         for (int j = start; j < steps.size(); j++) {
-            if (steps.get(j) instanceof ScenarioStep.AriaStep as && isBatchable(as)) {
-                batch.add(as);
+            CompactStep s = steps.get(j);
+            if (isAriaAction(s) && isBatchable(s)) {
+                batch.add(s);
             } else {
                 break;
             }
         }
         return batch;
     }
-
-    @SuppressWarnings("unchecked")
-    private ScenarioStep.AriaStep resolveAriaStep(ScenarioStep.AriaStep step,
-                                                  VariableContext context) {
-        var resolvedTarget = step.target() != null
-                             ? resolveAriaTarget(step.target(), context)
-                             : null;
-        var resolvedValue = step.value() != null
-                            ? context.resolve(step.value())
-                            : null;
-        var resolvedState = step.state() != null
-                            ? context.resolveMap(step.state())
-                            : null;
-        if (resolvedTarget == step.target() && resolvedValue == step.value()
-            && resolvedState == step.state()) {
-            return step;
-        }
-        return new ScenarioStep.AriaStep(step.name(), step.action(),
-                                         resolvedTarget, resolvedValue, resolvedState, step.timeout());
-    }
-
-    private AriaTarget resolveAriaTarget(AriaTarget target, VariableContext context) {
-        var resolvedName = context.resolve(target.name());
-        var resolvedWithin = target.within() != null
-                             ? resolveAriaTarget(target.within(), context)
-                             : null;
-        if (resolvedName.equals(target.name()) && resolvedWithin == target.within()) {
-            return target;
-        }
-        return new AriaTarget(target.role(), resolvedName, resolvedWithin);
-    }
-
 }

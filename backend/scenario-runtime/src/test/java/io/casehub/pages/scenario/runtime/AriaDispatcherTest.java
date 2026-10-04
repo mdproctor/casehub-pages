@@ -4,8 +4,7 @@ import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.InMemoryEventStore;
 import io.casehub.pages.push.PushRequest;
 import io.casehub.pages.push.TopicRegistry;
-import io.casehub.pages.scenario.AriaTarget;
-import io.casehub.pages.scenario.ScenarioStep;
+import io.casehub.pages.scenario.CompactStep;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,10 +42,7 @@ class AriaDispatcherTest {
 
     @Test
     void sendBroadcastsOnScenarioExecTopic() {
-        var step = new ScenarioStep.AriaStep(
-                "click-btn", "click",
-                new AriaTarget("button", "Submit"),
-                null, null, null);
+        var step = ariaStep("click", Map.of("role", "button", "name", "Submit"), "click-btn");
 
         Thread.ofVirtual().start(() -> {
             try { Thread.sleep(50); } catch (InterruptedException ignored) {}
@@ -63,10 +59,7 @@ class AriaDispatcherTest {
 
     @Test
     void sendCorrelatesResponseById() {
-        var step = new ScenarioStep.AriaStep(
-                "click-btn", "click",
-                new AriaTarget("button", "Submit"),
-                null, null, null);
+        var step = ariaStep("click", Map.of("role", "button", "name", "Submit"), "click-btn");
 
         Thread.ofVirtual().start(() -> {
             try { Thread.sleep(50); } catch (InterruptedException ignored) {}
@@ -85,10 +78,7 @@ class AriaDispatcherTest {
 
     @Test
     void sendTimesOutWhenNoResponse() {
-        var step = new ScenarioStep.AriaStep(
-                "click-btn", "click",
-                new AriaTarget("button", "Submit"),
-                null, null, null);
+        var step = ariaStep("click", Map.of("role", "button", "name", "Submit"), "click-btn");
 
         assertThatThrownBy(() -> dispatcher.send(step))
                 .isInstanceOf(AriaCommandException.class)
@@ -97,10 +87,7 @@ class AriaDispatcherTest {
 
     @Test
     void sendPropagatesBrowserError() {
-        var step = new ScenarioStep.AriaStep(
-                "click-btn", "click",
-                new AriaTarget("button", "Submit"),
-                null, null, null);
+        var step = ariaStep("click", Map.of("role", "button", "name", "Submit"), "click-btn");
 
         Thread.ofVirtual().start(() -> {
             try { Thread.sleep(50); } catch (InterruptedException ignored) {}
@@ -125,18 +112,15 @@ class AriaDispatcherTest {
 
     @Test
     void navigateWaitsForReadyProbe() {
-        var step = new ScenarioStep.AriaStep(
-                "nav", "navigate", null, "/helpdesk/intake", null, null);
+        var step = ariaStep("navigate", Map.of("value", "/helpdesk/intake"), "nav");
 
         Thread.ofVirtual().start(() -> {
             try { Thread.sleep(30); } catch (InterruptedException ignored) {}
-            // Respond to navigate
             var navPayload = capturedPayload.get();
             if (navPayload instanceof AriaDispatcher.CommandPayload cmd) {
                 dispatcher.onCommandResult(
                         new PushRequest.CommandResult(cmd.id(), true, null));
             }
-            // Wait for ready probe, then respond
             try { Thread.sleep(200); } catch (InterruptedException ignored) {}
             var probePayload = capturedPayload.get();
             if (probePayload instanceof AriaDispatcher.CommandPayload cmd
@@ -153,10 +137,8 @@ class AriaDispatcherTest {
     @Test
     void sendBatchReturnsOneResult() {
         var steps = List.of(
-                new ScenarioStep.AriaStep(null, "click",
-                        new AriaTarget("button", "A"), null, null, null),
-                new ScenarioStep.AriaStep(null, "fill",
-                        new AriaTarget("textbox", "Name"), "Alice", null, null));
+                ariaStep("click", Map.of("role", "button", "name", "A"), null),
+                ariaStep("fill", Map.of("role", "textbox", "name", "Name", "value", "Alice"), null));
 
         Thread.ofVirtual().start(() -> {
             try { Thread.sleep(50); } catch (InterruptedException ignored) {}
@@ -169,5 +151,10 @@ class AriaDispatcherTest {
 
         var result = dispatcher.sendBatch(steps);
         assertThat(result.ok()).isTrue();
+    }
+
+    private static CompactStep ariaStep(String action, Map<String, Object> params, String stepName) {
+        Map<String, Object> decorators = stepName != null ? Map.of("step", stepName) : Map.of();
+        return new CompactStep(action, params, null, null, null, decorators);
     }
 }

@@ -2,7 +2,7 @@ package io.casehub.pages.scenario.runtime;
 
 import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.PushRequest;
-import io.casehub.pages.scenario.ScenarioStep;
+import io.casehub.pages.scenario.CompactStep;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -41,29 +41,39 @@ public class AriaDispatcher {
         this.timeoutMs = timeoutMs;
     }
 
-    public PushRequest.CommandResult send(ScenarioStep.AriaStep step) {
-        var result = sendCommand(step.action(), step.target(), step.value(),
-                step.state(), step.timeout());
+    public PushRequest.CommandResult send(CompactStep step) {
+        var target = extractTarget(step.params());
+        var value  = (String) step.params().get("value");
+        @SuppressWarnings("unchecked")
+        var state = (Map<String, Object>) step.params().get("state");
+        var     timeoutParam = step.params().get("timeout");
+        Integer stepTimeout  = timeoutParam instanceof Number n ? n.intValue() : null;
+        var     result       = sendCommand(step.action(), target, value, state, stepTimeout);
 
         if ("navigate".equals(step.action())) {
-            waitForPageLoad(step.timeout());
+            waitForPageLoad(stepTimeout);
         }
 
         return result;
     }
 
-    public PushRequest.CommandResult sendBatch(List<ScenarioStep.AriaStep> steps) {
+    public PushRequest.CommandResult sendBatch(List<CompactStep> steps) {
         if (steps.size() == 1) {
             return send(steps.getFirst());
         }
-        var id = UUID.randomUUID().toString();
+        var id     = UUID.randomUUID().toString();
         var future = new CompletableFuture<PushRequest.CommandResult>();
         pending.put(id, future);
 
         try {
-            for (ScenarioStep.AriaStep step : steps) {
-                var payload = new CommandPayload(id, step.action(), step.target(),
-                        step.value(), step.state(), step.timeout());
+            for (CompactStep step : steps) {
+                var target = extractTarget(step.params());
+                var value  = (String) step.params().get("value");
+                @SuppressWarnings("unchecked")
+                var state = (Map<String, Object>) step.params().get("state");
+                var     timeoutParam = step.params().get("timeout");
+                Integer stepTimeout  = timeoutParam instanceof Number n ? n.intValue() : null;
+                var     payload      = new CommandPayload(id, step.action(), target, value, state, stepTimeout);
                 broadcaster.broadcast(TOPIC, payload);
             }
             return awaitResult(future, effectiveTimeout(null));
@@ -145,4 +155,14 @@ public class AriaDispatcher {
     private long effectiveTimeout(Integer stepTimeout) {
         return stepTimeout != null ? stepTimeout : timeoutMs;
     }
+
+    private static Map<String, Object> extractTarget(Map<String, Object> params) {
+        var target = new java.util.LinkedHashMap<String, Object>();
+        if (params.containsKey("role")) {target.put("role", params.get("role"));}
+        if (params.containsKey("name")) {target.put("name", params.get("name"));}
+        if (params.containsKey("index")) {target.put("index", params.get("index"));}
+        if (params.containsKey("within")) {target.put("within", params.get("within"));}
+        return target.isEmpty() ? null : target;
+    }
+
 }

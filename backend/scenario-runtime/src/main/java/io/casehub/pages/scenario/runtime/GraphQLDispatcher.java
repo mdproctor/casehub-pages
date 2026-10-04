@@ -3,7 +3,7 @@ package io.casehub.pages.scenario.runtime;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.casehub.pages.scenario.ScenarioStep;
+import io.casehub.pages.scenario.CompactStep;
 
 import java.io.IOException;
 import java.net.URI;
@@ -28,12 +28,17 @@ public class GraphQLDispatcher {
         this.mapper = mapper;
     }
 
-    public Map<String, Object> dispatch(ScenarioStep.GraphQLStep step,
-                                         String endpoint,
-                                         VariableContext ctx) {
-        Map<String, Object> resolvedParams = ctx.resolveMap(step.params());
-        String operationType = "mutation";
-        String query = buildQuery(step, operationType);
+    public Map<String, Object> dispatch(CompactStep step,
+                                        String endpoint,
+                                        VariableContext ctx) {
+        String              domain    = (String) step.params().get("domain");
+        String              operation = (String) step.params().get("operation");
+        Map<String, Object> gqlParams = new java.util.LinkedHashMap<>(step.params());
+        gqlParams.remove("domain");
+        gqlParams.remove("operation");
+        Map<String, Object> resolvedParams = ctx.resolveMap(gqlParams);
+        String              operationType  = "mutation";
+        String              query          = buildQuery(operation, gqlParams, operationType);
 
         try {
             String body = mapper.writeValueAsString(Map.of(
@@ -41,39 +46,36 @@ public class GraphQLDispatcher {
                     "variables", resolvedParams));
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(endpoint))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
+                                             .uri(URI.create(endpoint))
+                                             .header("Content-Type", "application/json")
+                                             .POST(HttpRequest.BodyPublishers.ofString(body))
+                                             .build();
 
             HttpResponse<String> response = httpClient.send(request,
-                    HttpResponse.BodyHandlers.ofString());
+                                                            HttpResponse.BodyHandlers.ofString());
 
-            return parseResponse(response.body(), step.operation());
+            return parseResponse(response.body(), operation);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException("GraphQL dispatch failed for "
-                    + step.domain() + "." + step.operation(), e);
+                                       + domain + "." + operation, e);
         }
     }
 
-    String buildQuery(ScenarioStep.GraphQLStep step, String operationType) {
-        String operation = step.operation();
-        Map<String, Object> params = step.params();
-
+    String buildQuery(String operation, Map<String, Object> params, String operationType) {
         if (params.isEmpty()) {
             return operationType + " { " + operation + " }";
         }
 
         String varDecl = params.keySet().stream()
-                .map(k -> "$" + k + ": String")
-                .collect(Collectors.joining(", "));
+                               .map(k -> "$" + k + ": String")
+                               .collect(Collectors.joining(", "));
 
         String argPass = params.keySet().stream()
-                .map(k -> k + ": $" + k)
-                .collect(Collectors.joining(", "));
+                               .map(k -> k + ": $" + k)
+                               .collect(Collectors.joining(", "));
 
         return operationType + " " + operation + "(" + varDecl + ") { "
-                + operation + "(" + argPass + ") }";
+               + operation + "(" + argPass + ") }";
     }
 
     @SuppressWarnings("unchecked")

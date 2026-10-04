@@ -3,7 +3,8 @@ package io.casehub.pages.scenario.runtime;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.casehub.pages.scenario.ScenarioStep;
+import io.casehub.pages.scenario.AwaitCondition;
+import io.casehub.pages.scenario.CompactStep;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,25 +27,36 @@ public class RestDispatcher {
         this.mapper = mapper;
     }
 
-    public Map<String, Object> dispatch(ScenarioStep.RestStep step,
-                                         String baseUrl,
-                                         VariableContext ctx) {
-        String resolvedUrl = ctx.resolve(baseUrl + step.url());
-        String method = step.method().toUpperCase();
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> dispatch(CompactStep step,
+                                        String baseUrl,
+                                        VariableContext ctx) {
+        String method = ((String) step.params().getOrDefault("method", "GET")).toUpperCase();
+        String url    = (String) step.params().get("url");
+        Map<String, Object> body = step.params().containsKey("body")
+                                   ? (Map<String, Object>) step.params().get("body") : Map.of();
+        Map<String, String> headers = step.params().containsKey("headers")
+                                      ? (Map<String, String>) step.params().get("headers") : Map.of();
+        Object         expectedStatusRaw = step.params().get("expected-status");
+        Integer        expectedStatus    = expectedStatusRaw instanceof Number n ? n.intValue() : null;
+        Object         awaitRaw          = step.decorator("await");
+        AwaitCondition await             = awaitRaw instanceof AwaitCondition ac ? ac : null;
+
+        String resolvedUrl = ctx.resolve(baseUrl + url);
 
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(resolvedUrl))
-                .header("Content-Type", "application/json");
+                                                        .uri(URI.create(resolvedUrl))
+                                                        .header("Content-Type", "application/json");
 
-        for (var entry : step.headers().entrySet()) {
+        for (var entry : headers.entrySet()) {
             requestBuilder.header(entry.getKey(), ctx.resolve(entry.getValue()));
         }
 
-        Map<String, Object> resolvedBody = ctx.resolveMap(step.body());
+        Map<String, Object> resolvedBody = ctx.resolveMap(body);
 
         HttpRequest.BodyPublisher bodyPublisher = resolvedBody.isEmpty()
-                ? HttpRequest.BodyPublishers.noBody()
-                : bodyPublisher(resolvedBody);
+                                                  ? HttpRequest.BodyPublishers.noBody()
+                                                  : bodyPublisher(resolvedBody);
 
         requestBuilder.method(method, bodyPublisher);
 
@@ -53,14 +65,14 @@ public class RestDispatcher {
                     requestBuilder.build(),
                     HttpResponse.BodyHandlers.ofString());
 
-            if (step.expectedStatus() != null && response.statusCode() != step.expectedStatus()) {
-                throw new RuntimeException("Expected status " + step.expectedStatus()
-                        + " but got " + response.statusCode() + ": " + response.body());
+            if (expectedStatus != null && response.statusCode() != expectedStatus) {
+                throw new RuntimeException("Expected status " + expectedStatus
+                                           + " but got " + response.statusCode() + ": " + response.body());
             }
 
             return parseResponse(response);
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("REST dispatch failed for " + method + " " + step.url(), e);
+            throw new RuntimeException("REST dispatch failed for " + method + " " + url, e);
         }
     }
 
