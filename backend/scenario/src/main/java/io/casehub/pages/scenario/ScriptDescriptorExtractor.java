@@ -41,8 +41,11 @@ public final class ScriptDescriptorExtractor {
             List<String> calls = extractCalls(root);
             List<AriaTarget> firstStepTargets = extractFirstStepTargets(root);
 
+            ScriptLifecycleState state = provenance == ScriptProvenance.UPLOADED
+                    ? ScriptLifecycleState.DRAFT : ScriptLifecycleState.ACTIVE;
+
             return new ScriptDescriptor(name, description, labels, tags,
-                    params, calls, provenance, firstStepTargets);
+                    params, calls, provenance, state, firstStepTargets);
         } catch (IOException e) {
             throw new IllegalArgumentException("Failed to parse scenario YAML", e);
         }

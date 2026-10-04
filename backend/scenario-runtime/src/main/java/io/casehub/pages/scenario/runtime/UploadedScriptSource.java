@@ -54,7 +54,7 @@ public class UploadedScriptSource implements ScriptSource {
         if (existing == null) return null;
         ScriptDescriptor updated = new ScriptDescriptor(existing.name(), meta.description(),
                 meta.labels(), meta.tags(), existing.params(), existing.calls(),
-                existing.provenance(), existing.firstStepTargets());
+                existing.provenance(), existing.state(), existing.firstStepTargets());
         descriptors.put(name, updated);
         return updated;
     }

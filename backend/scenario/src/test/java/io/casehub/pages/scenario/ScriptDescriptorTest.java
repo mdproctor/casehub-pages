@@ -29,6 +29,30 @@ class ScriptDescriptorTest {
     }
 
     @Test
+    void descriptor_hasState() {
+        var desc = new ScriptDescriptor("test", "desc", List.of(), List.of(),
+                                        List.of(), List.of(), ScriptProvenance.UPLOADED,
+                                        ScriptLifecycleState.DRAFT, List.of());
+        assertThat(desc.state()).isEqualTo(ScriptLifecycleState.DRAFT);
+    }
+
+    @Test
+    void descriptor_defaultsStateToActive_whenNull() {
+        var desc = new ScriptDescriptor("test", "desc", List.of(), List.of(),
+                                        List.of(), List.of(), ScriptProvenance.BUNDLED,
+                                        null, List.of());
+        assertThat(desc.state()).isEqualTo(ScriptLifecycleState.ACTIVE);
+    }
+
+    @Test
+    void descriptor_backwardCompatConstructor_defaultsToActive() {
+        var desc = new ScriptDescriptor("test", "desc", List.of(), List.of(),
+                                        List.of(), List.of(), ScriptProvenance.BUNDLED, List.of());
+        assertThat(desc.state()).isEqualTo(ScriptLifecycleState.ACTIVE);
+    }
+
+
+    @Test
     void paramDescriptor_holdsSchema() {
         var param = new ParamDescriptor("name", "string", true, null, List.of());
         assertThat(param.required()).isTrue();

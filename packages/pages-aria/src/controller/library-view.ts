@@ -11,6 +11,7 @@ export interface ScriptDescriptor {
   params: { name: string; type: string; required: boolean }[];
   calls: string[];
   provenance: string;
+  state: string;
   firstStepTargets: AriaTarget[];
 }
 
