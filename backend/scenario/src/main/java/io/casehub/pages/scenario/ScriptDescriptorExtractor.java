@@ -6,7 +6,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class ScriptDescriptorExtractor {
 
@@ -39,7 +41,7 @@ public final class ScriptDescriptorExtractor {
             }
 
             List<String> calls = extractCalls(root);
-            List<AriaTarget> firstStepTargets = extractFirstStepTargets(root);
+            List<Map<String, String>> firstStepTargets = extractFirstStepTargets(root);
 
             ScriptLifecycleState state = provenance == ScriptProvenance.UPLOADED
                     ? ScriptLifecycleState.DRAFT : ScriptLifecycleState.ACTIVE;
@@ -87,16 +89,16 @@ public final class ScriptDescriptorExtractor {
         }
     }
 
-    private static List<AriaTarget> extractFirstStepTargets(JsonNode root) {
+    private static List<Map<String, String>> extractFirstStepTargets(JsonNode root) {
         JsonNode firstStep = findFirstStep(root);
         if (firstStep == null) return List.of();
 
-        List<AriaTarget> targets = new ArrayList<>();
+        List<Map<String, String>> targets = new ArrayList<>();
         JsonNode commands = firstStep.get("commands");
         if (commands != null) {
             for (JsonNode cmd : commands) {
                 if (cmd.has("target") && cmd.get("target").isObject()) {
-                    AriaTarget t = parseAriaTarget(cmd.get("target"));
+                    Map<String, String> t = parseAriaTarget(cmd.get("target"));
                     if (t != null) targets.add(t);
                 }
             }
@@ -129,12 +131,14 @@ public final class ScriptDescriptorExtractor {
         return null;
     }
 
-    private static AriaTarget parseAriaTarget(JsonNode node) {
+    private static Map<String, String> parseAriaTarget(JsonNode node) {
         String role = node.path("role").asText(null);
         String name = node.path("name").asText(null);
         if (role == null || name == null) return null;
-        AriaTarget within = node.has("within") ? parseAriaTarget(node.get("within")) : null;
-        return new AriaTarget(role, name, within);
+        var target = new LinkedHashMap<String, String>();
+        target.put("role", role);
+        target.put("name", name);
+        return Map.copyOf(target);
     }
 
     private static List<String> extractStringList(JsonNode parent, String field) {

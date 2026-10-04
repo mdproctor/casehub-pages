@@ -1,13 +1,14 @@
 package io.casehub.pages.scenario;
 
 import java.util.List;
+import java.util.Map;
 
 public record ScriptDescriptor(String name, String description,
                                 List<String> labels, List<String> tags,
                                 List<ParamDescriptor> params, List<String> calls,
                                 ScriptProvenance provenance,
                                 ScriptLifecycleState state,
-                                List<AriaTarget> firstStepTargets) {
+                                List<Map<String, String>> firstStepTargets) {
     public ScriptDescriptor {
         if (labels == null) labels = List.of();
         if (tags == null) tags = List.of();
@@ -21,7 +22,7 @@ public record ScriptDescriptor(String name, String description,
                             List<String> labels, List<String> tags,
                             List<ParamDescriptor> params, List<String> calls,
                             ScriptProvenance provenance,
-                            List<AriaTarget> firstStepTargets) {
+                            List<Map<String, String>> firstStepTargets) {
         this(name, description, labels, tags, params, calls, provenance, null, firstStepTargets);
     }
 }

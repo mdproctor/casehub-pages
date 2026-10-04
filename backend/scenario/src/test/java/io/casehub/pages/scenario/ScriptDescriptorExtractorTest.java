@@ -3,6 +3,7 @@ package io.casehub.pages.scenario;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -125,8 +126,8 @@ class ScriptDescriptorExtractorTest {
                 """, ScriptProvenance.BUNDLED);
 
         assertThat(desc.firstStepTargets()).hasSize(2);
-        assertThat(desc.firstStepTargets().get(0)).isEqualTo(new AriaTarget("textbox", "Name"));
-        assertThat(desc.firstStepTargets().get(1)).isEqualTo(new AriaTarget("button", "Submit"));
+        assertThat(desc.firstStepTargets().get(0)).isEqualTo(Map.of("role", "textbox", "name", "Name"));
+        assertThat(desc.firstStepTargets().get(1)).isEqualTo(Map.of("role", "button", "name", "Submit"));
     }
 
     @Test

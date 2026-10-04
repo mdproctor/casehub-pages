@@ -3,6 +3,7 @@ package io.casehub.pages.scenario;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,10 +23,10 @@ class ScriptDescriptorTest {
 
     @Test
     void descriptor_holdsFirstStepTargets() {
-        var targets = List.of(new AriaTarget("button", "Submit"));
+        var targets = List.of(Map.of("role", "button", "name", "Submit"));
         var desc = new ScriptDescriptor("test", null, List.of(), List.of(),
                 List.of(), List.of(), ScriptProvenance.UPLOADED, targets);
-        assertThat(desc.firstStepTargets()).containsExactly(new AriaTarget("button", "Submit"));
+        assertThat(desc.firstStepTargets()).containsExactly(Map.of("role", "button", "name", "Submit"));
     }
 
     @Test

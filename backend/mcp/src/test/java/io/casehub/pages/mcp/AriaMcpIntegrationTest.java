@@ -4,7 +4,6 @@ import io.casehub.pages.push.EventBroadcaster;
 import io.casehub.pages.push.InMemoryEventStore;
 import io.casehub.pages.push.PushRequest;
 import io.casehub.pages.push.TopicRegistry;
-import io.casehub.pages.scenario.AriaTarget;
 import io.casehub.platform.api.mcp.McpDomain;
 import io.casehub.platform.mcp.DomainModel;
 import io.casehub.platform.mcp.ModelRegistry;
@@ -265,11 +264,10 @@ class AriaMcpIntegrationTest {
                     }
                 }
 
-                // Verify `within` was deserialized to AriaTarget
-                assertThat(args[2]).isInstanceOf(AriaTarget.class);
-                var within = (AriaTarget) args[2];
-                assertThat(within.role()).isEqualTo("group");
-                assertThat(within.name()).isEqualTo("Security");
+                @SuppressWarnings("unchecked")
+                var within = (Map<String, Object>) args[2];
+                assertThat(within).containsEntry("role", "group");
+                assertThat(within).containsEntry("name", "Security");
 
                 var result = (AriaResult) method.invoke(resolver, args);
                 assertThat(result.ok()).isTrue();
