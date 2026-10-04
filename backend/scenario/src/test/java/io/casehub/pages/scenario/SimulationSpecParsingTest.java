@@ -21,17 +21,15 @@ class SimulationSpecParsingTest {
                 steps:
                   - label: step1
                     target: browser
-                    commands:
-                      - action: navigate
-                        value: /home
+                    navigate: /home
                 """;
-        var scenario = HierarchicalParser.parse(yaml);
-        assertThat(scenario.simulation()).isNotNull();
-        assertThat(scenario.simulation().strategies())
+        var envelope = ScenarioEnvelopeParser.parse(yaml);
+        assertThat(envelope.simulation()).isNotNull();
+        assertThat(envelope.simulation().strategies())
                 .containsEntry("agent-provider.invoke", "sequential")
                 .containsEntry("case-memory-store.query", "key-lookup");
-        assertThat(scenario.simulation().corpus()).containsExactly("fixtures/agent-responses.yaml");
-        assertThat(scenario.simulation().capture()).containsExactly("preference-provider.get");
+        assertThat(envelope.simulation().corpus()).containsExactly("fixtures/agent-responses.yaml");
+        assertThat(envelope.simulation().capture()).containsExactly("preference-provider.get");
     }
 
     @Test
@@ -41,12 +39,10 @@ class SimulationSpecParsingTest {
                 steps:
                   - label: step1
                     target: browser
-                    commands:
-                      - action: navigate
-                        value: /home
+                    navigate: /home
                 """;
-        var scenario = HierarchicalParser.parse(yaml);
-        assertThat(scenario.simulation()).isNull();
+        var envelope = ScenarioEnvelopeParser.parse(yaml);
+        assertThat(envelope.simulation()).isNull();
     }
 
     @Test
@@ -59,14 +55,12 @@ class SimulationSpecParsingTest {
                 steps:
                   - label: step1
                     target: browser
-                    commands:
-                      - action: navigate
-                        value: /home
+                    navigate: /home
                 """;
-        var scenario = HierarchicalParser.parse(yaml);
-        assertThat(scenario.simulation()).isNotNull();
-        assertThat(scenario.simulation().strategies()).containsEntry("agent-provider.invoke", "random");
-        assertThat(scenario.simulation().corpus()).isEmpty();
-        assertThat(scenario.simulation().capture()).isEmpty();
+        var envelope = ScenarioEnvelopeParser.parse(yaml);
+        assertThat(envelope.simulation()).isNotNull();
+        assertThat(envelope.simulation().strategies()).containsEntry("agent-provider.invoke", "random");
+        assertThat(envelope.simulation().corpus()).isEmpty();
+        assertThat(envelope.simulation().capture()).isEmpty();
     }
 }
