@@ -71,6 +71,11 @@ public class ScriptRegistry {
             throw new IllegalArgumentException(
                     "Cannot update metadata for '" + name + "': not an uploaded script");
         }
+        io.casehub.pages.scenario.ScriptLifecycleState state = uploaded.stateOf(name);
+        if (state != null && state != io.casehub.pages.scenario.ScriptLifecycleState.DRAFT) {
+            throw new IllegalStateException(
+                    "Cannot update metadata for '" + name + "': script is " + state + ", must be DRAFT");
+        }
         return uploaded.updateMeta(name, meta);
     }
 
@@ -78,6 +83,36 @@ public class ScriptRegistry {
         if (bundled.contains(name)) return false;
         return uploaded.delete(name);
     }
+
+    public ScriptDescriptor activate(String name) {
+        if (!uploaded.contains(name)) {
+            throw new IllegalArgumentException("Cannot activate '" + name + "': not an uploaded script");
+        }
+        return uploaded.transition(name, io.casehub.pages.scenario.ScriptLifecycleState.ACTIVE);
+    }
+
+    public ScriptDescriptor archive(String name) {
+        if (!uploaded.contains(name)) {
+            throw new IllegalArgumentException("Cannot archive '" + name + "': not an uploaded script");
+        }
+        return uploaded.transition(name, io.casehub.pages.scenario.ScriptLifecycleState.ARCHIVED);
+    }
+
+    public ScriptDescriptor revise(String name) {
+        if (!uploaded.contains(name)) {
+            throw new IllegalArgumentException("Cannot revise '" + name + "': not an uploaded script");
+        }
+        return uploaded.transition(name, io.casehub.pages.scenario.ScriptLifecycleState.DRAFT);
+    }
+
+    public java.util.List<ScriptDescriptor> listActive(java.util.List<String> labels, java.util.List<String> tags) {
+        return allDescriptors()
+                       .filter(d -> d.state() == io.casehub.pages.scenario.ScriptLifecycleState.ACTIVE)
+                       .filter(d -> matchesLabels(d, labels))
+                       .filter(d -> matchesTags(d, tags))
+                       .toList();
+    }
+
 
     private Stream<ScriptDescriptor> allDescriptors() {
         Stream<ScriptDescriptor> base = Stream.concat(
