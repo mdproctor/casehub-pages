@@ -349,4 +349,34 @@ class ScenarioEnvelopeParserTest {
         assertThrows(IllegalArgumentException.class,
                 () -> ScenarioEnvelopeParser.parse(yaml));
     }
+
+    @Test
+    void parsesMultiDocWithPlaybookHeader() {
+        var yaml = """
+                playbook: "1.0"
+                schema: client
+                ---
+                scenario: helpdesk-intake
+                steps:
+                  - navigate: /intake
+                  - click:
+                      role: button
+                      name: Submit
+                """;
+        var envelope = ScenarioEnvelopeParser.parse(yaml);
+        assertEquals("helpdesk-intake", envelope.scenario());
+        assertEquals(2, envelope.allSteps().size());
+    }
+
+    @Test
+    void singleDocStillWorksAfterSplitter() {
+        var yaml = """
+                scenario: legacy
+                steps:
+                  - navigate: /home
+                """;
+        var envelope = ScenarioEnvelopeParser.parse(yaml);
+        assertEquals("legacy", envelope.scenario());
+        assertEquals(1, envelope.allSteps().size());
+    }
 }

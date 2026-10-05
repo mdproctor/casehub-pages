@@ -31,7 +31,8 @@ public final class ScenarioCompiler {
         if (templateLoader != null) {
             try {
                 ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-                JsonNode root = yamlMapper.readTree(yaml);
+                var split = YamlMultiDocSplitter.split(yaml);
+                JsonNode root = split.content();
                 if (root.has("includes")) {
                     IncludeExpander expander = new IncludeExpander(templateLoader);
                     root = expander.expand(root);

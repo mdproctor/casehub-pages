@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.casehub.yaml.core.foreach.ForEachDirective;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -26,8 +25,8 @@ public final class ScenarioEnvelopeParser {
     private ScenarioEnvelopeParser() {}
 
     public static ScenarioEnvelope parse(String yaml) {
-        try {
-            JsonNode root = YAML.readTree(yaml);
+        var split = YamlMultiDocSplitter.split(yaml);
+        JsonNode root = split.content();
 
             String scenario = root.path("scenario").asText(null);
             if (scenario == null || scenario.isBlank()) {
@@ -68,12 +67,8 @@ public final class ScenarioEnvelopeParser {
             var envelope = new ScenarioEnvelope(scenario, description, speed, actor, onError,
                     params, meta, data, iterations, slides, simulation, chapters, sections, steps);
 
-            validateStepNameUniqueness(envelope.allSteps());
-            return envelope;
-
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to parse scenario YAML", e);
-        }
+        validateStepNameUniqueness(envelope.allSteps());
+        return envelope;
     }
 
     public static String deriveStepName(CompactStep step, int index) {

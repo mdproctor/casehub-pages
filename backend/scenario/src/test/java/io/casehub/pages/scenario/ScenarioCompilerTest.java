@@ -229,6 +229,23 @@ class ScenarioCompilerTest {
         assertThat(adminSteps).hasSize(2);
     }
 
+    @Test
+    void compile_multiDocWithPlaybookHeader() {
+        var yaml = """
+                playbook: "1.0"
+                schema: client
+                ---
+                scenario: multi-doc-compile
+                steps:
+                  - navigate: /home
+                  - click:
+                      role: button
+                      name: Submit
+                """;
+        var compiled = ScenarioCompiler.compile(yaml, Map.of());
+        assertThat(compiled.steps()).hasSize(2);
+    }
+
     private static String fixture(String name) {
         try (InputStream is = ScenarioCompilerTest.class.getClassLoader()
                 .getResourceAsStream("scenarios/" + name)) {

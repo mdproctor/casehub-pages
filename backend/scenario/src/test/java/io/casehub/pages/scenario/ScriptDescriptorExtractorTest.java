@@ -143,4 +143,22 @@ class ScriptDescriptorExtractorTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("scenario");
     }
+
+    @Test
+    void extract_multiDocWithPlaybookHeader() {
+        var desc = ScriptDescriptorExtractor.extract("""
+                playbook: "1.0"
+                schema: client
+                ---
+                scenario: multi-doc-test
+                meta:
+                  description: Multi-doc scenario
+                  labels: [test]
+                steps:
+                  - navigate: /home
+                """, ScriptProvenance.BUNDLED);
+        assertThat(desc.name()).isEqualTo("multi-doc-test");
+        assertThat(desc.description()).isEqualTo("Multi-doc scenario");
+        assertThat(desc.labels()).containsExactly("test");
+    }
 }

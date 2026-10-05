@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,8 +16,8 @@ public final class ScriptDescriptorExtractor {
     private ScriptDescriptorExtractor() {}
 
     public static ScriptDescriptor extract(String yaml, ScriptProvenance provenance) {
-        try {
-            JsonNode root = YAML.readTree(yaml);
+        var split = YamlMultiDocSplitter.split(yaml);
+        JsonNode root = split.content();
 
             String name = root.path("scenario").asText(null);
             if (name == null || name.isBlank()) {
@@ -46,11 +45,8 @@ public final class ScriptDescriptorExtractor {
             ScriptLifecycleState state = provenance == ScriptProvenance.UPLOADED
                     ? ScriptLifecycleState.DRAFT : ScriptLifecycleState.ACTIVE;
 
-            return new ScriptDescriptor(name, description, labels, tags,
-                    params, calls, provenance, state, firstStepTargets);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to parse scenario YAML", e);
-        }
+        return new ScriptDescriptor(name, description, labels, tags,
+                params, calls, provenance, state, firstStepTargets);
     }
 
     private static List<ParamDescriptor> extractParams(JsonNode paramsNode) {
