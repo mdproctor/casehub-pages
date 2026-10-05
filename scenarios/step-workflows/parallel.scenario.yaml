@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "Parallel"
   description: "Parallel runs multiple steps concurrently. All branches execute simultaneously — the step completes when all branches finish."

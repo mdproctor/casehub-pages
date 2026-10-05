@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "Correlation Scope"
   description: "Async request/response correlation — register expected responses by key on a channel, send messages to the channel, then await correlated responses. The scope routes incoming messages by extracted key."

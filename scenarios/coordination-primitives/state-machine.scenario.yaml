@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "State Machine"
   description: "Declarative state machine with transitions, guards, and lifecycle handlers. Define states and allowed transitions, then drive the machine through its lifecycle."

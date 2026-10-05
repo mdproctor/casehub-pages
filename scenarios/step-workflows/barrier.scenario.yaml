@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "Barrier"
   description: "A barrier blocks until all named steps have completed. Use it to express \"wait for A and B before proceeding.\""

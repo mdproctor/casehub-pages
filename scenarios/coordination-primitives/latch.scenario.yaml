@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "Latch"
   description: "Countdown latch — starts at N, each countDown() decrements by 1. When count reaches zero, all waiters are released. Unlike a barrier, a latch is one-shot: once tripped it stays open."

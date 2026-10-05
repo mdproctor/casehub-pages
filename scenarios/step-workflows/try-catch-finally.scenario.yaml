@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "Try / Catch / Finally"
   description: "Structured error handling. Try-steps execute first; if any fails, catch-steps run. Finally-steps always execute regardless of outcome."

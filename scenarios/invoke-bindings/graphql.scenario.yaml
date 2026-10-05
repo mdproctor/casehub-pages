@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "GraphQL"
   description: "GraphQL binding — execute a query or mutation against a GraphQL endpoint. The mock executor simulates a users query and a createUser mutation with realistic response shapes."

@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "REST"
   description: "REST binding — invoke an HTTP endpoint. Supports GET, POST, PUT, DELETE with headers and body. The mock executor simulates a GET request to a users API and a POST to create an order."

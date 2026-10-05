@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "Combined Pipeline"
   description: "Rate-limited pipeline with deadline — composes semaphore, channel, spawned task, concurrent map, and deadline into a single workflow. A producer feeds items through a bounded channel, rate-limited workers process them under a semaphore gate, results accumulate in a concurrent map, and a deadline scopes the entire pipeline."

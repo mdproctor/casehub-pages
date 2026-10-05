@@ -1,3 +1,6 @@
+playbook: "1.0"
+schema: client
+---
 meta:
   title: "Channel"
   description: "Producer-consumer pattern — a bounded channel with capacity 2 connects a producer that sends 4 items to a consumer that receives them. The producer blocks when the channel is full until the consumer drains it."
