@@ -1,4 +1,4 @@
-import type { SectionContent, ScenarioBase } from '../scenario/types.js';
+import type { SectionContent, PlaybookBase } from '../scenario/types.js';
 
 export interface TutorialDescriptor {
   scenario: string;
@@ -34,6 +34,6 @@ export interface YamlEditorSection {
   buildOnPrevious?: boolean;
 }
 
-export interface YamlEditorScenario extends ScenarioBase {
+export interface YamlEditorScenario extends PlaybookBase {
   sections: YamlEditorSection[];
 }

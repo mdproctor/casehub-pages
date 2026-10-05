@@ -1,7 +1,7 @@
 import { DefaultScenarioScope, parseDuration, parseRetryDirective, parseLoopDirective } from '@casehubio/yaml-core/orchestration';
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { ConditionEvaluator } from '@casehubio/yaml-core/condition';
-import type { Scenario, SchedulerStep, SectionContent } from './types.js';
+import type { Playbook, SchedulerStep, SectionContent } from './types.js';
 import type { LoopDirective } from '@casehubio/yaml-core/orchestration';
 import { isSectioned } from './types.js';
 import type { ScenarioState, OutlineNode } from '../controller/scenario-connection-controller.js';
@@ -22,7 +22,7 @@ export interface SchedulerOptions {
   onComplete?: (scenarioName: string) => void;
 }
 
-export interface ScenarioRunner {
+export interface PlaybookRunner {
   play(): void;
   pause(): void;
   step(): Promise<void>;
@@ -42,9 +42,9 @@ export interface ScenarioRunner {
 type RunnerState = 'idle' | 'playing' | 'paused' | 'done';
 
 export function createScheduler(
-  scenario: Scenario,
+  scenario: Playbook,
   options: SchedulerOptions,
-): ScenarioRunner {
+): PlaybookRunner {
   const clock = new DefaultVirtualClock();
   const speed = options.speed ?? 1;
   clock.setSpeed(speed);
@@ -447,7 +447,7 @@ export function createScheduler(
   };
   options.eventTarget.addEventListener('scenario-command', onCommand);
 
-  const runner: ScenarioRunner = {
+  const runner: PlaybookRunner = {
     get state(): RunnerState { return runnerState; },
     get outline(): OutlineNode[] { return outline; },
     get clock(): VirtualClock { return clock; },
@@ -531,7 +531,7 @@ export function createScheduler(
   return runner;
 }
 
-function buildOutline(scenario: Scenario): OutlineNode[] {
+function buildOutline(scenario: Playbook): OutlineNode[] {
   if (!isSectioned(scenario)) return [];
   return scenario.sections.map((section) => ({
     label: section.title,

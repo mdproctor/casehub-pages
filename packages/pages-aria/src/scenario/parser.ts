@@ -4,7 +4,7 @@ import { Walker } from '@casehubio/yaml-core/step';
 import { IncludeExpander, parsePlaybookFrontMatter } from '@casehubio/yaml-core';
 import type { PlaybookFrontMatter, TemplateLoader } from '@casehubio/yaml-core';
 import type {
-  Scenario, FlatScenario, SectionedScenario,
+  Playbook, FlatPlaybook, SectionedPlaybook,
   TutorialMeta, TutorialSection, SectionContent,
   SchedulerStep, PreExtractedStep,
   OrchestrationBlock,
@@ -128,9 +128,9 @@ function resolveStepArray(rawSteps: Record<string, unknown>[], catalog: Catalog)
   return mergeSteps(resolved, preExtracted, slotTypes);
 }
 
-export interface ScenarioDocument {
+export interface PlaybookParseResult {
   frontMatter: PlaybookFrontMatter | null;
-  scenario: Scenario;
+  scenario: Playbook;
 }
 
 function splitMultiDoc(yamlString: string): { meta: Record<string, unknown> | null; content: Record<string, unknown> } {
@@ -150,38 +150,38 @@ function splitMultiDoc(yamlString: string): { meta: Record<string, unknown> | nu
   return { meta: firstDoc, content: merged };
 }
 
-export function parseScenario(yamlString: string, catalog: Catalog): Scenario {
+export function parsePlaybook(yamlString: string, catalog: Catalog): Playbook {
   const { meta, content } = splitMultiDoc(yamlString);
 
   if (meta && !('playbook' in meta)) {
-    return parseScenarioFromParsed(content, catalog);
+    return parsePlaybookFromParsed(content, catalog);
   }
 
   if (meta && 'playbook' in meta) {
-    return parseScenarioFromParsed(content, catalog);
+    return parsePlaybookFromParsed(content, catalog);
   }
 
-  return parseScenarioFromParsed(content, catalog);
+  return parsePlaybookFromParsed(content, catalog);
 }
 
-export function parseScenarioDocument(yamlString: string, catalog: Catalog): ScenarioDocument {
+export function parsePlaybookDocument(yamlString: string, catalog: Catalog): PlaybookParseResult {
   const { meta, content } = splitMultiDoc(yamlString);
   const frontMatter = meta ? parsePlaybookFrontMatter(meta) : null;
-  const scenario = parseScenarioFromParsed(content, catalog);
+  const scenario = parsePlaybookFromParsed(content, catalog);
   return { frontMatter, scenario };
 }
 
-export async function parseScenarioWithIncludes(
+export async function parsePlaybookWithIncludes(
   yamlString: string,
   catalog: Catalog,
   loader: TemplateLoader,
-): Promise<Scenario> {
+): Promise<Playbook> {
   const { content } = splitMultiDoc(yamlString);
   const expanded = await IncludeExpander.expand(content, loader);
-  return parseScenarioFromParsed(expanded, catalog);
+  return parsePlaybookFromParsed(expanded, catalog);
 }
 
-function parseScenarioFromParsed(parsed: Record<string, unknown>, catalog: Catalog): Scenario {
+function parsePlaybookFromParsed(parsed: Record<string, unknown>, catalog: Catalog): Playbook {
   const hasSteps = Array.isArray(parsed['steps']);
   const hasSections = Array.isArray(parsed['sections']);
 
@@ -208,7 +208,7 @@ function parseScenarioFromParsed(parsed: Record<string, unknown>, catalog: Catal
         steps,
       };
     });
-    const result: SectionedScenario = { sections };
+    const result: SectionedPlaybook = { sections };
     if (parsed['scenario']) result.scenario = parsed['scenario'] as string;
     if (meta) result.meta = meta;
     if (orchestration) result.orchestration = orchestration;
@@ -216,7 +216,7 @@ function parseScenarioFromParsed(parsed: Record<string, unknown>, catalog: Catal
   }
 
   const steps = resolveStepArray(parsed['steps'] as Record<string, unknown>[], catalog);
-  const result: FlatScenario = { steps };
+  const result: FlatPlaybook = { steps };
   if (parsed['scenario']) result.scenario = parsed['scenario'] as string;
   if (meta) result.meta = meta;
   if (orchestration) result.orchestration = orchestration;

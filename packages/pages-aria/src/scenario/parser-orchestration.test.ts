@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseScenario } from './parser.js';
-import type { FlatScenario, PreExtractedStep } from './types.js';
+import { parsePlaybook } from './parser.js';
+import type { FlatPlaybook, PreExtractedStep } from './types.js';
 import type { Catalog, CatalogEntry, PluginStep, ParallelStep, DelayStep, BlockStep } from '@casehubio/yaml-core/step';
 import { stepSuccess } from '@casehubio/yaml-core/step';
 
@@ -38,7 +38,7 @@ steps:
       branch-b:
         - click: { role: button, name: B }
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as ParallelStep;
     expect(step.kind).toBe('parallel');
     expect(step.steps).toHaveLength(2);
@@ -54,7 +54,7 @@ scenario: test
 steps:
   - signal: go
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PreExtractedStep;
     expect(step.kind).toBe('signal-fire');
     expect(step.name).toBe('go');
@@ -66,7 +66,7 @@ scenario: test
 steps:
   - await: { signal: data-loaded }
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PreExtractedStep;
     expect(step.kind).toBe('await-signal');
     expect(step.name).toBe('data-loaded');
@@ -78,7 +78,7 @@ scenario: test
 steps:
   - await: { barrier: all-ready }
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PreExtractedStep;
     expect(step.kind).toBe('await-barrier');
     expect(step.name).toBe('all-ready');
@@ -90,7 +90,7 @@ scenario: test
 steps:
   - delay: 500ms
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as DelayStep;
     expect(step.kind).toBe('delay');
     expect(step.duration).toBe(500);
@@ -103,7 +103,7 @@ steps:
   - click: { role: button, name: OK }
     delay: 100ms
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.decorators['delay']).toBe('100ms');
@@ -116,7 +116,7 @@ steps:
   - click: { role: button, name: OK }
     if: isReady
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.decorators['if']).toBe('isReady');
@@ -129,7 +129,7 @@ steps:
   - click: { role: button, name: Submit }
     retry: 3
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.decorators['retry']).toBe(3);
@@ -147,7 +147,7 @@ orchestration:
 steps:
   - click: { role: button, name: Start }
     `;
-    const result = parseScenario(yaml, catalog);
+    const result = parsePlaybook(yaml, catalog);
     expect(result.orchestration?.barriers?.['all-ready']?.count).toBe(3);
     expect(result.orchestration?.channels?.['trades']?.capacity).toBe(10);
     expect(result.orchestration?.signals).toEqual(['go', 'stop']);
@@ -165,7 +165,7 @@ steps:
       - click: { role: button, name: Refresh }
   - click: { role: button, name: After }
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     expect(result.steps).toHaveLength(2);
     expect((result.steps[0] as PluginStep).entry.qualifiedName).toBe('click');
     expect((result.steps[1] as PluginStep).entry.qualifiedName).toBe('click');
@@ -179,7 +179,7 @@ steps:
       dataset: accounts
       data: { id: 1, name: Test }
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.entry.qualifiedName).toBe('simulated');
@@ -194,7 +194,7 @@ steps:
       domain: finance
       operation: getAccounts
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     const step = result.steps[0] as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.entry.qualifiedName).toBe('graphql');
@@ -208,7 +208,7 @@ steps:
   - click: { role: button, name: OK }
   - fill: { role: textbox, name: Email, value: test@example.com }
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     expect(result.steps).toHaveLength(2);
     expect(result.steps.every(s => s.kind === 'plugin')).toBe(true);
     expect((result.steps[0] as PluginStep).entry.qualifiedName).toBe('click');
@@ -225,7 +225,7 @@ steps:
   - await: { signal: ready }
   - click: { role: button, name: Finish }
     `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     expect(result.steps).toHaveLength(5);
     expect(result.steps[0].kind).toBe('plugin');
     expect(result.steps[1].kind).toBe('signal-fire');

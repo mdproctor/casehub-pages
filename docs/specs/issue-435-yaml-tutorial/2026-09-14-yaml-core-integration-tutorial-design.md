@@ -452,7 +452,7 @@ The tutorial uses the existing `pages-tutorial-host` and `pages-tutorial-catalog
 
 - `TutorialDescriptor` registers the learning path in the catalog
 - `LearningPath` groups the 15 steps
-- `SectionedScenario` format wraps each step's content + validation
+- `SectionedPlaybook` format wraps each step's content + validation
 - The builder workbench replaces the narrative+controller UI for this tutorial type
 
 A new `contentType: 'yaml-editor'` distinguishes this from existing `'slides-only'` and `'hands-on'` tutorials. This requires:

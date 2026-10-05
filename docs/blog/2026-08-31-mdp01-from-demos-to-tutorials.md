@@ -21,7 +21,7 @@ own identity.
 
 ## The type system shift
 
-The scenario engine had a flat `Scenario` type: a name and a steps array. Tutorials
+The scenario engine had a flat `Playbook` type: a name and a steps array. Tutorials
 need sections — narrative content interleaved with executable steps. Rather than
 bolting optional fields onto the existing type, we split it into a discriminated
 union: `FlatScenario | SectionedScenario`. The parser detects which format the

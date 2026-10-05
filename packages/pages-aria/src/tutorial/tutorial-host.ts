@@ -2,8 +2,8 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { TutorialDescriptor, LearningPath, YamlEditorSection } from './types.js';
 import { isSectioned } from '../scenario/types.js';
-import { parseScenario as parse } from '../scenario/parser.js';
-import { createScheduler, type ScenarioRunner } from '../scenario/scheduler.js';
+import { parsePlaybook as parse } from '../scenario/parser.js';
+import { createScheduler, type PlaybookRunner } from '../scenario/scheduler.js';
 import { validateYamlStep } from './yaml-editor-runner.js';
 import './tutorial-catalog.js';
 import '../controller/scenario-controller.js';
@@ -91,7 +91,7 @@ export class PagesTutorialHost extends LitElement {
   @state() private _yamlEditorSections: YamlEditorSection[] = [];
   @state() private _yamlEditorValid = false;
 
-  private _runner: ScenarioRunner | null = null;
+  private _runner: PlaybookRunner | null = null;
   private _eventTarget: EventTarget | null = null;
   private _sectionTitles: string[] = [];
   private _scenarioRefCache: Map<string, string> = new Map();

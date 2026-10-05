@@ -824,7 +824,7 @@ and receives `ScenarioState` events via `_trackState()` (line 93).
 
 Migration:
 - Change import to `createScheduler` from `../scenario/scheduler.js`
-- The `ScenarioRunner` interface preserves the same API shape:
+- The `PlaybookRunner` interface preserves the same API shape:
   `play()`, `pause()`, `step()`, `runTo(sectionTitle)`, `setSpeed()`, `dispose()`
 - Event payload remains `ScenarioState` on topic `scenario:state` — no change
 - The `PagesScenarioController` and `PagesScenarioNarrative` components

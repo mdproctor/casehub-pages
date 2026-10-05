@@ -12,7 +12,7 @@
 
 **Goal:** Build a demo authoring engine where data events, UI actions, and visual annotations are scripted on a shared timeline with speed control, operable from any browser tab or machine.
 
-**Architecture:** `Scenario` is the top-level composition — sources, steps, and controller. Steps fire on time triggers, data predicates, or after-chains. UI actions dispatch real DOM events. Annotations are positioned overlays managed by the controller. Remote control via `ScenarioHost`/`ScenarioRemote` over `ControlChannel` (BroadcastChannel or WebSocket).
+**Architecture:** `Playbook` is the top-level composition — sources, steps, and controller. Steps fire on time triggers, data predicates, or after-chains. UI actions dispatch real DOM events. Annotations are positioned overlays managed by the controller. Remote control via `ScenarioHost`/`ScenarioRemote` over `ControlChannel` (BroadcastChannel or WebSocket).
 
 **Tech Stack:** TypeScript 5, Lit (for interactive UI components per web-component-strategy protocol), Vitest.
 

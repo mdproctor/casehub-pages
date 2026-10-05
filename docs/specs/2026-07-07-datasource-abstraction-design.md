@@ -474,7 +474,7 @@ function composite(initial: DataSource, live: DataSource): DataSource;
 
 ### 3.1 Scenario Composition
 
-A `Scenario` is the top-level unit — sources, steps, and controller configuration
+A `Playbook` is the top-level unit — sources, steps, and controller configuration
 composed together.
 
 ```typescript
@@ -843,7 +843,7 @@ the same definition.
 
 ### 6.5 Scenario-Mode Pages
 
-When a page uses a `Scenario` instead of individual datasets, the scenario manages
+When a page uses a `Playbook` instead of individual datasets, the scenario manages
 all sources and the controller:
 
 ```typescript
@@ -1081,7 +1081,7 @@ Each source implementation gets its own test suite:
 | Package | What it gains |
 |---------|-------------- |
 | `pages-data` | `DataSource`, `DataSink`, `SourceError`, `MutableDataSource`, source implementations (inline, csv, rest, sse, ws, postMessage, serverQuery, simulated, replay, recording, composite, join), `ScenarioController`, `createScenarioController`, mutation DSL |
-| `pages-runtime` | `Scenario` composition, step/trigger engine, `ScenarioHost`/`ScenarioRemote`, `DataPipeline` refactored, `DataSourceBinding`, annotation management |
+| `pages-runtime` | `Playbook` composition, step/trigger engine, `ScenarioHost`/`ScenarioRemote`, `DataPipeline` refactored, `DataSourceBinding`, annotation management |
 | `pages-viz` or `pages-runtime` | `<scenario-controls>` widget, `<dataset-explorer>` panel, annotation overlay renderer |
 | `pages-ui` | New builder functions (`bind`, re-exports of source constructors), `dataset()`/`inlineDataset()` removed |
 
@@ -1109,12 +1109,12 @@ provider/extraction/push machinery behind the DataSource interface. Integration
 tests verifying identical behaviour to current ExternalDataSetDef resolution.
 
 ### Phase 4: Pipeline Integration (pages-runtime)
-Refactor `DataPipeline` to use `DataSource`. Add `DataSourceBinding`, `Scenario`
+Refactor `DataPipeline` to use `DataSource`. Add `DataSourceBinding`, `Playbook`
 support to page options. `ExternalDataSetDef` becomes internal. YAML path
 continues to work (YAML parser creates DataSource objects internally).
 
 ### Phase 5: Scenario Engine (pages-runtime)
-`Scenario` composition, `ScenarioStep` execution, trigger system (time, data,
+`Playbook` composition, `ScenarioStep` execution, trigger system (time, data,
 after), `UIAction` dispatch. Annotation lifecycle management.
 
 ### Phase 6: Remote Control (pages-runtime)

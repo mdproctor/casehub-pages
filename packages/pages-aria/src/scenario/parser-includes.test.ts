@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { parseScenario, parseScenarioWithIncludes } from './parser.js';
+import { parsePlaybook, parsePlaybookWithIncludes } from './parser.js';
 import { createScenarioCatalog } from './catalog-factory.js';
 import { parse } from 'yaml';
 import type { TemplateLoader } from '@casehubio/yaml-core';
-import type { FlatScenario } from './types.js';
+import type { FlatPlaybook } from './types.js';
 
 describe('parseScenarioWithIncludes', () => {
   const catalog = createScenarioCatalog();
@@ -42,7 +42,7 @@ steps:
       name: Submit
 `;
     const loader = mockLoader({ 'seeds/chat.yaml': seedTemplate });
-    const result = await parseScenarioWithIncludes(yaml, catalog, loader) as FlatScenario;
+    const result = await parsePlaybookWithIncludes(yaml, catalog, loader) as FlatPlaybook;
 
     expect(result.steps.length).toBe(2);
     expect(result.steps[0].kind).toBe('plugin');
@@ -57,7 +57,7 @@ steps:
       role: button
       name: Go
 `;
-    const result = parseScenario(yaml, catalog) as FlatScenario;
+    const result = parsePlaybook(yaml, catalog) as FlatPlaybook;
     expect(result.steps).toHaveLength(1);
   });
 });
