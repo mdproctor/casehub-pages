@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseScenario } from './parser.js';
+import { parseScenario, parseScenarioDocument } from './parser.js';
 import { isSectioned } from './types.js';
 import type { FlatScenario, SectionedScenario } from './types.js';
 import type { Catalog, CatalogEntry, PluginStep } from '@casehubio/yaml-core/step';
@@ -406,5 +406,84 @@ sections:
     const step = parsed.sections[0]!.steps[0]! as PluginStep;
     expect(step.kind).toBe('plugin');
     expect(step.params['label']).toBe('forEach');
+  });
+});
+
+describe('multi-document YAML format', () => {
+  it('parses front matter + content', () => {
+    const yaml = `
+scenario: multi-doc-test
+meta:
+  title: "Multi-Doc"
+---
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    expect(scenario.scenario).toBe('multi-doc-test');
+    expect(scenario.meta?.title).toBe('Multi-Doc');
+    expect(scenario.steps).toHaveLength(1);
+  });
+
+  it('parses playbook front matter + content', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+---
+scenario: playbook-test
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const scenario = parseScenario(yaml, catalog) as FlatScenario;
+    expect(scenario.scenario).toBe('playbook-test');
+    expect(scenario.steps).toHaveLength(1);
+  });
+
+  it('parseScenarioDocument returns playbook front matter', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+name: my-playbook
+---
+scenario: playbook-test
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const doc = parseScenarioDocument(yaml, catalog);
+    expect(doc.frontMatter).not.toBeNull();
+    expect(doc.frontMatter!.version).toBe('1.0');
+    expect(doc.frontMatter!.schema).toBe('client');
+    expect(doc.frontMatter!.name).toBe('my-playbook');
+    expect(doc.scenario.steps).toHaveLength(1);
+  });
+
+  it('parseScenarioDocument returns null frontMatter for legacy', () => {
+    const yaml = `
+scenario: legacy
+steps:
+  - click: { role: button, name: "A" }
+`;
+    const doc = parseScenarioDocument(yaml, catalog);
+    expect(doc.frontMatter).toBeNull();
+    expect(doc.scenario.scenario).toBe('legacy');
+  });
+
+  it('multi-doc sections format', () => {
+    const yaml = `
+scenario: multi-doc-sections
+meta:
+  title: "Sections"
+---
+sections:
+  - title: Intro
+    steps:
+      - click: { role: button, name: "A" }
+`;
+    const scenario = parseScenario(yaml, catalog);
+    expect(isSectioned(scenario)).toBe(true);
+    if (isSectioned(scenario)) {
+      expect(scenario.sections).toHaveLength(1);
+      expect(scenario.meta?.title).toBe('Sections');
+    }
   });
 });
