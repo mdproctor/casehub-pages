@@ -140,7 +140,11 @@ function splitMultiDoc(yamlString: string): { meta: Record<string, unknown> | nu
   }
 
   const firstDoc = docs[0].toJSON() as Record<string, unknown>;
-  const secondDoc = docs[1].toJSON() as Record<string, unknown>;
+  const rawSecond = docs[1].toJSON();
+  if (typeof rawSecond !== 'object' || rawSecond === null || Array.isArray(rawSecond)) {
+    throw new Error('Second YAML document must be a mapping');
+  }
+  const secondDoc = rawSecond as Record<string, unknown>;
 
   if ('playbook' in firstDoc) {
     return { meta: firstDoc, content: secondDoc };

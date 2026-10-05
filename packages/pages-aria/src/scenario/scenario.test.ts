@@ -486,4 +486,15 @@ sections:
       expect(scenario.meta?.title).toBe('Sections');
     }
   });
+
+  it('rejects non-map second document', () => {
+    const yaml = `
+playbook: "1.0"
+schema: client
+---
+- item1
+- item2
+`;
+    expect(() => parsePlaybook(yaml, catalog)).toThrow('must be a mapping');
+  });
 });
