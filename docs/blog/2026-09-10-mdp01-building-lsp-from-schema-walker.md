@@ -22,7 +22,7 @@ This layering also means the core is testable without LSP infrastructure — tes
 
 The schema registry itself is pluggable. Each YAML format registers with an extension list and an optional content detector. CaseHub has five YAML formats — Page, CaseDefinition, Serverless Workflow, HTN, and Org Structure — each with different root-level structure. Extension-based detection (`.page.yaml`, `.case.yaml`, `.swf.yaml`) is O(1). For plain `.yaml` files, the registry falls back to structural inspection: `organization:` at root means Org, `do:` means SWF, `pages:` means Page, `dsl: + spec.bindings` means CaseDefinition. The detection chain is ordered by discrimination cost.
 
-The jq intelligence layer is deliberately minimal. CaseHub YAML uses jq expressions in dataset pipelines and guard conditions across all five formats. Rather than pulling in a full jq parser (which would need to be under 100KB gzipped for the web worker), we went with regex-based validation — bracket matching and pipe-sequence checks. Column-aware path completion (`.` followed by field names from the dataset context) works without parsing the full expression.
+The jq intelligence layer is deliberately minimal. CaseHub Playbook YAML uses jq expressions in dataset pipelines and guard conditions across all five formats. Rather than pulling in a full jq parser (which would need to be under 100KB gzipped for the web worker), we went with regex-based validation — bracket matching and pipe-sequence checks. Column-aware path completion (`.` followed by field names from the dataset context) works without parsing the full expression.
 
 ## Symbol Table and Rename
 

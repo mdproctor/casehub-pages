@@ -1,7 +1,7 @@
 {
   "name": "@casehubio/pages-lsp",
   "version": "0.1.0",
-  "description": "CaseHub LSP server — schema-driven completion, diagnostics, and hover for CaseHub YAML formats",
+  "description": "CaseHub LSP server — schema-driven completion, diagnostics, and hover for CaseHub Playbook YAML formats",
   "repository": {
     "type": "git",
     "url": "https://github.com/casehubio/casehub-pages.git"

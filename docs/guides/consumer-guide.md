@@ -126,7 +126,7 @@ YAML -> @casehubio/pages-ui (parse) -> @casehubio/pages-data (resolve)
 
 ### YAML Composition (yaml-core)
 
-A format-agnostic preprocessing layer that adds variables, modules, forEach, and conditionals to any CaseHub YAML format. Integrated into the page parser pipeline as step 0.
+A format-agnostic preprocessing layer that adds variables, modules, forEach, and conditionals to any CaseHub Playbook YAML format. Integrated into the page parser pipeline as step 0.
 
 ```
 YAML text → js-yaml parse → yaml-core.expand() → page parser → component tree

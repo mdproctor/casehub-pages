@@ -73,7 +73,7 @@ This matters because the graph renderer is framework infrastructure — it shoul
 
 ## The Parser Round-Trip Held
 
-The other Phase 0 gate: does the `yaml` npm package (CST-preserving, v2+) round-trip CaseHub YAML files without losing semantics? The engine uses Jackson + SnakeYAML. Expression strings like `${ .document.contentType }` with their `${` syntax could trip either parser's quoting heuristics.
+The other Phase 0 gate: does the `yaml` npm package (CST-preserving, v2+) round-trip CaseHub Playbook YAML files without losing semantics? The engine uses Jackson + SnakeYAML. Expression strings like `${ .document.contentType }` with their `${` syntax could trip either parser's quoting heuristics.
 
 It held. Every fixture — full case definitions, expression strings with comparison operators and null checks, multiline block scalars, mixed quoting styles — round-tripped through `parseDocument()` → `toString()` and parsed identically by both `js-yaml` (same YAML 1.1 spec as SnakeYAML) and Jackson itself. The YAML-as-source-of-truth design stands.
 

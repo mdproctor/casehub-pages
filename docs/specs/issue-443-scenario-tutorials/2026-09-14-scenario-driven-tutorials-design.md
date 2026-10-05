@@ -278,7 +278,7 @@ Tutorials use the standard `hands-on` sectioned scenario format:
 ```yaml
 scenario: yaml-composition
 meta:
-  title: "CaseHub YAML Composition"
+  title: "CaseHub Playbook YAML Composition"
   description: "Watch the composition language build pages live"
   area: yaml-composition
 

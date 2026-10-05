@@ -13,7 +13,7 @@
 Validate the two hard-gate prerequisites before any Phase 1 implementation:
 
 1. **React Flow v12 can be hosted inside a Lit Web Component** with proper CSS isolation, design token availability, and correct interaction handling — without Shadow DOM on the canvas.
-2. **The `yaml` npm package round-trips CaseHub YAML** with semantic fidelity, and Jackson + SnakeYAML can parse the output identically.
+2. **The `yaml` npm package round-trips CaseHub Playbook YAML** with semantic fidelity, and Jackson + SnakeYAML can parse the output identically.
 
 This spike produces production code in a real package (`packages/graph-renderer/`), not a throwaway prototype.
 

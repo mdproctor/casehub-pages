@@ -1,4 +1,4 @@
-# LSP Server + IDE Plugins for CaseHub YAML
+# LSP Server + IDE Plugins for CaseHub Playbook YAML
 
 **Issue:** casehubio/casehub-pages#407
 **Date:** 2026-09-10
@@ -6,7 +6,7 @@
 
 ## Overview
 
-A TypeScript Language Server Protocol (LSP) server providing schema-driven intelligence for all five CaseHub YAML formats — Page, CaseDefinition, Serverless Workflow (SWF), HTN, and Org Structure. The same LSP core powers three consumer surfaces: browser-based CodeMirror editors (via web worker), VS Code extension, and IntelliJ plugin. IDE plugins add native UI wrappers (refactoring preview, usage trees) as progressive enhancements over the base LSP experience. A visual diagram editor ("Open With") is sequenced as a later batch with its own design pass.
+A TypeScript Language Server Protocol (LSP) server providing schema-driven intelligence for all five CaseHub Playbook YAML formats — Page, CaseDefinition, Serverless Workflow (SWF), HTN, and Org Structure. The same LSP core powers three consumer surfaces: browser-based CodeMirror editors (via web worker), VS Code extension, and IntelliJ plugin. IDE plugins add native UI wrappers (refactoring preview, usage trees) as progressive enhancements over the base LSP experience. A visual diagram editor ("Open With") is sequenced as a later batch with its own design pass.
 
 ## Architecture
 
@@ -51,7 +51,7 @@ A TypeScript Language Server Protocol (LSP) server providing schema-driven intel
 
 ### Why a Custom LSP Server (Not Extending yaml-language-server)
 
-CaseHub YAML is discriminated-union-dominant. The `componentSchemaRegistry` has 55+ types dispatched by a `type` discriminator. The binding-schema has three discriminated unions (targetType, on, triggerType). yaml-language-server's JSON Schema `oneOf` handling produces flat completion — all branches' properties listed simultaneously, not narrowed by discriminator value. This is worse than no completion for CaseHub's format.
+CaseHub Playbook YAML is discriminated-union-dominant. The `componentSchemaRegistry` has 55+ types dispatched by a `type` discriminator. The binding-schema has three discriminated unions (targetType, on, triggerType). yaml-language-server's JSON Schema `oneOf` handling produces flat completion — all branches' properties listed simultaneously, not narrowed by discriminator value. This is worse than no completion for CaseHub's format.
 
 The existing `navigateSchema()` walker (375 lines in `schema-completion.ts`) already handles discriminated unions correctly with sibling-aware branch resolution — this IS the intelligence engine. Building a custom LSP around it is shorter and more capable than fighting yaml-language-server's schema resolution.
 
@@ -270,7 +270,7 @@ The challenge pass migrates these structural patterns from blocks-ui's yaml-edit
 
 ## jq Expression Intelligence
 
-jq expressions appear across all five CaseHub YAML formats, not just pages:
+jq expressions appear across all five CaseHub Playbook YAML formats, not just pages:
 
 | Format | Where jq expressions appear | Schema annotation |
 |--------|---------------------------|-------------------|
@@ -414,7 +414,7 @@ Four batches within two work slots, each with a review gate before the next star
 
 Issue #407 currently has no labels, milestone, or epic. Given the scope (new package, two IDE plugins, four format schema generators, refactoring engine), a tracking epic will be created with sub-issues per batch:
 
-- **Epic:** "LSP Server + IDE Plugins for CaseHub YAML" (parent of #407)
+- **Epic:** "LSP Server + IDE Plugins for CaseHub Playbook YAML" (parent of #407)
 - **Sub-issues:** one per batch (LSP Core, Refactoring Engine, IDE Plugins, Diagram Webview), plus one for domain schema generation (cross-cutting)
 - **Labels:** `lsp`, `ide-plugin` on all related issues
 

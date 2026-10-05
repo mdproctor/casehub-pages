@@ -1,5 +1,5 @@
 path: yaml-composition
-title: "CaseHub YAML Composition Language"
+title: "CaseHub Playbook YAML Composition Language"
 description: "Master variables, modules, forEach, and conditionals"
 labels:
   - difficulty:beginner

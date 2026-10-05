@@ -2,7 +2,7 @@
 
 Language intelligence for CaseHub Page YAML, powered by the `pages-lsp` server.
 
-For all five CaseHub YAML formats (Page, CaseDefinition, SWF, HTN, Org), install **CaseHub YAML** from `blocks-ui/plugins/intellij-casehub/` instead — it supersedes this plugin.
+For all five CaseHub Playbook YAML formats (Page, CaseDefinition, SWF, HTN, Org), install **CaseHub Playbook YAML** from `blocks-ui/plugins/intellij-casehub/` instead — it supersedes this plugin.
 
 ## Features
 

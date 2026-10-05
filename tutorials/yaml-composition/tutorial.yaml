@@ -1,6 +1,6 @@
 scenario: yaml-composition
 meta:
-  title: "CaseHub YAML Composition"
+  title: "CaseHub Playbook YAML Composition"
   description: "Watch variables, modules, forEach, and conditionals build progressively complex pages"
   area: yaml-composition
   labels:
@@ -16,7 +16,7 @@ meta:
   estimated: "45 min"
   prerequisites: []
   hero:
-    title: "CaseHub YAML Composition"
+    title: "CaseHub Playbook YAML Composition"
     subtitle: "Build complex pages from reusable, parameterized modules"
     icon: "🧩"
 
