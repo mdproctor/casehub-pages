@@ -12,7 +12,7 @@ A browsable catalog of all registered step actions (YAML definitions, MCP tools,
 ### Two-surface split
 
 - **Java `@McpDomain("step-catalog")` resolver** — serves catalog data (browse, search, detail). Reads YAML step definition files, enumerates registered MCP tools, discovers script files. Static at startup.
-- **TS pages-aria REST endpoint** — `POST /scenario/catalog/execute` handles live step execution via the existing `StructuralStepEvaluator` and invoke handlers.
+- **TS pages-aria REST endpoint** — `POST /scenario/catalog/execute` handles live step execution via the existing `StructuralStepEvaluator` (renamed to StructuralEvaluator) and invoke handlers.
 
 This split exists because the Java backend can read all definition sources natively, while step execution depends on the TS invoke handler pipeline which already works.
 
@@ -21,7 +21,7 @@ This split exists because the Java backend can read all definition sources nativ
 ```
 ┌─────────────────────────────┐
 │  Java Backend               │
-│  StepCatalogResolver        │
+│  StepCatalogResolver (→ CatalogResolver) │
 │  @McpDomain("step-catalog") │
 │                             │
 │  Sources:                   │
@@ -47,14 +47,14 @@ This split exists because the Java backend can read all definition sources nativ
            ▼
 ┌──────────────────────────────┐
 │  TS pages-aria server        │
-│  StepWalker → Evaluator      │
-│  Returns StepResult           │
+│  Walker → Evaluator           │
+│  Returns Result               │
 └──────────────────────────────┘
 ```
 
 ## Java Backend — StepCatalogResolver
 
-### Class: `StepCatalogResolver`
+### Class: `StepCatalogResolver` (renamed to CatalogResolver)
 
 Location: `backend/mcp/src/main/java/io/casehub/pages/mcp/StepCatalogResolver.java`
 
@@ -74,13 +74,13 @@ public class StepCatalogResolver {
 }
 ```
 
-### Class: `StepCatalogService`
+### Class: `StepCatalogService` (renamed to CatalogService)
 
 Location: `backend/scenario-runtime/src/main/java/io/casehub/pages/scenario/runtime/StepCatalogService.java`
 
 Scans and caches catalog entries at startup from three sources:
 
-1. **YAML step definition files** — reads `*.yaml` files from a configurable classpath/filesystem path (e.g. `casehub.step-catalog.definitions-path`). Parses the `DefinitionFile` format using the same schema as the TS `StepDefinitionParser`: namespace, actions map (each with name, description, inputs, outputs, invoke binding). The Java parser mirrors the TS parser's field mapping (including `default`/`defaultValue` and `enum`/`allowedValues` aliases).
+1. **YAML step definition files** — reads `*.yaml` files from a configurable classpath/filesystem path (e.g. `casehub.step-catalog.definitions-path`). Parses the `DefinitionFile` format using the same schema as the TS `StepDefinitionParser` (renamed to DeclarationParser): namespace, actions map (each with name, description, inputs, outputs, invoke binding). The Java parser mirrors the TS parser's field mapping (including `default`/`defaultValue` and `enum`/`allowedValues` aliases).
 
 2. **MCP tools** — enumerates tools from the platform's MCP domain registry (CDI-discovered `@McpDomain` beans). Each `@Query`/`@Mutation` has a name, parameter types, and return type that map to the catalog schema.
 
@@ -157,7 +157,7 @@ Or on failure:
 }
 ```
 
-**Implementation:** Build a `CompositeStepCatalog` from available sources (same sources the scenario runtime uses). Construct a single plugin step from the action name and provided params. Run through `StructuralStepEvaluator` with a `MapServiceRegistry`. Return the `StepResult` as JSON.
+**Implementation:** Build a `CompositeStepCatalog` (renamed to CompositeCatalog) from available sources (same sources the scenario runtime uses). Construct a single plugin step from the action name and provided params. Run through `StructuralStepEvaluator` (renamed to StructuralEvaluator) with a `MapServiceRegistry`. Return the `StepResult` (renamed to Result) as JSON.
 
 ## UI Component — `<pages-step-catalog>`
 
@@ -277,13 +277,13 @@ Per `aria-interaction-contract.md`:
 
 ## References
 
-- `../../../packages/yaml-core/src/step/walker.ts` — StepCatalog interface, CatalogEntry
+- `../../../packages/yaml-core/src/step/walker.ts` — Catalog interface (renamed from StepCatalog), CatalogEntry
 - `../../../packages/yaml-core/src/step/types.ts` — StepDefinition, StepParameter, InvokeBinding types
-- `../../../packages/yaml-core/src/step/catalog.ts` — CompositeStepCatalog, CatalogSource
-- `packages/yaml-core/src/step/sources/yaml-source.ts` — YamlStepDefinitionSource
+- `../../../packages/yaml-core/src/step/catalog.ts` — CompositeCatalog (renamed from CompositeStepCatalog), CatalogSource
+- `packages/yaml-core/src/step/sources/yaml-source.ts` — YamlDefinitionSource (renamed from YamlStepDefinitionSource)
 - `packages/yaml-core/src/step/sources/mcp-source.ts` — McpToolSource
 - `packages/yaml-core/src/step/sources/script-source.ts` — ScriptSource
-- `packages/yaml-core/src/step/structural-evaluator.ts` — StructuralStepEvaluator
+- `packages/yaml-core/src/step/structural-evaluator.ts` — StructuralEvaluator (renamed from StructuralStepEvaluator)
 - `packages/pages-aria/src/controller/library-view.ts` — PagesLibraryView (UI pattern reference)
 - `packages/pages-aria/src/controller/scenario-controller.ts` — PagesScenarioController (integration point)
 - `backend/mcp/src/main/java/io/casehub/pages/mcp/ScenarioResolver.java` — @McpDomain pattern

@@ -1,6 +1,6 @@
 # Decisions — Step Catalog Browser (#501)
 
-## D1: Java StepCatalog service structure
+## D1: Java StepCatalog (renamed to Catalog) service structure
 
 **Choice:** Single-class resolver with inline scanning
 **Alternatives:**
@@ -64,7 +64,7 @@
 
 ## D4: Try-it execution endpoint
 
-**Choice:** REST endpoint `POST /scenario/catalog/execute` on pages-aria TS server — takes `{ actionName, params }`, resolves via StepWalker, runs through StructuralStepEvaluator, returns StepResult
+**Choice:** REST endpoint `POST /scenario/catalog/execute` on pages-aria TS server — takes `{ actionName, params }`, resolves via StepWalker (renamed to Walker), runs through StructuralStepEvaluator (renamed to StructuralEvaluator), returns StepResult (renamed to Result)
 **Alternatives:**
 - WebSocket command via scenario-handler — adds protocol complexity for a synchronous request/response pattern
 - New MCP tool on TS side — no TS MCP server exists today
