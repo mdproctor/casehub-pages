@@ -24,6 +24,8 @@
     "@casehubio/pages-code-editor": "workspace:*",
     "@casehubio/pages-data": "workspace:*",
     "@casehubio/pages-diagram-palette": "workspace:*",
+    "@casehubio/pages-document-diff": "workspace:*",
+    "@casehubio/pages-markdown-editor": "workspace:*",
     "@casehubio/pages-property-palette": "workspace:*",
     "@casehubio/pages-runtime": "workspace:*",
     "@casehubio/pages-schema": "workspace:*",

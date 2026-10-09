@@ -10,8 +10,7 @@ import { tags } from '@lezer/highlight';
 import { yamlLinter } from './yaml-lint.js';
 import { yamlIndentBindings } from './yaml-indent.js';
 import { CodeEditorBridge } from './code-editor-bridge.js';
-
-const EDITABLE_TEXT = Symbol.for('scenario-editable-text');
+import { EDITABLE_TEXT } from '@casehubio/pages-editor-core';
 
 const pagesHighlightStyle = HighlightStyle.define([
   { tag: tags.propertyName, color: 'var(--pages-accent-11, #3451b2)' },
@@ -77,6 +76,7 @@ const pagesTheme = EditorView.theme({
 
 function languageExtension(lang: string): Extension[] {
   if (lang === 'json') return [json()];
+  if (lang === 'markdown') return [];
   return [yaml(), yamlLinter];
 }
 
@@ -103,7 +103,7 @@ export class PagesCodeEditor extends LitElement {
   value = '';
 
   @property({ type: String })
-  language: 'yaml' | 'json' = 'yaml';
+  language: 'yaml' | 'json' | 'markdown' = 'yaml';
 
   @property({ type: Boolean, reflect: true })
   readonly = false;

@@ -1,0 +1,83 @@
+pages:
+- name: index
+  rows:
+  - properties:
+      margin-bottom: 0px
+    columns:
+    - components:
+      - type: markdown
+        properties:
+          content: |
+            ## pages-document-diff
+
+            A generic document comparison component with LCS diff, word-level highlights,
+            canvas minimap, heading-based scroll sync, and split/unified view modes.
+
+            Load two markdown documents below and use the controls or run a **scenario playbook**
+            to exercise the API.
+  - properties:
+      margin-top: 0px
+    columns:
+    - span: 9
+      components:
+      - type: html
+        properties:
+          content: |
+            <pages-document-diff
+              id="diff-viewer"
+              role="region"
+              aria-label="Document diff"
+              style="height: 600px; border: 1px solid var(--pages-neutral-4, #e0e0e0); border-radius: 6px; overflow: hidden;"
+            ></pages-document-diff>
+    - span: 3
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Controls</h3>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <button id="btn-load" aria-label="Load sample" role="button"
+                    style="padding: 6px 12px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 4px; cursor: pointer; color: var(--pages-accent-11); font-size: 12px; text-align: left;">
+                    Load Sample Docs
+                  </button>
+                  <button id="btn-next" aria-label="Next diff" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Next Diff ↓
+                  </button>
+                  <button id="btn-prev" aria-label="Previous diff" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Previous Diff ↑
+                  </button>
+                  <button id="btn-swap" aria-label="Swap panels" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Swap A ↔ B
+                  </button>
+                  <button id="btn-sync" aria-label="Toggle sync" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Toggle Scroll Sync
+                  </button>
+                  <button id="btn-unified" aria-label="Unified view" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Unified View
+                  </button>
+                  <button id="btn-split" aria-label="Split view" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Split View
+                  </button>
+                </div>
+              </div>
+              <div id="diff-status" style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 14px;">Diff Summary</h3>
+                <pre id="summary-output" style="margin: 0; font-size: 11px; color: var(--pages-neutral-9); white-space: pre-wrap;">No content loaded</pre>
+              </div>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Scenario Playbooks</h3>
+                <p style="margin: 0 0 8px; color: var(--pages-neutral-9); font-size: 11px;">
+                  Run a playbook to see the API in action.
+                </p>
+                <div id="scenario-picker" style="display: flex; flex-direction: column; gap: 6px;"></div>
+              </div>
+            </div>
+

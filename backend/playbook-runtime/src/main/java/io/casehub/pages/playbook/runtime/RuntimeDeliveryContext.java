@@ -8,10 +8,22 @@ class RuntimeDeliveryContext implements DeliveryContext {
 
     private final PlaybookConfig config;
     private final VariableContext variables;
+    private final String executionId;
 
     RuntimeDeliveryContext(PlaybookConfig config, VariableContext variables) {
+        this(config, variables, null);
+    }
+
+    RuntimeDeliveryContext(PlaybookConfig config, VariableContext variables,
+                           String executionId) {
         this.config = config;
         this.variables = variables;
+        this.executionId = executionId;
+    }
+
+    @Override
+    public String executionId() {
+        return executionId;
     }
 
     @Override

@@ -218,4 +218,70 @@ describe('ARIA command executor', () => {
       })).rejects.toThrow('No matching row');
     });
   });
+
+  describe('generic method invocation', () => {
+    it('calls a method on the target element by action name', async () => {
+      document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
+      const el = document.querySelector('[role="region"]')! as any;
+      el.toggleSync = vi.fn().mockReturnValue(true);
+
+      const { executeStep } = await import('./command-executor.js');
+      await executeStep({
+        action: 'toggleSync',
+        target: { role: 'region', name: 'Diff' },
+      });
+
+      expect(el.toggleSync).toHaveBeenCalledOnce();
+    });
+
+    it('passes step properties as arguments', async () => {
+      document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
+      const el = document.querySelector('[role="region"]')! as any;
+      el.loadContent = vi.fn();
+
+      const { executeStep } = await import('./command-executor.js');
+      await executeStep({
+        action: 'loadContent',
+        target: { role: 'region', name: 'Diff' },
+        panel: 'a',
+        content: '# Hello',
+        label: 'v1',
+      });
+
+      expect(el.loadContent).toHaveBeenCalledWith('a', '# Hello', 'v1');
+    });
+
+    it('awaits async methods', async () => {
+      document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
+      const el = document.querySelector('[role="region"]')! as any;
+      el.loadFile = vi.fn().mockResolvedValue(undefined);
+
+      const { executeStep } = await import('./command-executor.js');
+      await executeStep({
+        action: 'loadFile',
+        target: { role: 'region', name: 'Diff' },
+        panel: 'a',
+        path: '/docs/readme.md',
+      });
+
+      expect(el.loadFile).toHaveBeenCalledWith('a', '/docs/readme.md');
+    });
+
+    it('throws when target has no matching method', async () => {
+      document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
+
+      const { executeStep } = await import('./command-executor.js');
+      await expect(executeStep({
+        action: 'nonExistentMethod',
+        target: { role: 'region', name: 'Diff' },
+      })).rejects.toThrow("has no method 'nonExistentMethod'");
+    });
+
+    it('throws when no target provided', async () => {
+      const { executeStep } = await import('./command-executor.js');
+      await expect(executeStep({
+        action: 'someMethod',
+      })).rejects.toThrow('requires a target');
+    });
+  });
 });

@@ -103,7 +103,8 @@ public class PlaybookExecutor {
                                         "No DeliveryHandler registered for delivery type: " + delivery);
         }
 
-        DeliveryContext ctx   = new RuntimeDeliveryContext(config, context);
+        String executionId = java.util.UUID.randomUUID().toString();
+        DeliveryContext ctx   = new RuntimeDeliveryContext(config, context, executionId);
         AwaitCondition  await = extractAwait(data);
 
         try {

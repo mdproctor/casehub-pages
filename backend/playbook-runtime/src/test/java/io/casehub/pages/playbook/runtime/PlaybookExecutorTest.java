@@ -216,6 +216,29 @@ class PlaybookExecutorTest {
         };
     }
 
+    @Test
+    void executeStep_passes_executionId_to_delivery_context() {
+        var capturedCtx = new java.util.concurrent.atomic.AtomicReference<io.casehub.pages.playbook.DeliveryContext>();
+        var handler = new io.casehub.pages.playbook.DeliveryHandler() {
+            @Override public String name() { return "rest"; }
+            @Override public io.casehub.pages.playbook.StepOutcome execute(
+                    String stepName, Map<String, Object> data,
+                    io.casehub.pages.playbook.DeliveryContext ctx) {
+                capturedCtx.set(ctx);
+                return io.casehub.pages.playbook.StepOutcome.ok(stepName, Map.of());
+            }
+        };
+
+        var executor = new PlaybookExecutor(List.of(handler));
+        var step = new CompactStep("rest", Map.of(), null, null, null,
+                Map.of("step", "s1"));
+        executor.execute(List.of(step), PlaybookConfig.localhost());
+
+        assertThat(capturedCtx.get()).isNotNull();
+        assertThat(capturedCtx.get().executionId()).isNotNull();
+        assertThat(capturedCtx.get().executionId()).matches("[0-9a-f-]{36}");
+    }
+
     private static AriaDispatcher batchCapturingDispatcher(List<Integer> batchSizes) {
         return new AriaDispatcher(
                 new EventBroadcaster(

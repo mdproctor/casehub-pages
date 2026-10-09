@@ -71,6 +71,14 @@ module.exports = (env = {}) => {
           sideEffects: true,
         },
         {
+          test: /pages-document-diff[\/]dist[\/]/,
+          sideEffects: true,
+        },
+        {
+          test: /pages-markdown-editor[\/]dist[\/]/,
+          sideEffects: true,
+        },
+        {
           test: /pages-aria[\/]dist[\/]/,
           sideEffects: true,
         },

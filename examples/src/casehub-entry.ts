@@ -12,6 +12,8 @@ import "@casehubio/pages-aria/dist/controller";
 import "@casehubio/graph-renderer";
 import "@casehubio/graph-renderer/dist/bridge/PagesGraphCanvas.js";
 import "@casehubio/pages-code-editor";
+import "@casehubio/pages-document-diff";
+import "@casehubio/pages-markdown-editor";
 import { createSchemaCompletion } from "@casehubio/pages-code-editor";
 import { dashboardSchema } from "@casehubio/pages-schema";
 import "@casehubio/pages-property-palette";

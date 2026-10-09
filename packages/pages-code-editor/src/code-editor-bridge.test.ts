@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { CodeEditorBridge } from './code-editor-bridge.js';
+import { editableTextComplianceTests } from '@casehubio/pages-editor-core/dist/compliance.js';
 
 function mockView(doc: string) {
   const lines = doc.split('\n');
@@ -64,7 +65,7 @@ describe('CodeEditorBridge', () => {
   it('setCursor dispatches selection', () => {
     const view = mockView('line one\nline two');
     const bridge = new CodeEditorBridge(view);
-    bridge.setCursor(2, 5);
+    bridge.setCursor(1, 5);
     expect(view.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({ selection: { anchor: 14 } }),
     );
@@ -73,9 +74,9 @@ describe('CodeEditorBridge', () => {
   it('getCursor returns position after setCursor', () => {
     const view = mockView('line one\nline two');
     const bridge = new CodeEditorBridge(view);
-    bridge.setCursor(2, 5);
+    bridge.setCursor(1, 5);
     const pos = bridge.getCursor();
-    expect(pos.line).toBe(2);
+    expect(pos.line).toBe(1);
     expect(pos.col).toBe(5);
   });
 
@@ -107,7 +108,7 @@ describe('CodeEditorBridge', () => {
     bridge.replaceRange({ line: 1, col: 0 }, { line: 1, col: 4 }, 'LINE');
     expect(view.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
-        changes: { from: 0, to: 4, insert: 'LINE' },
+        changes: { from: 9, to: 13, insert: 'LINE' },
       }),
     );
   });
@@ -118,7 +119,7 @@ describe('CodeEditorBridge', () => {
     bridge.deleteRange({ line: 1, col: 0 }, { line: 1, col: 5 });
     expect(view.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
-        changes: { from: 0, to: 5 },
+        changes: { from: 9, to: 14 },
       }),
     );
   });
@@ -128,4 +129,9 @@ describe('CodeEditorBridge', () => {
     const bridge = new CodeEditorBridge(view);
     expect(() => bridge.clearHighlights()).not.toThrow();
   });
+});
+
+editableTextComplianceTests('CodeEditorBridge', () => {
+  const view = mockView('hello world\nsecond line\nthird line');
+  return new CodeEditorBridge(view);
 });

@@ -1,0 +1,94 @@
+pages:
+- name: index
+  rows:
+  - properties:
+      margin-bottom: 0px
+    columns:
+    - components:
+      - type: markdown
+        properties:
+          content: |
+            ## pages-markdown-editor
+
+            A rich markdown editor built on [Milkdown](https://milkdown.dev/) (ProseMirror-based, markdown-first).
+            Supports WYSIWYG, source, and split editing modes with a custom toolbar,
+            floating annotations, edit sessions, and an `EditableText` bridge for
+            programmatic access and MCP tool integration.
+
+            **Try the controls** on the right or run a **scenario playbook** to see
+            the API in action.
+  - properties:
+      margin-top: 0px
+    columns:
+    - span: 9
+      components:
+      - type: html
+        properties:
+          content: |
+            <pages-markdown-editor
+              id="md-editor"
+              role="textbox"
+              aria-label="Markdown editor"
+              label="Showcase editor"
+              style="height: 550px; border: 1px solid var(--pages-neutral-4, #e0e0e0); border-radius: 6px; overflow: hidden;"
+            ></pages-markdown-editor>
+    - span: 3
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Mode</h3>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <button id="btn-wysiwyg" aria-label="WYSIWYG mode" role="button"
+                    style="padding: 6px 12px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 4px; cursor: pointer; color: var(--pages-accent-11); font-size: 12px; text-align: left;">
+                    WYSIWYG
+                  </button>
+                  <button id="btn-source" aria-label="Source mode" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Source
+                  </button>
+                  <button id="btn-split" aria-label="Split mode" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Split
+                  </button>
+                </div>
+              </div>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Edit API</h3>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <button id="btn-insert" aria-label="Insert text" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Insert Text
+                  </button>
+                  <button id="btn-highlight" aria-label="Highlight range" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Highlight Line
+                  </button>
+                  <button id="btn-clear-hl" aria-label="Clear highlights" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Clear Highlights
+                  </button>
+                  <button id="btn-annotate" aria-label="Add annotation" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Highlight Block
+                  </button>
+                  <button id="btn-session" aria-label="Toggle session" role="button"
+                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    Begin Edit Session
+                  </button>
+                </div>
+              </div>
+              <div id="editor-info" style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 14px;">Status</h3>
+                <pre id="status-output" style="margin: 0; font-size: 11px; color: var(--pages-neutral-9); white-space: pre-wrap;"></pre>
+              </div>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
+                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Scenario Playbooks</h3>
+                <p style="margin: 0 0 8px; color: var(--pages-neutral-9); font-size: 11px;">
+                  Run a playbook to see the API exercised live.
+                </p>
+                <div id="scenario-picker" style="display: flex; flex-direction: column; gap: 6px;"></div>
+              </div>
+            </div>

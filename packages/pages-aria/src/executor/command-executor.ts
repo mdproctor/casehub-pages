@@ -100,8 +100,28 @@ export async function executeStep(
     case 'editor-cursor': { editorCursor(step.target!, step['line'] as number, step['col'] as number); return; }
     case 'editor-highlight': { editorHighlight(step.target!, step['from'] as Position, step['to'] as Position, step['style'] as string); return; }
     case 'editor-completion': return editorCompletion(step.target!, step['label'] as string);
-    default: throw new Error(`Unknown action: ${step.action}`);
+    default: return invokeMethod(step);
   }
+}
+
+function extractArgs(step: Record<string, unknown>): unknown[] {
+  const skip = new Set(['action', 'delivery', 'target', 'role', 'name', 'index', 'within']);
+  const args: unknown[] = [];
+  for (const [k, v] of Object.entries(step)) {
+    if (!skip.has(k) && v !== undefined) args.push(v);
+  }
+  return args;
+}
+
+async function invokeMethod(step: { action?: string; target?: AriaTarget; [key: string]: unknown }): Promise<void> {
+  if (!step.target) throw new Error(`Method invocation '${step.action}' requires a target`);
+  const el = resolveTarget(step.target);
+  const method = (el as any)[step.action!];
+  if (typeof method !== 'function') {
+    throw new Error(`Target ${step.target.role} "${step.target.name}" has no method '${step.action}'`);
+  }
+  const result = method.call(el, ...extractArgs(step));
+  if (result instanceof Promise) await result;
 }
 
 function resolveEditor(target: AriaTarget) {

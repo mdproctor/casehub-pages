@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 104,
+  "totalSamples": 106,
   "categories": [
     {
       "category": "Charts",
@@ -701,6 +701,13 @@
           "tsPath": "Custom Components/Code Editor.ts"
         },
         {
+          "name": "Document Diff",
+          "path": "Custom Components/Document Diff.page.yaml",
+          "category": "Custom Components",
+          "file": "Document Diff.page.yaml",
+          "tsPath": "Custom Components/Document Diff.ts"
+        },
+        {
           "name": "Iframe Components",
           "path": "Custom Components/Iframe Components.page.yaml",
           "category": "Custom Components",
@@ -710,6 +717,13 @@
             "iframe",
             "embed"
           ]
+        },
+        {
+          "name": "Markdown Editor",
+          "path": "Custom Components/Markdown Editor.page.yaml",
+          "category": "Custom Components",
+          "file": "Markdown Editor.page.yaml",
+          "tsPath": "Custom Components/Markdown Editor.ts"
         }
       ]
     },

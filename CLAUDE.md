@@ -35,3 +35,12 @@ This repo owns its own documentation, synced to parent via subtree:
 - `docs/guides/contributor-guide.md` — for contributors: package architecture, build system, extension points
 
 Update the relevant guide in the same session when implementation changes components, APIs, or protocols. Do not defer — drift compounds. Parent (`casehubio/parent`) aggregates these at `docs/repos/casehub-pages/` for RAG retrieval.
+
+## Editor Packages
+
+Three packages provide the editor infrastructure:
+- `packages/pages-editor-core/` — `EditableText` interface, `EditableTextBridge` base, MCP tool adapter, edit sessions
+- `packages/pages-markdown-editor/` — Milkdown/ProseMirror LIT component with dual-mode (WYSIWYG/source/split), toolbar, annotations
+- `packages/pages-document-diff/` — generic LCS diff, word highlights, canvas minimap, scroll sync (extracted from blocks-ui)
+
+`pages-code-editor` extends `EditableTextBridge` from editor-core. `pages-aria` re-exports types from editor-core (deprecated `ScenarioEditableText` alias remains for backward compat).

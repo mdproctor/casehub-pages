@@ -2,7 +2,16 @@
   "name": "@casehubio/pages-aria",
   "version": "0.1.0",
   "type": "module",
-  "sideEffects": ["dist/*.js", "src/controller/standalone.ts", "src/controller/step-catalog.ts", "src/controller/playbook-controller.ts", "src/controller/playbook-narrative.ts", "src/controller/playbook-yaml-viewer.ts", "src/controller/library-view.ts", "src/tutorial/tutorial-host.ts"],
+  "sideEffects": [
+    "dist/*.js",
+    "src/controller/standalone.ts",
+    "src/controller/step-catalog.ts",
+    "src/controller/playbook-controller.ts",
+    "src/controller/playbook-narrative.ts",
+    "src/controller/playbook-yaml-viewer.ts",
+    "src/controller/library-view.ts",
+    "src/tutorial/tutorial-host.ts"
+  ],
   "exports": {
     "./walker": "./src/walker/index.ts",
     "./executor": "./src/executor/index.ts",
@@ -19,6 +28,7 @@
   },
   "dependencies": {
     "@casehubio/pages-data": "workspace:*",
+    "@casehubio/pages-editor-core": "workspace:*",
     "@casehubio/pages-primitives": "workspace:*",
     "@casehubio/yaml-core": "workspace:*",
     "lit": "^3.3.3",
