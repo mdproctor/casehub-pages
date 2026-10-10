@@ -1,5 +1,6 @@
 import { assertState, waitFor, resolveTarget } from '../executor/index.js';
 import { injectStyles, highlightElement, completeTypingNow, isTypingSkipped, resetTypingSkip } from '../executor/visual-feedback.js';
+import { progressiveEmit } from '@casehubio/pages-editor-core';
 import { showSpotlight, dismissAllSpotlights } from '../executor/spotlight.js';
 import type { AriaTarget, AriaState } from '@casehubio/pages-primitives';
 import type { EventConnection } from '@casehubio/pages-data';
@@ -563,61 +564,22 @@ async function progressiveFill(
   value: string,
   speed: number,
 ): Promise<void> {
-  const charDelay = Math.max(10, 40 / speed);
-  const wordDelay = Math.max(20, 60 / speed);
-
-  const PHASES: { count: number; chunk: number }[] = [
-    { count: 5, chunk: 1 },
-    { count: 5, chunk: 1 },
-    { count: 6, chunk: 2 },
-    { count: 7, chunk: 4 },
-    { count: Infinity, chunk: 5 },
-  ];
-
   el.focus();
   el.classList.add('scenario-typing');
   resetTypingSkip();
 
-  const words = value.split(/(?<=\s)/);
   let revealed = '';
-  let wordIdx = 0;
-
-  function finish(): void {
-    el.value = value;
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-    el.classList.remove('scenario-typing');
-    resetTypingSkip();
-  }
-
-  // Phase 0: first phase — character by character
-  const charCount = Math.min(PHASES[0].count, words.length);
-  const charText = words.slice(0, charCount).join('');
-  for (let i = 1; i <= charText.length; i++) {
-    if (isTypingSkipped()) { finish(); return; }
-    revealed = charText.slice(0, i);
+  await progressiveEmit(value, chunk => {
+    revealed += chunk;
     el.value = revealed;
     el.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise<void>(r => setTimeout(r, charDelay));
-  }
-  wordIdx = charCount;
+  }, { speed, isSkipped: () => isTypingSkipped() });
 
-  // Remaining phases: word chunks with increasing size
-  for (let p = 1; p < PHASES.length && wordIdx < words.length; p++) {
-    const { count, chunk } = PHASES[p]!;
-    const phaseEnd = Math.min(wordIdx + count, words.length);
-    while (wordIdx < phaseEnd) {
-      if (isTypingSkipped()) { finish(); return; }
-      const end = Math.min(wordIdx + chunk, phaseEnd);
-      revealed += words.slice(wordIdx, end).join('');
-      wordIdx = end;
-      el.value = revealed;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      await new Promise<void>(r => setTimeout(r, wordDelay));
-    }
-  }
-
-  finish();
+  el.value = value;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+  el.classList.remove('scenario-typing');
+  resetTypingSkip();
 }
 
 function buildAriaTarget(params: Record<string, unknown>): AriaTarget | undefined {

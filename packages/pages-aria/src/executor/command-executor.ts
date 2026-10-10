@@ -2,6 +2,7 @@ import { findAllByRole, getAriaState } from '../walker/index.js';
 import type { AriaTarget, AriaState } from '@casehubio/pages-primitives';
 import { findEditableText } from './editable-text.js';
 import type { Position } from './editable-text.js';
+import { progressiveInsert } from '@casehubio/pages-editor-core';
 import { showSpotlight } from './spotlight.js';
 import type { SpotlightConfig } from './spotlight.js';
 
@@ -131,44 +132,6 @@ function resolveEditor(target: AriaTarget) {
   return editor;
 }
 
-async function progressiveInsert(
-  editor: ReturnType<typeof resolveEditor>,
-  text: string,
-  speed: number,
-  _finishFn: (remaining: string) => void,
-): Promise<void> {
-  const charDelay = Math.max(10, 40 / speed);
-  const wordDelay = Math.max(20, 60 / speed);
-  const words = text.split(/(\s+)/);
-
-  const phase0End = Math.min(5, words.length);
-  for (let w = 0; w < phase0End; w++) {
-    const word = words[w]!;
-    for (const ch of word) {
-      editor.insertText(ch);
-      await new Promise(r => setTimeout(r, charDelay));
-    }
-  }
-
-  let wordIndex = phase0End;
-  const chunkSizes = [1, 2, 4, 5];
-  const phaseLengths = [5, 6, 7, Infinity];
-  for (let phase = 0; phase < chunkSizes.length; phase++) {
-    const chunk = chunkSizes[phase]!;
-    const len = phaseLengths[phase]!;
-    let count = 0;
-    while (wordIndex < words.length && count < len) {
-      let batch = '';
-      for (let c = 0; c < chunk && wordIndex < words.length; c++, wordIndex++) {
-        batch += words[wordIndex]!;
-      }
-      editor.insertText(batch);
-      count++;
-      await new Promise(r => setTimeout(r, wordDelay));
-    }
-  }
-}
-
 async function editorInsert(target: AriaTarget, value: string, typing: string, speed: number, line?: number, col?: number): Promise<void> {
   const editor = resolveEditor(target);
   if (line !== undefined && col !== undefined) {
@@ -177,7 +140,7 @@ async function editorInsert(target: AriaTarget, value: string, typing: string, s
   if (typing === 'instant') {
     editor.insertText(value);
   } else {
-    await progressiveInsert(editor, value, speed, (r) => { editor.insertText(r); });
+    await progressiveInsert(editor, value, { speed });
   }
 }
 
@@ -187,7 +150,7 @@ async function editorSetContent(target: AriaTarget, value: string, typing: strin
     editor.setContent(value);
   } else {
     editor.setContent('');
-    await progressiveInsert(editor, value, speed, (r) => { editor.setContent(r); });
+    await progressiveInsert(editor, value, { speed });
   }
 }
 
@@ -197,7 +160,7 @@ async function editorReplace(target: AriaTarget, from: Position, to: Position, v
   if (typing === 'instant') {
     editor.insertText(value);
   } else {
-    await progressiveInsert(editor, value, speed, (r) => { editor.insertText(r); });
+    await progressiveInsert(editor, value, { speed });
   }
 }
 

@@ -14,6 +14,7 @@ import "@casehubio/graph-renderer/dist/bridge/PagesGraphCanvas.js";
 import "@casehubio/pages-code-editor";
 import "@casehubio/pages-document-diff";
 import "@casehubio/pages-markdown-editor";
+import { progressiveInsert } from "@casehubio/pages-editor-core";
 import { createSchemaCompletion } from "@casehubio/pages-code-editor";
 import { dashboardSchema } from "@casehubio/pages-schema";
 import "@casehubio/pages-property-palette";
@@ -26,6 +27,7 @@ import { applyTheme, getTheme } from "@casehubio/pages-ui-tokens";
 applyTheme('casehub-dark');
 
 export { loadSite, applyTheme, getTheme };
+export { progressiveInsert };
 export type { LiveSite, SiteOptions };
 
 export { createBasicPipelineModel, PIPELINE_SCHEMAS };

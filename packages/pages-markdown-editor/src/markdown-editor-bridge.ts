@@ -161,6 +161,13 @@ export class MarkdownEditorBridge extends EditableTextBridge {
     this.view.dispatch(tr.insertText(text, cursor));
   }
 
+  insertRawText(text: string): void {
+    this._invalidateCache();
+    const cursor = this.view.state.selection.from;
+    const { tr } = this.view.state;
+    this.view.dispatch(tr.insertText(text, cursor));
+  }
+
   override replaceRange(from: Position, to: Position, text: string): void {
     this._invalidateCache();
     const fromOffset = this.toOffset(from);

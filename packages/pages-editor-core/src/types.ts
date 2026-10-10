@@ -71,6 +71,8 @@ export interface EditableText {
   beginEditSession(owner: string): EditSession;
   endEditSession(session: EditSession): void;
 
+  insertRawText?(text: string): void;
+
   triggerCompletion?(): void;
   selectCompletion?(label: string): boolean;
 }

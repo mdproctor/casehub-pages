@@ -88,6 +88,10 @@ pages:
                     style="padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; text-align: left;">
                     Insert Text
                   </button>
+                  <button id="btn-insert-large" aria-label="Insert large text" role="button"
+                    style="padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; text-align: left;">
+                    Insert Large Text
+                  </button>
                   <button id="btn-clear-hl" aria-label="Clear all highlights" role="button"
                     style="padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; width: 100%;">
                     Clear All

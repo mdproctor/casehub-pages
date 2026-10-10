@@ -111,8 +111,37 @@ var btnInsert = document.getElementById('btn-insert');
 if (btnInsert) btnInsert.addEventListener('click', function() {
   var bridge = getBridge();
   if (bridge) {
-    bridge.insertText('\n\n> **Note:** This text was inserted programmatically via the EditableText bridge.\n');
-    updateStatus();
+    casehubPages.progressiveInsert(bridge, '\n\n> **Note:** This text was inserted programmatically via the EditableText bridge.\n');
+  }
+});
+
+var btnInsertLarge = document.getElementById('btn-insert-large');
+if (btnInsertLarge) btnInsertLarge.addEventListener('click', function() {
+  var bridge = getBridge();
+  if (bridge) {
+    var largeText = '\n\n## Architectural Overview\n\n'
+      + 'The platform follows a layered architecture where each tier has a single responsibility '
+      + 'and communicates through well-defined interfaces. The data layer handles ingestion, '
+      + 'validation, and transformation of raw inputs into structured records. The processing '
+      + 'layer applies business rules, enrichment, and correlation across multiple data streams. '
+      + 'The presentation layer renders the final output through composable visual components.\n\n'
+      + 'Each layer is independently deployable and testable. The data layer exposes a streaming '
+      + 'API that the processing layer consumes through backpressure-aware channels. The processing '
+      + 'layer publishes enriched events that the presentation layer subscribes to via push protocol. '
+      + 'This decoupling means any layer can be replaced or scaled without affecting the others. '
+      + 'Schema evolution is handled through versioned contracts at each boundary.\n\n'
+      + '### Component Model\n\n'
+      + 'Components are self-describing units that declare their inputs, outputs, and configuration '
+      + 'schema. The runtime discovers and wires components dynamically based on page definitions. '
+      + 'Each component manages its own lifecycle — initialisation, data binding, rendering, and '
+      + 'teardown — without relying on a central coordinator. Inter-component communication uses '
+      + 'a typed event bus that enforces payload contracts at compile time.\n\n'
+      + 'The bridge pattern enables programmatic access to any component through a uniform interface. '
+      + 'This is critical for scenarios where external systems — playbooks, LLM agents, or test '
+      + 'harnesses — need to inspect and manipulate component state without knowledge of the '
+      + 'underlying rendering engine. The same bridge that drives a Milkdown editor works equally '
+      + 'well with CodeMirror, a property palette, or a graph canvas.\n';
+    casehubPages.progressiveInsert(bridge, largeText);
   }
 });
 
@@ -393,7 +422,7 @@ async function runScenario(steps, delayMs) {
       if (!bridge) continue;
       var a = step.action;
       if (a === 'editor-set-content') { bridge.setContent(step.value); }
-      else if (a === 'editor-insert') { bridge.insertText(step.value); }
+      else if (a === 'editor-insert') { await casehubPages.progressiveInsert(bridge, step.value); }
       else if (a === 'editor-cursor') { bridge.setCursor(step.line, step.col); }
       else if (a === 'editor-highlight') { bridge.highlight(step.from, step.to, step.style); }
       else if (a === 'editor-highlight-sentence') { bridge.highlightSentence(undefined, 'underline'); }
