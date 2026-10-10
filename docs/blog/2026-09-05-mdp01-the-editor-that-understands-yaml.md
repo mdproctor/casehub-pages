@@ -15,7 +15,7 @@ point was simple: extract the inline YAML highlighter from blocks-ui into
 a reusable component. The ending point was different.
 
 The conversation shifted when Mark asked about context-aware completion
-for jq expressions and CaseHub Playbook YAML. That changed the architecture from
+for jq expressions and CaseHub YAML. That changed the architecture from
 a textarea overlay to CodeMirror 6, and from a utility component to the
 front end of a Language Server Protocol pipeline. The editor ships now
 with syntax highlighting and YAML parse validation. Completion is

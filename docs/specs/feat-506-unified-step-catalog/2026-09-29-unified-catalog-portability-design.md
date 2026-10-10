@@ -232,7 +232,7 @@ The "Try it" panel calls `validatePortability()` before executing. If violations
 - `packages/yaml-core/src/step/plugin-registry.ts` — apply default portability on register()
 - `packages/yaml-core/src/step/index.ts` — re-export new types
 - `packages/pages-aria/src/controller/step-catalog.ts` — CatalogDataSource integration, portability badges, filter chips
-- `../../../packages/pages-aria/src/controller/playbook-controller.ts` — wire catalog sources
+- `packages/pages-aria/src/controller/scenario-controller.ts` — wire catalog sources
 - `packages/pages-aria/src/controller/index.ts` — re-export new types
 
 ## References

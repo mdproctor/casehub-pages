@@ -17,7 +17,7 @@ I wanted a phone-as-remote experience. Open a URL on your phone, see the scenari
 
 ## The Push Wire Gap
 
-The orchestrator already had `GET /scenario/state` for polling, but the controller needs real-time updates — when a step completes, the outline should highlight the new position immediately. That meant adding `scenario:state` broadcast via `EventBroadcaster`, the same infrastructure that powers live data dashboards. Every state mutation — start, pause, resume, step completion, speed change, stop — now pushes the full `PlaybookState` to all listeners on the `scenario:state` topic.
+The orchestrator already had `GET /scenario/state` for polling, but the controller needs real-time updates — when a step completes, the outline should highlight the new position immediately. That meant adding `scenario:state` broadcast via `EventBroadcaster`, the same infrastructure that powers live data dashboards. Every state mutation — start, pause, resume, step completion, speed change, stop — now pushes the full `ScenarioState` to all listeners on the `scenario:state` topic.
 
 The `stop()` method was interesting. The obvious implementation clears the session and broadcasts idle state. But executors need to know the session ended too — they might have queued sequences still running. The fix: broadcast `executor-control: stop` to all executors *before* clearing the session ID, then broadcast the idle state to controllers. Order matters because `PushMessage.executorControl` requires a non-null session ID.
 
@@ -25,7 +25,7 @@ The `stop()` method was interesting. The obvious implementation clears the sessi
 
 ## Two Components, One Controller
 
-The design review pushed us toward extracting a `PlaybookConnectionController` — a Lit `ReactiveController` that manages the push wire lifecycle. Both `<pages-scenario-controller>` (outline + transport) and `<pages-scenario-narrative>` (markdown content) use it. The controller handles mode resolution (embedded with a shared connection vs remote with its own WebSocket), topic listening, state extraction, and REST command dispatch.
+The design review pushed us toward extracting a `ScenarioConnectionController` — a Lit `ReactiveController` that manages the push wire lifecycle. Both `<pages-scenario-controller>` (outline + transport) and `<pages-scenario-narrative>` (markdown content) use it. The controller handles mode resolution (embedded with a shared connection vs remote with its own WebSocket), topic listening, state extraction, and REST command dispatch.
 
 I'd initially planned a single LitElement with internal state. The reactive controller emerged when the narrative component needed the same connection lifecycle — at that point, duplicating the listen/unlisten/mode-resolution logic across two components was worse than the abstraction.
 

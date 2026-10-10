@@ -1,8 +1,9 @@
-import type { EditableText, Position, AnnotationOptions, EditSession } from './types.js';
+import type { EditableText, Position, AnnotationOptions, EditSession, LineReader } from './types.js';
 import { EditSessionActiveError } from './types.js';
 
 export class McpToolAdapter {
   private _session: EditSession | null = null;
+  private _reader: LineReader | null = null;
 
   constructor(private readonly editor: EditableText) {}
 
@@ -71,6 +72,69 @@ export class McpToolAdapter {
         this.editor.clearHighlights();
         this.editor.clearAnnotations();
         return { success: true };
+
+      case 'editor_highlight_sentence': {
+        const id = this.editor.highlightSentence(
+          params.pos as Position | undefined,
+          params.style,
+        );
+        return { id };
+      }
+
+      case 'editor_highlight_text': {
+        const ids = this.editor.highlightText(params.query, params.style);
+        return { ids };
+      }
+
+      case 'editor_highlight_line': {
+        const id = this.editor.highlightLine(params.line, params.count, params.style);
+        return { id };
+      }
+
+      case 'editor_get_highlight_text': {
+        const text = this.editor.getHighlightText(params.id);
+        if (text === undefined) return { error: 'not_found', id: params.id };
+        return { text };
+      }
+
+      case 'editor_list_highlights':
+        return { highlights: this.editor.listHighlights() };
+
+      case 'editor_clear_highlight_group':
+        this.editor.clearHighlightGroup(params.group);
+        return { success: true };
+
+      case 'editor_reader_start': {
+        if (this._reader) this._reader.dispose();
+        this._reader = this.editor.createReader(params.style);
+        return { position: this._reader.position() };
+      }
+
+      case 'editor_reader_move': {
+        if (!this._reader) return { error: 'no_reader' };
+        this._reader.moveTo(params.pos as Position);
+        return { position: this._reader.position() };
+      }
+
+      case 'editor_reader_advance': {
+        if (!this._reader) return { error: 'no_reader' };
+        this._reader.advance();
+        return { position: this._reader.position() };
+      }
+
+      case 'editor_reader_advance_line': {
+        if (!this._reader) return { error: 'no_reader' };
+        this._reader.advanceLine();
+        return { position: this._reader.position() };
+      }
+
+      case 'editor_reader_stop': {
+        if (this._reader) {
+          this._reader.dispose();
+          this._reader = null;
+        }
+        return { success: true };
+      }
 
       case 'editor_begin_session':
         return this._beginSession(params.owner);

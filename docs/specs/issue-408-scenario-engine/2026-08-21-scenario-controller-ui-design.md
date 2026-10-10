@@ -32,7 +32,7 @@ This spec covers:
 
 The following backend gaps must be addressed as part of this issue:
 
-- **`stop()` implementation:** `PlaybookOrchestrator` has no `stop()` method.
+- **`stop()` implementation:** `ScenarioOrchestrator` has no `stop()` method.
   `ScenarioControlResource.stop()` is a no-op. Implement: clear session,
   broadcast `executor-control: stop` to all executors, broadcast idle state.
 - **`runTo()` completion:** The current `runTo()` just calls `resume()` —
@@ -47,11 +47,11 @@ The following backend gaps must be addressed as part of this issue:
 
 ### 2.1 State broadcast — `scenario:state` topic
 
-The `PlaybookOrchestrator` currently serves state via `GET /scenario/state`
+The `ScenarioOrchestrator` currently serves state via `GET /scenario/state`
 and broadcasts `executor-control` messages to executors, but does not push
 state changes to listening controllers. Add state broadcasting.
 
-**What changes in `PlaybookOrchestrator`:**
+**What changes in `ScenarioOrchestrator`:**
 
 1. Inject `EventBroadcaster` (from push-runtime).
 2. After every state-mutating operation (`start`, `pause`, `resume`, `step`,
@@ -59,7 +59,7 @@ state changes to listening controllers. Add state broadcasting.
    ```java
    broadcaster.broadcast("scenario:state", state());
    ```
-3. The `EventBroadcaster.broadcast()` serialises `PlaybookState` as the
+3. The `EventBroadcaster.broadcast()` serialises `ScenarioState` as the
    event payload and delivers it to all sessions listening on `scenario:state`.
 
 **Wire format — `op: "event"` on topic `scenario:state`:**
@@ -110,7 +110,7 @@ shown in the wire format example above.
 
 ### 2.2 Outline endpoint — `GET /scenario/outline`
 
-Add to `PlaybookControlResource`:
+Add to `ScenarioControlResource`:
 
 ```java
 @GET
@@ -332,7 +332,7 @@ private async sendCommand(path: string, body?: object): Promise<void> {
 }
 ```
 
-The REST response returns `PlaybookState` — but we don't use it for state
+The REST response returns `ScenarioState` — but we don't use it for state
 updates (the push wire broadcast delivers the canonical state to all
 controllers simultaneously). The response is only used for error detection.
 
@@ -401,7 +401,7 @@ HTML is set via `innerHTML` on a container with scoped styles.
 
 **`Template` (path + section extraction):**
 Fetch the template file from `GET ${restBase}/scenario/content?path=${path}`.
-This requires a new endpoint in `PlaybookControlResource` that serves
+This requires a new endpoint in `ScenarioControlResource` that serves
 template files from a configurable content root directory
 (`casehub.scenario.content-root`, defaulting to `META-INF/resources/scenario/content/`).
 Extract the named section (if specified — find the heading, take content
@@ -470,7 +470,7 @@ doesn't produce valid WebSocket URLs).
 ### 5.3 Bundle
 
 A separate webpack/esbuild entry point in pages-aria that bundles:
-- `../../../packages/pages-aria/src/controller/playbook-controller.ts` + its Lit dependencies
+- `scenario-controller.ts` + its Lit dependencies
 - Custom element registration
 
 This produces a standalone JS file that can be loaded independently of
@@ -520,7 +520,7 @@ broadcast is the canonical source).
 
 - **ScenarioOrchestrator broadcast test:** verify `EventBroadcaster.broadcast`
   is called after each state mutation (start, pause, resume, step, speed,
-  onStepResult) with correct `PlaybookState` payload.
+  onStepResult) with correct `ScenarioState` payload.
 - **Outline endpoint test:** `GET /scenario/outline` returns correct tree
   structure for chapters/sections/steps scenarios. Returns 404 when no
   scenario is active.

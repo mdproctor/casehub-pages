@@ -766,7 +766,7 @@ presenter remote for a demo running on a laptop.
 
 | Component | Current | After |
 |-----------|---------|-------|
-| `PlaybookExecutor` (Java) | Sequential step loop, direct dispatcher calls | Trigger graph, sequence dispatch to executors via protocol |
+| `ScenarioExecutor` (Java) | Sequential step loop, direct dispatcher calls | Trigger graph, sequence dispatch to executors via protocol |
 | `AriaDispatcher` | Single-command push wire, `CommandPayload` | Replaced by dispatch-sequence to browser executor |
 | `GraphQLDispatcher` | Direct HTTP POST | Replaced by dispatch-sequence to service executors (or retained for services without local executors) |
 | `scenario-handler.ts` | Single-command handler | Sequence handler with step queue and control |

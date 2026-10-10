@@ -611,7 +611,7 @@ The scenario compilation pipeline consumes these types from `casehub-platform-ya
 | `CsvColumnType` | `data` | `STRING, INTEGER, BOOLEAN, DECIMAL` with `parse()` method |
 | `Truthiness` | `condition` | `isTruthy(String) → boolean` — shared `when` evaluation |
 
-The scenario `PlaybookCompiler` wires these as:
+The scenario `ScenarioCompiler` wires these as:
 ```java
 var paramSource = VariableSource.chain(
     callerParams::get,          // caller-supplied
@@ -653,4 +653,4 @@ var resolver = new VariableResolver(
   (D8-D27)
 - `scenario-handler.ts` — browser executor
 - `ScenarioParser.java` — server-side YAML parser
-- `PlaybookConnectionController` — controller push wire management
+- `ScenarioConnectionController` — controller push wire management

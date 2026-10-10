@@ -666,7 +666,7 @@ Phase 1B (graph-renderer) ──┤ parallel
 
 4. **Lienzo port** — strategic option for full canvas control. Revisit after the React Flow approach proves out or hits limitations. 6-10 person-week investment. Provides canvas-level drawing API, scene graph, hit-testing, pan/zoom — but requires maintaining alone.
 
-5. **YAML divergences from SWF** — Confirm the full list of CaseHub Playbook YAML conventions that diverge from the Serverless Workflow spec (known: CaseHub-specific fields like `bindings`, `milestones`, `goals`, `capabilities`, `cbr`, `authorization`, `episodic`). Ensure the domain adapter handles both correctly.
+5. **YAML divergences from SWF** — Confirm the full list of CaseHub YAML conventions that diverge from the Serverless Workflow spec (known: CaseHub-specific fields like `bindings`, `milestones`, `goals`, `capabilities`, `cbr`, `authorization`, `episodic`). Ensure the domain adapter handles both correctly.
 
 ## 8. Non-Goals
 

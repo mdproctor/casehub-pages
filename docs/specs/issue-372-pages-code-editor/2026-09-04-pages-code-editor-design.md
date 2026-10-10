@@ -12,7 +12,7 @@ Three deliverables:
 2. **Export promotion** — move `exportDiagram()` from `@casehubio/pages-diagram-core` to `@casehubio/graph-renderer`, consolidating React Flow DOM coupling in the rendering layer
 3. **Standalone diagram export tool** — a standalone HTML entry point composing the code editor with graph canvas and export buttons
 
-The editor is designed for a future where CaseHub Playbook YAML and jq expressions have context-aware completion via a Language Server Protocol (LSP) server, and where the same language intelligence powers VS Code and IntelliJ plugins. The LSP server is a separate effort (D8, tracked as casehubio/casehub-pages#407); this branch ships the editor with basic syntax highlighting.
+The editor is designed for a future where CaseHub YAML and jq expressions have context-aware completion via a Language Server Protocol (LSP) server, and where the same language intelligence powers VS Code and IntelliJ plugins. The LSP server is a separate effort (D8, tracked as casehubio/casehub-pages#407); this branch ships the editor with basic syntax highlighting.
 
 ## 1. Component: `<pages-code-editor>`
 
@@ -320,7 +320,7 @@ The pages monorepo has three existing editor/viewer components:
 |-----------|---------|------|-----------------------------------|
 | `PagesPromptEditor` | `pages-diagram-core` | Lightweight textarea for diagram property editing | Stays as-is. Zero third-party deps, serves its purpose. The code editor is an upgrade path for cases needing syntax highlighting, not a replacement. |
 | `PagesJsonViewer` | `pages-diagram-core` | Read-only `<pre>` JSON display | Stays as-is. Trivially simple, no CodeMirror needed. |
-| `PagesScenarioYamlViewer` | `pages-aria` | Scenario-aware YAML viewer with step highlighting, drag/resize, guide tab | Could use `pages-code-editor` as its rendering engine in a future refactor, but this is a separate effort — the viewer is deeply coupled to the scenario system (`PlaybookConnectionController`, step line mapping, guide tab). |
+| `PagesScenarioYamlViewer` | `pages-aria` | Scenario-aware YAML viewer with step highlighting, drag/resize, guide tab | Could use `pages-code-editor` as its rendering engine in a future refactor, but this is a separate effort — the viewer is deeply coupled to the scenario system (`ScenarioConnectionController`, step line mapping, guide tab). |
 
 `yaml-highlighter.ts` (in `pages-aria`) provides the custom YAML tokenizer used by `PagesScenarioYamlViewer`. It remains until any future migration of that component to CodeMirror.
 
@@ -414,7 +414,7 @@ Not in scope for #372, but the architecture is designed for it:
 
 - **`extensions` property** on `<pages-code-editor>` accepts a CodeMirror LSP client extension
 - **LSP server** (TypeScript, runs in Node for IDEs or web worker for browser) provides:
-  - CaseHub Playbook YAML schema completion (component types, properties, pipeline stages)
+  - CaseHub YAML schema completion (component types, properties, pipeline stages)
   - jq expression completion and validation
   - Diagnostics (invalid YAML structure, unknown component types, type mismatches)
 - **IDE plugins** (VS Code, IntelliJ) use their native editors + the same LSP server
@@ -461,4 +461,4 @@ The existing Playwright config (`examples/playwright.config.ts`) provides the in
 - [GE-20260818-f0257a] — Shadow-aware CSS injection with WeakMap ref-counting
 - [GE-20260813-674be0] — YAML desugarer drops unknown component props silently
 - [casehubio/casehub-pages#372] — Issue: pages-code-editor component with YAML syntax highlighting
-- [casehubio/casehub-pages#407] — Issue: LSP server for CaseHub Playbook YAML and jq (D8)
+- [casehubio/casehub-pages#407] — Issue: LSP server for CaseHub YAML and jq (D8)

@@ -13,7 +13,7 @@ the current position highlighted. The YAML viewer should be independently positi
 
 A Lit component in `packages/pages-aria` that renders syntax-highlighted YAML source
 with live position tracking. Connects to the push wire independently via
-`PlaybookConnectionController` — the same reactive controller pattern used by
+`ScenarioConnectionController` — the same reactive controller pattern used by
 `<pages-scenario-controller>`.
 
 **Properties:**
@@ -89,7 +89,7 @@ The `PagesScenarioController` gains:
   to share the push wire.
 
 The viewer element is created once and cached — toggle shows/hides it. The viewer
-receives `scenario` from the controller and shares the same `PlaybookConnectionController`
+receives `scenario` from the controller and shares the same `ScenarioConnectionController`
 state events.
 
 ### Detach to window
@@ -123,11 +123,11 @@ loads `controller.js` can use `<pages-scenario-yaml-viewer>`.
 
 | File | What |
 |------|------|
-| `../../../packages/pages-aria/src/controller/playbook-yaml-viewer.ts` | Lit component — rendering, highlighting, scroll tracking, drag |
+| `packages/pages-aria/src/controller/scenario-yaml-viewer.ts` | Lit component — rendering, highlighting, scroll tracking, drag |
 | `packages/pages-aria/src/controller/yaml-highlighter.ts` | YAML tokenizer (regex) + AST position mapper (yaml parseDocument) |
 | `packages/pages-aria/src/controller/yaml-highlighter.test.ts` | Tests for tokenizer and position mapper |
-| `../../../packages/pages-aria/src/controller/playbook-yaml-viewer.test.ts` | Component tests |
-| `../../../packages/pages-aria/src/controller/playbook-controller.ts` | Updated — add toggle button, viewer lifecycle |
+| `packages/pages-aria/src/controller/scenario-yaml-viewer.test.ts` | Component tests |
+| `packages/pages-aria/src/controller/scenario-controller.ts` | Updated — add toggle button, viewer lifecycle |
 | `packages/pages-aria/src/controller/standalone.ts` | Updated — export YamlViewer |
 | `backend/scenario-runtime/.../scenario/yaml-viewer.html` | Minimal pop-out page for detach mode |
 
@@ -144,7 +144,7 @@ loads `controller.js` can use `<pages-scenario-yaml-viewer>`.
 ## References
 
 - casehubio/casehub-pages#349 — issue
-- `../../../packages/pages-aria/src/controller/playbook-controller.ts` — existing controller
-- `../../../packages/pages-aria/src/controller/playbook-connection-controller.ts` — push wire pattern
+- `packages/pages-aria/src/controller/scenario-controller.ts` — existing controller
+- `packages/pages-aria/src/controller/scenario-connection-controller.ts` — push wire pattern
 - `packages/pages-aria/package.json` — yaml dependency
 - D23, D24, D25 in decisions.md — detach, yaml CST, floating layout decisions

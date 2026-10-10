@@ -95,7 +95,7 @@ The controller UI from the previous session was a standalone full-page layout �
 
 The pill collapses to `▶ help-desk-demo 33%` — minimal footprint during automated playback. Click it and the card expands: outline tree with checkmarks on completed steps, blue highlight on the current step, transport controls (play/pause/step/speed slider), and a Reset button. The glassmorphic dark card with `backdrop-filter: blur` matches the helpdesk's dark theme without clashing.
 
-The `mode` property on the Lit component drives this — `full` for the standalone remote page, `compact` for embedding. Both use the same `PlaybookConnectionController` underneath. The overlay is draggable via pointer events on the header bar.
+The `mode` property on the Lit component drives this — `full` for the standalone remote page, `compact` for embedding. Both use the same `ScenarioConnectionController` underneath. The overlay is draggable via pointer events on the header bar.
 
 ## Presenter Mode
 
@@ -109,7 +109,7 @@ The Reset button calls a Flyway clean + migrate on the H2 in-memory database, st
 
 One piece of infrastructure made the distributed executors possible without modifying the push endpoint: the `PushRequestHandler` SPI.
 
-Previously, the helpdesk's push endpoint had hardcoded `switch` cases for `executor-register` and `step-result`, directly calling the `PlaybookOrchestrator`. Any new app that wanted scenario support would have to duplicate that routing.
+Previously, the helpdesk's push endpoint had hardcoded `switch` cases for `executor-register` and `step-result`, directly calling the `ScenarioOrchestrator`. Any new app that wanted scenario support would have to duplicate that routing.
 
 The handler chain is a simple interface in the push module:
 
@@ -120,7 +120,7 @@ public interface PushRequestHandler {
 }
 ```
 
-The push endpoint now iterates `Instance<PushRequestHandler>` for any op it doesn't handle natively. `PlaybookPushHandler` in `scenario-runtime` implements it for executor-register and step-result. Drop scenario-runtime on the classpath and the routing auto-discovers via CDI. The endpoint only handles `listen`/`unlisten` directly — everything else goes through the chain.
+The push endpoint now iterates `Instance<PushRequestHandler>` for any op it doesn't handle natively. `ScenarioPushHandler` in `scenario-runtime` implements it for executor-register and step-result. Drop scenario-runtime on the classpath and the routing auto-discovers via CDI. The endpoint only handles `listen`/`unlisten` directly — everything else goes through the chain.
 
 ## What's Next
 

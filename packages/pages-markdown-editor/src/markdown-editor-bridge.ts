@@ -1,8 +1,9 @@
-import { EditableTextBridge } from '@casehubio/pages-editor-core';
-import type { Position, HighlightStyle } from '@casehubio/pages-editor-core';
+import { EditableTextBridge, highlightOptionsToCSS, resolveHighlightStyle } from '@casehubio/pages-editor-core';
+import type { Position, HighlightStyle, HighlightOptions, LineReader } from '@casehubio/pages-editor-core';
 import type { EditorView } from '@milkdown/kit/prose/view';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
+import { HighlightRenderer } from './overlay/highlight-renderer.js';
 
 type Serializer = (doc: any) => string;
 type Parser = (text: string) => any;
@@ -10,7 +11,8 @@ type Parser = (text: string) => any;
 export class MarkdownEditorBridge extends EditableTextBridge {
   private _lineOffsets: number[] | null = null;
   private _cachedText: string | null = null;
-  private _decorations: Map<string, { from: number; to: number; style: string }> = new Map();
+  private _decorations: Map<string, { from: number; to: number; style: HighlightOptions }> = new Map();
+  private _highlightRenderer: HighlightRenderer | null = null;
 
   constructor(
     private readonly view: EditorView,
@@ -20,11 +22,20 @@ export class MarkdownEditorBridge extends EditableTextBridge {
     super();
   }
 
-  private _styleForHighlight(style: string): string {
-    if (style === 'pulse') return 'background: rgba(99, 102, 241, 0.3); border-radius: 2px;';
-    if (style === 'underline') return 'text-decoration: underline wavy rgba(99, 102, 241, 0.7);';
-    if (style === 'glow') return 'background: rgba(99, 102, 241, 0.2); box-shadow: 0 0 4px rgba(99, 102, 241, 0.4);';
-    return 'outline: 1px solid rgba(99, 102, 241, 0.5);';
+  initOverlay(overlay: HTMLElement): void {
+    this._highlightRenderer = new HighlightRenderer(overlay, (from, to) => {
+      const rects: Array<{ left: number; top: number; right: number; bottom: number }> = [];
+      const coordsFrom = this.view.coordsAtPos(from);
+      const coordsTo = this.view.coordsAtPos(to);
+      if (coordsFrom.top === coordsTo.top) {
+        rects.push({ left: coordsFrom.left, top: coordsFrom.top, right: coordsTo.right, bottom: coordsTo.bottom });
+      } else {
+        rects.push({ left: coordsFrom.left, top: coordsFrom.top, right: coordsFrom.right, bottom: coordsFrom.bottom });
+        rects.push({ left: coordsTo.left, top: coordsTo.top, right: coordsTo.right, bottom: coordsTo.bottom });
+      }
+      return rects;
+    });
+    this._highlightRenderer.startTracking();
   }
 
   private _applyDecorations(): void {
@@ -36,7 +47,7 @@ export class MarkdownEditorBridge extends EditableTextBridge {
       const to = Math.max(1, Math.min(entry.to, docSize));
       if (from < to) {
         decos.push(Decoration.inline(from, to, {
-          style: this._styleForHighlight(entry.style),
+          style: highlightOptionsToCSS(entry.style),
         }));
       }
     }
@@ -190,26 +201,50 @@ export class MarkdownEditorBridge extends EditableTextBridge {
     id: string,
     from: Position,
     to: Position,
-    style?: HighlightStyle,
+    style: HighlightOptions,
   ): void {
     const fromOffset = this.toOffset(from);
     const toOffset = this.toOffset(to);
-    this._decorations.set(id, { from: fromOffset, to: toOffset, style: style ?? 'pulse' });
+    if (this._highlightRenderer) {
+      this._highlightRenderer.add(id, fromOffset, toOffset, style);
+    }
+    this._decorations.set(id, { from: fromOffset, to: toOffset, style });
     this._applyDecorations();
   }
 
   protected override removeHighlightDecoration(id: string): void {
+    if (this._highlightRenderer) {
+      this._highlightRenderer.remove(id);
+    }
     this._decorations.delete(id);
     this._applyDecorations();
   }
 
   protected override clearHighlightDecorations(): void {
+    if (this._highlightRenderer) {
+      this._highlightRenderer.clear();
+    }
     this._decorations.clear();
     this._applyDecorations();
   }
 
-  override highlightLine(_line: number, style?: HighlightStyle): string {
-    const sel = this.view.state.selection.from;
+  override highlightLine(_line: number, count?: number, style?: HighlightStyle | HighlightOptions): string {
+    const docSize = this.view.state.doc.content.size;
+    let sel = Math.max(1, Math.min(this.view.state.selection.from, docSize));
+    let resolved = this.view.state.doc.resolve(sel);
+    if (!resolved.parent.isTextblock) {
+      let found = false;
+      for (let p = 1; p < docSize; p++) {
+        const r = this.view.state.doc.resolve(p);
+        if (r.parent.isTextblock && r.parent.textContent.length > 0) {
+          sel = r.start();
+          resolved = r;
+          found = true;
+          break;
+        }
+      }
+      if (!found) return this._highlightDocRange(resolved.start(), resolved.end(), style);
+    }
     const coords = this.view.coordsAtPos(sel);
     const cursorMidY = (coords.top + coords.bottom) / 2;
 
@@ -219,7 +254,6 @@ export class MarkdownEditorBridge extends EditableTextBridge {
       blockEl = blockEl.parentNode;
     }
     if (!blockEl) {
-      const resolved = this.view.state.doc.resolve(sel);
       return this._highlightDocRange(resolved.start(), resolved.end(), style);
     }
 
@@ -242,23 +276,33 @@ export class MarkdownEditorBridge extends EditableTextBridge {
 
     const cursorLine = lines.find(l => cursorMidY >= l.top - 2 && cursorMidY <= l.bottom + 2);
     if (!cursorLine) {
-      const resolved = this.view.state.doc.resolve(sel);
       return this._highlightDocRange(resolved.start(), resolved.end(), style);
     }
 
-    const lineMidY = (cursorLine.top + cursorLine.bottom) / 2;
-    const startResult = this.view.posAtCoords({ left: cursorLine.left + 1, top: lineMidY });
-    const endResult = this.view.posAtCoords({ left: cursorLine.right - 1, top: lineMidY });
+    const blockStart = resolved.start();
+    const blockEnd = resolved.end();
+    const selCoords = this.view.coordsAtPos(sel);
+    const lineHeight = selCoords.bottom - selCoords.top;
+    const threshold = Math.max(lineHeight * 0.4, 8);
 
-    if (!startResult || !endResult) {
-      const resolved = this.view.state.doc.resolve(sel);
-      return this._highlightDocRange(resolved.start(), resolved.end(), style);
+    let startPos = sel;
+    for (let p = sel - 1; p >= blockStart; p--) {
+      const c = this.view.coordsAtPos(p);
+      if (Math.abs(c.top - selCoords.top) > threshold) break;
+      startPos = p;
     }
 
-    return this._highlightDocRange(startResult.pos, endResult.pos, style);
+    let endPos = sel;
+    for (let p = sel; p <= blockEnd; p++) {
+      const c = this.view.coordsAtPos(p);
+      if (Math.abs(c.top - selCoords.top) > threshold) break;
+      endPos = p;
+    }
+
+    return this._highlightDocRange(startPos, endPos, style);
   }
 
-  override highlightBlock(pos: Position, style?: HighlightStyle): string {
+  override highlightBlock(pos: Position, style?: HighlightStyle | HighlightOptions): string {
     const offset = this.toOffset(pos);
     const docSize = this.view.state.doc.content.size;
     const clamped = Math.max(1, Math.min(offset, docSize));
@@ -277,15 +321,200 @@ export class MarkdownEditorBridge extends EditableTextBridge {
     return this._highlightDocRange(start, end, style);
   }
 
-  private _highlightDocRange(from: number, to: number, style?: HighlightStyle): string {
+  override highlightText(query: string, style?: HighlightStyle | HighlightOptions): string[] {
+    const ids: string[] = [];
+    this.view.state.doc.descendants((node, pos) => {
+      if (!node.isText || !node.text) return;
+      let idx = 0;
+      while ((idx = node.text.indexOf(query, idx)) !== -1) {
+        ids.push(this._highlightDocRange(pos + idx, pos + idx + query.length, style));
+        idx += query.length;
+      }
+    });
+    return ids;
+  }
+
+  override createReader(style?: HighlightStyle | HighlightOptions): LineReader {
+    let docPos = 1;
+    let hlId: string | null = null;
+    let lastMode: 'sentence' | 'line' = 'sentence';
+    const self = this;
+
+    function rehighlight(): void {
+      if (!hlId) return;
+      if (lastMode === 'line') {
+        const tr = self.view.state.tr;
+        self.view.dispatch(tr.setSelection(TextSelection.create(tr.doc, docPos)));
+        self.removeHighlight(hlId);
+        hlId = self.highlightLine(0, 1, style);
+      } else {
+        self.removeHighlight(hlId);
+        hlId = self.highlightSentence(self.toPosition(docPos), style);
+      }
+    }
+
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const onResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(rehighlight, 150);
+    };
+    window.addEventListener('resize', onResize);
+
+    function scrollToPos(): void {
+      const coords = self.view.coordsAtPos(docPos);
+      let scrollParent: Element | null = self.view.dom.parentElement;
+      while (scrollParent) {
+        if (scrollParent.scrollHeight > scrollParent.clientHeight) break;
+        scrollParent = scrollParent.parentElement;
+      }
+      if (!scrollParent) return;
+      const rect = scrollParent.getBoundingClientRect();
+      const relativeY = coords.top - rect.top;
+      const threshold = rect.height * 0.6;
+      if (relativeY > threshold || relativeY < 0) {
+        const targetScroll = scrollParent.scrollTop + relativeY - rect.height * 0.33;
+        scrollParent.scrollTo({ top: targetScroll, behavior: 'smooth' });
+      }
+    }
+
+    function update(): void {
+      if (hlId) self.removeHighlight(hlId);
+      const docSize = self.view.state.doc.content.size;
+      if (docPos >= docSize) { hlId = null; return; }
+      lastMode = 'sentence';
+      hlId = self.highlightSentence(self.toPosition(docPos), style);
+      scrollToPos();
+    }
+
+    update();
+
+    return {
+      moveTo(pos: Position): void {
+        docPos = self.toOffset(pos);
+        update();
+      },
+      advance(): void {
+        if (hlId) {
+          const deco = self._decorations.get(hlId);
+          if (deco) {
+            let next = deco.to;
+            const docSize = self.view.state.doc.content.size;
+            while (next < docSize) {
+              const resolved = self.view.state.doc.resolve(next);
+              if (resolved.parent.isTextblock) {
+                const offset = next - resolved.start();
+                const ch = resolved.parent.textContent[offset];
+                if (ch !== undefined && !/\s/.test(ch)) break;
+              }
+              next++;
+            }
+            if (next >= docSize) { self.removeHighlight(hlId); hlId = null; return; }
+            docPos = next;
+          }
+        }
+        update();
+      },
+      advanceLine(): void {
+        const docSize = self.view.state.doc.content.size;
+        let next = docPos + 1;
+        if (hlId) {
+          const deco = self._decorations.get(hlId);
+          if (deco) next = deco.to + 1;
+        }
+        if (next >= docSize) { if (hlId) { self.removeHighlight(hlId); hlId = null; } return; }
+        while (next < docSize) {
+          const r = self.view.state.doc.resolve(next);
+          if (r.parent.isTextblock && r.parent.textContent.length > 0) {
+            docPos = next;
+            const tr = self.view.state.tr;
+            self.view.dispatch(tr.setSelection(TextSelection.create(tr.doc, docPos)));
+            if (hlId) self.removeHighlight(hlId);
+            lastMode = 'line';
+            hlId = self.highlightLine(0, 1, style);
+            scrollToPos();
+            return;
+          }
+          next++;
+        }
+        if (hlId) { self.removeHighlight(hlId); hlId = null; }
+      },
+      position(): Position {
+        return self.toPosition(docPos);
+      },
+      dispose(): void {
+        window.removeEventListener('resize', onResize);
+        if (hlId) { self.removeHighlight(hlId); hlId = null; }
+      },
+    };
+  }
+
+  override highlightSentence(pos?: Position, style?: HighlightStyle | HighlightOptions): string {
+    const sel = pos ? this.toOffset(pos) : this.view.state.selection.from;
+    const docSize = this.view.state.doc.content.size;
+    const clamped = Math.max(1, Math.min(sel, docSize));
+    const resolved = this.view.state.doc.resolve(clamped);
+    const parent = resolved.parent;
+    if (!parent.isTextblock) {
+      return this._highlightDocRange(resolved.start(), resolved.end(), style);
+    }
+    const blockStart = resolved.start();
+    const blockText = parent.textContent;
+    const cursorOffset = clamped - blockStart;
+    const sentenceEnds = /[.!?](?=\s|$)/g;
+    const ranges: Array<{ start: number; end: number }> = [];
+    let rangeStart = 0;
+    let match;
+    while ((match = sentenceEnds.exec(blockText)) !== null) {
+      ranges.push({ start: rangeStart, end: match.index + 1 });
+      rangeStart = match.index + 1;
+      while (rangeStart < blockText.length && /\s/.test(blockText[rangeStart]!)) rangeStart++;
+    }
+    if (rangeStart < blockText.length) {
+      ranges.push({ start: rangeStart, end: blockText.length });
+    }
+    if (ranges.length === 0) {
+      ranges.push({ start: 0, end: blockText.length });
+    }
+    let sentenceStart = 0;
+    let sentenceEnd = blockText.length;
+    for (const range of ranges) {
+      if (cursorOffset >= range.start && cursorOffset < range.end) {
+        sentenceStart = range.start;
+        sentenceEnd = range.end;
+        break;
+      }
+    }
+    return this._highlightDocRange(blockStart + sentenceStart, blockStart + sentenceEnd, style);
+  }
+
+  override getHighlightText(id: string): string | undefined {
+    const deco = this._decorations.get(id);
+    if (!deco) return undefined;
+    return this.view.state.doc.textBetween(deco.from, deco.to);
+  }
+
+  override listHighlights(): Array<{ id: string; from: Position; to: Position; text: string; group?: string }> {
+    return [...this._decorations.entries()].map(([id, deco]) => {
+      const entry: { id: string; from: Position; to: Position; text: string; group?: string } = {
+        id,
+        from: this.toPosition(deco.from),
+        to: this.toPosition(deco.to),
+        text: this.view.state.doc.textBetween(deco.from, deco.to),
+      };
+      if (deco.style.group !== undefined) entry.group = deco.style.group;
+      return entry;
+    });
+  }
+
+  private _highlightDocRange(from: number, to: number, style?: HighlightStyle | HighlightOptions): string {
     const id = this._genId('hl');
-    const hlStyle = style ?? 'pulse';
+    const resolved = resolveHighlightStyle(style);
     this._highlights.set(id, {
       from: this.toPosition(from),
       to: this.toPosition(to),
-      style: hlStyle,
+      style: resolved,
     });
-    this._decorations.set(id, { from, to, style: hlStyle });
+    this._decorations.set(id, { from, to, style: resolved });
     this._applyDecorations();
     return id;
   }

@@ -33,6 +33,14 @@ function createMockEditableText(content = 'hello world'): EditableText & Record<
     highlight: vi.fn(() => 'hl-1'),
     removeHighlight: vi.fn(),
     clearHighlights: vi.fn(),
+    clearHighlightGroup: vi.fn(),
+    highlightLine: vi.fn(() => 'hl-l1'),
+    highlightBlock: vi.fn(() => 'hl-b1'),
+    highlightRange: vi.fn(() => 'hl-r1'),
+    highlightSentence: vi.fn(() => 'hl-s1'),
+    highlightText: vi.fn(() => []),
+    getHighlightText: vi.fn(() => undefined),
+    listHighlights: vi.fn(() => []),
     addAnnotation: vi.fn(() => 'ann-1'),
     removeAnnotation: vi.fn(),
     clearAnnotations: vi.fn(),
@@ -42,6 +50,12 @@ function createMockEditableText(content = 'hello world'): EditableText & Record<
       return session;
     }),
     endEditSession: vi.fn((s: EditSession) => { if (session === s) session = null; }),
+    createReader: vi.fn(() => ({
+      moveTo: vi.fn(),
+      advance: vi.fn(),
+      position: vi.fn(() => ({ line: 0, col: 0 })),
+      dispose: vi.fn(),
+    })),
   };
 }
 
@@ -225,6 +239,143 @@ describe('McpToolAdapter', () => {
       await adapter.handleToolCall('editor_begin_session', { owner: 'claude' });
       const result = await adapter.handleToolCall('editor_end_session', {});
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('semantic highlight tools', () => {
+    it('editor_highlight_sentence calls highlightSentence()', async () => {
+      const mock = createMockEditableText('Hello world. Another sentence.');
+      mock.highlightSentence = vi.fn(() => 'hl-s1');
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_highlight_sentence', {});
+      expect(result).toEqual({ id: 'hl-s1' });
+      expect(mock.highlightSentence).toHaveBeenCalled();
+    });
+
+    it('editor_highlight_text calls highlightText()', async () => {
+      const mock = createMockEditableText('hello hello');
+      mock.highlightText = vi.fn(() => ['hl-1', 'hl-2']);
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_highlight_text', { query: 'hello', style: 'error' });
+      expect(result).toEqual({ ids: ['hl-1', 'hl-2'] });
+      expect(mock.highlightText).toHaveBeenCalledWith('hello', 'error');
+    });
+
+    it('editor_highlight_line calls highlightLine() with count', async () => {
+      const mock = createMockEditableText('a\nb\nc');
+      mock.highlightLine = vi.fn(() => 'hl-l1');
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_highlight_line', { line: 0, count: 2 });
+      expect(result).toEqual({ id: 'hl-l1' });
+      expect(mock.highlightLine).toHaveBeenCalledWith(0, 2, undefined);
+    });
+  });
+
+  describe('read-back tools', () => {
+    it('editor_get_highlight_text returns text', async () => {
+      const mock = createMockEditableText('hello world');
+      mock.getHighlightText = vi.fn(() => 'hello');
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_get_highlight_text', { id: 'hl-1' });
+      expect(result).toEqual({ text: 'hello' });
+    });
+
+    it('editor_get_highlight_text returns error for not found', async () => {
+      const mock = createMockEditableText('hello');
+      mock.getHighlightText = vi.fn(() => undefined);
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_get_highlight_text', { id: 'hl-99' });
+      expect(result.error).toBe('not_found');
+    });
+
+    it('editor_list_highlights returns highlight list', async () => {
+      const mock = createMockEditableText('hello');
+      const list = [{ id: 'hl-1', from: { line: 0, col: 0 }, to: { line: 0, col: 5 }, text: 'hello', group: 'g' }];
+      mock.listHighlights = vi.fn(() => list);
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_list_highlights', {});
+      expect(result).toEqual({ highlights: list });
+    });
+
+    it('editor_clear_highlight_group calls clearHighlightGroup()', async () => {
+      const mock = createMockEditableText('');
+      mock.clearHighlightGroup = vi.fn();
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_clear_highlight_group', { group: 'errors' });
+      expect(result).toEqual({ success: true });
+      expect(mock.clearHighlightGroup).toHaveBeenCalledWith('errors');
+    });
+  });
+
+  describe('reader tools', () => {
+    it('editor_reader_start creates a reader', async () => {
+      const mock = createMockEditableText('Hello world. Second sentence.');
+      const mockReader = {
+        moveTo: vi.fn(),
+        advance: vi.fn(),
+        position: vi.fn(() => ({ line: 0, col: 0 })),
+        dispose: vi.fn(),
+      };
+      mock.createReader = vi.fn(() => mockReader);
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_reader_start', { style: 'pulse' });
+      expect(result.position).toEqual({ line: 0, col: 0 });
+      expect(mock.createReader).toHaveBeenCalledWith('pulse');
+    });
+
+    it('editor_reader_move moves the reader', async () => {
+      const mock = createMockEditableText('Hello world.');
+      const mockReader = {
+        moveTo: vi.fn(),
+        advance: vi.fn(),
+        position: vi.fn(() => ({ line: 0, col: 5 })),
+        dispose: vi.fn(),
+      };
+      mock.createReader = vi.fn(() => mockReader);
+      const adapter = new McpToolAdapter(mock);
+      await adapter.handleToolCall('editor_reader_start', {});
+      const result = await adapter.handleToolCall('editor_reader_move', { pos: { line: 0, col: 5 } });
+      expect(result.position).toEqual({ line: 0, col: 5 });
+      expect(mockReader.moveTo).toHaveBeenCalledWith({ line: 0, col: 5 });
+    });
+
+    it('editor_reader_advance advances the reader', async () => {
+      const mock = createMockEditableText('Hello. World.');
+      const mockReader = {
+        moveTo: vi.fn(),
+        advance: vi.fn(),
+        position: vi.fn(() => ({ line: 0, col: 7 })),
+        dispose: vi.fn(),
+      };
+      mock.createReader = vi.fn(() => mockReader);
+      const adapter = new McpToolAdapter(mock);
+      await adapter.handleToolCall('editor_reader_start', {});
+      const result = await adapter.handleToolCall('editor_reader_advance', {});
+      expect(result.position).toEqual({ line: 0, col: 7 });
+      expect(mockReader.advance).toHaveBeenCalled();
+    });
+
+    it('editor_reader_stop disposes the reader', async () => {
+      const mock = createMockEditableText('Hello.');
+      const mockReader = {
+        moveTo: vi.fn(),
+        advance: vi.fn(),
+        position: vi.fn(() => ({ line: 0, col: 0 })),
+        dispose: vi.fn(),
+      };
+      mock.createReader = vi.fn(() => mockReader);
+      const adapter = new McpToolAdapter(mock);
+      await adapter.handleToolCall('editor_reader_start', {});
+      const result = await adapter.handleToolCall('editor_reader_stop', {});
+      expect(result).toEqual({ success: true });
+      expect(mockReader.dispose).toHaveBeenCalled();
+    });
+
+    it('editor_reader_move returns error when no reader active', async () => {
+      const mock = createMockEditableText('');
+      const adapter = new McpToolAdapter(mock);
+      const result = await adapter.handleToolCall('editor_reader_move', { pos: { line: 0, col: 0 } });
+      expect(result.error).toBe('no_reader');
     });
   });
 

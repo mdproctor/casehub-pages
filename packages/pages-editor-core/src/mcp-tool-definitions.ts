@@ -4,6 +4,24 @@ export interface McpToolDefinition {
   inputSchema: Record<string, any>;
 }
 
+const highlightStyleSchema = {
+  oneOf: [
+    { type: 'string', enum: ['pulse', 'underline', 'glow', 'box', 'error', 'suggestion'] },
+    {
+      type: 'object',
+      properties: {
+        background: { type: 'string' },
+        border: { type: 'string' },
+        borderRadius: { type: 'string' },
+        textDecoration: { type: 'string' },
+        label: { type: 'string' },
+        group: { type: 'string' },
+      },
+    },
+  ],
+  description: 'Highlight style — a preset name or custom options',
+};
+
 const positionSchema = {
   type: 'object',
   properties: {
@@ -102,7 +120,7 @@ export const MCP_TOOL_DEFINITIONS: McpToolDefinition[] = [
       properties: {
         from: { ...positionSchema, description: 'Start position' },
         to: { ...positionSchema, description: 'End position' },
-        style: { type: 'string', enum: ['pulse', 'underline', 'glow', 'box'], description: 'Highlight style (default: pulse)' },
+        style: { ...highlightStyleSchema },
       },
       required: ['from', 'to'],
     },
@@ -145,6 +163,65 @@ export const MCP_TOOL_DEFINITIONS: McpToolDefinition[] = [
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'editor_highlight_sentence',
+    description: 'Highlight the sentence at the cursor or a given position. Returns a highlight ID.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        pos: { ...positionSchema, description: 'Position within the sentence (default: cursor)' },
+        style: { ...highlightStyleSchema },
+      },
+    },
+  },
+  {
+    name: 'editor_highlight_text',
+    description: 'Find and highlight ALL occurrences of a string. Returns an array of highlight IDs.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Text to find and highlight' },
+        style: { ...highlightStyleSchema },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'editor_highlight_line',
+    description: 'Highlight one or more consecutive lines. Returns a highlight ID.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        line: { type: 'number', description: 'Zero-based starting line number' },
+        count: { type: 'number', description: 'Number of lines to highlight (default: 1)' },
+        style: { ...highlightStyleSchema },
+      },
+      required: ['line'],
+    },
+  },
+  {
+    name: 'editor_get_highlight_text',
+    description: 'Get the text content under a highlight by ID.',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'Highlight ID' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'editor_list_highlights',
+    description: 'List all active highlights with IDs, ranges, text content, and group.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'editor_clear_highlight_group',
+    description: 'Remove all highlights belonging to a named group.',
+    inputSchema: {
+      type: 'object',
+      properties: { group: { type: 'string', description: 'Group name to clear' } },
+      required: ['group'],
+    },
+  },
+  {
     name: 'editor_begin_session',
     description: 'Begin an exclusive edit session. The editor becomes read-only for other users.',
     inputSchema: {
@@ -156,6 +233,38 @@ export const MCP_TOOL_DEFINITIONS: McpToolDefinition[] = [
   {
     name: 'editor_end_session',
     description: 'End the active edit session, returning the editor to normal mode.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'editor_reader_start',
+    description: 'Start a tracked line reader that highlights the current sentence. Animates between positions.',
+    inputSchema: {
+      type: 'object',
+      properties: { style: { ...highlightStyleSchema } },
+    },
+  },
+  {
+    name: 'editor_reader_move',
+    description: 'Move the line reader to a specific position.',
+    inputSchema: {
+      type: 'object',
+      properties: { pos: { ...positionSchema, description: 'Target position' } },
+      required: ['pos'],
+    },
+  },
+  {
+    name: 'editor_reader_advance',
+    description: 'Advance the line reader to the next sentence.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'editor_reader_advance_line',
+    description: 'Advance the line reader to the next text block (paragraph, heading, list item).',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'editor_reader_stop',
+    description: 'Stop and dispose the line reader, removing its highlight.',
     inputSchema: { type: 'object', properties: {} },
   },
 ];

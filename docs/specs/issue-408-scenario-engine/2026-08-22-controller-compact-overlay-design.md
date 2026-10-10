@@ -88,8 +88,8 @@ The `baseurl` attribute is set inline. The `firstUpdated()` lifecycle (fixed in 
 
 ### What doesn't change
 
-- `PlaybookConnectionController` — same connection logic for both modes
-- `PlaybookState`, `OutlineNode` interfaces — unchanged
+- `ScenarioConnectionController` — same connection logic for both modes
+- `ScenarioState`, `OutlineNode` interfaces — unchanged
 - Push wire protocol — unchanged
 - `remote.html` — unchanged (uses `mode="full"` by default)
 
@@ -97,12 +97,12 @@ The `baseurl` attribute is set inline. The `firstUpdated()` lifecycle (fixed in 
 
 ### Files to modify
 
-- `../../../packages/pages-aria/src/controller/playbook-controller.ts` — add `mode` property, pill render, expand/collapse state, drag handler, conditional CSS
+- `packages/pages-aria/src/controller/scenario-controller.ts` — add `mode` property, pill render, expand/collapse state, drag handler, conditional CSS
 - `examples/helpdesk/.../index.html` — embed the controller with `mode="compact"`
 
 ### Files unchanged
 
-- `../../../packages/pages-aria/src/controller/playbook-connection-controller.ts` — no changes
+- `scenario-connection-controller.ts` — no changes
 - `remote.html` — already works as standalone
 
 ## Test plan
@@ -115,8 +115,8 @@ The `baseurl` attribute is set inline. The `firstUpdated()` lifecycle (fixed in 
 
 ## References
 
-- `../../../packages/pages-aria/src/controller/playbook-controller.ts` — current controller component
-- `../../../packages/pages-aria/src/controller/playbook-connection-controller.ts` — connection logic
+- `packages/pages-aria/src/controller/scenario-controller.ts` — current controller component
+- `packages/pages-aria/src/controller/scenario-connection-controller.ts` — connection logic
 - `examples/helpdesk/src/main/resources/META-INF/resources/index.html` — helpdesk UI
 - D21 — compact mode layout decision (pill + expand)
 - D22 — scope decision (compact only)

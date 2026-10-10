@@ -11,7 +11,7 @@ series: issue-408-scenario-engine
 
 Continued from [Specifying a Scenario Format Before Building the Engine](2026-08-11-mdp01-scenario-format-spec.md).
 
-The scenario format spec was the easy part — it defines what a scenario says, not how it runs. The harder question is orchestrator-to-executor communication. Today the `PlaybookExecutor` sends individual ARIA commands via push wire and waits for `CommandResult` back. That's a single-command RPC pattern. No stepping, no speed control, no service executors. The helpdesk example can't participate.
+The scenario format spec was the easy part — it defines what a scenario says, not how it runs. The harder question is orchestrator-to-executor communication. Today the `ScenarioExecutor` sends individual ARIA commands via push wire and waits for `CommandResult` back. That's a single-command RPC pattern. No stepping, no speed control, no service executors. The helpdesk example can't participate.
 
 I started by framing this as a tension between "central orchestration" (Pages makes HTTP calls to services) and "distributed executors" (services embed local executors that receive script fragments). That framing was wrong. There is no tension. The Java server is the orchestrator — that's settled architecture. The TypeScript side orchestrates in browser-only mode. A hierarchy of orchestrators is possible but not the primary concern. The protocol sits within that settled architecture, not between competing models.
 

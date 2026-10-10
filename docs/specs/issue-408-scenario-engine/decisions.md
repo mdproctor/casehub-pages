@@ -88,7 +88,7 @@
 
 ## D14: REST endpoint for scenario outline data
 
-**Choice:** Add `GET /scenario/outline` to `PlaybookControlResource` returning the parsed chapter/section/step hierarchy. Controller fetches once on scenario start.
+**Choice:** Add `GET /scenario/outline` to `ScenarioControlResource` returning the parsed chapter/section/step hierarchy. Controller fetches once on scenario start.
 **Alternatives:**
 - Inline full outline in every `scenario:state` push wire message — bloats every state update with static data that only changes on new scenario start
 - REST initial + push delta for position changes — more complex for marginal bandwidth savings on a local-network use case
@@ -99,7 +99,7 @@
 
 ## D15: Push wire broadcast for real-time state updates
 
-**Choice:** Add `scenario:state` topic broadcast to `PlaybookOrchestrator` via `EventBroadcaster`. Controller listens via `EventConnection.listen(['scenario:state'])`. Broadcast on every state change (step completion, pause, resume, speed change).
+**Choice:** Add `scenario:state` topic broadcast to `ScenarioOrchestrator` via `EventBroadcaster`. Controller listens via `EventConnection.listen(['scenario:state'])`. Broadcast on every state change (step completion, pause, resume, speed change).
 **Alternatives:**
 - REST polling `GET /scenario/state` on an interval — laggy, wastes bandwidth, doesn't support multi-device sync
 **Rationale:** Real-time state is required for the "presenter remote" use case (phone controlling laptop display). Multiple controllers must stay in sync. Push wire is the existing infrastructure for this — no new transport needed.
@@ -124,7 +124,7 @@
 
 **Choice:** Embedded mode: host passes an existing `EventConnection` via property. Remote mode: host passes a `baseUrl` string and the component creates its own connection internally.
 **Alternatives:**
-- Reactive controller — `PlaybookConnectionController` managing the EventConnection; more structured but adds indirection for a two-mode problem with one consumer
+- Reactive controller — `ScenarioConnectionController` managing the EventConnection; more structured but adds indirection for a two-mode problem with one consumer
 - Auto-detect — controller checks for pages-runtime context; implicit, harder to test, magical
 **Rationale:** Clean API surface. The host decides the mode, the controller doesn't care. Testable — pass a mock connection in tests.
 **Trade-offs:** Embedded hosts must pass the connection explicitly. Minor wiring cost.

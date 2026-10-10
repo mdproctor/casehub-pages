@@ -20,7 +20,7 @@ pages:
   - properties:
       margin-top: 0px
     columns:
-    - span: 9
+    - span: 8
       components:
       - type: html
         properties:
@@ -32,63 +32,120 @@ pages:
               label="Showcase editor"
               style="height: 550px; border: 1px solid var(--pages-neutral-4, #e0e0e0); border-radius: 6px; overflow: hidden;"
             ></pages-markdown-editor>
-    - span: 3
+    - span: 4
       components:
       - type: html
         properties:
           content: |
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
-                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Mode</h3>
-                <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 13px;">Mode</h3>
+                <div style="display: flex; gap: 4px;">
                   <button id="btn-wysiwyg" aria-label="WYSIWYG mode" role="button"
-                    style="padding: 6px 12px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 4px; cursor: pointer; color: var(--pages-accent-11); font-size: 12px; text-align: left;">
+                    style="flex: 1; padding: 5px 8px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 4px; cursor: pointer; color: var(--pages-accent-11); font-size: 11px;">
                     WYSIWYG
                   </button>
                   <button id="btn-source" aria-label="Source mode" role="button"
-                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
                     Source
                   </button>
                   <button id="btn-split" aria-label="Split mode" role="button"
-                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
                     Split
                   </button>
                 </div>
               </div>
-              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
-                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Edit API</h3>
-                <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 13px;">Highlight API</h3>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  <div style="display: flex; gap: 4px;">
+                    <button id="btn-highlight-line" aria-label="Highlight line" role="button"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                      Line
+                    </button>
+                    <button id="btn-highlight-sentence" aria-label="Highlight sentence" role="button"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                      Sentence
+                    </button>
+                    <button id="btn-highlight-block" aria-label="Highlight block" role="button"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                      Block
+                    </button>
+                  </div>
+                  <div style="display: flex; gap: 4px;">
+                    <input id="highlight-text-input" type="text" placeholder="Search text..." aria-label="Text to highlight"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; color: var(--pages-neutral-11); font-size: 11px; min-width: 0;" value="bridge">
+                    <button id="btn-highlight-text" aria-label="Find and highlight" role="button"
+                      style="padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; white-space: nowrap;">
+                      Find All
+                    </button>
+                  </div>
+                  <button id="btn-custom-style" aria-label="Custom style highlight" role="button"
+                    style="padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; text-align: left;">
+                    Custom Style (3 lines, green dashed, group: suggestions)
+                  </button>
                   <button id="btn-insert" aria-label="Insert text" role="button"
-                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
+                    style="padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; text-align: left;">
                     Insert Text
                   </button>
-                  <button id="btn-highlight" aria-label="Highlight range" role="button"
-                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
-                    Highlight Line
-                  </button>
-                  <button id="btn-clear-hl" aria-label="Clear highlights" role="button"
-                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
-                    Clear Highlights
-                  </button>
-                  <button id="btn-annotate" aria-label="Add annotation" role="button"
-                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
-                    Highlight Block
-                  </button>
-                  <button id="btn-session" aria-label="Toggle session" role="button"
-                    style="padding: 6px 12px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 12px; text-align: left;">
-                    Begin Edit Session
+                  <button id="btn-clear-hl" aria-label="Clear all highlights" role="button"
+                    style="padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; width: 100%;">
+                    Clear All
                   </button>
                 </div>
               </div>
-              <div id="editor-info" style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
-                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 14px;">Status</h3>
-                <pre id="status-output" style="margin: 0; font-size: 11px; color: var(--pages-neutral-9); white-space: pre-wrap;"></pre>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 13px;">Read-back</h3>
+                <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+                  <button id="btn-list-highlights" aria-label="List highlights" role="button"
+                    style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                    List Highlights
+                  </button>
+                  <button id="btn-get-text" aria-label="Get highlight text" role="button"
+                    style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                    Get Last Text
+                  </button>
+                </div>
+                <pre id="readback-output" style="margin: 0; font-size: 10px; color: var(--pages-neutral-9); white-space: pre-wrap; max-height: 80px; overflow-y: auto; background: var(--pages-neutral-2); padding: 6px; border-radius: 4px;">(click a button above)</pre>
               </div>
-              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 16px;">
-                <h3 style="margin: 0 0 12px; color: var(--pages-neutral-12); font-size: 14px;">Scenario Playbooks</h3>
-                <p style="margin: 0 0 8px; color: var(--pages-neutral-9); font-size: 11px;">
-                  Run a playbook to see the API exercised live.
-                </p>
-                <div id="scenario-picker" style="display: flex; flex-direction: column; gap: 6px;"></div>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 13px;">Reader</h3>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  <div style="display: flex; gap: 4px;">
+                    <button id="btn-reader-start" aria-label="Start reader" role="button"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-accent-3); border: 1px solid var(--pages-accent-6); border-radius: 4px; cursor: pointer; color: var(--pages-accent-11); font-size: 11px;">
+                      Start
+                    </button>
+                    <button id="btn-reader-stop" aria-label="Stop reader" role="button"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                      Stop
+                    </button>
+                  </div>
+                  <div style="display: flex; gap: 4px;">
+                    <button id="btn-reader-advance-line" aria-label="Advance line" role="button"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                      Next Line
+                    </button>
+                    <button id="btn-reader-advance" aria-label="Advance sentence" role="button"
+                      style="flex: 1; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px;">
+                      Next Sentence
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 13px;">Session</h3>
+                <button id="btn-session" aria-label="Toggle session" role="button"
+                  style="width: 100%; padding: 5px 8px; background: var(--pages-neutral-2); border: 1px solid var(--pages-neutral-5); border-radius: 4px; cursor: pointer; color: var(--pages-neutral-11); font-size: 11px; text-align: left;">
+                  Begin Edit Session
+                </button>
+              </div>
+              <div id="editor-info" style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                <h3 style="margin: 0 0 6px; color: var(--pages-neutral-12); font-size: 13px;">Status</h3>
+                <pre id="status-output" style="margin: 0; font-size: 10px; color: var(--pages-neutral-9); white-space: pre-wrap;"></pre>
+              </div>
+              <div style="background: var(--pages-neutral-1); border: 1px solid var(--pages-neutral-4); border-radius: 8px; padding: 12px;">
+                <h3 style="margin: 0 0 8px; color: var(--pages-neutral-12); font-size: 13px;">Scenario Playbooks</h3>
+                <div id="scenario-picker" style="display: flex; flex-direction: column; gap: 5px;"></div>
               </div>
             </div>

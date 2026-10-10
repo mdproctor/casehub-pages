@@ -38,7 +38,7 @@
 
 ## D4: Language support — CodeMirror Lezer grammars + future LSP
 
-**Choice:** Use CodeMirror's built-in language support: `@codemirror/lang-yaml` and `@codemirror/lang-json` for syntax highlighting via Lezer grammars. Expose a `language` property on the component that selects the active language mode. For context-aware completion (CaseHub Playbook YAML schema, jq expressions), design the component to accept a CodeMirror `Extension[]` property so a language server client extension can be plugged in later.
+**Choice:** Use CodeMirror's built-in language support: `@codemirror/lang-yaml` and `@codemirror/lang-json` for syntax highlighting via Lezer grammars. Expose a `language` property on the component that selects the active language mode. For context-aware completion (CaseHub YAML schema, jq expressions), design the component to accept a CodeMirror `Extension[]` property so a language server client extension can be plugged in later.
 **Alternatives:**
 - Custom tokenizer interface `(line, state) => { tokens, endState }` — reinvents what Lezer grammars already do, and wouldn't integrate with CodeMirror's completion/lint framework
 - Custom tokenizer from pages-aria — production-quality for line-level highlighting but stateless, cannot handle multi-line constructs, and incompatible with CodeMirror's architecture
@@ -88,7 +88,7 @@
 
 ## D8: Language intelligence architecture — LSP, separate issue
 
-**Choice:** Context-aware completion for CaseHub Playbook YAML and jq expressions will be delivered via a Language Server Protocol (LSP) server, tracked as a separate issue. The `pages-code-editor` component ships now with basic YAML/JSON syntax highlighting. The component's `extensions` property provides the seam for plugging in an LSP client extension later.
+**Choice:** Context-aware completion for CaseHub YAML and jq expressions will be delivered via a Language Server Protocol (LSP) server, tracked as a separate issue. The `pages-code-editor` component ships now with basic YAML/JSON syntax highlighting. The component's `extensions` property provides the seam for plugging in an LSP client extension later.
 **Alternatives:**
 - Build completion directly into the web component — works for web but doesn't share with VS Code/IntelliJ plugins
 - Ship everything together — delays the editor for months while the language server is built

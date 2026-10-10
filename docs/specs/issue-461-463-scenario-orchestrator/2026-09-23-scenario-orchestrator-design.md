@@ -37,7 +37,7 @@ YAML binding for orchestration constructs at both inline and top-level.
 
 **Relationship to scenario-handler.ts:**
 The `scenario-handler.ts` in `packages/pages-aria/src/server/` is the distributed
-execution path — it receives commands from the backend `PlaybookOrchestrator` via
+execution path — it receives commands from the backend `ScenarioOrchestrator` via
 WebSocket push and executes them locally. It has no scenario model, no parser, and
 no scheduling — it is a command executor driven by the server. The DES scheduler
 replaces the local execution path (`runner.ts`, `sectioned-runner.ts`) used for
@@ -488,13 +488,13 @@ existing sectioned-runner):
 
 | Event topic | When | Data |
 |---|---|---|
-| `scenario:state` | play/pause/step/done transitions | Full `PlaybookState` payload (see below) |
+| `scenario:state` | play/pause/step/done transitions | Full `ScenarioState` payload (see below) |
 | `scenario:step` | after each step executes | `{ queue, step, virtualTime }` |
 | `scenario:section` | entering a new section | `{ sectionIndex, title }` |
 | `scenario:queue` | queue state change | `{ queueId, state, reason }` |
 
-The `scenario:state` event emits the existing `PlaybookState` shape from
-`../../../packages/pages-aria/src/controller/playbook-connection-controller.ts` to maintain backward compatibility with
+The `scenario:state` event emits the existing `ScenarioState` shape from
+`scenario-connection-controller.ts` to maintain backward compatibility with
 `PagesScenarioController`, `PagesScenarioNarrative`, and `PagesTutorialHost`:
 
 ```typescript
@@ -820,13 +820,13 @@ The `PagesTutorialHost` component in `packages/pages-aria/src/tutorial/tutorial-
 currently imports `runSectionedScenario` and `TutorialRunner` from
 `../scenario/sectioned-runner.js` (lines 6). It calls `runner.runTo(sectionTitle)`
 in `_onPrev()` (line 105) and `_onNext()` (line 112) with section title strings,
-and receives `PlaybookState` events via `_trackState()` (line 93).
+and receives `ScenarioState` events via `_trackState()` (line 93).
 
 Migration:
 - Change import to `createScheduler` from `../scenario/scheduler.js`
-- The `PlaybookRunner` interface preserves the same API shape:
+- The `ScenarioRunner` interface preserves the same API shape:
   `play()`, `pause()`, `step()`, `runTo(sectionTitle)`, `setSpeed()`, `dispose()`
-- Event payload remains `PlaybookState` on topic `scenario:state` — no change
+- Event payload remains `ScenarioState` on topic `scenario:state` — no change
 - The `PagesScenarioController` and `PagesScenarioNarrative` components
   consume events only — no import changes needed
 
