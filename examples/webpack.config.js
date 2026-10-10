@@ -79,6 +79,10 @@ module.exports = (env = {}) => {
           sideEffects: true,
         },
         {
+          test: /topology-viewer[\/]dist[\/]/,
+          sideEffects: true,
+        },
+        {
           test: /pages-aria[\/]dist[\/]/,
           sideEffects: true,
         },
@@ -151,6 +155,7 @@ module.exports = (env = {}) => {
         "@casehubio/pages-ui-components/types": path.resolve(__dirname, "../packages/pages-ui-components/dist/types"),
         "@casehubio/pages-ui-components": path.resolve(__dirname, "../packages/pages-ui-components"),
         "@casehubio/pages-code-editor": path.resolve(__dirname, "../packages/pages-code-editor"),
+        "@casehubio/topology-viewer": path.resolve(__dirname, "../packages/topology-viewer"),
         "@casehubio/pages-schema": path.resolve(__dirname, "../packages/pages-schema"),
         "@casehubio/graph-core": path.resolve(__dirname, "../packages/graph-core"),
         "@casehubio/graph-renderer": path.resolve(__dirname, "../packages/graph-renderer"),

@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "CaseHub Pages Examples Gallery",
-  "totalSamples": 106,
+  "totalSamples": 108,
   "categories": [
     {
       "category": "Charts",
@@ -706,6 +706,14 @@
           "category": "Custom Components",
           "file": "Document Diff.page.yaml",
           "tsPath": "Custom Components/Document Diff.ts"
+        },
+        {
+          "name": "Drift Badge",
+          "path": "Custom Components/Drift Badge.page.yaml",
+          "category": "Custom Components",
+          "file": "Drift Badge.page.yaml",
+          "tags": ["iot", "drift", "topology", "badge", "sse"],
+          "tsPath": "Custom Components/Drift Badge.ts"
         },
         {
           "name": "Iframe Components",

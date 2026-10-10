@@ -1,0 +1,88 @@
+pages:
+- name: index
+  rows:
+  - columns:
+    - components:
+      - type: markdown
+        properties:
+          content: |
+            ## pages-drift-badge
+
+            A topology drift status badge for IoT device nodes. Shows drift state
+            with colour-coded severity and live countdown for permitted drift exemptions.
+
+            - **Amber** badge with countdown for `PERMITTED_DRIFT` — trigger-sourced exemption with deadline
+            - **Red** pulsing badge for `UNEXPECTED_DRIFT` — unexempted state deviation
+            - No badge rendered for `NORMAL` state
+  - columns:
+    - span: 4
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+              <div style="font-size:13px; font-weight:500; color:var(--pages-neutral-11,#666);">Permitted Drift (MOTION trigger)</div>
+              <pages-drift-badge id="badge-permitted"></pages-drift-badge>
+            </div>
+    - span: 4
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+              <div style="font-size:13px; font-weight:500; color:var(--pages-neutral-11,#666);">Unexpected Drift</div>
+              <pages-drift-badge id="badge-unexpected"></pages-drift-badge>
+            </div>
+    - span: 4
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+              <div style="font-size:13px; font-weight:500; color:var(--pages-neutral-11,#666);">Normal (no badge)</div>
+              <pages-drift-badge id="badge-normal"></pages-drift-badge>
+              <div style="font-size:12px; color:var(--pages-neutral-8,#999); font-style:italic;">
+                Badge renders nothing when status is NORMAL
+              </div>
+            </div>
+  - columns:
+    - components:
+      - type: markdown
+        properties:
+          content: |
+            ---
+
+            ### SSE Event Wiring
+
+            Use `subscribeDriftEvents(target, callbacks)` to listen for
+            `drift:exemption:granted` and `drift:exemption:revoked` events
+            via the pages-event protocol. Returns a single unsubscribe handle.
+
+            ```typescript
+            import { subscribeDriftEvents, DriftStatus } from '@casehubio/topology-viewer';
+
+            const unsub = subscribeDriftEvents(document, {
+              onNodeUpdate(deviceId, patch) {
+                // patch.driftStatus, patch.triggerSource, patch.exemptUntil
+              }
+            });
+            ```
+  - columns:
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+              <div style="font-size:13px; font-weight:500; color:var(--pages-neutral-11,#666);">Permitted — VIBRATION trigger (short deadline)</div>
+              <pages-drift-badge id="badge-vibration"></pages-drift-badge>
+            </div>
+    - span: 6
+      components:
+      - type: html
+        properties:
+          content: |
+            <div style="padding:16px; display:flex; flex-direction:column; gap:16px;">
+              <div style="font-size:13px; font-weight:500; color:var(--pages-neutral-11,#666);">Permitted — TEMPERATURE trigger (long deadline)</div>
+              <pages-drift-badge id="badge-temperature"></pages-drift-badge>
+            </div>
