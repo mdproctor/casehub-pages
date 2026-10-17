@@ -96,6 +96,10 @@ A read-only semantic viewer panel synced to the text editor. The viewer renders 
 - Circular dependency: red highlight on the cycle path
 **Rationale:** LLM-generated YAML will have errors. The viewer's job is to make those errors visible, not hide behind a blank screen. Degraded-mode rendering is a v1 requirement.
 
+### Design Scope vs Implementation Scope
+
+The mockup (27 sections, 5 parts) is the **design horizon**, not the v1 implementation scope. The holistic design ensures leaf components (step cards, expression pills, decorator badges) compose correctly when higher layers arrive (patterns, aggregate views, focus modes). Building without the full picture produces components that work in isolation but need refactoring at integration time. The v1/v2/v3 phasing controls *implementation* scope; the 27-section mockup controls *design coherence*.
+
 ### D10: v1 Scope — Single File
 
 **Choice:** v1 operates on a single playbook YAML file at a time
