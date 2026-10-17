@@ -219,6 +219,28 @@ Agent identity rendering:
 | Grouping | Badge showing strategy (windowed/keyed) |
 | Summarisers | Type-specific rendering (threshold rules, state machine, field extraction) |
 
+### Layer: Desired State Topology (v3)
+
+| Desired State Aspect | Visual Treatment |
+|---------------------|-----------------|
+| Nodes + dependencies | DAG graph via `graph-core` + `graph-renderer` |
+| forEach expansion | Template/Expanded toggle — 1 template node vs N stamped instances (teal-colored) |
+| `when:` conditionals | Dashed border node (may or may not exist) |
+| Rules (auto-wiring) | Rule-generated edges shown in different style from declared edges |
+| Invariants | Validation badges on nodes/edges |
+| Lifecycle phases | Progressive vertical layers with completion gates and progress bars |
+| Modules | Imported subgraphs with alias prefix, collapsible |
+
+### Layer: Deployment Topology (v3 — ops)
+
+| Deployment Aspect | Visual Treatment |
+|-------------------|-----------------|
+| CaseHub application nodes | Service cards with type badge, image, replicas |
+| Phased rollout | Progressive layers: Foundation → Services → Agent Fleet |
+| Phase completion | Progress bars with status (complete/provisioning/pending) |
+| forEach fleet expansion | Agent fleet cards with model badges, generated from inline data |
+| Adaptive topology | Trigger → action cards (situation-confidence → scale/update mutations) |
+
 ## Component Architecture
 
 ```

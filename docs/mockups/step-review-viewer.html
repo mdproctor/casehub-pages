@@ -2653,5 +2653,312 @@
 </div>
 
 
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PART 4: DESIRED STATE & DEPLOYMENT TOPOLOGIES                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div style="margin-top: 80px; padding-top: 32px; border-top: 3px solid var(--teal);">
+  <h1>Part 4: Desired State & Deployment Topologies</h1>
+  <p class="subtitle">YAML declares what should exist. The viewer shows the dependency graph, forEach expansions, lifecycle phases, and deployment topology.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>22. Desired State Graph — Template → Expanded Topology</h2>
+<h3>forEach stamps one node into three regional instances</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase;">DESIRED STATE</span>
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-bright);">Web Store Pipeline</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">
+      <span style="padding: 2px 8px; border-radius: 3px; background: rgba(255,255,255,0.05); margin-right: 4px; color: var(--text-dim);">Template</span>
+      <span style="padding: 2px 8px; border-radius: 3px; background: var(--teal); color: var(--bg); font-weight: 600;">Expanded</span>
+    </span>
+  </div>
+
+  <div style="padding: 24px;">
+    <!-- Linear chain: catalog → cart → payment → order-confirmation -->
+    <div style="display: flex; justify-content: center; gap: 0; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--green);"></div>
+        <span style="font-size: 12px;">product-catalog</span>
+      </div>
+      <span style="color: var(--text-dim); padding: 0 6px;">→</span>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--green);"></div>
+        <span style="font-size: 12px;">shopping-cart</span>
+      </div>
+      <span style="color: var(--text-dim); padding: 0 6px;">→</span>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--green);"></div>
+        <span style="font-size: 12px;">payment</span>
+      </div>
+      <span style="color: var(--text-dim); padding: 0 6px;">→</span>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--green);"></div>
+        <span style="font-size: 12px;">order-confirmation</span>
+      </div>
+    </div>
+
+    <!-- Fan-out from forEach -->
+    <div style="display: flex; justify-content: center; padding: 0 0 8px;">
+      <svg width="240" height="40" style="overflow: visible;">
+        <line x1="120" y1="0" x2="40" y2="35" stroke="#94e2d5" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="120" y1="0" x2="120" y2="35" stroke="#94e2d5" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="120" y1="0" x2="200" y2="35" stroke="#94e2d5" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+      </svg>
+    </div>
+
+    <!-- forEach indicator -->
+    <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+      <div style="padding: 4px 12px; background: rgba(148,226,213,0.1); border: 1px dashed var(--teal); border-radius: 4px; font-size: 11px; display: flex; align-items: center; gap: 6px;">
+        <span style="color: var(--teal); font-weight: 600;">forEach</span>
+        <span style="color: var(--text-dim);">shipping</span>
+        <span style="font-family: monospace; color: var(--teal);">as: warehouse</span>
+        <span style="font-family: monospace; color: var(--teal);">in: [us-east, eu-west, ap-south]</span>
+      </div>
+    </div>
+
+    <!-- Expanded instances -->
+    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <div style="background: rgba(148,226,213,0.06); border: 1px solid rgba(148,226,213,0.2); border-radius: 8px; padding: 10px 16px; min-width: 160px;">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--teal);"></div>
+          <span style="font-size: 12px; font-weight: 500;">shipping.us-east</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">
+          <div>carrier: <span style="color: var(--amber);">fedex</span></div>
+          <div>warehouse: <span style="color: var(--teal);">us-east</span></div>
+        </div>
+      </div>
+      <div style="background: rgba(148,226,213,0.06); border: 1px solid rgba(148,226,213,0.2); border-radius: 8px; padding: 10px 16px; min-width: 160px;">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--teal);"></div>
+          <span style="font-size: 12px; font-weight: 500;">shipping.eu-west</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">
+          <div>carrier: <span style="color: var(--amber);">fedex</span></div>
+          <div>warehouse: <span style="color: var(--teal);">eu-west</span></div>
+        </div>
+      </div>
+      <div style="background: rgba(148,226,213,0.06); border: 1px solid rgba(148,226,213,0.2); border-radius: 8px; padding: 10px 16px; min-width: 160px;">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--teal);"></div>
+          <span style="font-size: 12px; font-weight: 500;">shipping.ap-south</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">
+          <div>carrier: <span style="color: var(--amber);">fedex</span></div>
+          <div>warehouse: <span style="color: var(--teal);">ap-south</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Template vs Expanded:</strong> The YAML declares one <code>shipping</code> node with <code>forEach: warehouses</code>.
+  The viewer toggles between the compact template (1 node) and the expanded topology (3 stamped instances).
+  Each instance shows its resolved <code>${each.warehouse}</code> value. The teal coloring marks forEach-generated nodes.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>23. CaseHub Application Topology — Deployment View</h2>
+<h3>ops progressive deployment: services + dependencies + forEach fleet</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase;">DEPLOYMENT</span>
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-bright);">FSI Trading Platform</span>
+    <span class="decorator" style="background: rgba(148,226,213,0.2); color: var(--teal);">desired state</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">8 nodes &middot; 3 phases</span>
+  </div>
+
+  <div style="padding: 16px;">
+    <!-- Phase 1: Foundation -->
+    <div style="margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase;">Phase 1</span>
+        <span style="font-size: 12px; font-weight: 500;">Foundation</span>
+        <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green); font-size: 10px;">allPresent</span>
+        <div style="flex: 1; height: 4px; background: rgba(166,227,161,0.2); border-radius: 2px; margin-left: 8px;">
+          <div style="width: 100%; height: 100%; background: var(--green); border-radius: 2px;"></div>
+        </div>
+        <span style="font-size: 10px; color: var(--green);">complete</span>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; padding-left: 16px;">
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+          <span style="font-size: 11px; font-weight: 500;">qhorus</span>
+          <span style="font-size: 10px; color: var(--text-dim);">messaging</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+          <span style="font-size: 11px; font-weight: 500;">eidos</span>
+          <span style="font-size: 10px; color: var(--text-dim);">agent registry</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+          <span style="font-size: 11px; font-weight: 500;">engine</span>
+          <span style="font-size: 10px; color: var(--text-dim);">coordination</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+          <span style="font-size: 11px; font-weight: 500;">ledger</span>
+          <span style="font-size: 10px; color: var(--text-dim);">audit trail</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2: Services -->
+    <div style="margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--amber); text-transform: uppercase;">Phase 2</span>
+        <span style="font-size: 12px; font-weight: 500;">Services</span>
+        <span class="decorator" style="background: rgba(249,226,175,0.2); color: var(--amber); font-size: 10px;">allPresent</span>
+        <div style="flex: 1; height: 4px; background: rgba(249,226,175,0.2); border-radius: 2px; margin-left: 8px;">
+          <div style="width: 60%; height: 100%; background: var(--amber); border-radius: 2px;"></div>
+        </div>
+        <span style="font-size: 10px; color: var(--amber);">provisioning</span>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; padding-left: 16px;">
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+          <span style="font-size: 11px; font-weight: 500;">work</span>
+          <span style="font-size: 10px; color: var(--text-dim);">task mgmt</span>
+        </div>
+        <div style="background: rgba(249,226,175,0.06); border: 1px solid rgba(249,226,175,0.3); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber); animation: pulse 2s infinite;"></div>
+          <span style="font-size: 11px; font-weight: 500;">market-data</span>
+          <span style="font-size: 10px; color: var(--amber);">provisioning...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3: Agent Fleet -->
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase;">Phase 3</span>
+        <span style="font-size: 12px; font-weight: 500;">Agent Fleet</span>
+        <span class="decorator" style="background: rgba(127,132,156,0.2); color: var(--text-dim); font-size: 10px;">waiting</span>
+        <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.04); border-radius: 2px; margin-left: 8px;"></div>
+        <span style="font-size: 10px; color: var(--text-dim);">pending phase 2</span>
+      </div>
+
+      <!-- forEach indicator -->
+      <div style="padding-left: 16px; margin-bottom: 8px;">
+        <div style="padding: 4px 12px; background: rgba(148,226,213,0.06); border: 1px dashed var(--teal); border-radius: 4px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px;">
+          <span style="color: var(--teal); font-weight: 600;">forEach</span>
+          <span style="color: var(--text-dim);">llm-fleet</span>
+          <span style="font-size: 10px; color: var(--text-dim);">3 agents from inline data</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; padding-left: 16px; opacity: 0.5;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-dim);"></div>
+          <span style="font-size: 11px;">trade-analyst</span>
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-dim);"></div>
+          <span style="font-size: 11px;">risk-monitor</span>
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">sonnet-5</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 6px;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-dim);"></div>
+          <span style="font-size: 11px;">compliance-bot</span>
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Three views of the same system:</strong>
+  <br>1. <strong>Application logic</strong> (Parts 1-3) — what agents do: steps, patterns, coordination
+  <br>2. <strong>Desired state topology</strong> (this section) — what should exist: nodes, dependencies, forEach expansions
+  <br>3. <strong>Deployment phases</strong> — when it deploys: progressive rollout with completion gates
+  <br><br>
+  The viewer renders all three from YAML. An LLM generates a desired state topology, the reviewer
+  sees the dependency graph, the forEach expansion, and the phased rollout plan — all semantically
+  rendered, not as raw YAML text.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>24. Adaptive Topology — Situation-Triggered Mutations</h2>
+<h3>desired state adapts: volatility spike → scale risk agents</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase;">ADAPTATIONS</span>
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-bright);">FSI Trading Platform</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">2 adaptation rules</span>
+  </div>
+
+  <div style="padding: 16px; display: grid; gap: 12px;">
+    <!-- Adaptation 1 -->
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 12px; font-weight: 600; color: var(--amber);">scale-risk-on-volatility</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; font-size: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-size: 10px; color: var(--text-dim); text-transform: uppercase;">trigger</span>
+          <span style="font-family: monospace; color: var(--amber); background: rgba(249,226,175,0.1); padding: 2px 8px; border-radius: 3px;">volatility-spike ≥ 0.7</span>
+        </div>
+        <span style="color: var(--text-dim); font-size: 16px;">→</span>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-size: 10px; color: var(--text-dim); text-transform: uppercase;">action</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">scale</span>
+            <span style="font-weight: 500;">risk-agent</span>
+            <span style="font-family: monospace; color: var(--text-dim);">1 → 5</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px; margin-left: auto;">
+          <span style="font-size: 10px; color: var(--text-dim); text-transform: uppercase;">deactivate</span>
+          <span style="font-family: monospace; color: var(--text-dim);">&lt; 0.5</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adaptation 2 -->
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 12px; font-weight: 600; color: var(--red);">tighten-trust-on-anomaly</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; font-size: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-size: 10px; color: var(--text-dim); text-transform: uppercase;">trigger</span>
+          <span style="font-family: monospace; color: var(--red); background: rgba(243,139,168,0.1); padding: 2px 8px; border-radius: 3px;">market-anomaly ≥ 0.6</span>
+        </div>
+        <span style="color: var(--text-dim); font-size: 16px;">→</span>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-size: 10px; color: var(--text-dim); text-transform: uppercase;">action</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="decorator" style="background: rgba(249,226,175,0.2); color: var(--amber);">update</span>
+            <span style="font-weight: 500;">review</span>
+            <span style="font-family: monospace; color: var(--text-dim);">threshold: 0.9</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Adaptive topologies react to runtime situations.</strong>
+  When a volatility spike is detected (confidence ≥ 0.7), the risk-agent fleet scales from 1 to 5 instances.
+  When the situation subsides (confidence &lt; 0.5), it scales back. A market anomaly tightens trust thresholds.
+  The reviewer sees the adaptation rules as trigger → action cards — instantly verifiable.
+</div>
+
+
 </body>
 </html>
