@@ -1459,7 +1459,7 @@
 
 <div style="margin-top: 80px; padding-top: 32px; border-top: 3px solid var(--blue);">
   <h1>Part 2: Agent Coordination & Business Logic</h1>
-  <p class="subtitle">The core use case — distributed LLM agent orchestration for FSI workflows. Each agent is a project (manifest + edison + runtime) that can be drilled into.</p>
+  <p class="subtitle">The core use case — distributed LLM agent orchestration for FSI workflows. Each agent is a project (eidos + pattern + steps) that can be drilled into.</p>
 </div>
 
 
@@ -1803,59 +1803,133 @@
 
   <!-- Tabs -->
   <div class="tab-bar">
-    <div class="tab active">Manifest</div>
-    <div class="tab">Eidos</div>
-    <div class="tab">Runtime</div>
+    <div class="tab active">Eidos</div>
+    <div class="tab">Pattern</div>
+    <div class="tab">Steps</div>
   </div>
 
-  <!-- Manifest content -->
+  <!-- Eidos content — full agent identity descriptor -->
   <div style="padding: 16px;">
 
-    <!-- Agent identity -->
-    <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; margin-bottom: 20px;">
-      <span style="color: var(--text-dim);">descriptor</span>
-      <span style="font-weight: 500;">kyc-identity</span>
-      <span style="color: var(--text-dim);">model</span>
-      <span><span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-opus-5</span></span>
-      <span style="color: var(--text-dim);">structured output</span>
-      <span style="color: var(--green);">enabled</span>
-      <span style="color: var(--text-dim);">timeout</span>
-      <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">30s</span>
-    </div>
-
-    <!-- Inputs -->
-    <div style="margin-bottom: 16px;">
-      <h3 style="margin-bottom: 8px;">Inputs</h3>
-      <div style="display: grid; grid-template-columns: auto auto 1fr; gap: 4px 16px; font-size: 12px;">
-        <span style="font-weight: 500;">documents</span>
-        <span style="color: var(--text-dim); font-family: monospace;">Document[]</span>
-        <span style="color: var(--text-dim);">identity documents to process</span>
-        <span style="font-weight: 500;">taxonomy</span>
-        <span style="color: var(--text-dim); font-family: monospace;">string</span>
-        <span style="color: var(--text-dim);">classification taxonomy version</span>
+    <!-- Identity header -->
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+      <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(250,179,135,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--peach);">⬡</div>
+      <div>
+        <div style="font-size: 15px; font-weight: 600; color: var(--text-bright);">Identity Extractor</div>
+        <div style="font-size: 12px; color: var(--text-dim);">slot: <span style="color: var(--blue);">document-analyst</span> &middot; archetype: <span style="color: var(--purple);">detective</span></div>
+      </div>
+      <div style="margin-left: auto; display: flex; gap: 6px;">
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-opus-5</span>
+        <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
       </div>
     </div>
 
-    <!-- Outputs -->
-    <div>
-      <h3 style="margin-bottom: 8px;">Outputs</h3>
-      <div style="display: grid; grid-template-columns: auto auto 1fr; gap: 4px 16px; font-size: 12px;">
-        <span style="font-weight: 500;">fullName</span>
-        <span style="color: var(--text-dim); font-family: monospace;">string</span>
-        <span style="color: var(--text-dim);">extracted legal name</span>
-        <span style="font-weight: 500;">dateOfBirth</span>
-        <span style="color: var(--text-dim); font-family: monospace;">date</span>
-        <span style="color: var(--text-dim);">extracted DOB</span>
-        <span style="font-weight: 500;">nationality</span>
-        <span style="color: var(--text-dim); font-family: monospace;">string</span>
-        <span style="color: var(--text-dim);">extracted nationality</span>
-        <span style="font-weight: 500;">confidence</span>
-        <span style="color: var(--text-dim); font-family: monospace;">number</span>
-        <span style="color: var(--text-dim);">extraction confidence 0-1</span>
-        <span style="font-weight: 500;">flags</span>
-        <span style="color: var(--text-dim); font-family: monospace;">string[]</span>
-        <span style="color: var(--text-dim);">anomalies detected</span>
+    <!-- Disposition — 5 behavioral axes -->
+    <h3 style="margin-bottom: 10px;">Disposition</h3>
+    <div style="display: grid; gap: 6px; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 12px;">
+        <span style="width: 100px; color: var(--text-dim); text-align: right;">social</span>
+        <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 30%; height: 100%; background: var(--blue); border-radius: 3px;"></div>
+        </div>
+        <span style="width: 80px; color: var(--blue); font-weight: 500;">analytical</span>
       </div>
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 12px;">
+        <span style="width: 100px; color: var(--text-dim); text-align: right;">rules</span>
+        <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 90%; height: 100%; background: var(--green); border-radius: 3px;"></div>
+        </div>
+        <span style="width: 80px; color: var(--green); font-weight: 500;">strict</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 12px;">
+        <span style="width: 100px; color: var(--text-dim); text-align: right;">risk</span>
+        <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 20%; height: 100%; background: var(--teal); border-radius: 3px;"></div>
+        </div>
+        <span style="width: 80px; color: var(--teal); font-weight: 500;">conservative</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 12px;">
+        <span style="width: 100px; color: var(--text-dim); text-align: right;">autonomy</span>
+        <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 50%; height: 100%; background: var(--amber); border-radius: 3px;"></div>
+        </div>
+        <span style="width: 80px; color: var(--amber); font-weight: 500;">moderate</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; font-size: 12px;">
+        <span style="width: 100px; color: var(--text-dim); text-align: right;">conflict</span>
+        <div style="flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 70%; height: 100%; background: var(--purple); border-radius: 3px;"></div>
+        </div>
+        <span style="width: 80px; color: var(--purple); font-weight: 500;">competing</span>
+      </div>
+    </div>
+
+    <!-- Capabilities with confidence -->
+    <h3 style="margin-bottom: 8px;">Capabilities</h3>
+    <div style="display: grid; gap: 6px; margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 12px;">
+        <span style="font-weight: 500; min-width: 140px;">identity-extraction</span>
+        <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 92%; height: 100%; background: var(--green); border-radius: 2px;"></div>
+        </div>
+        <span style="color: var(--green); font-family: monospace; font-size: 11px; min-width: 36px; text-align: right;">0.92</span>
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);" title="Healthy"></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 12px;">
+        <span style="font-weight: 500; min-width: 140px;">document-ocr</span>
+        <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 85%; height: 100%; background: var(--green); border-radius: 2px;"></div>
+        </div>
+        <span style="color: var(--green); font-family: monospace; font-size: 11px; min-width: 36px; text-align: right;">0.85</span>
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);" title="Healthy"></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 12px;">
+        <span style="font-weight: 500; min-width: 140px;">fraud-detection</span>
+        <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 68%; height: 100%; background: var(--amber); border-radius: 2px;"></div>
+        </div>
+        <span style="color: var(--amber); font-family: monospace; font-size: 11px; min-width: 36px; text-align: right;">0.68</span>
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber);" title="Degraded"></span>
+      </div>
+    </div>
+
+    <!-- Goals -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+      <div>
+        <h3 style="margin-bottom: 8px;">Goals</h3>
+        <div style="display: grid; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; background: rgba(255,255,255,0.03); border-radius: 4px;">
+            <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">PRIMARY</span>
+            <span>Extract identity fields accurately</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; background: rgba(255,255,255,0.03); border-radius: 4px;">
+            <span class="decorator" style="background: rgba(127,132,156,0.2); color: var(--text-dim); font-size: 9px;">SECONDARY</span>
+            <span>Flag document anomalies</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin-bottom: 8px;">Constraints</h3>
+        <div style="display: grid; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; background: rgba(243,139,168,0.06); border-radius: 4px;">
+            <span class="decorator" style="background: rgba(243,139,168,0.2); color: var(--red); font-size: 9px;">HARD</span>
+            <span>Never store raw biometric data</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; background: rgba(249,226,175,0.06); border-radius: 4px;">
+            <span class="decorator" style="background: rgba(249,226,175,0.2); color: var(--amber); font-size: 9px;">SOFT</span>
+            <span>Prefer MRZ over OCR when available</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Briefing (collapsible) -->
+    <h3 style="margin-bottom: 8px;">Briefing</h3>
+    <div style="font-size: 12px; color: var(--text-dim); padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 4px; border-left: 3px solid var(--border); line-height: 1.6;">
+      You are an identity extraction specialist. You process passport MRZ zones,
+      driver's license barcodes, and utility bills to extract verified identity fields.
+      You operate under strict data protection constraints — extracted fields only,
+      never raw biometric data. When OCR confidence falls below 0.7, flag for human review.
     </div>
   </div>
 </div>
@@ -1868,9 +1942,9 @@
     <span style="color: var(--text-bright); font-weight: 600;">identity-extractor</span>
   </div>
   <div class="tab-bar">
-    <div class="tab">Manifest</div>
-    <div class="tab active">Eidos</div>
-    <div class="tab">Runtime</div>
+    <div class="tab">Eidos</div>
+    <div class="tab active">Pattern</div>
+    <div class="tab">Steps</div>
   </div>
   <div style="padding: 16px;">
     <h3 style="margin-bottom: 8px;">Decision Logic</h3>
@@ -1949,9 +2023,9 @@
     <span style="color: var(--text-bright); font-weight: 600;">identity-extractor</span>
   </div>
   <div class="tab-bar">
-    <div class="tab">Manifest</div>
     <div class="tab">Eidos</div>
-    <div class="tab active">Runtime</div>
+    <div class="tab">Pattern</div>
+    <div class="tab active">Steps</div>
   </div>
   <div style="padding: 16px;">
     <h3 style="margin-bottom: 8px;">Execution Steps</h3>
@@ -2106,6 +2180,476 @@
   <br><br>
   In Java, this change would be spread across 3-4 files (new agent class, orchestrator wiring, risk model params, config)
   with no way to see the topology change in a single view.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PART 3: FULL ECOSYSTEM VIEWS                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div style="margin-top: 80px; padding-top: 32px; border-top: 3px solid var(--green);">
+  <h1>Part 3: Full Ecosystem — Choreography, Work Items, Patterns, Pipelines</h1>
+  <p class="subtitle">Views informed by the holistic review of platform, eidos, engine, work, and blocks.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>17. Choreography View — Reactive Case (Blackboard Architecture)</h2>
+<h3>trade surveillance: bindings fire on context changes, no prescribed sequence</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">CASE</span>
+    <span style="font-size: 13px; font-weight: 600; color: var(--text-bright);">Trade Surveillance</span>
+    <span class="decorator" style="background: rgba(203,166,247,0.2); color: var(--purple);">choreography</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">4 workers &middot; 4 bindings &middot; 3 milestones</span>
+  </div>
+
+  <div style="padding: 32px; position: relative;">
+    <!-- CaseContext (center) -->
+    <div style="display: flex; justify-content: center; margin-bottom: 24px;">
+      <div style="background: rgba(137,180,250,0.08); border: 2px solid var(--blue); border-radius: 12px; padding: 16px 24px; min-width: 280px;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Case Context</div>
+        <div style="display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px;">
+          <span style="color: var(--text-dim);">tradeFeed</span>
+          <span style="color: var(--amber); font-family: monospace; font-size: 11px;">Trade[]</span>
+          <span style="color: var(--text-dim);">anomalies</span>
+          <span style="color: var(--amber); font-family: monospace; font-size: 11px;">Anomaly[]</span>
+          <span style="color: var(--text-dim);">correlations</span>
+          <span style="color: var(--amber); font-family: monospace; font-size: 11px;">Finding[]</span>
+          <span style="color: var(--text-dim);">riskScore</span>
+          <span style="color: var(--amber); font-family: monospace; font-size: 11px;">number</span>
+          <span style="color: var(--text-dim);">decision</span>
+          <span style="color: var(--amber); font-family: monospace; font-size: 11px;">string</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bindings as trigger arrows -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <!-- Binding 1 -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 10px; font-weight: 600; color: var(--purple); text-transform: uppercase;">binding</span>
+          <span style="font-size: 12px; font-weight: 500;">on-trade-feed</span>
+        </div>
+        <div style="font-size: 11px; display: flex; align-items: center; gap: 4px;">
+          <span style="color: var(--text-dim);">when</span>
+          <span style="font-family: monospace; color: var(--amber); background: rgba(249,226,175,0.1); padding: 1px 6px; border-radius: 3px;">.tradeFeed != null</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+          <span style="color: var(--text-dim); font-size: 11px;">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+            <span class="step-action">trade-monitor</span>
+            <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">sonnet-5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Binding 2 -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 10px; font-weight: 600; color: var(--purple); text-transform: uppercase;">binding</span>
+          <span style="font-size: 12px; font-weight: 500;">on-anomalies-detected</span>
+        </div>
+        <div style="font-size: 11px; display: flex; align-items: center; gap: 4px;">
+          <span style="color: var(--text-dim);">when</span>
+          <span style="font-family: monospace; color: var(--amber); background: rgba(249,226,175,0.1); padding: 1px 6px; border-radius: 3px;">.anomalies | length > 0</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+          <span style="color: var(--text-dim); font-size: 11px;">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+            <span class="step-action">correlation-engine</span>
+            <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Binding 3 -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 10px; font-weight: 600; color: var(--purple); text-transform: uppercase;">binding</span>
+          <span style="font-size: 12px; font-weight: 500;">on-correlations-complete</span>
+        </div>
+        <div style="font-size: 11px; display: flex; align-items: center; gap: 4px;">
+          <span style="color: var(--text-dim);">when</span>
+          <span style="font-family: monospace; color: var(--amber); background: rgba(249,226,175,0.1); padding: 1px 6px; border-radius: 3px;">.correlations != null</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+          <span style="color: var(--text-dim); font-size: 11px;">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+            <span class="step-action">risk-scorer</span>
+            <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Binding 4 — human work item -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 10px; font-weight: 600; color: var(--purple); text-transform: uppercase;">binding</span>
+          <span style="font-size: 12px; font-weight: 500;">on-high-risk</span>
+        </div>
+        <div style="font-size: 11px; display: flex; align-items: center; gap: 4px;">
+          <span style="color: var(--text-dim);">when</span>
+          <span style="font-family: monospace; color: var(--amber); background: rgba(249,226,175,0.1); padding: 1px 6px; border-radius: 3px;">.riskScore >= 0.7</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+          <span style="color: var(--text-dim); font-size: 11px;">→</span>
+          <div class="step-card" style="margin: 0; flex: 1; border-left: 3px solid var(--teal);">
+            <div class="step-icon" style="background: rgba(148,226,213,0.15); color: var(--teal);">👤</div>
+            <span class="step-action">compliance-reviewer</span>
+            <span class="decorator" style="background: rgba(148,226,213,0.2); color: var(--teal); font-size: 9px;">human</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Milestones -->
+    <div style="margin-top: 20px; display: flex; gap: 12px;">
+      <div style="flex: 1; padding: 8px 12px; background: rgba(166,227,161,0.06); border: 1px solid rgba(166,227,161,0.2); border-radius: 6px; font-size: 11px;">
+        <span style="color: var(--green); font-weight: 600;">MILESTONE</span>
+        <span style="color: var(--text-dim); margin-left: 6px;">anomalies-detected</span>
+      </div>
+      <div style="flex: 1; padding: 8px 12px; background: rgba(166,227,161,0.06); border: 1px solid rgba(166,227,161,0.2); border-radius: 6px; font-size: 11px;">
+        <span style="color: var(--green); font-weight: 600;">MILESTONE</span>
+        <span style="color: var(--text-dim); margin-left: 6px;">risk-assessed</span>
+      </div>
+      <div style="flex: 1; padding: 8px 12px; background: rgba(166,227,161,0.06); border: 1px solid rgba(166,227,161,0.2); border-radius: 6px; font-size: 11px;">
+        <span style="color: var(--green); font-weight: 600;">MILESTONE</span>
+        <span style="color: var(--text-dim); margin-left: 6px;">reviewed</span>
+      </div>
+    </div>
+
+    <!-- Goals -->
+    <div style="margin-top: 12px; display: flex; gap: 12px;">
+      <div style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--green); background: var(--green-dim); font-size: 11px;">
+        <span style="color: var(--green); font-weight: 600;">GOAL</span>
+        <span style="color: var(--text-dim); margin-left: 6px;">sar-filed</span>
+      </div>
+      <div style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--green); background: var(--green-dim); font-size: 11px;">
+        <span style="color: var(--green); font-weight: 600;">GOAL</span>
+        <span style="color: var(--text-dim); margin-left: 6px;">cleared</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Choreography vs swim lanes:</strong> No prescribed execution order. The CaseContext is the shared state;
+  bindings are reactive triggers. The viewer shows the <em>topology of reactions</em>, not a timeline.
+  Data flows implicitly: trade-monitor writes <code>anomalies</code>, which triggers the <code>on-anomalies-detected</code> binding.
+  A reviewer sees the dependency chain without tracing sequential code.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>18. Work Item Card — Human-in-the-Loop</h2>
+<h3>distinct from agent-delegate: waits hours/days, has SLA, lifecycle, assignment</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 16px 0;">
+  <div class="step-card" style="border-left: 3px solid var(--teal); padding: 12px;">
+    <div class="step-icon" style="background: rgba(148,226,213,0.15); color: var(--teal); width: 28px; height: 28px; font-size: 14px;">👤</div>
+    <div style="flex: 1;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span class="step-action" style="font-size: 14px;">SAR Review</span>
+        <span class="decorator" style="background: rgba(243,139,168,0.2); color: var(--red);">HIGH</span>
+        <span class="decorator" style="background: rgba(148,226,213,0.2); color: var(--teal);">human task</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 3px 16px; font-size: 12px; margin-bottom: 8px;">
+        <span style="color: var(--text-dim);">candidates</span>
+        <span>compliance-officers, senior-compliance</span>
+        <span style="color: var(--text-dim);">capabilities</span>
+        <span><span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 10px;">regulatory-review</span> <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 10px;">sar-filing</span></span>
+        <span style="color: var(--text-dim);">strategy</span>
+        <span>LEAST_LOADED</span>
+      </div>
+
+      <!-- SLA indicator -->
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 11px; color: var(--text-dim);">SLA</span>
+        <div style="flex: 1; max-width: 200px; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; width: 35%; height: 100%; background: var(--green); border-radius: 3px;"></div>
+        </div>
+        <span style="font-size: 11px; color: var(--green); font-family: monospace;">2h 36m remaining</span>
+        <span style="font-size: 10px; color: var(--text-dim);">of 4h</span>
+      </div>
+
+      <!-- Permitted outcomes -->
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span style="font-size: 10px; color: var(--text-dim); padding-top: 2px;">outcomes:</span>
+        <span style="padding: 2px 8px; border-radius: 3px; font-size: 11px; border: 1px solid var(--green); color: var(--green);">file-sar</span>
+        <span style="padding: 2px 8px; border-radius: 3px; font-size: 11px; border: 1px solid var(--text-dim); color: var(--text-dim);">no-action</span>
+        <span style="padding: 2px 8px; border-radius: 3px; font-size: 11px; border: 1px solid var(--amber); color: var(--amber);">escalate</span>
+        <span style="padding: 2px 8px; border-radius: 3px; font-size: 11px; border: 1px solid var(--blue); color: var(--blue);">request-more-info</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Not an agent-delegate.</strong> Work items <em>wait</em> for human resolution — hours, not milliseconds.
+  The teal left border and 👤 icon immediately distinguish them from agent cards.
+  SLA bar shows time remaining. Permitted outcomes show what the reviewer can decide.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>19. Voting Pattern — Multi-Agent Convergence</h2>
+<h3>blocks agentic pattern: all agents vote, majority wins, contested → escalate</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">PATTERN</span>
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-bright);">Risk Assessment Decision</span>
+    <span class="decorator" style="background: rgba(203,166,247,0.2); color: var(--purple);">voting</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">
+      majority-vote &middot; max 3 rounds &middot; escalation on contested
+    </span>
+  </div>
+
+  <div style="padding: 24px;">
+    <!-- Agents contributing votes -->
+    <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; min-width: 160px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 500;">quantitative-scorer</div>
+          <div style="font-size: 10px; color: var(--text-dim);">statistical risk model</div>
+        </div>
+      </div>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; min-width: 160px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 500;">qualitative-reviewer</div>
+          <div style="font-size: 10px; color: var(--text-dim);">contextual analysis</div>
+        </div>
+      </div>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; min-width: 160px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 500;">regulatory-checker</div>
+          <div style="font-size: 10px; color: var(--text-dim);">compliance rules</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Convergence arrows -->
+    <div style="display: flex; justify-content: center; padding: 0 0 8px;">
+      <svg width="200" height="30" style="overflow: visible;">
+        <line x1="20" y1="0" x2="100" y2="25" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="100" y1="0" x2="100" y2="25" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="180" y1="0" x2="100" y2="25" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+      </svg>
+    </div>
+
+    <!-- Aggregation -->
+    <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+      <div style="background: rgba(137,180,250,0.08); border: 2px solid var(--blue); border-radius: 8px; padding: 10px 24px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 18px;">⚖</span>
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: var(--blue);">MAJORITY VOTE</div>
+          <div style="font-size: 11px; color: var(--text-dim);">threshold: 0.6 &middot; max 3 rounds</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Judgment / escalation -->
+    <div style="display: flex; justify-content: center; gap: 16px;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+        <div style="font-size: 10px; color: var(--green); font-weight: 600;">AGREED</div>
+        <div style="padding: 6px 16px; border-radius: 6px; border: 1px solid var(--green); background: var(--green-dim); font-size: 12px; color: var(--green);">
+          → decision
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+        <div style="font-size: 10px; color: var(--amber); font-weight: 600;">CONTESTED</div>
+        <div style="padding: 6px 16px; border-radius: 6px; border: 1px solid var(--amber); background: var(--amber-dim); font-size: 12px; color: var(--amber); display: flex; align-items: center; gap: 6px;">
+          <span>→ escalate to</span>
+          <div style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(148,226,213,0.15); border: 1px solid rgba(148,226,213,0.3); border-radius: 4px;">
+            <span style="font-size: 10px;">👤</span>
+            <span style="font-size: 11px; color: var(--teal);">senior-analyst</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>20. Debate Pattern — Turn-Based Agent Deliberation</h2>
+<h3>agents argue positions, judge resolves after rounds</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase;">PATTERN</span>
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-bright);">Compliance Dispute Resolution</span>
+    <span class="decorator" style="background: rgba(203,166,247,0.2); color: var(--purple);">debate</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">convergence termination &middot; max 5 rounds</span>
+  </div>
+
+  <div style="padding: 16px;">
+    <!-- Debaters -->
+    <div style="display: flex; justify-content: center; gap: 32px; margin-bottom: 16px;">
+      <div style="text-align: center;">
+        <div style="background: rgba(137,180,250,0.08); border: 1px solid rgba(137,180,250,0.3); border-radius: 8px; padding: 10px 16px; margin-bottom: 4px;">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); margin: 0 auto 4px;">⬡</div>
+          <div style="font-size: 12px; font-weight: 500;">risk-advocate</div>
+        </div>
+        <div style="font-size: 10px; color: var(--blue);">argues for caution</div>
+      </div>
+      <div style="font-size: 20px; color: var(--text-dim); display: flex; align-items: center;">⇌</div>
+      <div style="text-align: center;">
+        <div style="background: rgba(166,227,161,0.08); border: 1px solid rgba(166,227,161,0.3); border-radius: 8px; padding: 10px 16px; margin-bottom: 4px;">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); margin: 0 auto 4px;">⬡</div>
+          <div style="font-size: 12px; font-weight: 500;">opportunity-advocate</div>
+        </div>
+        <div style="font-size: 10px; color: var(--green);">argues for action</div>
+      </div>
+    </div>
+
+    <!-- Rounds -->
+    <div style="display: grid; gap: 8px; max-width: 500px; margin: 0 auto;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid var(--blue);">
+        <span style="font-size: 10px; font-weight: 600; color: var(--text-dim); min-width: 50px;">Round 1</span>
+        <span style="font-size: 12px; color: var(--blue);">risk-advocate</span>
+        <span style="font-size: 11px; color: var(--text-dim);">presents initial position</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid var(--green);">
+        <span style="font-size: 10px; font-weight: 600; color: var(--text-dim); min-width: 50px;">Round 1</span>
+        <span style="font-size: 12px; color: var(--green);">opportunity-advocate</span>
+        <span style="font-size: 11px; color: var(--text-dim);">presents counter-position</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid var(--blue);">
+        <span style="font-size: 10px; font-weight: 600; color: var(--text-dim); min-width: 50px;">Round 2</span>
+        <span style="font-size: 12px; color: var(--blue);">risk-advocate</span>
+        <span style="font-size: 11px; color: var(--text-dim);">rebuts with evidence</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid var(--green);">
+        <span style="font-size: 10px; font-weight: 600; color: var(--text-dim); min-width: 50px;">Round 2</span>
+        <span style="font-size: 12px; color: var(--green);">opportunity-advocate</span>
+        <span style="font-size: 11px; color: var(--text-dim);">concedes partial point</span>
+      </div>
+      <div style="text-align: center; font-size: 11px; color: var(--text-dim); padding: 4px;">⋮ until convergence or max rounds</div>
+    </div>
+
+    <!-- Judge -->
+    <div style="display: flex; justify-content: center; margin-top: 12px;">
+      <div style="background: rgba(249,226,175,0.08); border: 2px solid var(--amber); border-radius: 8px; padding: 10px 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 18px;">⚖</span>
+        <div>
+          <div style="font-size: 12px; font-weight: 600; color: var(--amber);">JUDGE</div>
+          <div style="font-size: 11px; color: var(--text-dim);">chief-compliance-officer &middot; resolves when converged</div>
+        </div>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>21. Summarisation Pipeline — Event Stream Processing</h2>
+<h3>trade signals flow through progressive abstraction levels</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase;">PIPELINE</span>
+    <span style="font-size: 13px; font-weight: 500; color: var(--text-bright);">Trade Signal Aggregation</span>
+    <span class="decorator" style="background: rgba(148,226,213,0.2); color: var(--teal);">5s tick</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">
+      source: io.casehub.fsi.trade.v1 &middot; 3 levels
+    </span>
+  </div>
+
+  <div style="padding: 24px;">
+    <!-- Level 1 -->
+    <div style="background: rgba(137,180,250,0.04); border: 1px solid rgba(137,180,250,0.15); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--blue);">LEVEL 1</span>
+        <span style="font-size: 13px; font-weight: 500;">per-instrument</span>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 10px;">keyed: instrumentId</span>
+        <span class="decorator" style="background: rgba(127,132,156,0.2); color: var(--text-dim); font-size: 10px;">pass-through</span>
+      </div>
+      <div style="font-size: 11px; color: var(--text-dim);">
+        emit → <span style="font-family: monospace; color: var(--amber);">io.casehub.fsi.trade.instrument.v1</span>
+      </div>
+    </div>
+
+    <div style="text-align: center; font-size: 16px; color: var(--text-dim); padding: 2px;">↓</div>
+
+    <!-- Level 2 -->
+    <div style="background: rgba(249,226,175,0.04); border: 1px solid rgba(249,226,175,0.15); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--amber);">LEVEL 2</span>
+        <span style="font-size: 13px; font-weight: 500;">anomaly-window</span>
+        <span class="decorator" style="background: rgba(249,226,175,0.2); color: var(--amber); font-size: 10px;">windowed: 50 / 60s</span>
+        <span class="decorator" style="background: rgba(249,226,175,0.2); color: var(--amber); font-size: 10px;">threshold-classify</span>
+      </div>
+      <!-- Threshold rules as mini-table -->
+      <div style="display: grid; grid-template-columns: auto auto auto; gap: 3px 12px; font-size: 11px; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 4px;">
+        <span style="font-family: monospace; color: var(--amber);">volumeRatio > 3.0</span>
+        <span style="color: var(--text-dim);">→ VOLUME_ANOMALY</span>
+        <span class="decorator" style="background: rgba(249,226,175,0.2); color: var(--amber); font-size: 9px;">MEDIUM</span>
+
+        <span style="font-family: monospace; color: var(--amber);">|priceDeviation| > 0.05</span>
+        <span style="color: var(--text-dim);">→ PRICE_ANOMALY</span>
+        <span class="decorator" style="background: rgba(243,139,168,0.2); color: var(--red); font-size: 9px;">HIGH</span>
+
+        <span style="font-family: monospace; color: var(--amber);">selfTradeRatio > 0.3</span>
+        <span style="color: var(--text-dim);">→ WASH_TRADING</span>
+        <span class="decorator" style="background: rgba(243,139,168,0.3); color: var(--red); font-size: 9px; font-weight: 700;">CRITICAL</span>
+      </div>
+      <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+        emit → <span style="font-family: monospace; color: var(--amber);">io.casehub.fsi.trade.anomaly.v1</span>
+      </div>
+    </div>
+
+    <div style="text-align: center; font-size: 16px; color: var(--text-dim); padding: 2px;">↓</div>
+
+    <!-- Level 3 — State machine -->
+    <div style="background: rgba(243,139,168,0.04); border: 1px solid rgba(243,139,168,0.15); border-radius: 8px; padding: 12px 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--red);">LEVEL 3</span>
+        <span style="font-size: 13px; font-weight: 500;">alert-phase</span>
+        <span class="decorator" style="background: rgba(243,139,168,0.2); color: var(--red); font-size: 10px;">phase-detect</span>
+      </div>
+      <!-- State machine inline -->
+      <div class="state-machine" style="padding: 8px 0;">
+        <div class="state-node" style="border-color: var(--green); color: var(--green);">NORMAL</div>
+        <div class="state-transition" style="font-size: 12px;">
+          <div style="display: flex; flex-direction: column; align-items: center; padding: 0 6px;">
+            <span>→</span>
+            <span style="font-size: 9px; color: var(--text-dim);">≥3 MEDIUM</span>
+          </div>
+        </div>
+        <div class="state-node" style="border-color: var(--amber); color: var(--amber);">ELEVATED</div>
+        <div class="state-transition" style="font-size: 12px;">
+          <div style="display: flex; flex-direction: column; align-items: center; padding: 0 6px;">
+            <span>→</span>
+            <span style="font-size: 9px; color: var(--text-dim);">≥1 CRITICAL</span>
+          </div>
+        </div>
+        <div class="state-node" style="border-color: var(--red); color: var(--red); background: rgba(243,139,168,0.1);">CRITICAL</div>
+      </div>
+      <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+        emit → <span style="font-family: monospace; color: var(--amber);">io.casehub.fsi.trade.alert.v1</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Progressive abstraction:</strong> Raw trade events (thousands/second) → per-instrument grouping →
+  windowed anomaly classification (threshold rules as a mini-table) → phase detection
+  (state machine: NORMAL → ELEVATED → CRITICAL). Each level emits a new CloudEvent type.
+  The reviewer sees the full signal-processing pipeline at a glance — impossible in Java
+  where this would be spread across event handlers, scheduled jobs, and state machine classes.
 </div>
 
 
