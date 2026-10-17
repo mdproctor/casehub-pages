@@ -1010,6 +1010,89 @@ termination:
 
 ---
 
+## Implementation Guidance
+
+### Visual Fidelity
+
+The mockup (`docs/mockups/step-review-viewer.html`) is the visual source of truth. Extract exact CSS values from it — do not approximate. Key design tokens from the mockup:
+
+- **Color palette:** Catppuccin Mocha — `--bg: #1e1e2e`, `--surface: #282a3a`, `--border: #3b3d52`, `--text: #cdd6f4`, `--blue: #89b4fa`, `--green: #a6e3a1`, `--red: #f38ba8`, `--amber: #f9e2af`, `--purple: #cba6f7`, `--teal: #94e2d5`, `--peach: #fab387`, `--pink: #f5c2e7`
+- **Card backgrounds:** `rgba(255,255,255,0.04)` with `rgba(255,255,255,0.08)` border
+- **Hover:** `rgba(255,255,255,0.07)`
+- **Border radius:** `6px` for cards, `8px` for containers, `3px` for badges/pills
+- **Typography:** `Inter` for UI text, `JetBrains Mono` / `Fira Code` for code/values
+- **Expression pill colors:** blue=params, green=each, peach=from, purple=module
+- **Decorator badge colors:** peach=retry, amber=timeout, teal=loop, purple=when, red=mutex, blue=forEach
+
+These MUST match the mockup. The user has explicitly flagged visual quality as a priority.
+
+### Incremental Update Architecture
+
+Each component owns one `ResolvedStep` node. Children are separate components. This gives granular update boundaries via Lit's reactive rendering:
+
+```
+<pages-step-viewer .steps=${resolvedSteps}>
+  <step-card .step=${steps[0]} key="fetch">      ← unchanged? Lit skips
+  <swim-lane-view .step=${steps[1]} key="conc">  ← child changed? only child re-renders
+    <step-card .step=${lane.steps[0]} key="a">    ← unchanged
+    <step-card .step=${lane.steps[1]} key="b">    ← THIS changed → re-render
+  <step-card .step=${steps[2]} key="decide">      ← unchanged? Lit skips
+```
+
+Rules:
+- Key components by `step:` name when available, structural path (parent + index) when unnamed
+- Pass `ResolvedStep` objects as properties — Lit's dirty checking handles the rest
+- Do NOT re-render the entire viewer on YAML change — only changed subtrees update
+- The 300ms debounce (D8) handles parse cost; Lit handles render cost
+
+### Package Location
+
+New package: `packages/pages-step-viewer/`
+
+Dependencies:
+- `@casehubio/yaml-core` — `ResolvedStep`, `Walker`, `Catalog` types
+- `@casehubio/pages-ui-tokens` — shared design tokens (extend with viewer-specific tokens from mockup)
+- `lit` — reactive web components
+
+No dependency on `pages-aria` (the existing YAML viewer is a separate concern). No dependency on `graph-core`/`graph-renderer` in v1 (graph views are v2+).
+
+### Data Flow
+
+```
+YAML text (from editor)
+  → yaml.parseDocument()           (300ms debounce)
+  → Walker.resolve(parsed, catalog) 
+  → ResolvedStep[]                  (the data model)
+  → <pages-step-viewer .steps=${}>  (Lit reactive rendering)
+  → DOM                             (incremental updates via keyed children)
+```
+
+### What the Existing Codebase Provides
+
+- `packages/yaml-core/src/step/walker.ts` — `Walker.resolve()` takes raw YAML objects + `Catalog`, returns `ResolvedStep[]`. This is the parser. Use it directly.
+- `packages/yaml-core/src/step/walker.ts` lines 65-77 — `ResolvedStep` discriminated union: PluginStep, InvokeStep, BlockStep, IfElseStep, MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep, BarrierStep, QuorumStep, DelayStep, RaceStep
+- `packages/pages-aria/src/controller/yaml-highlighter.ts` — `buildStepLineMap()` maps step names to YAML line ranges (useful for bidirectional cursor sync)
+- `packages/pages-code-editor/src/pages-code-editor.ts` — the CodeMirror editor component (the split-view partner)
+
+### Existing Case Diagram — Parallel Development
+
+The `<casehub-diagram>` in `blocks-ui` is an interactive editor for case definitions. It was NOT designed for playbook review. The step viewer is a parallel, independent effort — build it without integrating with the case diagram. Compare approaches later with real content. See issue #567 for the full rationale.
+
+### What's NOT in the Issues Yet
+
+These emerged late in the brainstorming and aren't captured as separate issues:
+- The split-view layout (editor left, viewer right) — needs a container component
+- Bidirectional cursor sync (click step → editor scrolls, editor cursor → step highlights)
+- The YAML error indicator bar (D8/D9) — part of the viewer chrome
+- Which package owns the split-view container vs the viewer panel
+
+### Things That Will Evolve
+
+- The YAML surfaces are still being built across the ecosystem (blocks, engine, ops). Design for what exists now; the viewer adapts as new YAML shapes emerge.
+- The CNCF serverless workflow engine is planned — steps will execute on a real stateful runtime, not just the current Java executor.
+- The project model (D11) is an open problem — make pragmatic assumptions in the UI, infrastructure follows.
+- Diff matching is deliberately simple (D10) — collect real examples of bad diffs, then refine.
+
 ## References
 
 - `packages/yaml-core/src/step/walker.ts` — ResolvedStep discriminated union (TypeScript)
