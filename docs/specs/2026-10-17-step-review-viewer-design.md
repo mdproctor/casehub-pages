@@ -77,6 +77,35 @@ A read-only semantic viewer panel synced to the text editor. The viewer renders 
 **Rationale:** LLM generates YAML in the text editor, human reviews in the semantic viewer. Changes in the editor trigger re-parse and re-render in the viewer. Edit in one, review in the other.
 **Trade-offs:** No graphical editing (deferred to future version).
 
+### D8: Editor Sync Protocol
+
+**Choice:** Parse-on-debounce with last-valid-state freeze
+- Re-parse on 300ms debounce after last editor change
+- On successful parse: update viewer immediately
+- On parse error: freeze at last valid render, show error indicator bar at top ("line 23: unexpected key 'concurent'")
+- Cursor position in editor highlights corresponding step in viewer (bidirectional: clicking a step in the viewer scrolls the editor to that line)
+**Rationale:** Mid-edit YAML is almost always unparseable. Blanking the viewer on every keystroke is useless. Freezing at last-valid with an error bar gives the reviewer context while the LLM (or human) is still typing.
+
+### D9: Invalid/Error State Rendering
+
+**Choice:** Degraded-mode rendering with inline error markers
+- When YAML has syntax errors: show a "parse error" banner with line/column, viewer shows last valid state
+- When YAML is syntactically valid but semantically wrong (unknown step type, mismatched signal names, circular dependencies): render what we can, mark errors inline with red badges on the affected steps/signals
+- Unresolved signal names: red dashed arrow with "unresolved" label
+- Unknown step type: step card with red icon and "unknown: xyz" label
+- Circular dependency: red highlight on the cycle path
+**Rationale:** LLM-generated YAML will have errors. The viewer's job is to make those errors visible, not hide behind a blank screen. Degraded-mode rendering is a v1 requirement.
+
+### D10: v1 Scope — Single File
+
+**Choice:** v1 operates on a single playbook YAML file at a time
+- No cross-file analysis
+- No project aggregate view
+- No focus modes (these require cross-file data)
+- The viewer receives one `ResolvedStep[]` tree and renders it
+- Cross-file features (aggregate dashboard, focus modes, multi-file diff) are v3
+**Rationale:** A single-file viewer demonstrates the core value proposition (semantic rendering beats text review) without requiring a project model, file discovery, or multi-repo aggregation. Ship the step viewer first, add the project shell later.
+
 ## Visual Vocabulary
 
 These foundation components are reused across all semantic layers:
