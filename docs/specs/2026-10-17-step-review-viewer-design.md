@@ -231,6 +231,17 @@ Agent identity rendering:
 | Lifecycle phases | Progressive vertical layers with completion gates and progress bars |
 | Modules | Imported subgraphs with alias prefix, collapsible |
 
+### Layer: Saga Compensation (v3)
+
+| Saga Aspect | Visual Treatment |
+|-------------|-----------------|
+| Forward + compensation dual path | Side-by-side or stacked: forward bindings left, compensation chain right, pairing arrows between |
+| Compensation gaps | Red warning on bindings without `compensatedBy` — immediate visual bug signal for FSI review |
+| Compensation-only bindings | Dimmed in forward view, highlighted in compensation view (`compensation: true`) |
+| Compensation order | Explicit `compensationOrder` shown; inferred reverse topological order shown with "computed" badge |
+| Runtime timeline | Forward steps → compensation trigger (who, why) → compensation steps → final status |
+| WorkItem compensation | Original linked to compensating WorkItem, `CompensationStatus` badge |
+
 ### Layer: Deployment Topology (v3 — ops)
 
 | Deployment Aspect | Visual Treatment |
