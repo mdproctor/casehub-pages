@@ -333,6 +333,19 @@ Agent identity rendering:
 
 Each level reuses components from the level below. The step viewer is the leaf component that everything builds on.
 
+## Maturation Order
+
+The phases follow a natural maturation order — render first, navigate second, aggregate third, diff last. Each phase can ship independently. Don't gate earlier phases on later ones.
+
+| Order | Phase | Question it answers | Notes |
+|-------|-------|-------------------|-------|
+| 1 | **Render** | "Can I see what the YAML does?" | Step cards, swim lanes, control flow, invoke cards. Single file, no navigation. Ship this first. |
+| 2 | **Navigate** | "Can I move between levels?" | Drill-down, breadcrumbs, Eidos/Pattern/Steps tabs. |
+| 3 | **Aggregate** | "Can I see the whole project?" | Project dashboard, focus modes. Start with pragmatic file-location assumptions — the UI leads, infrastructure follows. Don't wait for a formal project model. |
+| 4 | **Diff** | "What changed?" | Semantic diff is a maturation feature. Rendering must be stable before diffs are meaningful. Real usage reveals what diffs look like — designing the algorithm in advance is premature. |
+
+Diff depends on stable rendering. Aggregation depends on navigation. Navigation depends on rendering. Each layer is built on the previous.
+
 ## Diff Architecture
 
 ### Step-level diff (v1)
