@@ -216,18 +216,23 @@ The runtime playbook steps. This is the universal component — every agent has 
 
 ### Layer: Agentic Patterns (v2 — build when blocks YAML matures)
 
-The 8 blocks pattern topologies:
+v2 targets 3 pattern topologies that have mockups and infrastructure:
 
-| Pattern | Visual Treatment |
-|---------|-----------------|
-| `sequence` | Linear step list |
-| `parallel` | Swim lanes |
-| `supervisor` | Hub-and-spoke graph (supervisor node routes to agent nodes) |
-| `loop` | Linear with annotated back-edge + exit condition |
-| `conditional` | Branch diagram |
-| `voting` | Convergence: all agents → aggregation node → result |
-| `debate` | Turn-based rounds (vertical flow, judge at bottom) |
-| `HTN` | Hierarchical tree (ELK mrtree layout) |
+| Pattern | Visual Treatment | Status |
+|---------|-----------------|--------|
+| `parallel` | Swim lanes | Mocked (reuses step viewer swim lanes) |
+| `voting` | Convergence: all agents → aggregation node → result | Mocked (section 19) |
+| `debate` | Turn-based rounds (vertical flow, judge at bottom) | Mocked (section 20) |
+
+Remaining 5 patterns deferred — design when real blocks YAML exercises them:
+
+| Pattern | Likely Treatment | Deferred Because |
+|---------|-----------------|-----------------|
+| `sequence` | Linear step list | Trivial — just step cards in order |
+| `supervisor` | Hub-and-spoke graph | Needs real supervisor YAML to understand dynamic routing visuals |
+| `loop` | Linear with back-edge | Needs real loop examples to understand exit condition rendering |
+| `conditional` | Branch diagram | Reuses control flow blocks — may not need separate work |
+| `HTN` | Hierarchical tree | Needs real HTN decomposition YAML; ELK mrtree is hand-waving without it |
 
 Each agent in a pattern is a clickable node that drills into the agent view.
 
