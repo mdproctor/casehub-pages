@@ -314,7 +314,14 @@ Each level reuses components from the level below. The step viewer is the leaf c
 
 ### Step-level diff (v1)
 
-Compare two parsed `ResolvedStep[]` trees. Walk both trees, match steps by name/position, classify as added/removed/modified. Apply diff markers to the existing step cards and swim lanes.
+Compare two parsed `ResolvedStep[]` trees. Matching strategy (deliberately simple — refine over time):
+
+1. **Named steps** (`step: X`): match by name — exact, reliable
+2. **Unnamed steps**: match by position within their parent block — good enough for sequential steps
+3. **Renames**: show as remove + add (honest — the reviewer sees both). No heuristic rename detection in v1.
+4. **Reorders**: position-based matching means a reorder shows as multiple changes. Acceptable for v1 since LLMs tend to regenerate sections rather than surgically reorder.
+
+The matching algorithm is an internal implementation detail — the visual rendering (unified diagram with green/amber/red markers) is the stable API. The algorithm can be improved without changing the UX. Collect real diff examples that render badly, then refine for those specific cases.
 
 ### Application-level diff (v3)
 
