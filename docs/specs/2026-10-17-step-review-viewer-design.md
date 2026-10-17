@@ -303,6 +303,104 @@ Drill into each file's semantic diff using the same unified diagram approach.
 
 ---
 
+## User Journey: Day 0 to Deployed Project
+
+The viewer must serve the user at every stage of building a distributed agent application — not just when the project is complete. At each stage, it shows what exists, what's incomplete, and lets the user focus on the area they're working on.
+
+### Stage 1: Project Manifest
+
+The user starts with a project definition — a manifest declaring what this application is.
+
+```yaml
+namespace: io.casehub.fsi
+name: trade-surveillance
+version: "1.0"
+title: "Trade Surveillance System"
+```
+
+**Viewer shows:** Project identity card. Everything else is empty — but the viewer shows placeholder sections for what comes next (agents, case, infrastructure), each marked "not yet defined." This is the skeleton the user will fill in.
+
+### Stage 2: Agent Design (Eidos)
+
+The user defines who the agents are — their identities, capabilities, disposition, goals, constraints. At this point there are no steps, no case definition, no infrastructure. Just agents.
+
+**Viewer shows:** Agent gallery — a grid of eidos cards, each showing slot, archetype, model badge, capability list with confidence scores, disposition bars. The user can see at a glance: "I have 4 agents defined, the compliance-analyst has high rule-following but the risk-scorer has low risk-appetite." No drill-down yet — there's nothing inside to drill into.
+
+**Completeness signal:** Each agent card shows what's defined (identity, capabilities, disposition) and what's not (no steps, no pattern assignment).
+
+### Stage 3: Case Architecture
+
+The user defines the coordination structure — capabilities the system needs, bindings that trigger on context changes, workers that execute capabilities, goals that define done.
+
+**Viewer shows:** Case overview — the choreography/blackboard view (section 17) or a sequential orchestration flow. Workers now link to the eidos agents defined in stage 2. The viewer shows which workers have agents assigned and which don't.
+
+**Completeness signal:** Workers without implementations (no steps, no pattern) are marked "stub." Bindings without target workers are flagged. Goals without reachable paths are warned.
+
+### Stage 4: Agent Implementation (Steps)
+
+The user (or LLM) writes the runtime steps for each agent — REST calls, MCP tools, control flow, concurrency, data processing. This is where the core step viewer comes in.
+
+**Viewer shows:** Full step rendering — step cards, swim lanes, signal arrows, barrier bars, expression pills, invoke cards. The user can now drill from the case view into any worker and see its steps.
+
+**Focus mode: "LLM Logic"** — filters to show only agent-delegate steps, the expressions they consume, and the structured outputs they produce. Hides infrastructure steps (REST, GraphQL) to focus on what the LLMs are actually deciding.
+
+### Stage 5: Orchestration Patterns
+
+The user defines how agents collaborate — voting, debate, supervisor routing, parallel extraction. These are blocks agentic patterns that sit between the case and the individual agents.
+
+**Viewer shows:** Pattern topology views (section 19-20) — voting convergence, debate rounds, supervisor hub-and-spoke. Each agent in the pattern links to its eidos card and drill-down to its steps.
+
+### Stage 6: Safety — Sagas, Work Items, Compliance
+
+The user adds compensation paths (saga reversal chains), human-in-the-loop checkpoints (work items with SLA), and compliance controls.
+
+**Viewer shows:** Saga dual path (forward + compensation), compensation gap detection (red warnings on bindings without compensatedBy), work item cards with SLA indicators and lifecycle states.
+
+**Completeness signal:** Forward steps without compensation paths are visually flagged. This is critical for FSI — every consequential action needs an undo path.
+
+### Stage 7: Infrastructure (Desired State)
+
+The user defines the deployment topology — what services should exist, their dependencies, forEach fleet expansion, lifecycle phases.
+
+**Viewer shows:** Desired state graph with dependsOn backward resolution, forEach forward expansion, lifecycle phase progress bars, module imports. Unresolved dependencies shown as broken red arrows.
+
+### Stage 8: Deploy
+
+The user deploys via ops topology YAML — progressive phased rollout (foundation → services → fleet), adaptive topology mutations.
+
+**Viewer shows:** Deployment topology with phase progress, adaptive trigger→action cards, fleet status.
+
+### Project Aggregate View
+
+At any stage, the user can zoom out to see the project as a whole. The aggregate view is a dashboard with panels:
+
+| Panel | What it shows |
+|-------|--------------|
+| **Agents** | Grid of eidos cards (stage 2+) — slot, model, key capabilities |
+| **Case** | Choreography/orchestration miniature (stage 3+) — bindings, workers, goals |
+| **Steps** | Expandable per-agent step summaries (stage 4+) — step count, types, complexity |
+| **Patterns** | Pattern topology thumbnails (stage 5+) — voting, debate, supervisor |
+| **Safety** | Compensation coverage bar + work item count (stage 6+) |
+| **Infrastructure** | Desired state topology miniature (stage 7+) — node count, dependency count |
+| **Deploy** | Phase progress (stage 8) |
+
+### Focus Filters
+
+The aggregate view supports focus modes that filter to a specific concern:
+
+| Focus | What it shows | Why |
+|-------|--------------|-----|
+| **LLM Logic** | Agent-delegate steps only, model choices, structured output schemas, prompt descriptors | "What are the LLMs actually deciding?" |
+| **Data Flow** | Expressions across all steps showing how data moves between agents and services | "Where does the trade data go?" |
+| **Concurrency** | All concurrent/parallel/race blocks, signals, barriers, channels | "What runs in parallel and how does it sync?" |
+| **Safety** | Saga compensation chains, gap detection, work items, constraints | "Is every action reversible? Where are the human checkpoints?" |
+| **Infrastructure** | Desired state topology, deployment phases, adaptive mutations | "What gets deployed and in what order?" |
+| **Diff** | Semantic changes across all layers since last version | "What did the LLM change?" |
+
+These focus modes answer the questions a reviewer asks at each stage. "LLM Logic" is the most important during stage 4 — the reviewer wants to see what the LLMs are doing without wading through REST plumbing.
+
+---
+
 ## FSI Use Cases
 
 These use cases show what a reviewer would see in the viewer when reviewing LLM-generated YAML for distributed agent coordination in financial services.

@@ -3003,5 +3003,327 @@
 </div>
 
 
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PART 5: PROJECT AGGREGATE VIEW & FOCUS MODES                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div style="margin-top: 80px; padding-top: 32px; border-top: 3px solid var(--amber);">
+  <h1>Part 5: Project Aggregate View — Day 0 to Deployed</h1>
+  <p class="subtitle">The user journey: from first manifest to deployed fleet. The viewer serves every stage, showing what exists, what's incomplete, and letting the user focus on what matters.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>25. Project Dashboard — Aggregate View</h2>
+<h3>all layers at a glance with completeness signals</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <!-- Project header -->
+  <div style="padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(137,180,250,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--blue);">◆</div>
+    <div>
+      <div style="font-size: 16px; font-weight: 600; color: var(--text-bright);">Trade Surveillance</div>
+      <div style="font-size: 12px; color: var(--text-dim);">io.casehub.fsi / trade-surveillance / v1.0</div>
+    </div>
+    <!-- Focus mode selector -->
+    <div style="margin-left: auto; display: flex; gap: 4px; font-size: 11px;">
+      <span style="padding: 4px 10px; border-radius: 4px; background: var(--blue-dim); color: var(--blue); font-weight: 600; cursor: pointer;">All</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: pointer;">LLM Logic</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: pointer;">Data Flow</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: pointer;">Concurrency</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: pointer;">Safety</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: pointer;">Infrastructure</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: pointer;">Diff</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+    <!-- Agents panel -->
+    <div style="padding: 16px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--peach); text-transform: uppercase;">Agents</span>
+        <span style="font-size: 11px; color: var(--text-dim);">4 defined</span>
+        <div style="margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--green);" title="All agents have steps"></div>
+      </div>
+      <div style="display: grid; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 12px; cursor: pointer;">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); width: 18px; height: 18px; font-size: 9px;">⬡</div>
+          <span style="font-weight: 500;">trade-monitor</span>
+          <span style="color: var(--text-dim); font-size: 10px;">detective</span>
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">sonnet-5</span>
+          <span style="margin-left: auto; font-size: 10px; color: var(--text-dim);">12 steps</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 12px; cursor: pointer;">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); width: 18px; height: 18px; font-size: 9px;">⬡</div>
+          <span style="font-weight: 500;">correlation-engine</span>
+          <span style="color: var(--text-dim); font-size: 10px;">analyst</span>
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+          <span style="margin-left: auto; font-size: 10px; color: var(--text-dim);">8 steps</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 12px; cursor: pointer;">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); width: 18px; height: 18px; font-size: 9px;">⬡</div>
+          <span style="font-weight: 500;">risk-scorer</span>
+          <span style="color: var(--text-dim); font-size: 10px;">assessor</span>
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+          <span style="margin-left: auto; font-size: 10px; color: var(--text-dim);">6 steps</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 12px; cursor: pointer;">
+          <div class="step-icon" style="background: rgba(148,226,213,0.15); color: var(--teal); width: 18px; height: 18px; font-size: 9px;">👤</div>
+          <span style="font-weight: 500;">compliance-reviewer</span>
+          <span style="color: var(--text-dim); font-size: 10px;">human</span>
+          <span class="decorator" style="background: rgba(148,226,213,0.2); color: var(--teal); font-size: 9px;">human task</span>
+          <span style="margin-left: auto; font-size: 10px; color: var(--text-dim);">4h SLA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case panel -->
+    <div style="padding: 16px; border-bottom: 1px solid var(--border);">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--purple); text-transform: uppercase;">Case</span>
+        <span class="decorator" style="background: rgba(203,166,247,0.2); color: var(--purple); font-size: 10px;">choreography</span>
+        <div style="margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+      </div>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px;">
+        <span style="color: var(--text-dim);">bindings</span>
+        <span>4 reactive triggers</span>
+        <span style="color: var(--text-dim);">capabilities</span>
+        <span>4 defined</span>
+        <span style="color: var(--text-dim);">milestones</span>
+        <span>3 checkpoints</span>
+        <span style="color: var(--text-dim);">goals</span>
+        <span><span style="color: var(--green);">2 success</span></span>
+      </div>
+    </div>
+
+    <!-- Safety panel -->
+    <div style="padding: 16px; border-right: 1px solid var(--border);">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--red); text-transform: uppercase;">Safety</span>
+        <div style="margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--amber);" title="1 compensation gap"></div>
+      </div>
+      <!-- Compensation coverage -->
+      <div style="margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; margin-bottom: 4px;">
+          <span style="color: var(--text-dim);">Saga coverage</span>
+          <span style="margin-left: auto; color: var(--amber);">3/4 bindings</span>
+        </div>
+        <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px;">
+          <div style="width: 75%; height: 100%; background: var(--green); border-radius: 3px; position: relative;">
+            <div style="position: absolute; right: 0; top: -1px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); border: 2px solid var(--surface);"></div>
+          </div>
+        </div>
+        <div style="font-size: 10px; color: var(--amber); margin-top: 4px;">⚠ on-trade-feed has no compensation</div>
+      </div>
+      <!-- Work items -->
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px;">
+        <span style="color: var(--text-dim);">human gates</span>
+        <span>1 (compliance-reviewer)</span>
+        <span style="color: var(--text-dim);">constraints</span>
+        <span>2 HARD, 1 SOFT</span>
+      </div>
+    </div>
+
+    <!-- Infrastructure panel -->
+    <div style="padding: 16px;">
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--teal); text-transform: uppercase;">Infrastructure</span>
+        <div style="margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+      </div>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px;">
+        <span style="color: var(--text-dim);">topology</span>
+        <span>8 nodes, 3 phases</span>
+        <span style="color: var(--text-dim);">fleet</span>
+        <span>3 agents (forEach)</span>
+        <span style="color: var(--text-dim);">dependencies</span>
+        <span><span style="color: var(--green);">all resolved</span></span>
+        <span style="color: var(--text-dim);">adaptations</span>
+        <span>2 rules</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>26. Focus Mode — "LLM Logic" Filter</h2>
+<h3>isolates what the LLMs are deciding — strips infrastructure plumbing</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 13px; font-weight: 600; color: var(--text-bright);">Trade Surveillance</span>
+    <div style="display: flex; gap: 4px; font-size: 11px;">
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim);">All</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: var(--peach); color: var(--bg); font-weight: 600;">LLM Logic</span>
+      <span style="padding: 4px 10px; border-radius: 4px; background: rgba(255,255,255,0.04); color: var(--text-dim);">Safety</span>
+    </div>
+  </div>
+
+  <div style="padding: 16px;">
+    <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 12px; padding: 6px 10px; background: rgba(250,179,135,0.06); border-radius: 4px; border-left: 3px solid var(--peach);">
+      Showing only agent-delegate steps and their decision logic. REST/GraphQL/MCP plumbing hidden.
+    </div>
+
+    <!-- Agent 1 -->
+    <div style="margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span style="font-size: 13px; font-weight: 600;">trade-monitor</span>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">sonnet-5</span>
+      </div>
+      <div style="padding-left: 32px;">
+        <div class="step-card">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+          <span class="step-action">agent-delegate</span>
+          <span class="step-target">pattern-detector</span>
+          <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+        </div>
+        <div style="padding: 4px 0 4px 34px; font-size: 11px; color: var(--text-dim);">
+          <span style="color: var(--text-dim);">decides:</span>
+          <span style="color: var(--amber);">anomalies[]</span> — which trades are suspicious
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent 2 -->
+    <div style="margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span style="font-size: 13px; font-weight: 600;">correlation-engine</span>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">opus-5</span>
+      </div>
+      <div style="padding-left: 32px;">
+        <div class="step-card">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+          <span class="step-action">agent-delegate</span>
+          <span class="step-target">anomaly-classifier</span>
+          <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+          <span class="decorator retry">↻ retry: 2</span>
+        </div>
+        <div style="padding: 4px 0 4px 34px; font-size: 11px; color: var(--text-dim);">
+          <span style="color: var(--text-dim);">decides:</span>
+          <span style="color: var(--amber);">correlations[]</span> — cross-referenced findings with classification
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent 3 -->
+    <div style="margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span style="font-size: 13px; font-weight: 600;">risk-scorer</span>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">opus-5</span>
+      </div>
+      <div style="padding-left: 32px;">
+        <div class="step-card">
+          <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+          <span class="step-action">agent-delegate</span>
+          <span class="step-target">risk-assessor</span>
+          <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+        </div>
+        <div style="padding: 4px 0 4px 34px; font-size: 11px; color: var(--text-dim);">
+          <span style="color: var(--text-dim);">decides:</span>
+          <span style="color: var(--amber);">riskScore</span> (0-1) + <span style="color: var(--amber);">recommendation</span> (approve/escalate/reject)
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision chain summary -->
+    <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: 6px; padding: 12px 16px; margin-top: 8px;">
+      <div style="font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px;">LLM DECISION CHAIN</div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; flex-wrap: wrap;">
+        <span style="color: var(--text);">trades</span>
+        <span style="color: var(--text-dim);">→</span>
+        <span style="padding: 2px 8px; background: rgba(250,179,135,0.1); border-radius: 3px; color: var(--peach);">pattern-detector</span>
+        <span style="color: var(--text-dim);">→</span>
+        <span style="color: var(--amber);">anomalies</span>
+        <span style="color: var(--text-dim);">→</span>
+        <span style="padding: 2px 8px; background: rgba(250,179,135,0.1); border-radius: 3px; color: var(--peach);">anomaly-classifier</span>
+        <span style="color: var(--text-dim);">→</span>
+        <span style="color: var(--amber);">correlations</span>
+        <span style="color: var(--text-dim);">→</span>
+        <span style="padding: 2px 8px; background: rgba(250,179,135,0.1); border-radius: 3px; color: var(--peach);">risk-assessor</span>
+        <span style="color: var(--text-dim);">→</span>
+        <span style="color: var(--amber);">riskScore + recommendation</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>LLM Logic focus strips everything but agent decisions.</strong>
+  The reviewer sees: which LLMs run, what they decide, and how their outputs chain together.
+  No REST calls, no GraphQL queries, no MCP tools — just the decision chain.
+  This answers: "What are the LLMs actually doing in this application?"
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>27. Completeness Signals — Early Stage Project</h2>
+<h3>what exists, what's missing, what needs attention</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+    <div style="font-size: 16px; font-weight: 600; color: var(--text-bright);">KYC Verification</div>
+    <span style="font-size: 12px; color: var(--text-dim);">early stage — 3 of 8 layers defined</span>
+  </div>
+
+  <div style="padding: 16px; display: grid; gap: 8px;">
+    <!-- Defined -->
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(166,227,161,0.04); border: 1px solid rgba(166,227,161,0.15);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px;">Manifest</span>
+      <span style="font-size: 11px; color: var(--green);">defined</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(166,227,161,0.04); border: 1px solid rgba(166,227,161,0.15);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px;">Agents (Eidos)</span>
+      <span style="font-size: 11px; color: var(--green);">6 agents defined</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(166,227,161,0.04); border: 1px solid rgba(166,227,161,0.15);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--green);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px;">Case Architecture</span>
+      <span style="font-size: 11px; color: var(--green);">7 bindings, 4 milestones, 2 goals</span>
+    </div>
+
+    <!-- In progress -->
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(249,226,175,0.04); border: 1px solid rgba(249,226,175,0.15);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px;">Agent Steps</span>
+      <span style="font-size: 11px; color: var(--amber);">2 of 6 agents have steps</span>
+    </div>
+
+    <!-- Not started -->
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-dim);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px; color: var(--text-dim);">Patterns</span>
+      <span style="font-size: 11px; color: var(--text-dim);">not yet defined</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-dim);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px; color: var(--text-dim);">Safety (Sagas)</span>
+      <span style="font-size: 11px; color: var(--text-dim);">not yet defined</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-dim);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px; color: var(--text-dim);">Infrastructure</span>
+      <span style="font-size: 11px; color: var(--text-dim);">not yet defined</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+      <div style="width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--text-dim);"></div>
+      <span style="font-size: 12px; font-weight: 500; min-width: 120px; color: var(--text-dim);">Deployment</span>
+      <span style="font-size: 11px; color: var(--text-dim);">not yet defined</span>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>The viewer serves day 0, not just day N.</strong> An early-stage project shows what's been defined (green),
+  what's in progress (amber), and what's not started (dashed outline). The user knows exactly where
+  they are in the journey and what to work on next. As the LLM fills in each layer, the indicators update.
+</div>
+
+
 </body>
 </html>
