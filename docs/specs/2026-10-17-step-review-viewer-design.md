@@ -106,6 +106,20 @@ A read-only semantic viewer panel synced to the text editor. The viewer renders 
 - Cross-file features (aggregate dashboard, focus modes, multi-file diff) are v3
 **Rationale:** A single-file viewer demonstrates the core value proposition (semantic rendering beats text review) without requiring a project model, file discovery, or multi-repo aggregation. Ship the step viewer first, add the project shell later.
 
+### D11: Project Model — Open Problem
+
+**Status:** Unresolved — blocks v3 (aggregate view, focus modes, multi-file diff)
+
+The project aggregate view requires knowing which files constitute a CaseHub application. Today, a project is "random files over a number of folders" — eidos YAML in one place, case definitions in another, step playbooks in a third, desired state topologies elsewhere. There is no project manifest or convention that lets a viewer discover and aggregate them.
+
+This is not a viewer problem — it's a platform problem. The viewer cannot solve it alone. Possible future approaches:
+- A `casehub-project.yaml` manifest listing all constituent files
+- Convention-based discovery (`META-INF/eidos/`, `META-INF/desiredstate/`, etc.)
+- IDE workspace integration (the viewer reads the IDE's project model)
+- Build-time assembly (Maven/Gradle collects the files into a known structure)
+
+Until this is resolved, v3 features (aggregate dashboard, focus modes, cross-file diff) remain aspirational. The mockup shows what they WOULD look like, not how they source their data. This is explicitly a gap to be filled as the YAML surfaces and project conventions mature.
+
 ## Visual Vocabulary
 
 These foundation components are reused across all semantic layers:
