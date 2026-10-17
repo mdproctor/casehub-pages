@@ -1,0 +1,824 @@
+# Step Review Viewer — Design Specification
+
+**Date:** 2026-10-17
+**Status:** Draft
+**Mockup:** `docs/mockups/step-review-viewer.html`
+
+## Problem
+
+CaseHub applications are defined in YAML across multiple semantic layers (case definitions, agentic patterns, eidos descriptors, runtime steps, work templates, summarisation pipelines). Today the only review surface is a text editor with syntax highlighting. When an LLM generates or modifies this YAML, the human reviewer must mentally parse indentation, match signal names across branches, trace data dependencies through expressions, and reconstruct concurrent execution topology from text. This is the same limitation that makes Java concurrent code hard to review — except CaseHub's YAML encodes structure explicitly, which means we can do better.
+
+## Solution
+
+A read-only semantic viewer panel synced to the text editor. The viewer renders parsed YAML using purpose-built visual treatments per semantic category. The LLM writes, the human reviews. The viewer makes correctness visually obvious and errors visually jarring.
+
+## Design Decisions
+
+### D1: Priority Domain
+
+**Choice:** Concurrency + Coordination first
+**Alternatives:**
+- All domains shallow first — spreads effort too thin, weaker demo impact
+- Sequential + control flow first — most common but least differentiated vs text
+- Data-driven + forEach — practical but not visually distinctive
+**Rationale:** Strongest "Java can't do this" showcase. Swim lanes, signal arrows, barrier bars are impossible to derive from general-purpose code review.
+**Trade-offs:** Common sequential steps get basic rendering first, not optimised.
+
+### D2: Rendering Approach
+
+**Choice:** HTML Grid + SVG arrows
+**Alternatives:**
+- Compact structured text — simpler but loses spatial relationships
+- Full SVG diagram — most polished but hardest to diff, accessibility concerns
+**Rationale:** HTML for content (selectable text, accessible), SVG overlay for connections (signal arrows, barrier bars). Best balance of visual clarity and implementation effort.
+**Trade-offs:** More complex than pure text rendering, simpler than full SVG.
+
+### D3: Diff Style
+
+**Choice:** Unified diagram
+**Alternatives:**
+- Side-by-side diagrams — 2x horizontal space, harder to spot inline changes
+- Toggle (before/after) — compact but requires interaction to compare
+**Rationale:** Changes visible in spatial context. Green = added, red = removed, amber = modified. The reviewer sees what changed without reconstructing the full picture.
+**Trade-offs:** Can get cluttered with many simultaneous changes.
+
+### D4: Agent Coordination View
+
+**Choice:** Auto-switch between swim lanes and graph based on pattern topology
+**Alternatives:**
+- Swim lanes only — loses non-linear topologies (fan-out/fan-in, supervisor hub-and-spoke)
+- Graph only — loses temporal ordering that swim lanes naturally show
+**Rationale:** Different topologies deserve different visualizations. `concurrent:` → swim lanes. Supervisor → hub-and-spoke. Fan-out/fan-in → DAG. Pattern type drives the choice.
+**Trade-offs:** More complex rendering logic, but produces the right visualization for each case.
+
+### D5: Graph Rendering Infrastructure
+
+**Choice:** Reuse existing `graph-core` + `graph-renderer` packages
+**Alternatives:**
+- Build custom SVG graph renderer — duplicates existing capability
+- Use external library — adds dependency, doesn't integrate with stencil registry
+**Rationale:** `graph-core` already has `GraphModel` (nodes, edges, decorations), `graph-renderer` has `<pages-graph-canvas>` with ELK layout, stencil registry, and drill-down navigation. The agent coordination graph view is a mapping problem, not a rendering problem.
+**Trade-offs:** Dependency on React Flow (via graph-renderer), but already in the project.
+
+### D6: Agent Drill-Down Tabs
+
+**Choice:** Eidos / Pattern / Steps (aligned with CaseHub concepts)
+**Alternatives:**
+- Manifest / Edison / Runtime — original mockup naming, not aligned with platform terminology
+**Rationale:** "Eidos" IS the agent identity spec in CaseHub. "Pattern" is the blocks agentic pattern. "Steps" is the runtime playbook. Using platform-native terms avoids confusion.
+**Trade-offs:** None — pure naming alignment.
+
+### D7: Architecture
+
+**Choice:** Read-only companion panel synced to text editor
+**Alternatives:**
+- Integrated editor with graphical editing — too complex for v1
+- Standalone viewer — loses the edit/review workflow
+**Rationale:** LLM generates YAML in the text editor, human reviews in the semantic viewer. Changes in the editor trigger re-parse and re-render in the viewer. Edit in one, review in the other.
+**Trade-offs:** No graphical editing (deferred to future version).
+
+## Visual Vocabulary
+
+These foundation components are reused across all semantic layers:
+
+### Step Cards
+
+Compact single-line rendering with action icon, action name, target, value. Decorators as badges on the right edge.
+
+```
+┌──────────────────────────────────────────────────┐
+│ [icon] action  target  "value"    [retry: 3]     │
+└──────────────────────────────────────────────────┘
+```
+
+### Decorator Badges
+
+Small colored chips attached to step cards:
+- `↻ retry: 3` (peach)
+- `⏱ 5000ms` (amber)
+- `↻ continuous` (teal)
+- `? ${condition}` (purple)
+- `🔒 mutex-name` (red)
+- `∀ item in collection` (blue)
+
+### Expression Pills
+
+Inline colored spans by scope:
+- `${params.*}` — blue (parameter)
+- `${each.*}` — green (iteration variable)
+- `${from.*}` — peach (channel/source data)
+- `${module.*}` — purple (module output)
+
+### Invoke Cards
+
+Structured call cards showing method/protocol badge, endpoint, step name, and request body:
+
+```
+┌─────────────────────────────────────────────┐
+│ [POST]  /api/cases           step: create   │
+├─────────────────────────────────────────────┤
+│ customer: "Alice Chen"                      │
+│ channel: "web"                              │
+└─────────────────────────────────────────────┘
+```
+
+### Swim Lanes
+
+CSS Grid columns for concurrent branches. Steps flow top-to-bottom within each lane. SVG overlay for signal arrows between lanes.
+
+### Barrier Bars
+
+Horizontal bars spanning all lanes with name and count badge. Visually separates "before sync" from "after sync" steps.
+
+### Signal Arrows
+
+SVG arrows connecting signal-emit steps to signal-await steps across lanes. Arrow label shows signal name.
+
+### Graph Nodes
+
+`graph-core` `GraphNode` with `NodeDecoration` (badges, pills, borders) for agent/worker/pattern nodes. ELK layout via `graph-renderer`.
+
+### Diff Markers
+
+- Added: green background, green border, `+ NEW` badge
+- Removed: red background, strikethrough, `- REMOVED` badge
+- Modified: amber background, amber border, `MODIFIED` badge, inline `old → new` for changed values
+
+## Semantic Layer Rendering
+
+### Layer: Steps (v1 — build now)
+
+The runtime playbook steps. This is the universal component — every agent has steps.
+
+| Step Type | Visual Treatment |
+|-----------|-----------------|
+| UI actions (click, fill, navigate, assert) | Compact step card with action icon |
+| Control flow (if/else) | Side-by-side branch panels with colored gutters |
+| Control flow (match/cases) | Pattern table: pattern → step card |
+| Control flow (try/catch/finally) | Stacked colored regions (green/red/teal) |
+| Concurrent branches | Swim lanes with signal arrows and barrier bars |
+| Parallel (unnamed) | Swim lanes without headers |
+| Race | Swim lanes with "first wins" indicator |
+| Quorum | Barrier bar with "N of M required" |
+| Select | Signal multiplexing (first-to-fire indicator) |
+| Delay | Dashed-line gap with time label |
+| Agent-delegate | Agent card with model badge, descriptor, structured output flag |
+| REST/GraphQL/MCP calls | Invoke cards with method badge and body |
+| Script execution | Code block with runtime badge |
+| ForEach over data | Data table with typed columns + iteration binding |
+| State machine | Node diagram with transitions |
+| Channel pub/sub | Publish/subscribe badges on step cards |
+| Mutex | Lock icon badge, same-mutex steps visually linked |
+| Work items | Distinct card style (human icon, SLA indicator, lifecycle state) |
+
+### Layer: Agentic Patterns (v2 — build when blocks YAML matures)
+
+The 8 blocks pattern topologies:
+
+| Pattern | Visual Treatment |
+|---------|-----------------|
+| `sequence` | Linear step list |
+| `parallel` | Swim lanes |
+| `supervisor` | Hub-and-spoke graph (supervisor node routes to agent nodes) |
+| `loop` | Linear with annotated back-edge + exit condition |
+| `conditional` | Branch diagram |
+| `voting` | Convergence: all agents → aggregation node → result |
+| `debate` | Turn-based rounds (vertical flow, judge at bottom) |
+| `HTN` | Hierarchical tree (ELK mrtree layout) |
+
+Each agent in a pattern is a clickable node that drills into the agent view.
+
+### Layer: Eidos (v2 — build with agentic patterns)
+
+Agent identity rendering:
+
+| Eidos Aspect | Visual Treatment |
+|-------------|-----------------|
+| Identity (slot, archetype, model) | Header card with badges |
+| Capabilities | List with confidence scores and health indicators |
+| Disposition (5 axes) | Radar/polar chart or labeled bar indicators |
+| Goals | Priority-tagged list (PRIMARY/SECONDARY) |
+| Constraints | Severity-tagged list (HARD/SOFT) |
+| Briefing | Collapsible prose block |
+
+### Layer: Case Definition (v3 — build when navigation hierarchy is clear)
+
+| Case Aspect | Visual Treatment |
+|-------------|-----------------|
+| Choreography (reactive) | Blackboard diagram: context center, bindings as trigger edges, workers as peripheral nodes |
+| Orchestration (sequential) | Linear/planned execution flow |
+| Bindings | Trigger rules: JQ condition → worker dispatch |
+| Goals/Milestones | Progress indicators |
+| Workers | Cards with type badge (Function/Workflow/Agent/SubCase/HumanTask) |
+
+### Layer: Summarisation Pipelines (v3)
+
+| Pipeline Aspect | Visual Treatment |
+|----------------|-----------------|
+| Levels | Vertical funnel: events → grouping → classification → phase detection |
+| Grouping | Badge showing strategy (windowed/keyed) |
+| Summarisers | Type-specific rendering (threshold rules, state machine, field extraction) |
+
+## Component Architecture
+
+```
+<pages-step-viewer>           ← v1: renders parsed steps
+  ├── <step-card>             ← compact action rendering
+  ├── <swim-lane-view>        ← concurrent branches
+  ├── <control-flow-block>    ← if/else, match, try/catch
+  ├── <invoke-card>           ← REST/GQL/MCP calls
+  ├── <data-table-view>       ← inline CSV rendering
+  └── <diff-overlay>          ← unified diff markers
+
+<pages-pattern-viewer>        ← v2: renders blocks patterns
+  ├── <pages-graph-canvas>    ← reused from graph-renderer
+  ├── <swim-lane-view>        ← reused from step-viewer
+  └── <agent-card>            ← agent node with eidos summary
+
+<pages-agent-viewer>          ← v2: agent drill-down
+  ├── <eidos-view>            ← identity, capabilities, disposition
+  ├── <pages-pattern-viewer>  ← if agent participates in a pattern
+  └── <pages-step-viewer>     ← runtime steps
+
+<pages-application-viewer>    ← v3: full case navigation
+  ├── <case-overview>         ← choreography/orchestration view
+  ├── <pages-pattern-viewer>  ← per-capability patterns
+  └── <pages-agent-viewer>    ← per-agent drill-down
+```
+
+Each level reuses components from the level below. The step viewer is the leaf component that everything builds on.
+
+## Diff Architecture
+
+### Step-level diff (v1)
+
+Compare two parsed `ResolvedStep[]` trees. Walk both trees, match steps by name/position, classify as added/removed/modified. Apply diff markers to the existing step cards and swim lanes.
+
+### Application-level diff (v3)
+
+Multi-file diff summary at the top:
+```
+Diff — KYC Application
+  + 1 agent added (pep-screener)
+  ~ quorum 2/3 → 3/4
+  ~ risk-assessor params updated
+  + new eidos descriptor
+  + new runtime steps
+```
+
+Drill into each file's semantic diff using the same unified diagram approach.
+
+---
+
+## FSI Use Cases
+
+These use cases show what a reviewer would see in the viewer when reviewing LLM-generated YAML for distributed agent coordination in financial services.
+
+### Use Case 1: Trade Surveillance — Suspicious Activity Detection
+
+A trade surveillance system where multiple LLM agents monitor trading activity, detect anomalies, and coordinate on investigation.
+
+#### Case Definition (engine)
+
+```yaml
+dsl: "1.0.0"
+namespace: io.casehub.fsi
+name: trade-surveillance
+version: "1.0"
+title: "Trade Surveillance — Suspicious Activity Detection"
+
+spec:
+  planningStrategy: choreography
+
+  capabilities:
+    - name: monitorTrades
+      description: "Monitor real-time trade feed for anomalous patterns"
+      inputProjection: "{ feed: .tradeFeed, thresholds: .config.thresholds }"
+      outputProjection: "{ anomalies: .detected }"
+
+    - name: correlateActivity
+      description: "Cross-reference flagged trades with account history and market data"
+      inputProjection: "{ anomalies: .anomalies, accounts: .accounts }"
+      outputProjection: "{ correlations: .findings }"
+
+    - name: assessRisk
+      description: "Score correlation findings for SAR filing threshold"
+      inputProjection: "{ correlations: .correlations, policy: .config.riskPolicy }"
+      outputProjection: "{ riskScore: .score, recommendation: .action }"
+
+    - name: humanReview
+      description: "Compliance officer reviews AI findings before SAR filing"
+      inputProjection: "{ findings: .correlations, risk: .riskScore, recommendation: .recommendation }"
+      outputProjection: "{ decision: .decision, notes: .reviewNotes }"
+
+  workers:
+    - name: trade-monitor
+      capabilities: [monitorTrades]
+      type: agent
+
+    - name: correlation-engine
+      capabilities: [correlateActivity]
+      type: agent
+
+    - name: risk-scorer
+      capabilities: [assessRisk]
+      type: agent
+
+    - name: compliance-reviewer
+      capabilities: [humanReview]
+      type: human
+      executionPolicy:
+        maxConcurrent: 1
+
+  bindings:
+    - name: on-trade-feed
+      capability: monitorTrades
+      on:
+        contextChange:
+          keys: ["tradeFeed"]
+          filter: '.tradeFeed != null'
+
+    - name: on-anomalies-detected
+      capability: correlateActivity
+      on:
+        contextChange:
+          keys: ["anomalies"]
+          filter: '.anomalies != null and (.anomalies | length) > 0'
+
+    - name: on-correlations-complete
+      capability: assessRisk
+      on:
+        contextChange:
+          keys: ["correlations"]
+          filter: '.correlations != null'
+
+    - name: on-high-risk
+      capability: humanReview
+      on:
+        contextChange:
+          keys: ["riskScore"]
+          filter: '.riskScore >= 0.7'
+
+  milestones:
+    - name: anomalies-detected
+      condition: '.anomalies != null and (.anomalies | length) > 0'
+
+    - name: risk-assessed
+      condition: '.riskScore != null'
+
+    - name: reviewed
+      condition: '.decision != null'
+
+  goals:
+    - name: sar-filed
+      condition: '.decision == "file-sar" and .sarReference != null'
+      kind: success
+
+    - name: cleared
+      condition: '.decision == "no-action" and .reviewNotes != null'
+      kind: success
+
+    - name: escalated
+      condition: '.decision == "escalate"'
+      kind: success
+```
+
+**Viewer rendering:** Blackboard diagram with `tradeFeed` context at center. Four binding edges radiating out: `on-trade-feed` → `trade-monitor`, `on-anomalies-detected` → `correlation-engine`, `on-correlations-complete` → `risk-scorer`, `on-high-risk` → `compliance-reviewer`. Each binding edge labeled with its JQ filter condition. Milestones as progress markers. Goals as terminal indicators.
+
+#### Agentic Pattern — Correlation (blocks)
+
+```yaml
+type: parallel
+agents:
+  - type: worker
+    name: market-data-analyst
+  - type: worker
+    name: account-history-analyst
+  - type: worker
+    name: counterparty-analyst
+aggregation:
+  type: collect-all
+```
+
+**Viewer rendering:** Three swim lanes (market-data-analyst, account-history-analyst, counterparty-analyst) running in parallel, converging at a `collect-all` aggregation point.
+
+#### Eidos — Trade Monitor Agent (eidos)
+
+```yaml
+descriptors:
+  - agentId: trade-monitor-v1
+    name: Trade Monitor
+    slot: surveillance-analyst
+    tenancyId: fsi-trading
+    archetype: detective
+
+    disposition:
+      socialOrient: analytical
+      ruleFollowing: strict
+      riskAppetite: conservative
+      autonomy: moderate
+      conflictMode: competing
+      delegation: true
+
+    capabilities:
+      - name: pattern-detection
+        tags: [temporal, statistical, cross-asset]
+        epistemic:
+          domain: market-microstructure
+          confidence: 0.85
+      - name: anomaly-classification
+        tags: [wash-trading, spoofing, layering, front-running]
+        epistemic:
+          domain: market-abuse-regulation
+          confidence: 0.78
+
+    goals:
+      - name: detect-anomalies
+        description: "Identify trading patterns that deviate from normal behaviour"
+        priority: PRIMARY
+        visibility: PUBLIC
+      - name: minimize-false-positives
+        description: "Maintain precision above 85% to avoid alert fatigue"
+        priority: SECONDARY
+        visibility: PUBLIC
+
+    constraints:
+      - name: no-trading-decisions
+        description: "Never recommend or execute trades. Observation and flagging only."
+        severity: HARD
+        visibility: PUBLIC
+      - name: data-retention
+        description: "All flagged patterns must be retained for 7 years per MAR"
+        severity: HARD
+        visibility: PUBLIC
+
+    briefing: >-
+      You are a Trade Monitor agent specialising in market abuse detection.
+      You analyse real-time trade feeds for patterns indicative of wash trading,
+      spoofing, layering, and front-running. You operate under strict regulatory
+      constraints — you observe and flag, never act. False positives waste
+      compliance resources; false negatives risk regulatory action.
+```
+
+**Viewer rendering (Eidos tab):** Identity card showing slot "surveillance-analyst", archetype "detective", model badge. Disposition rendered as 5 labeled bars (analytical, strict, conservative, moderate, competing). Capabilities with confidence scores (0.85, 0.78) and domain tags. Goals with PRIMARY/SECONDARY priority. Constraints with HARD severity and red indicators.
+
+#### Runtime Steps — Trade Monitor (platform/pages)
+
+```yaml
+playbook: "1.0"
+schema: server
+---
+playbook: trade-monitor-runtime
+params:
+  - name: feed
+    type: object
+    required: true
+  - name: thresholds
+    type: object
+    required: true
+
+steps:
+  - rest-request:
+      name: fetch-baseline
+      method: GET
+      url: /api/market-data/baseline
+      params:
+        instrument: "${params.feed.instrument}"
+        window: "30d"
+    timeout: 10s
+
+  - agent-delegate:
+      descriptor: pattern-detector
+      model: claude-sonnet-5
+      structuredOutput: true
+      params:
+        trades: "${params.feed.trades}"
+        baseline: "${fetch-baseline.result}"
+        thresholds: "${params.thresholds}"
+
+  - if: "${ pattern-detector.result.anomalies | length > 0 }"
+    then:
+      - parallel:
+        - mcp-call:
+            name: enrich-market-context
+            tool: market-context-lookup
+            params:
+              instrument: "${params.feed.instrument}"
+              timestamp: "${pattern-detector.result.firstAnomaly.timestamp}"
+        - graphql-exec:
+            name: fetch-account-positions
+            domain: trading
+            operation: accountPositions
+            params:
+              accountIds: "${pattern-detector.result.involvedAccounts}"
+      - agent-delegate:
+          name: classify-anomalies
+          descriptor: anomaly-classifier
+          model: claude-opus-5
+          structuredOutput: true
+          params:
+            anomalies: "${pattern-detector.result.anomalies}"
+            marketContext: "${enrich-market-context.result}"
+            positions: "${fetch-account-positions.result}"
+          retry: 2
+          timeout: 30s
+    else:
+      - log: { message: "No anomalies detected for ${params.feed.instrument}" }
+```
+
+**Viewer rendering (Steps tab):** Sequential steps: REST call card (GET baseline), agent-delegate card (pattern-detector, sonnet-5). Then an if/else block — condition `anomalies.length > 0`. The "then" branch has two parallel swim lanes (MCP call + GraphQL call) converging, then another agent-delegate (classify-anomalies, opus-5, with retry:2 and timeout:30s badges). The "else" branch has a single log step.
+
+#### Work Template — Compliance Review (work)
+
+```yaml
+templates:
+  - name: sar-review
+    description: "Compliance officer review of AI-flagged suspicious activity"
+    candidateGroups: [compliance-officers, senior-compliance]
+    priority: HIGH
+    expiryHours: 4
+    claimHours: 1
+    requiredCapabilities:
+      - regulatory-review
+      - sar-filing
+    permittedOutcomes: '["file-sar", "no-action", "escalate", "request-more-info"]'
+    labels:
+      instrument: "${context.feed.instrument}"
+      riskScore: "${context.riskScore}"
+      anomalyType: "${context.correlations[0].type}"
+    assignmentStrategy: LEAST_LOADED
+```
+
+**Viewer rendering:** Work item card (distinct from agent cards) with human icon, "HIGH" priority badge, "4h SLA" countdown indicator, candidate groups chip, required capabilities list, and four permitted outcomes as labeled buttons.
+
+#### Summarisation Pipeline — Trade Event Stream (blocks)
+
+```yaml
+pipeline:
+  name: trade-signal-aggregation
+  source:
+    cloud-event-type: io.casehub.fsi.trade.v1
+  tick-interval: 5000
+  levels:
+    - name: per-instrument
+      grouping:
+        type: keyed
+        key: instrumentId
+      summariser:
+        type: pass-through
+      emit:
+        cloud-event-type: io.casehub.fsi.trade.instrument.v1
+
+    - name: anomaly-window
+      grouping:
+        type: windowed
+        count: 50
+        max-age: 60000
+      summariser:
+        type: threshold-classify
+        rules:
+          - name: volume-spike
+            when: "volumeRatio > 3.0"
+            category: VOLUME_ANOMALY
+            severity: MEDIUM
+          - name: price-deviation
+            when: "Math.abs(priceDeviation) > 0.05"
+            category: PRICE_ANOMALY
+            severity: HIGH
+          - name: wash-pattern
+            when: "selfTradeRatio > 0.3"
+            category: WASH_TRADING
+            severity: CRITICAL
+      emit:
+        cloud-event-type: io.casehub.fsi.trade.anomaly.v1
+
+    - name: alert-phase
+      summariser:
+        type: phase-detect
+        initial: NORMAL
+        states: [NORMAL, ELEVATED, CRITICAL]
+        transitions:
+          - from: NORMAL
+            to: ELEVATED
+            count-field: severity
+            count-value: MEDIUM
+            op: ">="
+            threshold: 3
+          - from: ELEVATED
+            to: CRITICAL
+            count-field: severity
+            count-value: CRITICAL
+            op: ">="
+            threshold: 1
+          - from: ELEVATED
+            to: NORMAL
+            count-field: severity
+            count-value: LOW
+            op: "<="
+            threshold: 0
+      emit:
+        cloud-event-type: io.casehub.fsi.trade.alert.v1
+```
+
+**Viewer rendering:** Vertical funnel with three levels. Level 1: "per-instrument" with keyed grouping badge (instrumentId). Level 2: "anomaly-window" with windowed grouping (50 events / 60s), three threshold rules shown as a table (condition → category → severity, color-coded). Level 3: "alert-phase" as a state machine diagram (NORMAL → ELEVATED → CRITICAL with transition conditions on the arrows).
+
+---
+
+### Use Case 2: KYC Verification Pipeline
+
+Multi-agent document verification with parallel extraction, quorum-based decisions, and human escalation. (See mockup sections 13-16 for visual reference — the FSI use case that drove the original swim lane + graph design.)
+
+#### Case Definition
+
+```yaml
+dsl: "1.0.0"
+namespace: io.casehub.fsi
+name: kyc-verification
+version: "1.0"
+
+spec:
+  planningStrategy: sequential
+
+  capabilities:
+    - name: classifyDocuments
+      inputProjection: "{ docs: .applicationDocs }"
+      outputProjection: "{ classified: .documentTypes }"
+
+    - name: extractIdentity
+      inputProjection: "{ docs: .classified.identity }"
+      outputProjection: "{ identity: .extracted }"
+
+    - name: extractFinancials
+      inputProjection: "{ docs: .classified.financial }"
+      outputProjection: "{ financials: .extracted }"
+
+    - name: verifyAddress
+      inputProjection: "{ docs: .classified.address }"
+      outputProjection: "{ address: .verified }"
+
+    - name: screenSanctions
+      inputProjection: "{ name: .identity.fullName, dob: .identity.dateOfBirth }"
+      outputProjection: "{ sanctionsResult: .screening }"
+
+    - name: assessRisk
+      inputProjection: >-
+        { identity: .identity, financials: .financials,
+          address: .address, sanctions: .sanctionsResult,
+          riskTier: .config.riskTier }
+      outputProjection: "{ decision: .riskDecision }"
+
+    - name: seniorReview
+      inputProjection: "{ findings: .correlations, risk: .decision }"
+      outputProjection: "{ finalDecision: .reviewed }"
+
+  workers:
+    - name: doc-classifier
+      capabilities: [classifyDocuments]
+      type: agent
+
+    - name: identity-extractor
+      capabilities: [extractIdentity]
+      type: agent
+
+    - name: financial-extractor
+      capabilities: [extractFinancials]
+      type: agent
+
+    - name: address-verifier
+      capabilities: [verifyAddress]
+      type: agent
+
+    - name: sanctions-screener
+      capabilities: [screenSanctions]
+      type: agent
+
+    - name: risk-assessor
+      capabilities: [assessRisk]
+      type: agent
+
+    - name: senior-compliance
+      capabilities: [seniorReview]
+      type: human
+      executionPolicy:
+        maxConcurrent: 1
+
+  bindings:
+    - name: on-application
+      capability: classifyDocuments
+      on:
+        contextChange:
+          keys: ["applicationDocs"]
+
+    - name: on-classified
+      capability: extractIdentity
+      on:
+        contextChange:
+          keys: ["classified"]
+          filter: '.classified.identity != null'
+
+    - name: on-classified-financial
+      capability: extractFinancials
+      on:
+        contextChange:
+          keys: ["classified"]
+          filter: '.classified.financial != null'
+
+    - name: on-classified-address
+      capability: verifyAddress
+      on:
+        contextChange:
+          keys: ["classified"]
+          filter: '.classified.address != null'
+
+    - name: on-identity-extracted
+      capability: screenSanctions
+      on:
+        contextChange:
+          keys: ["identity"]
+          filter: '.identity.fullName != null'
+
+    - name: on-extraction-complete
+      capability: assessRisk
+      on:
+        contextChange:
+          keys: ["identity", "financials", "address", "sanctionsResult"]
+          filter: >-
+            [.identity, .financials, .sanctionsResult]
+            | map(. != null) | [., true, true] | .[0:3]
+            | map(select(. == true)) | length >= 2
+
+    - name: on-escalation
+      capability: seniorReview
+      on:
+        contextChange:
+          keys: ["decision"]
+          filter: '.decision.action == "escalate"'
+
+  milestones:
+    - name: documents-classified
+      condition: '.classified != null'
+    - name: extraction-complete
+      condition: '[.identity, .financials, .address] | map(select(. != null)) | length >= 2'
+    - name: risk-assessed
+      condition: '.decision != null'
+
+  goals:
+    - name: approved
+      condition: '.decision.action == "approve" or .finalDecision.action == "approve"'
+      kind: success
+    - name: rejected
+      condition: '.decision.action == "reject" or .finalDecision.action == "reject"'
+      kind: success
+```
+
+**Viewer rendering:** The choreography bindings create a natural DAG: `on-application` fans out (after classification) to three parallel extraction bindings, which converge at `on-extraction-complete` (with a 2-of-3 quorum condition), then flow to risk assessment, with an optional escalation binding to human review. The graph view renders this topology directly from the binding structure — no explicit `concurrent:` needed because the choreography bindings encode the parallelism implicitly.
+
+#### Agentic Pattern — Risk Assessment Decision (blocks)
+
+```yaml
+type: voting
+agents:
+  - type: worker
+    name: quantitative-scorer
+  - type: worker
+    name: qualitative-reviewer
+  - type: worker
+    name: regulatory-checker
+  - type: human
+    name: senior-analyst
+aggregation:
+  type: majority-vote
+judgment:
+  trigger:
+    type: contested
+  caller:
+    type: escalation-chain
+    chain: [senior-analyst]
+  agreement:
+    type: majority
+    threshold: 0.6
+termination:
+  - type: all-agreed
+  - type: max-iterations
+    iterations: 3
+```
+
+**Viewer rendering:** Convergence diagram. Three agent nodes (quantitative-scorer, qualitative-reviewer, regulatory-checker) plus one human node (senior-analyst) all contribute votes. Aggregation node shows "majority-vote". Judgment section shows "contested → escalation to senior-analyst". A reviewer instantly sees: 4 participants, majority wins, max 3 rounds, human escalation if contested.
+
+---
+
+## References
+
+- `packages/yaml-core/src/step/walker.ts` — ResolvedStep discriminated union (TypeScript)
+- `packages/pages-aria/src/controller/playbook-yaml-viewer.ts` — existing YAML viewer (line-by-line highlighting)
+- `packages/pages-aria/src/controller/yaml-highlighter.ts` — current tokenizer
+- `packages/graph-core/src/model.ts` — GraphModel, GraphNode, GraphEdge, NodeDecoration
+- `packages/graph-renderer/src/bridge/PagesGraphCanvas.ts` — `<pages-graph-canvas>` web component
+- `packages/graph-renderer/src/registry/stencil-registry.ts` — custom node type registration
+- `packages/graph-renderer/src/layout/elk-layout.ts` — ELK layout algorithms
+- `docs/mockups/step-review-viewer.html` — visual mockup (HTML/CSS)
+- casehub-platform `yaml-step-runtime` — Java ResolvedStep sealed interface (server-side execution)
+- casehub-eidos `AgentDescriptor.java` — full agent identity specification
+- casehub-engine `CaseDefinition.yaml` schema — case definition structure
+- casehub-blocks `agentic-yaml` — 8 pattern topologies (PatternSpec, PatternCompiler)
+- casehub-work `WorkItem.java` — 11-state work item lifecycle

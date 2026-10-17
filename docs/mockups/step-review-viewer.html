@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step Review Viewer — Design Mockup</title>
+<style>
+  :root {
+    --bg: #1e1e2e;
+    --surface: #282a3a;
+    --surface-hover: #313348;
+    --border: #3b3d52;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --text-bright: #f0f4ff;
+
+    --blue: #89b4fa;
+    --blue-dim: rgba(137, 180, 250, 0.15);
+    --green: #a6e3a1;
+    --green-dim: rgba(166, 227, 161, 0.12);
+    --green-border: rgba(166, 227, 161, 0.4);
+    --red: #f38ba8;
+    --red-dim: rgba(243, 139, 168, 0.12);
+    --red-border: rgba(243, 139, 168, 0.4);
+    --amber: #f9e2af;
+    --amber-dim: rgba(249, 226, 175, 0.15);
+    --amber-border: rgba(249, 226, 175, 0.4);
+    --purple: #cba6f7;
+    --purple-dim: rgba(203, 166, 247, 0.15);
+    --teal: #94e2d5;
+    --peach: #fab387;
+    --pink: #f5c2e7;
+
+    --lane-bg: rgba(255,255,255,0.02);
+    --lane-border: rgba(255,255,255,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 32px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  p.subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+
+  /* ─── Concurrent Block Container ─── */
+  .concurrent-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+    position: relative;
+  }
+  .concurrent-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .concurrent-header .icon {
+    color: var(--blue);
+    font-size: 14px;
+  }
+
+  /* ─── Swim Lanes ─── */
+  .swim-lanes {
+    display: grid;
+    gap: 0;
+    padding: 0;
+    position: relative;
+  }
+  .swim-lanes.cols-2 { grid-template-columns: 1fr 1fr; }
+  .swim-lanes.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .swim-lanes.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .swim-lane {
+    padding: 16px;
+    border-right: 1px solid var(--lane-border);
+    min-height: 200px;
+    position: relative;
+  }
+  .swim-lane:last-child { border-right: none; }
+  .swim-lane.added {
+    background: var(--green-dim);
+  }
+
+  .lane-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 16px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--blue);
+    display: inline-block;
+  }
+  .lane-name.added {
+    color: var(--green);
+    border-bottom-color: var(--green);
+  }
+
+  /* ─── Step Cards ─── */
+  .step-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+  }
+  .step-card:hover {
+    background: rgba(255,255,255,0.07);
+  }
+  .step-card.added {
+    background: var(--green-dim);
+    border-color: var(--green-border);
+  }
+  .step-card.removed {
+    background: var(--red-dim);
+    border-color: var(--red-border);
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  .step-card.modified {
+    background: var(--amber-dim);
+    border-color: var(--amber-border);
+  }
+
+  .step-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+  .step-icon.click { background: var(--blue-dim); color: var(--blue); }
+  .step-icon.signal { background: var(--purple-dim); color: var(--purple); }
+  .step-icon.await { background: rgba(148, 226, 213, 0.15); color: var(--teal); }
+  .step-icon.delay { background: rgba(249, 226, 175, 0.15); color: var(--amber); }
+  .step-icon.fill { background: rgba(137, 180, 250, 0.15); color: var(--blue); }
+  .step-icon.log { background: rgba(127, 132, 156, 0.15); color: var(--text-dim); }
+  .step-icon.nav { background: rgba(203, 166, 247, 0.15); color: var(--purple); }
+  .step-icon.graphql { background: rgba(245, 194, 231, 0.15); color: var(--pink); }
+  .step-icon.assert { background: rgba(166, 227, 161, 0.15); color: var(--green); }
+
+  .step-action {
+    font-weight: 500;
+    color: var(--text);
+  }
+  .step-target {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .step-value {
+    color: var(--amber);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+  }
+
+  /* ─── Decorators (badges) ─── */
+  .decorator {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .decorator.retry { background: rgba(250, 179, 135, 0.2); color: var(--peach); }
+  .decorator.timeout { background: rgba(249, 226, 175, 0.2); color: var(--amber); }
+  .decorator.loop { background: rgba(148, 226, 213, 0.2); color: var(--teal); }
+  .decorator.when { background: rgba(203, 166, 247, 0.2); color: var(--purple); }
+  .decorator.mutex { background: rgba(243, 139, 168, 0.2); color: var(--red); }
+  .decorator.foreach { background: rgba(137, 180, 250, 0.2); color: var(--blue); }
+
+  /* ─── Delay indicator ─── */
+  .delay-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 0;
+    margin-bottom: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    position: relative;
+  }
+  .delay-indicator::before,
+  .delay-indicator::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--border) 0,
+      var(--border) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
+  .delay-indicator .delay-value {
+    color: var(--amber);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-weight: 500;
+  }
+
+  /* ─── Signal Arrow ─── */
+  .signal-connector {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    z-index: 10;
+  }
+
+  /* ─── Barrier Bar ─── */
+  .barrier-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(137, 180, 250, 0.06);
+    border-top: 2px solid var(--blue);
+    border-bottom: 2px solid var(--blue);
+    margin: 4px 0;
+    position: relative;
+  }
+  .barrier-bar.modified {
+    border-color: var(--amber);
+    background: var(--amber-dim);
+  }
+  .barrier-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .barrier-bar.modified .barrier-label { color: var(--amber); }
+  .barrier-count {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-dim);
+  }
+  .barrier-line {
+    flex: 1;
+    height: 0;
+    border-top: 1px dashed var(--blue);
+  }
+  .barrier-bar.modified .barrier-line { border-color: var(--amber); }
+
+  /* ─── Signal line between lanes (CSS-drawn) ─── */
+  .signal-row {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    position: relative;
+  }
+  .signal-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .signal-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .signal-cell {
+    padding: 4px 16px;
+    display: flex;
+    align-items: center;
+  }
+
+  .signal-arrow-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+  }
+  .signal-arrow-line {
+    flex: 1;
+    height: 0;
+    border-top: 2px solid var(--purple);
+    position: relative;
+  }
+  .signal-arrow-line::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: -6px;
+    border: 5px solid transparent;
+    border-left: 6px solid var(--purple);
+  }
+  .signal-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--purple);
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid rgba(203, 166, 247, 0.3);
+    white-space: nowrap;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -11px;
+    z-index: 5;
+  }
+
+  /* ─── Expression pills ─── */
+  .expr {
+    display: inline;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .expr.param { background: rgba(137, 180, 250, 0.15); color: var(--blue); }
+  .expr.each { background: rgba(166, 227, 161, 0.15); color: var(--green); }
+  .expr.from { background: rgba(250, 179, 135, 0.15); color: var(--peach); }
+  .expr.module { background: rgba(203, 166, 247, 0.15); color: var(--purple); }
+
+  /* ─── Diff change markers ─── */
+  .diff-marker {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .diff-marker.added { background: var(--green-dim); color: var(--green); }
+  .diff-marker.removed { background: var(--red-dim); color: var(--red); }
+  .diff-marker.modified { background: var(--amber-dim); color: var(--amber); }
+
+  .old-value {
+    color: var(--red);
+    text-decoration: line-through;
+    font-size: 11px;
+    margin-right: 4px;
+  }
+  .new-value {
+    color: var(--green);
+    font-size: 11px;
+  }
+
+  /* ─── Section dividers ─── */
+  .example-section {
+    margin: 32px 0;
+  }
+
+  /* ─── Compact step (single line) ─── */
+  .compact-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    margin-bottom: 4px;
+    font-size: 13px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.02);
+  }
+  .compact-step:hover { background: rgba(255,255,255,0.05); }
+
+  /* ─── Data Table ─── */
+  .data-table-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .data-table-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    text-align: left;
+    padding: 8px 16px;
+    font-weight: 600;
+    color: var(--blue);
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .data-table th .type-badge {
+    font-weight: 400;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: 4px;
+  }
+  .data-table td {
+    padding: 6px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td.bool-true { color: var(--green); }
+  .data-table td.bool-false { color: var(--red); }
+
+  /* ─── ForEach binding ─── */
+  .foreach-binding {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(137, 180, 250, 0.06);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .foreach-binding code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--blue);
+  }
+
+  /* ─── Control flow ─── */
+  .control-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .control-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .control-header .keyword { color: var(--purple); }
+  .control-header .condition {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    background: rgba(249, 226, 175, 0.1);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .branch-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .branch {
+    padding: 12px 16px;
+  }
+  .branch:first-child {
+    border-right: 1px solid var(--border);
+  }
+  .branch-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+  }
+  .branch-label.then { color: var(--green); }
+  .branch-label.else { color: var(--red); }
+  .branch-label.catch { color: var(--red); }
+  .branch-label.finally { color: var(--teal); }
+  .branch-label.try { color: var(--green); }
+
+  /* ─── Match/Cases ─── */
+  .match-cases {
+    display: grid;
+    gap: 0;
+  }
+  .match-case {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .match-case:last-child { border-bottom: none; }
+  .match-pattern {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(203, 166, 247, 0.1);
+    color: var(--purple);
+    min-width: 80px;
+  }
+  .match-pattern.default {
+    background: rgba(127, 132, 156, 0.1);
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .match-arrow {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  /* ─── Invoke call card ─── */
+  .invoke-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .invoke-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .method-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+  .method-badge.post { background: rgba(166, 227, 161, 0.2); color: var(--green); }
+  .method-badge.get { background: rgba(137, 180, 250, 0.2); color: var(--blue); }
+  .invoke-url {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .invoke-step-name {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+  .invoke-body {
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .invoke-body .key { color: var(--blue); }
+  .invoke-body .value { color: var(--amber); }
+
+  /* ─── Page layout ─── */
+  .mockup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 32px;
+  }
+  @media (max-width: 1200px) {
+    .mockup-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── Tabs ─── */
+  .tab-bar {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+
+  /* ─── State machine ─── */
+  .state-machine {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  .state-node {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    background: rgba(255,255,255,0.03);
+  }
+  .state-node.initial {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+  .state-node.current {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-dim);
+  }
+  .state-transition {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--text-dim);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .note {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 4px;
+    border-left: 3px solid var(--border);
+  }
+
+  /* ─── Diff summary bar ─── */
+  .diff-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 12px;
+  }
+  .diff-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .diff-stat .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .diff-stat .dot.green { background: var(--green); }
+  .diff-stat .dot.red { background: var(--red); }
+  .diff-stat .dot.amber { background: var(--amber); }
+</style>
+</head>
+<body>
+
+<h1>Step Review Viewer — Design Mockup</h1>
+<p class="subtitle">Semantic rendering of the step YAML language. Read-only companion panel synced to the text editor.</p>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>1. Concurrency — Swim Lanes with Signal Arrows</h2>
+<h3>orchestration-block: init signals ready, both sync at barrier</h3>
+
+<div class="concurrent-block">
+  <div class="concurrent-header">
+    <span class="icon">⫘</span> CONCURRENT
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">
+      orchestration: 1 barrier, 1 signal
+    </span>
+  </div>
+  <div class="swim-lanes cols-2">
+    <!-- Lane: init -->
+    <div class="swim-lane">
+      <div class="lane-name">init</div>
+
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"A"</span>
+      </div>
+
+      <div class="delay-indicator">
+        <span class="delay-value">1500ms</span>
+      </div>
+
+      <div class="step-card" id="signal-ready">
+        <div class="step-icon signal">◇</div>
+        <span class="step-action">signal</span>
+        <span class="step-value">ready</span>
+      </div>
+    </div>
+
+    <!-- Lane: worker -->
+    <div class="swim-lane">
+      <div class="lane-name">worker</div>
+
+      <div class="step-card" id="await-ready">
+        <div class="step-icon await">◈</div>
+        <span class="step-action">await</span>
+        <span class="step-target">signal:</span>
+        <span class="step-value">ready</span>
+      </div>
+
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"B"</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signal arrow drawn as a styled row spanning both lanes -->
+  <div style="position: relative; margin: -4px 16px 0; z-index: 5;">
+    <svg width="100%" height="24" style="position: absolute; top: -120px; left: 0; overflow: visible; pointer-events: none;">
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#cba6f7"/>
+        </marker>
+      </defs>
+      <line x1="40%" y1="12" x2="56%" y2="12" stroke="#cba6f7" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="6,3"/>
+      <rect x="44%" y="2" width="56" height="18" rx="3" fill="#282a3a" stroke="rgba(203,166,247,0.3)" stroke-width="1"/>
+      <text x="47%" y="15" fill="#cba6f7" font-size="10" font-weight="600" font-family="Inter, sans-serif">ready</text>
+    </svg>
+  </div>
+
+  <!-- Barrier -->
+  <div class="barrier-bar">
+    <div class="barrier-label">▮ barrier</div>
+    <span class="barrier-count">sync</span>
+    <div class="barrier-line"></div>
+    <span class="barrier-count">count: 2</span>
+  </div>
+
+  <div class="swim-lanes cols-2">
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"C"</span>
+      </div>
+    </div>
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"D"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>2. Three-Branch Barrier with Staggered Delays</h2>
+<h3>fast / medium / slow branches converge at barrier</h3>
+
+<div class="concurrent-block">
+  <div class="concurrent-header">
+    <span class="icon">⫘</span> CONCURRENT
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">
+      orchestration: 1 barrier (count: 3)
+    </span>
+  </div>
+  <div class="swim-lanes cols-3">
+    <div class="swim-lane">
+      <div class="lane-name">fast</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"A"</span>
+      </div>
+    </div>
+    <div class="swim-lane">
+      <div class="lane-name">medium</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"B"</span>
+      </div>
+      <div class="delay-indicator">
+        <span class="delay-value">1000ms</span>
+      </div>
+    </div>
+    <div class="swim-lane">
+      <div class="lane-name">slow</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"C"</span>
+      </div>
+      <div class="delay-indicator">
+        <span class="delay-value">2000ms</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="barrier-bar">
+    <div class="barrier-label">▮ barrier</div>
+    <span class="barrier-count">all-ready</span>
+    <div class="barrier-line"></div>
+    <span class="barrier-count">count: 3</span>
+  </div>
+
+  <div class="swim-lanes cols-3">
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"D"</span>
+      </div>
+    </div>
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"E"</span>
+      </div>
+    </div>
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-target">button</span>
+        <span class="step-value">"F"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>3. Compact Sequential Steps with Decorators</h2>
+<h3>form automation: fill, select, click with when/retry badges</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 0; margin: 16px 0;">
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon nav">⤳</div>
+    <span class="step-action">navigate</span>
+    <span class="step-value">/helpdesk/intake</span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon fill">✎</div>
+    <span class="step-action">fill</span>
+    <span class="step-target">textbox</span>
+    <span class="step-value">"Customer Name"</span>
+    <span class="step-target">=</span>
+    <span class="step-value">"Alice Chen"</span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon fill">✎</div>
+    <span class="step-action">fill</span>
+    <span class="step-target">textbox</span>
+    <span class="step-value">"Description"</span>
+    <span class="step-target">=</span>
+    <span class="step-value">"Cannot access dashboard"</span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon fill">☰</div>
+    <span class="step-action">select</span>
+    <span class="step-target">combobox</span>
+    <span class="step-value">"Priority"</span>
+    <span class="step-target">=</span>
+    <span class="step-value">"High"</span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon click">⊡</div>
+    <span class="step-action">click</span>
+    <span class="step-target">button</span>
+    <span class="step-value">"Submit"</span>
+    <span class="decorator retry">↻ retry: 3</span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon assert">✓</div>
+    <span class="step-action">assert</span>
+    <span class="step-target">alert</span>
+    <span class="step-value">"Submission confirmation"</span>
+    <span class="decorator timeout">⏱ 5000ms</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>4. Expressions as Colored Pills</h2>
+<h3>different colors by scope: params, each, from, module</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 0; margin: 16px 0;">
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon nav">⤳</div>
+    <span class="step-action">navigate</span>
+    <span class="step-value">#teams/<span class="expr param">${params.teamName}</span></span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon fill">✎</div>
+    <span class="step-action">fill</span>
+    <span class="step-target">textbox</span>
+    <span class="step-value">"Full Name"</span>
+    <span class="step-target">=</span>
+    <span class="expr each">${each.member.name}</span>
+    <span class="decorator foreach">∀ member in members</span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon click">⊡</div>
+    <span class="step-action">click</span>
+    <span class="step-target">button</span>
+    <span class="step-value">"Grant Admin"</span>
+    <span class="decorator when">? <span class="expr each">${each.member.admin}</span></span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon log">▸</div>
+    <span class="step-action">log</span>
+    <span class="step-value">"Processing <span class="expr from">${from.value}</span>"</span>
+    <span class="decorator loop">↻ continuous</span>
+  </div>
+  <div class="step-card" style="margin: 0 12px 4px;">
+    <div class="step-icon fill">✎</div>
+    <span class="step-action">fill</span>
+    <span class="step-target">dataset</span>
+    <span class="expr module">${module.ops.panelId}</span><span class="step-value">-feed</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>5. Inline Data as Rendered Table</h2>
+<h3>CSV data section → actual table with typed columns</h3>
+
+<div class="data-table-container">
+  <div class="data-table-header">
+    <span style="color: var(--blue);">⊞</span> DATA — members
+    <span style="margin-left: auto; font-size: 11px;">3 rows × 4 columns</span>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>name <span class="type-badge">string</span></th>
+        <th>email <span class="type-badge">string</span></th>
+        <th>role <span class="type-badge">string</span></th>
+        <th>admin <span class="type-badge">boolean</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Alice Chen</td>
+        <td>alice@example.com</td>
+        <td>Developer</td>
+        <td class="bool-true">true</td>
+      </tr>
+      <tr>
+        <td>Bob Martin</td>
+        <td>bob@example.com</td>
+        <td>Viewer</td>
+        <td class="bool-false">false</td>
+      </tr>
+      <tr>
+        <td>Carol White</td>
+        <td>carol@example.com</td>
+        <td>Lead</td>
+        <td class="bool-true">true</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="foreach-binding">
+    <span>↳ used by forEach:</span>
+    <code>as: member</code>
+    <code>in: members</code>
+    <span style="margin-left: 12px;">→ accessed via</span>
+    <span class="expr each" style="font-size: 12px;">${each.member.*}</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>6. Control Flow — If/Else and Match/Cases</h2>
+
+<div class="mockup-grid">
+  <div>
+    <h3>if / else as side-by-side branches</h3>
+    <div class="control-block">
+      <div class="control-header">
+        <span class="keyword">if</span>
+        <span class="condition">${ .score >= 0.8 }</span>
+      </div>
+      <div class="branch-container">
+        <div class="branch">
+          <div class="branch-label then">then</div>
+          <div class="step-card">
+            <div class="step-icon log">▸</div>
+            <span class="step-action">log</span>
+            <span class="step-value">"Approved"</span>
+          </div>
+          <div class="step-card">
+            <div class="step-icon click">⊡</div>
+            <span class="step-action">click</span>
+            <span class="step-target">button</span>
+            <span class="step-value">"Continue"</span>
+          </div>
+        </div>
+        <div class="branch">
+          <div class="branch-label else">else</div>
+          <div class="step-card">
+            <div class="step-icon log">▸</div>
+            <span class="step-action">log</span>
+            <span class="step-value">"Rejected"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h3>match / cases as pattern table</h3>
+    <div class="control-block">
+      <div class="control-header">
+        <span class="keyword">match</span>
+        <span class="condition">${ .severity }</span>
+      </div>
+      <div class="match-cases">
+        <div class="match-case">
+          <span class="match-pattern">"error"</span>
+          <span class="match-arrow">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon log">▸</div>
+            <span class="step-action">log</span>
+            <span class="step-value">"Matched: error"</span>
+          </div>
+        </div>
+        <div class="match-case">
+          <span class="match-pattern">"warning"</span>
+          <span class="match-arrow">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon log">▸</div>
+            <span class="step-action">log</span>
+            <span class="step-value">"Matched: warning"</span>
+          </div>
+        </div>
+        <div class="match-case">
+          <span class="match-pattern default">default</span>
+          <span class="match-arrow">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon log">▸</div>
+            <span class="step-action">log</span>
+            <span class="step-value">"No match — default"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>7. Try / Catch / Finally</h2>
+
+<div class="control-block" style="max-width: 600px;">
+  <div class="control-header">
+    <span class="keyword">try / catch / finally</span>
+  </div>
+  <div style="padding: 0;">
+    <div class="branch" style="border-bottom: 1px solid var(--border); background: rgba(166,227,161,0.04);">
+      <div class="branch-label try">try</div>
+      <div class="step-card">
+        <div class="step-icon log">▸</div>
+        <span class="step-action">log</span>
+        <span class="step-value">"Attempting risky operation"</span>
+      </div>
+      <div class="step-card">
+        <div class="step-icon" style="background: rgba(243,139,168,0.15); color: var(--red);">✕</div>
+        <span class="step-action">fail</span>
+        <span class="step-value">"Something went wrong"</span>
+      </div>
+    </div>
+    <div class="branch" style="border-bottom: 1px solid var(--border); background: rgba(243,139,168,0.04);">
+      <div class="branch-label catch">catch</div>
+      <div class="step-card">
+        <div class="step-icon log">▸</div>
+        <span class="step-action">log</span>
+        <span class="step-value">"Caught error — recovering"</span>
+      </div>
+    </div>
+    <div class="branch" style="background: rgba(148,226,213,0.04);">
+      <div class="branch-label finally">finally</div>
+      <div class="step-card">
+        <div class="step-icon log">▸</div>
+        <span class="step-action">log</span>
+        <span class="step-value">"Cleanup — always runs"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>8. External Call Cards</h2>
+
+<div class="mockup-grid">
+  <div>
+    <h3>REST call</h3>
+    <div class="invoke-card">
+      <div class="invoke-header">
+        <span class="method-badge post">POST</span>
+        <span class="invoke-url">/api/cases</span>
+        <span class="invoke-step-name">step: create-case</span>
+      </div>
+      <div class="invoke-body">
+        <div><span class="key">customer:</span> <span class="value">"Alice Chen"</span></div>
+        <div><span class="key">channel:</span> <span class="value">"web"</span></div>
+        <div><span class="key">summary:</span> <span class="value">"Dashboard access issue"</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h3>GraphQL call</h3>
+    <div class="invoke-card">
+      <div class="invoke-header">
+        <span class="method-badge" style="background: rgba(245,194,231,0.2); color: var(--pink);">GQL</span>
+        <span class="invoke-url">connectors / injectChat</span>
+        <span class="invoke-step-name">step: inject-chat</span>
+      </div>
+      <div class="invoke-body">
+        <div><span class="key">platform:</span> <span class="value">"slack"</span></div>
+        <div><span class="key">sender:</span> <span class="value">"Alice"</span></div>
+        <div><span class="key">channel:</span> <span class="value">"support"</span></div>
+        <div><span class="key">text:</span> <span class="value">"My laptop won't boot"</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>9. State Machine</h2>
+<h3>sm-create → transitions rendered as a state diagram</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text-dim);">
+    STATE MACHINE — order
+  </div>
+  <div class="state-machine">
+    <div class="state-node initial">draft</div>
+    <div class="state-transition">→</div>
+    <div class="state-node">submitted</div>
+    <div class="state-transition">→</div>
+    <div class="state-node current">approved</div>
+    <div class="state-transition" style="color: var(--text-dim); font-size: 12px;">
+      <span style="padding: 0 8px; opacity: 0.5;">or</span>
+    </div>
+    <div class="state-node" style="border-color: var(--red); color: var(--red);">rejected</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>10. Unified Diff View</h2>
+<h3>barrier example: adding a 4th branch, bumping barrier count 3→4</h3>
+
+<div class="diff-summary">
+  <span style="font-weight: 600; color: var(--text-bright);">Diff</span>
+  <div class="diff-stat"><div class="dot green"></div> 1 branch added</div>
+  <div class="diff-stat"><div class="dot green"></div> 2 steps added</div>
+  <div class="diff-stat"><div class="dot amber"></div> 1 barrier modified</div>
+</div>
+
+<div class="concurrent-block">
+  <div class="concurrent-header">
+    <span class="icon">⫘</span> CONCURRENT
+    <span class="diff-marker modified" style="margin-left: auto;">MODIFIED</span>
+  </div>
+  <div class="swim-lanes cols-4">
+    <div class="swim-lane">
+      <div class="lane-name">fast</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"A"</span>
+      </div>
+    </div>
+    <div class="swim-lane">
+      <div class="lane-name">medium</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"B"</span>
+      </div>
+      <div class="delay-indicator"><span class="delay-value">1000ms</span></div>
+    </div>
+    <div class="swim-lane">
+      <div class="lane-name">slow</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"C"</span>
+      </div>
+      <div class="delay-indicator"><span class="delay-value">2000ms</span></div>
+    </div>
+    <!-- NEW BRANCH -->
+    <div class="swim-lane added">
+      <div class="lane-name added">extra</div>
+      <div class="step-card added">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"G"</span>
+        <span class="diff-marker added">+ NEW</span>
+      </div>
+      <div class="delay-indicator"><span class="delay-value">3000ms</span></div>
+    </div>
+  </div>
+
+  <!-- Modified barrier -->
+  <div class="barrier-bar modified">
+    <div class="barrier-label">▮ barrier</div>
+    <span class="barrier-count">all-ready</span>
+    <div class="barrier-line"></div>
+    <span class="barrier-count">
+      count: <span class="old-value">3</span> <span class="new-value">4</span>
+    </span>
+    <span class="diff-marker modified">MODIFIED</span>
+  </div>
+
+  <div class="swim-lanes cols-4">
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"D"</span>
+      </div>
+    </div>
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"E"</span>
+      </div>
+    </div>
+    <div class="swim-lane" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"F"</span>
+      </div>
+    </div>
+    <div class="swim-lane added" style="min-height: auto; padding-top: 8px;">
+      <div class="step-card added">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"H"</span>
+        <span class="diff-marker added">+ NEW</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>11. Mutex Coordination</h2>
+<h3>steps tagged with same mutex never run simultaneously</h3>
+
+<div class="concurrent-block">
+  <div class="concurrent-header">
+    <span class="icon">⫘</span> CONCURRENT
+  </div>
+  <div class="swim-lanes cols-2">
+    <div class="swim-lane">
+      <div class="lane-name">branch-a</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"A"</span>
+        <span class="decorator mutex">🔒 db-write</span>
+      </div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"B"</span>
+        <span class="decorator mutex">🔒 db-write</span>
+      </div>
+    </div>
+    <div class="swim-lane">
+      <div class="lane-name">branch-b</div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"C"</span>
+        <span class="decorator mutex">🔒 db-write</span>
+      </div>
+      <div class="step-card">
+        <div class="step-icon click">⊡</div>
+        <span class="step-action">click</span>
+        <span class="step-value">"D"</span>
+        <span class="decorator mutex">🔒 db-write</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="note">All steps sharing the <code style="color: var(--red);">db-write</code> mutex are visually linked — a reviewer immediately sees which steps contend for the same lock.</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>12. Channel Producer / Consumer</h2>
+<h3>bounded channel with publish/from lifecycle</h3>
+
+<div class="concurrent-block">
+  <div class="concurrent-header">
+    <span class="icon">⫘</span> CONCURRENT
+  </div>
+  <div class="swim-lanes cols-3">
+    <div class="swim-lane">
+      <div class="lane-name">source</div>
+      <div class="step-card">
+        <div class="step-icon log">▸</div>
+        <span class="step-action">log</span>
+        <span class="step-value">"Emitting events"</span>
+        <span class="decorator" style="background: rgba(203,166,247,0.2); color: var(--purple);">📡 → raw-events</span>
+        <span class="decorator loop">↻ ×10</span>
+      </div>
+    </div>
+    <div class="swim-lane">
+      <div class="lane-name">enricher</div>
+      <div class="step-card">
+        <div class="step-icon log">▸</div>
+        <span class="step-action">log</span>
+        <span class="step-value">"Enriching <span class="expr from">${from.type}</span>"</span>
+      </div>
+      <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">
+        <span class="decorator" style="background: rgba(250,179,135,0.2); color: var(--peach);">📥 ← raw-events</span>
+        <span class="decorator loop">↻ continuous</span>
+        <span class="decorator" style="background: rgba(243,139,168,0.2); color: var(--red);">⏹ cancel: shutdown</span>
+      </div>
+    </div>
+    <div class="swim-lane">
+      <div class="lane-name">supervisor</div>
+      <div class="delay-indicator"><span class="delay-value">500ms</span></div>
+      <div class="step-card">
+        <div class="step-icon" style="background: rgba(243,139,168,0.15); color: var(--red);">⏹</div>
+        <span class="step-action">stop</span>
+        <span class="step-value">enricher</span>
+      </div>
+      <div class="step-card">
+        <div class="step-icon log">▸</div>
+        <span class="step-action">log</span>
+        <span class="step-value">"Enricher stopped"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>Comparison: What Java Would Look Like</h2>
+<p class="subtitle" style="margin-bottom: 16px;">
+  The same barrier-with-staggered-delays pattern, reviewed as a Java PR.
+  The reviewer gets a text diff. They must mentally trace the ExecutorService,
+  CountDownLatch, and thread interactions.
+</p>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.7; overflow-x: auto; margin: 16px 0;">
+  <div style="color: var(--text-dim);">// Java equivalent of the 3-branch barrier example</div>
+  <div><span style="color: var(--purple);">var</span> <span style="color: var(--text);">executor</span> = <span style="color: var(--blue);">Executors</span>.newFixedThreadPool(<span style="color: var(--peach);">3</span>);</div>
+  <div><span style="color: var(--purple);">var</span> <span style="color: var(--text);">barrier</span> = <span style="color: var(--purple);">new</span> <span style="color: var(--blue);">CyclicBarrier</span>(<span style="color: var(--peach);">3</span>);</div>
+  <div>&nbsp;</div>
+  <div>executor.submit(() -> {</div>
+  <div>&nbsp;&nbsp;click(<span style="color: var(--amber);">"A"</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-dim);">// fast — no delay</span></div>
+  <div>&nbsp;&nbsp;barrier.await();</div>
+  <div>&nbsp;&nbsp;click(<span style="color: var(--amber);">"D"</span>);</div>
+  <div>});</div>
+  <div>executor.submit(() -> {</div>
+  <div>&nbsp;&nbsp;click(<span style="color: var(--amber);">"B"</span>);</div>
+  <div>&nbsp;&nbsp;<span style="color: var(--blue);">Thread</span>.sleep(<span style="color: var(--peach);">1000</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-dim);">// medium — 1s delay</span></div>
+  <div>&nbsp;&nbsp;barrier.await();</div>
+  <div>&nbsp;&nbsp;click(<span style="color: var(--amber);">"E"</span>);</div>
+  <div>});</div>
+  <div>executor.submit(() -> {</div>
+  <div>&nbsp;&nbsp;click(<span style="color: var(--amber);">"C"</span>);</div>
+  <div>&nbsp;&nbsp;<span style="color: var(--blue);">Thread</span>.sleep(<span style="color: var(--peach);">2000</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-dim);">// slow — 2s delay</span></div>
+  <div>&nbsp;&nbsp;barrier.await();</div>
+  <div>&nbsp;&nbsp;click(<span style="color: var(--amber);">"F"</span>);</div>
+  <div>});</div>
+  <div>&nbsp;</div>
+  <div style="color: var(--text-dim);">// 15 lines of code to mentally trace.</div>
+  <div style="color: var(--text-dim);">// The barrier semantics are implicit in the API name.</div>
+  <div style="color: var(--text-dim);">// Adding a 4th branch is a multi-line diff with a</div>
+  <div style="color: var(--text-dim);">// CyclicBarrier(3→4) change buried in line 2.</div>
+</div>
+
+<div class="note">
+  <strong>The Java version:</strong> 15 lines of text. The reviewer mentally constructs the swim lanes in their head.
+  Adding a 4th branch = +6 lines of new code, +1 line changed (barrier count), all interleaved in a text diff.
+  <br><br>
+  <strong>The step viewer:</strong> The swim lane diagram IS the review surface. Adding a 4th branch = a new green lane appears,
+  barrier count shows 3→4 inline. Verified in seconds, not minutes.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PART 2: AGENT COORDINATION & BUSINESS LOGIC                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<div style="margin-top: 80px; padding-top: 32px; border-top: 3px solid var(--blue);">
+  <h1>Part 2: Agent Coordination & Business Logic</h1>
+  <p class="subtitle">The core use case — distributed LLM agent orchestration for FSI workflows. Each agent is a project (manifest + edison + runtime) that can be drilled into.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>13. Agent Coordination — Swim Lane View</h2>
+<h3>KYC verification pipeline: classify → extract → verify (parallel) → decide</h3>
+
+<div class="concurrent-block">
+  <div class="concurrent-header">
+    <span class="icon">⫘</span> COORDINATION PLAYBOOK
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">
+      4 agents &middot; 2 barriers &middot; 1 channel
+    </span>
+  </div>
+
+  <!-- Sequential pre-phase -->
+  <div style="padding: 16px;">
+    <div class="step-card">
+      <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+      <span class="step-action">agent-delegate</span>
+      <span class="step-target">doc-classifier</span>
+      <span style="margin-left: auto; display: flex; gap: 6px; align-items: center;">
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); cursor: pointer;" title="Click to drill down">claude-sonnet-5</span>
+        <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+      </span>
+    </div>
+    <div style="padding: 4px 12px;">
+      <div class="invoke-body" style="padding: 4px 0;">
+        <div><span class="key">descriptor:</span> <span class="value">"document-classifier"</span></div>
+        <div><span class="key">params.documents:</span> <span class="expr param">${params.applicationDocs}</span></div>
+        <div><span class="key">params.taxonomy:</span> <span class="value">"kyc-v3"</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signal from classifier to parallel extractors -->
+  <div class="barrier-bar" style="border-color: var(--purple); background: rgba(203,166,247,0.06);">
+    <div class="barrier-label" style="color: var(--purple);">◇ signal</div>
+    <span class="barrier-count" style="color: var(--purple);">docs-classified</span>
+    <div class="barrier-line" style="border-color: var(--purple);"></div>
+    <span class="barrier-count">fan-out to extractors</span>
+  </div>
+
+  <!-- Parallel extraction lanes -->
+  <div class="swim-lanes cols-3">
+    <div class="swim-lane">
+      <div class="lane-name">identity-extractor</div>
+
+      <div class="step-card" style="cursor: pointer; border-left: 3px solid var(--peach);">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span class="step-action">agent-delegate</span>
+        <span style="font-size: 11px; color: var(--text-dim);">↗ drill down</span>
+      </div>
+      <div style="padding: 2px 12px; margin-bottom: 8px;">
+        <div style="font-size: 11px; display: flex; gap: 4px; flex-wrap: wrap;">
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-opus-5</span>
+          <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+        </div>
+        <div class="invoke-body" style="padding: 4px 0; font-size: 11px;">
+          <div><span class="key">descriptor:</span> <span class="value">"kyc-identity"</span></div>
+          <div><span class="key">docs:</span> <span class="expr from">${from.identity_docs}</span></div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-icon" style="background: rgba(245,194,231,0.15); color: var(--pink);">G</div>
+        <span class="step-action">graphql</span>
+        <span class="step-target">sanctions / screenEntity</span>
+      </div>
+    </div>
+
+    <div class="swim-lane">
+      <div class="lane-name">financial-extractor</div>
+
+      <div class="step-card" style="cursor: pointer; border-left: 3px solid var(--peach);">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span class="step-action">agent-delegate</span>
+        <span style="font-size: 11px; color: var(--text-dim);">↗ drill down</span>
+      </div>
+      <div style="padding: 2px 12px; margin-bottom: 8px;">
+        <div style="font-size: 11px; display: flex; gap: 4px; flex-wrap: wrap;">
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-opus-5</span>
+          <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+        </div>
+        <div class="invoke-body" style="padding: 4px 0; font-size: 11px;">
+          <div><span class="key">descriptor:</span> <span class="value">"kyc-financials"</span></div>
+          <div><span class="key">docs:</span> <span class="expr from">${from.financial_docs}</span></div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-icon" style="background: rgba(137,180,250,0.15); color: var(--blue);">R</div>
+        <span class="step-action">rest</span>
+        <span class="step-target">POST /api/aml/check</span>
+      </div>
+    </div>
+
+    <div class="swim-lane">
+      <div class="lane-name">address-verifier</div>
+
+      <div class="step-card" style="cursor: pointer; border-left: 3px solid var(--peach);">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span class="step-action">agent-delegate</span>
+        <span style="font-size: 11px; color: var(--text-dim);">↗ drill down</span>
+      </div>
+      <div style="padding: 2px 12px; margin-bottom: 8px;">
+        <div style="font-size: 11px; display: flex; gap: 4px; flex-wrap: wrap;">
+          <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-sonnet-5</span>
+          <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+        </div>
+        <div class="invoke-body" style="padding: 4px 0; font-size: 11px;">
+          <div><span class="key">descriptor:</span> <span class="value">"kyc-address"</span></div>
+          <div><span class="key">docs:</span> <span class="expr from">${from.address_docs}</span></div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-icon" style="background: rgba(203,166,247,0.15); color: var(--purple);">M</div>
+        <span class="step-action">mcp-call</span>
+        <span class="step-target">geo-verify</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quorum barrier -->
+  <div class="barrier-bar">
+    <div class="barrier-label">▮ quorum</div>
+    <span class="barrier-count">extraction-complete</span>
+    <div class="barrier-line"></div>
+    <span class="barrier-count">required: 2 of 3</span>
+  </div>
+
+  <!-- Decision phase -->
+  <div style="padding: 16px;">
+    <div class="step-card" style="border-left: 3px solid var(--peach); cursor: pointer;">
+      <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+      <span class="step-action">agent-delegate</span>
+      <span class="step-target">risk-assessor</span>
+      <span style="margin-left: auto; display: flex; gap: 6px; align-items: center;">
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-opus-5</span>
+        <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">structured</span>
+        <span style="font-size: 11px; color: var(--text-dim);">↗ drill down</span>
+      </span>
+    </div>
+    <div style="padding: 4px 12px;">
+      <div class="invoke-body" style="padding: 4px 0;">
+        <div><span class="key">descriptor:</span> <span class="value">"kyc-risk-decision"</span></div>
+        <div><span class="key">params.identity:</span> <span class="expr from">${identity-extractor.result}</span></div>
+        <div><span class="key">params.financials:</span> <span class="expr from">${financial-extractor.result}</span></div>
+        <div><span class="key">params.address:</span> <span class="expr from">${address-verifier.result}</span></div>
+        <div><span class="key">params.riskPolicy:</span> <span class="expr param">${params.riskTier}</span></div>
+      </div>
+    </div>
+
+    <!-- Conditional routing -->
+    <div class="control-block" style="margin: 12px 0 0;">
+      <div class="control-header">
+        <span class="keyword">match</span>
+        <span class="condition">${ risk-assessor.result.decision }</span>
+      </div>
+      <div class="match-cases">
+        <div class="match-case">
+          <span class="match-pattern">"approve"</span>
+          <span class="match-arrow">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon" style="background: rgba(166,227,161,0.15); color: var(--green);">✓</div>
+            <span class="step-action">rest</span>
+            <span class="step-target">POST /api/kyc/approve</span>
+            <span class="decorator" style="background: rgba(203,166,247,0.2); color: var(--purple);">→ notify-compliance</span>
+          </div>
+        </div>
+        <div class="match-case">
+          <span class="match-pattern">"escalate"</span>
+          <span class="match-arrow">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon" style="background: rgba(249,226,175,0.15); color: var(--amber);">⚠</div>
+            <span class="step-action">agent-delegate</span>
+            <span class="step-target">senior-reviewer</span>
+            <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-opus-5</span>
+          </div>
+        </div>
+        <div class="match-case">
+          <span class="match-pattern">"reject"</span>
+          <span class="match-arrow">→</span>
+          <div class="step-card" style="margin: 0; flex: 1;">
+            <div class="step-icon" style="background: rgba(243,139,168,0.15); color: var(--red);">✕</div>
+            <span class="step-action">rest</span>
+            <span class="step-target">POST /api/kyc/reject</span>
+            <span class="decorator" style="background: rgba(203,166,247,0.2); color: var(--purple);">→ notify-applicant</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>14. Same Pipeline — Graph View (auto-switch for fan-out/fan-in)</h2>
+<h3>topology view shows agent dependencies and data flow</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">KYC PIPELINE</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">
+      <span style="padding: 2px 8px; border-radius: 3px; background: rgba(255,255,255,0.05); margin-right: 4px; color: var(--text-dim);">Lanes</span>
+      <span style="padding: 2px 8px; border-radius: 3px; background: var(--blue-dim); color: var(--blue); font-weight: 600;">Graph</span>
+    </span>
+  </div>
+
+  <div style="padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 0;">
+
+    <!-- Tier 1: Classifier -->
+    <div style="display: flex; justify-content: center;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer;" title="Click to drill down">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 13px; font-weight: 500;">doc-classifier</div>
+          <div style="font-size: 11px; color: var(--text-dim);">classify documents by type</div>
+        </div>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">sonnet-5</span>
+      </div>
+    </div>
+
+    <!-- Arrows down (fan-out) -->
+    <div style="display: flex; justify-content: center; gap: 120px; padding: 8px 0;">
+      <svg width="200" height="40" style="overflow: visible;">
+        <defs>
+          <marker id="arrow-graph" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#7f849c"/>
+          </marker>
+        </defs>
+        <line x1="100" y1="0" x2="20" y2="35" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="100" y1="0" x2="100" y2="35" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="100" y1="0" x2="180" y2="35" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <text x="30" y="20" fill="#7f849c" font-size="9" font-family="Inter, sans-serif">identity</text>
+        <text x="88" y="20" fill="#7f849c" font-size="9" font-family="Inter, sans-serif">financial</text>
+        <text x="150" y="20" fill="#7f849c" font-size="9" font-family="Inter, sans-serif">address</text>
+      </svg>
+    </div>
+
+    <!-- Tier 2: Parallel extractors -->
+    <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 180px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 500;">identity-extractor</div>
+          <div style="font-size: 10px; color: var(--text-dim);">passport, ID, biometrics</div>
+        </div>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+      </div>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 180px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 500;">financial-extractor</div>
+          <div style="font-size: 10px; color: var(--text-dim);">statements, tax returns</div>
+        </div>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+      </div>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; cursor: pointer; min-width: 180px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 500;">address-verifier</div>
+          <div style="font-size: 10px; color: var(--text-dim);">utility bills, geo-check</div>
+        </div>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">sonnet-5</span>
+      </div>
+    </div>
+
+    <!-- Quorum indicator -->
+    <div style="margin: 16px 0; display: flex; align-items: center; gap: 12px; padding: 6px 16px; background: rgba(137,180,250,0.06); border: 1px dashed var(--blue); border-radius: 4px;">
+      <span style="font-size: 11px; font-weight: 600; color: var(--blue);">QUORUM</span>
+      <span style="font-size: 11px; color: var(--text-dim);">2 of 3 required</span>
+    </div>
+
+    <!-- Arrows down (fan-in) -->
+    <div style="display: flex; justify-content: center; padding: 4px 0;">
+      <svg width="200" height="30" style="overflow: visible;">
+        <line x1="20" y1="0" x2="100" y2="25" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="100" y1="0" x2="100" y2="25" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="180" y1="0" x2="100" y2="25" stroke="#7f849c" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+      </svg>
+    </div>
+
+    <!-- Tier 3: Decision -->
+    <div style="display: flex; justify-content: center;">
+      <div style="background: rgba(255,255,255,0.04); border: 2px solid var(--amber); border-radius: 8px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <div>
+          <div style="font-size: 13px; font-weight: 500;">risk-assessor</div>
+          <div style="font-size: 11px; color: var(--text-dim);">final KYC decision</div>
+        </div>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">opus-5</span>
+      </div>
+    </div>
+
+    <!-- Match outcomes -->
+    <div style="display: flex; justify-content: center; padding: 8px 0;">
+      <svg width="200" height="30" style="overflow: visible;">
+        <line x1="100" y1="0" x2="20" y2="25" stroke="#a6e3a1" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="100" y1="0" x2="100" y2="25" stroke="#f9e2af" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+        <line x1="100" y1="0" x2="180" y2="25" stroke="#f38ba8" stroke-width="1.5" marker-end="url(#arrow-graph)"/>
+      </svg>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 24px;">
+      <div style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--green); background: var(--green-dim); font-size: 12px; color: var(--green); font-weight: 500;">
+        approve
+      </div>
+      <div style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--amber); background: var(--amber-dim); font-size: 12px; color: var(--amber); font-weight: 500;">
+        escalate → senior-reviewer
+      </div>
+      <div style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--red); background: var(--red-dim); font-size: 12px; color: var(--red); font-weight: 500;">
+        reject
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note">
+  <strong>Auto-switch rule:</strong> Swim lanes when the playbook uses <code>concurrent:</code> with named branches.
+  Graph view when the topology is non-linear — fan-out, fan-in, or complex dependencies between agents.
+  The viewer detects the shape and picks the right representation. Toggle between them with the Lanes / Graph buttons.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>15. Agent Project Drill-Down</h2>
+<h3>clicking an agent shows its project: manifest + edison + runtime</h3>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+
+  <!-- Breadcrumb -->
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; font-size: 12px;">
+    <span style="color: var(--blue); cursor: pointer;">KYC Pipeline</span>
+    <span style="color: var(--text-dim);">›</span>
+    <span style="color: var(--text-bright); font-weight: 600;">identity-extractor</span>
+    <span style="margin-left: auto; font-size: 11px; color: var(--text-dim);">agent project</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <div class="tab active">Manifest</div>
+    <div class="tab">Eidos</div>
+    <div class="tab">Runtime</div>
+  </div>
+
+  <!-- Manifest content -->
+  <div style="padding: 16px;">
+
+    <!-- Agent identity -->
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; margin-bottom: 20px;">
+      <span style="color: var(--text-dim);">descriptor</span>
+      <span style="font-weight: 500;">kyc-identity</span>
+      <span style="color: var(--text-dim);">model</span>
+      <span><span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">claude-opus-5</span></span>
+      <span style="color: var(--text-dim);">structured output</span>
+      <span style="color: var(--green);">enabled</span>
+      <span style="color: var(--text-dim);">timeout</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">30s</span>
+    </div>
+
+    <!-- Inputs -->
+    <div style="margin-bottom: 16px;">
+      <h3 style="margin-bottom: 8px;">Inputs</h3>
+      <div style="display: grid; grid-template-columns: auto auto 1fr; gap: 4px 16px; font-size: 12px;">
+        <span style="font-weight: 500;">documents</span>
+        <span style="color: var(--text-dim); font-family: monospace;">Document[]</span>
+        <span style="color: var(--text-dim);">identity documents to process</span>
+        <span style="font-weight: 500;">taxonomy</span>
+        <span style="color: var(--text-dim); font-family: monospace;">string</span>
+        <span style="color: var(--text-dim);">classification taxonomy version</span>
+      </div>
+    </div>
+
+    <!-- Outputs -->
+    <div>
+      <h3 style="margin-bottom: 8px;">Outputs</h3>
+      <div style="display: grid; grid-template-columns: auto auto 1fr; gap: 4px 16px; font-size: 12px;">
+        <span style="font-weight: 500;">fullName</span>
+        <span style="color: var(--text-dim); font-family: monospace;">string</span>
+        <span style="color: var(--text-dim);">extracted legal name</span>
+        <span style="font-weight: 500;">dateOfBirth</span>
+        <span style="color: var(--text-dim); font-family: monospace;">date</span>
+        <span style="color: var(--text-dim);">extracted DOB</span>
+        <span style="font-weight: 500;">nationality</span>
+        <span style="color: var(--text-dim); font-family: monospace;">string</span>
+        <span style="color: var(--text-dim);">extracted nationality</span>
+        <span style="font-weight: 500;">confidence</span>
+        <span style="color: var(--text-dim); font-family: monospace;">number</span>
+        <span style="color: var(--text-dim);">extraction confidence 0-1</span>
+        <span style="font-weight: 500;">flags</span>
+        <span style="color: var(--text-dim); font-family: monospace;">string[]</span>
+        <span style="color: var(--text-dim);">anomalies detected</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Eidos tab (shown separately for mockup clarity) -->
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; font-size: 12px;">
+    <span style="color: var(--blue); cursor: pointer;">KYC Pipeline</span>
+    <span style="color: var(--text-dim);">›</span>
+    <span style="color: var(--text-bright); font-weight: 600;">identity-extractor</span>
+  </div>
+  <div class="tab-bar">
+    <div class="tab">Manifest</div>
+    <div class="tab active">Eidos</div>
+    <div class="tab">Runtime</div>
+  </div>
+  <div style="padding: 16px;">
+    <h3 style="margin-bottom: 8px;">Decision Logic</h3>
+
+    <!-- Eidos as a state machine / decision tree -->
+    <div class="control-block" style="margin: 8px 0;">
+      <div class="control-header">
+        <span class="keyword">match</span>
+        <span class="condition">${ .document.type }</span>
+      </div>
+      <div class="match-cases">
+        <div class="match-case">
+          <span class="match-pattern">"passport"</span>
+          <span class="match-arrow">→</span>
+          <div style="flex: 1; font-size: 12px;">
+            <div style="margin-bottom: 4px;">Extract: MRZ zone, photo, signature</div>
+            <div style="display: flex; gap: 4px;">
+              <span class="decorator" style="background: rgba(166,227,161,0.2); color: var(--green);">high confidence</span>
+              <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">OCR + vision</span>
+            </div>
+          </div>
+        </div>
+        <div class="match-case">
+          <span class="match-pattern">"drivers_license"</span>
+          <span class="match-arrow">→</span>
+          <div style="flex: 1; font-size: 12px;">
+            <div style="margin-bottom: 4px;">Extract: front fields, barcode data</div>
+            <div style="display: flex; gap: 4px;">
+              <span class="decorator" style="background: rgba(249,226,175,0.2); color: var(--amber);">medium confidence</span>
+              <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">OCR</span>
+            </div>
+          </div>
+        </div>
+        <div class="match-case">
+          <span class="match-pattern">"utility_bill"</span>
+          <span class="match-arrow">→</span>
+          <div style="flex: 1; font-size: 12px;">
+            <div style="margin-bottom: 4px;">Extract: name, address, date only</div>
+            <div style="display: flex; gap: 4px;">
+              <span class="decorator" style="background: rgba(243,139,168,0.2); color: var(--red);">low confidence</span>
+              <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">text extraction</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-block" style="margin: 12px 0;">
+      <div class="control-header">
+        <span class="keyword">if</span>
+        <span class="condition">${ .confidence < 0.7 }</span>
+      </div>
+      <div class="branch-container">
+        <div class="branch">
+          <div class="branch-label then">then</div>
+          <div style="font-size: 12px; padding: 4px 0;">
+            Flag for human review, add to <span class="expr param">${params.reviewQueue}</span>
+          </div>
+        </div>
+        <div class="branch">
+          <div class="branch-label else">else</div>
+          <div style="font-size: 12px; padding: 4px 0;">
+            Auto-approve extraction, emit result
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Runtime tab -->
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; font-size: 12px;">
+    <span style="color: var(--blue); cursor: pointer;">KYC Pipeline</span>
+    <span style="color: var(--text-dim);">›</span>
+    <span style="color: var(--text-bright); font-weight: 600;">identity-extractor</span>
+  </div>
+  <div class="tab-bar">
+    <div class="tab">Manifest</div>
+    <div class="tab">Eidos</div>
+    <div class="tab active">Runtime</div>
+  </div>
+  <div style="padding: 16px;">
+    <h3 style="margin-bottom: 8px;">Execution Steps</h3>
+
+    <div class="step-card">
+      <div class="step-icon" style="background: rgba(137,180,250,0.15); color: var(--blue);">R</div>
+      <span class="step-action">rest</span>
+      <span class="step-target">POST /api/ocr/extract</span>
+      <span class="step-value">body: <span class="expr param">${params.documents}</span></span>
+      <span class="decorator timeout">⏱ 15s</span>
+    </div>
+
+    <div class="control-block" style="margin: 8px 0;">
+      <div class="control-header">
+        <span class="keyword">if</span>
+        <span class="condition">${ .ocr.confidence >= 0.9 }</span>
+      </div>
+      <div class="branch-container">
+        <div class="branch">
+          <div class="branch-label then">then</div>
+          <div class="step-card">
+            <div class="step-icon" style="background: rgba(203,166,247,0.15); color: var(--purple);">M</div>
+            <span class="step-action">mcp-call</span>
+            <span class="step-target">identity-validate</span>
+          </div>
+        </div>
+        <div class="branch">
+          <div class="branch-label else">else</div>
+          <div class="step-card">
+            <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+            <span class="step-action">agent-delegate</span>
+            <span class="step-target">vision-reviewer</span>
+            <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue);">opus-5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-icon" style="background: rgba(245,194,231,0.15); color: var(--pink);">G</div>
+      <span class="step-action">graphql</span>
+      <span class="step-target">sanctions / screenEntity</span>
+      <span class="step-value">name: <span class="expr from">${ocr.fullName}</span></span>
+      <span class="decorator retry">↻ retry: 2</span>
+    </div>
+
+    <div class="step-card">
+      <div class="step-icon" style="background: rgba(203,166,247,0.15); color: var(--purple);">◇</div>
+      <span class="step-action">signal</span>
+      <span class="step-value">extraction-complete</span>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>The three tabs form a complete agent project:</strong>
+  <br><strong>Manifest</strong> — what the agent is (descriptor, model, inputs/outputs). The contract.
+  <br><strong>Eidos</strong> — the decision logic (match/cases, if/else, state machines). The brain.
+  <br><strong>Runtime</strong> — the execution steps (REST calls, MCP tools, sub-agent delegations). The hands.
+  <br><br>
+  Each tab uses the same visual vocabulary — step cards, control flow blocks, expression pills, decorator badges.
+  A reviewer navigates: coordination playbook → drill into agent → inspect manifest/edison/runtime → back to coordination.
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>16. Agent Diff — Coordination Level</h2>
+<h3>new agent added to the pipeline, quorum adjusted</h3>
+
+<div class="diff-summary">
+  <span style="font-weight: 600; color: var(--text-bright);">Diff — KYC Pipeline</span>
+  <div class="diff-stat"><div class="dot green"></div> 1 agent added (pep-screener)</div>
+  <div class="diff-stat"><div class="dot amber"></div> quorum 2/3 → 3/4</div>
+  <div class="diff-stat"><div class="dot amber"></div> risk-assessor params updated</div>
+</div>
+
+<div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 16px 0;">
+  <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim);">PIPELINE GRAPH — DIFF VIEW</span>
+    <span class="diff-marker modified" style="margin-left: auto;">MODIFIED</span>
+  </div>
+  <div style="padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 0;">
+
+    <!-- Classifier (unchanged) -->
+    <div style="display: flex; justify-content: center;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; opacity: 0.7;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span style="font-size: 12px;">doc-classifier</span>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">sonnet-5</span>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 8px; color: var(--text-dim); font-size: 16px;">↓</div>
+
+    <!-- Extractors row (3 existing + 1 new) -->
+    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px; opacity: 0.7;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); width: 18px; height: 18px; font-size: 10px;">⬡</div>
+        <span style="font-size: 11px;">identity</span>
+      </div>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px; opacity: 0.7;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); width: 18px; height: 18px; font-size: 10px;">⬡</div>
+        <span style="font-size: 11px;">financial</span>
+      </div>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px; opacity: 0.7;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); width: 18px; height: 18px; font-size: 10px;">⬡</div>
+        <span style="font-size: 11px;">address</span>
+      </div>
+      <!-- NEW agent -->
+      <div style="background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 6px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach); width: 18px; height: 18px; font-size: 10px;">⬡</div>
+        <span style="font-size: 11px; font-weight: 500;">pep-screener</span>
+        <span class="diff-marker added">+ NEW</span>
+      </div>
+    </div>
+
+    <!-- Modified quorum -->
+    <div style="margin: 16px 0; display: flex; align-items: center; gap: 12px; padding: 6px 16px; background: var(--amber-dim); border: 1px dashed var(--amber); border-radius: 4px;">
+      <span style="font-size: 11px; font-weight: 600; color: var(--amber);">QUORUM</span>
+      <span style="font-size: 11px; color: var(--text-dim);">
+        required: <span class="old-value">2 of 3</span> <span class="new-value">3 of 4</span>
+      </span>
+      <span class="diff-marker modified">MODIFIED</span>
+    </div>
+
+    <!-- Decision (modified) -->
+    <div style="display: flex; justify-content: center;">
+      <div style="background: var(--amber-dim); border: 2px solid var(--amber); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px;">
+        <div class="step-icon" style="background: rgba(250,179,135,0.15); color: var(--peach);">⬡</div>
+        <span style="font-size: 12px; font-weight: 500;">risk-assessor</span>
+        <span class="decorator" style="background: rgba(137,180,250,0.2); color: var(--blue); font-size: 9px;">opus-5</span>
+        <span class="diff-marker modified">MODIFIED</span>
+      </div>
+    </div>
+    <div style="font-size: 11px; color: var(--text-dim); text-align: center; padding-top: 4px;">
+      + params.pepResult: <span class="expr from">${pep-screener.result}</span>
+    </div>
+
+    <div style="text-align: center; padding: 8px; color: var(--text-dim); font-size: 16px;">↓</div>
+    <div style="display: flex; justify-content: center; gap: 16px;">
+      <div style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--green); font-size: 11px; color: var(--green); opacity: 0.7;">approve</div>
+      <div style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--amber); font-size: 11px; color: var(--amber); opacity: 0.7;">escalate</div>
+      <div style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--red); font-size: 11px; color: var(--red); opacity: 0.7;">reject</div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Coordination-level diff tells the whole story in one glance:</strong>
+  A new PEP screening agent was added to the extraction tier, the quorum was tightened from 2/3 to 3/4,
+  and the risk-assessor now receives the PEP result as an additional input.
+  <br><br>
+  In Java, this change would be spread across 3-4 files (new agent class, orchestrator wiring, risk model params, config)
+  with no way to see the topology change in a single view.
+</div>
+
+
+</body>
+</html>

@@ -172,7 +172,6 @@ package-lock.json
 **/target/
 
 #maven
-**/.flattened-pom.xml
 **/mvnw
 **/mvnw.cmd
 **/.mvn
