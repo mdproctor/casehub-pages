@@ -517,8 +517,7 @@
 
 # For each member: fill their profile, then verify in parallel
 - forEach:
-    each: "member in members"
-    steps:
+    "member in members":
       - fill:
           target: textbox
           value: "Full Name"
