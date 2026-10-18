@@ -23,6 +23,7 @@ const BADGE_MAP: Record<string, { badge: string; badgeClass: string }> = {
 @customElement('invoke-card')
 export class InvokeCard extends LitElement {
   @property({ attribute: false }) step!: InvokeStep;
+  @property({ reflect: true, attribute: 'body-layout' }) bodyLayout: 'block' | 'inline' = 'block';
 
   static override styles = css`
     :host {
@@ -74,11 +75,23 @@ export class InvokeCard extends LitElement {
       font-size: 12px;
       line-height: 1.6;
     }
+    :host([body-layout="inline"]) .body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 12px;
+    }
     .body-entry .key {
       color: #89b4fa;
     }
     .body-entry .value {
       color: #a6e3a1;
+    }
+    :host([body-layout="inline"]) .body-entry::after {
+      content: ',';
+      color: #7f849c;
+    }
+    :host([body-layout="inline"]) .body-entry:last-child::after {
+      content: '';
     }
 
     .decorators {

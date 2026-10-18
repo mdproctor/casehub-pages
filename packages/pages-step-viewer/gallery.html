@@ -212,7 +212,10 @@
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>10. Invoke Cards</h2>
-<h3>REST, GraphQL, MCP call cards with method badges and request bodies</h3>
+<h3>body-layout: block (default) vs inline — toggle per card or globally</h3>
+<div style="display: flex; gap: 8px; margin-bottom: 12px;">
+  <button id="layout-toggle" style="padding: 4px 12px; border-radius: 4px; border: 1px solid #3b3d52; background: #282a3a; color: #cdd6f4; cursor: pointer; font-family: inherit; font-size: 12px;">Toggle layout: block → inline</button>
+</div>
 <div id="section-10"></div>
 
 
@@ -674,6 +677,15 @@
       name: "Alice"
       locale: "en-GB"
   `);
+
+  // Layout toggle for invoke cards
+  document.getElementById('layout-toggle').addEventListener('click', () => {
+    const cards = document.querySelectorAll('invoke-card');
+    const current = cards[0]?.getAttribute('body-layout') ?? 'block';
+    const next = current === 'block' ? 'inline' : 'block';
+    cards.forEach(c => c.setAttribute('body-layout', next));
+    document.getElementById('layout-toggle').textContent = `Toggle layout: ${next} → ${next === 'block' ? 'inline' : 'block'}`;
+  });
 
   // ═══════════════════════════════════════════════
   // 11. Expression Pills
