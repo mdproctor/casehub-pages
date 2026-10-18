@@ -232,13 +232,19 @@
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>13. Edge Cases</h2>
-<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<h2>13. Degraded Mode</h2>
+<h3>Walker errors render inline — valid steps still appear, errors marked in red</h3>
 <div id="section-13"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>14. Decorator Badges — Isolated</h2>
+<h2>14. Edge Cases</h2>
+<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<div id="section-14"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>15. Decorator Badges — Isolated</h2>
 <h3>standalone badge rendering outside step cards</h3>
 <div class="badge-grid" id="badge-grid"></div>
 
@@ -690,6 +696,110 @@
   });
 
   // ═══════════════════════════════════════════════
+  // 13. Degraded Mode
+  // Shows how the viewer handles errors — valid steps render,
+  // errors appear inline as red error-step cards.
+  // ═══════════════════════════════════════════════
+  {
+    const container = document.getElementById('section-13');
+    const yamlText = `
+# Valid step renders normally
+- click:
+    target: button
+    value: "Submit"
+
+# Unknown action — catalog rejects it
+- nonexistent-action:
+    value: "this will fail"
+
+# Valid step renders despite earlier error
+- navigate:
+    value: /dashboard
+
+# Another unknown
+- bogus-step:
+    target: field
+    value: "also fails"
+
+# Valid step at the end
+- assert:
+    target: heading
+    value: "Dashboard"
+  timeout: 5000`;
+
+    const id = panelId++;
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${id}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${id}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${id}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${id}">
+        <pre>${highlightYaml(yamlText.trim())}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Restricted catalog — only knows real actions, rejects unknowns
+    const knownActions = new Set(['click', 'fill', 'navigate', 'assert', 'log', 'graphql']);
+    const strictCatalog = {
+      resolve(name) {
+        if (!knownActions.has(name)) return undefined;
+        return demoCatalog.resolve(name);
+      },
+      availableActions() { return knownActions; },
+    };
+
+    // Parse YAML and resolve step-by-step, catching per-step errors
+    const target = document.getElementById(`rendered-${id}`);
+    try {
+      const doc = parse(yamlText);
+      const steps = Array.isArray(doc) ? doc : doc.steps ?? doc;
+      for (const rawStep of steps) {
+        try {
+          const resolved = Walker.resolve([rawStep], strictCatalog);
+          for (const step of resolved) {
+            let el;
+            if (step.kind === 'plugin') {
+              el = document.createElement('step-card');
+              el.step = step;
+            } else if (step.kind === 'invoke') {
+              el = document.createElement('invoke-card');
+              el.step = step;
+            } else {
+              el = document.createElement('error-step');
+              el.kind = step.kind;
+              el.message = 'unsupported step type';
+            }
+            target.appendChild(el);
+          }
+        } catch (e) {
+          const el = document.createElement('error-step');
+          const keys = Object.keys(rawStep).filter(k => k !== 'step');
+          el.kind = keys[0] ?? 'unknown';
+          el.message = e.message;
+          target.appendChild(el);
+        }
+      }
+    } catch (e) {
+      const err = document.createElement('div');
+      err.className = 'error-banner';
+      err.textContent = `Parse error: ${e.message}`;
+      target.appendChild(err);
+    }
+  }
+
+  // ═══════════════════════════════════════════════
   // 11. Expression Pills
   // Expression syntax ${scope.path} in param values gets colored pills.
   // ═══════════════════════════════════════════════
@@ -746,7 +856,7 @@
   // ═══════════════════════════════════════════════
   // 6. Edge Cases
   // ═══════════════════════════════════════════════
-  renderSection('section-13', `
+  renderSection('section-14', `
 # Unknown action — falls back to default icon
 - custom-plugin:
     value: "falls back to default icon"
