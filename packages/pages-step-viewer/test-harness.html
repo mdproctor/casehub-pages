@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step Card — Visual Test Harness</title>
+<style>
+  :root {
+    --bg: #1e1e2e;
+    --surface: #282a3a;
+    --border: #3b3d52;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 32px;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f0f4ff;
+    margin: 32px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2:first-of-type { margin-top: 0; }
+  .container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 16px 0;
+  }
+  step-card {
+    margin-bottom: 4px;
+  }
+  p.note {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 8px 0 16px;
+  }
+</style>
+</head>
+<body>
+
+<h2>1. Basic Step Cards</h2>
+<p class="note">click, fill, navigate, assert — matching mockup section 3</p>
+<div class="container" id="basic-cards"></div>
+
+<h2>2. Steps with Decorators</h2>
+<p class="note">retry, timeout badges on right edge</p>
+<div class="container" id="decorated-cards"></div>
+
+<h2>3. Expression Pills</h2>
+<p class="note">params (blue), each (green), from (peach), module (purple)</p>
+<div class="container" id="expr-cards"></div>
+
+<h2>4. Diff States</h2>
+<p class="note">added (green), removed (red strikethrough), modified (amber)</p>
+<div class="container" id="diff-cards"></div>
+
+<script type="module">
+  import './src/step-card.ts';
+
+  function makePluginStep(action, params, decorators = {}) {
+    return {
+      kind: 'plugin',
+      name: null,
+      entry: {
+        qualifiedName: action,
+        definition: {},
+        action: { execute: async () => ({ kind: 'success', output: {}, executionMetadata: {} }) },
+      },
+      params,
+      decorators,
+    };
+  }
+
+  function addCard(containerId, step, diffState) {
+    const card = document.createElement('step-card');
+    card.step = step;
+    if (diffState) card.diffState = diffState;
+    document.getElementById(containerId).appendChild(card);
+  }
+
+  // 1. Basic cards
+  addCard('basic-cards', makePluginStep('navigate', { value: '/helpdesk/intake' }));
+  addCard('basic-cards', makePluginStep('fill', { target: 'textbox', value: '"Customer Name"', content: '"Alice Chen"' }));
+  addCard('basic-cards', makePluginStep('fill', { target: 'textbox', value: '"Description"', content: '"Cannot access dashboard"' }));
+  addCard('basic-cards', makePluginStep('select', { target: 'combobox', value: '"Priority"', content: '"High"' }));
+  addCard('basic-cards', makePluginStep('click', { target: 'button', value: '"Submit"' }));
+  addCard('basic-cards', makePluginStep('assert', { target: 'alert', value: '"Submission confirmation"' }));
+
+  // 2. Decorated cards
+  addCard('decorated-cards', makePluginStep('click', { target: 'button', value: '"Submit"' }, { retry: 3 }));
+  addCard('decorated-cards', makePluginStep('assert', { target: 'alert', value: '"Confirmation"' }, { timeout: 5000 }));
+  addCard('decorated-cards', makePluginStep('click', { target: 'button', value: '"Grant Admin"' }, { when: '${each.member.admin}' }));
+  addCard('decorated-cards', makePluginStep('log', { value: '"Processing"' }, { loop: 'continuous' }));
+  addCard('decorated-cards', makePluginStep('fill', { target: 'textbox', value: '"Name"' }, { forEach: 'member in members' }));
+
+  // 3. Expression pills
+  addCard('expr-cards', makePluginStep('navigate', { value: '#teams/${params.teamName}' }));
+  addCard('expr-cards', makePluginStep('fill', { target: 'textbox', value: '"Full Name"', content: '${each.member.name}' }));
+  addCard('expr-cards', makePluginStep('log', { value: '"Processing ${from.value}."' }));
+  addCard('expr-cards', makePluginStep('fill', { target: 'dataset', value: '${module.ops.panelId}', content: '-feed' }));
+
+  // 4. Diff states
+  addCard('diff-cards', makePluginStep('click', { target: 'button', value: '"New Step"' }), 'added');
+  addCard('diff-cards', makePluginStep('fill', { target: 'textbox', value: '"Old Field"' }), 'removed');
+  addCard('diff-cards', makePluginStep('navigate', { value: '/updated/path' }), 'modified');
+  addCard('diff-cards', makePluginStep('click', { target: 'button', value: '"Unchanged"' }));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "@casehubio/pages-step-viewer",
+  "version": "0.1.0",
+  "description": "CaseHub step review viewer — semantic rendering of playbook YAML steps",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casehubio/casehub-pages.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@casehubio/yaml-core": "workspace:*",
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@casehubio/pages-tsconfig": "workspace:*",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.1"
+  },
+  "license": "Apache-2.0"
+}
