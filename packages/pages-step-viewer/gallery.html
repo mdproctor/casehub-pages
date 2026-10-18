@@ -516,29 +516,28 @@
     value: "/org/\${params.orgId}/members"
 
 # For each member: fill their profile, then verify in parallel
-- forEach:
-    "member in members":
-      - fill:
-          target: textbox
-          value: "Full Name"
-          content: "\${each.member.name}"
-      - parallel:
-          update-role:
-            - click:
-                target: combobox
-                value: "Role"
-            - click:
-                target: option
-                value: "\${each.member.role}"
-          update-perms:
-            - fill:
-                target: checkbox-group
-                value: "Permissions"
-                content: "\${each.member.perms}"
-      - click:
-          target: button
-          value: "Save Member"
-        retry: 2
+- forEach member in members:
+    - fill:
+        target: textbox
+        value: "Full Name"
+        content: "\${each.member.name}"
+    - parallel:
+        update-role:
+          - click:
+              target: combobox
+              value: "Role"
+          - click:
+              target: option
+              value: "\${each.member.role}"
+        update-perms:
+          - fill:
+              target: checkbox-group
+              value: "Permissions"
+              content: "\${each.member.perms}"
+    - click:
+        target: button
+        value: "Save Member"
+      retry: 2
 
 # After all members processed
 - assert:
