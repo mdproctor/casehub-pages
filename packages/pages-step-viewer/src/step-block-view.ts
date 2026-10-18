@@ -32,14 +32,7 @@ export class StepBlockView extends LitElement {
     }
     .block-icon {
       color: #89b4fa;
-      font-size: 12px;
-    }
-    .block-label {
-      color: #cdd6f4;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: none;
-      letter-spacing: normal;
+      font-size: 13px;
     }
     .decorators {
       display: flex;
@@ -70,15 +63,10 @@ export class StepBlockView extends LitElement {
     `;
   }
 
-  private renderHeader(): TemplateResult {
+  private identifyBlock(): { icon: string; label: string; secondaryBadges: TemplateResult[] } {
     const decs = this.step.decorators;
     const badges: TemplateResult[] = [];
 
-    if (decs.forEach != null) {
-      const fe = decs.forEach;
-      const label = typeof fe === 'string' ? fe : `${(fe as Record<string, unknown>).item ?? ''} in ${(fe as Record<string, unknown>).collection ?? ''}`;
-      badges.push(html`<decorator-badge kind="foreach" label="${label}"></decorator-badge>`);
-    }
     if (decs.retry != null) {
       badges.push(html`<decorator-badge kind="retry" label="retry: ${decs.retry}"></decorator-badge>`);
     }
@@ -95,12 +83,29 @@ export class StepBlockView extends LitElement {
       badges.push(html`<decorator-badge kind="loop" label="${decs.loop}"></decorator-badge>`);
     }
 
+    if (decs.forEach != null) {
+      const fe = decs.forEach;
+      const iterExpr = typeof fe === 'string'
+        ? fe
+        : `${(fe as Record<string, unknown>).item ?? ''} in ${(fe as Record<string, unknown>).collection ?? ''}`;
+      return { icon: '∀', label: `FOR EACH ${iterExpr}`, secondaryBadges: badges };
+    }
+
+    if (this.step.name) {
+      return { icon: '▧', label: this.step.name, secondaryBadges: badges };
+    }
+
+    return { icon: '▧', label: 'BLOCK', secondaryBadges: badges };
+  }
+
+  private renderHeader(): TemplateResult {
+    const { icon, label, secondaryBadges } = this.identifyBlock();
+
     return html`
       <div class="block-header">
-        <span class="block-icon">▧</span>
-        BLOCK
-        ${this.step.name ? html`<span class="block-label">${this.step.name}</span>` : nothing}
-        ${badges.length > 0 ? html`<div class="decorators">${badges}</div>` : nothing}
+        <span class="block-icon">${icon}</span>
+        ${label}
+        ${secondaryBadges.length > 0 ? html`<div class="decorators">${secondaryBadges}</div>` : nothing}
       </div>
     `;
   }
