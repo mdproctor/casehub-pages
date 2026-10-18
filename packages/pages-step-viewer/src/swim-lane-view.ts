@@ -1,7 +1,7 @@
-import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { ParallelStep, ResolvedStep } from '@casehubio/yaml-core/step';
-import './step-card.js';
+import { renderStepContent } from './step-dispatch.js';
 
 @customElement('swim-lane-view')
 export class SwimLaneView extends LitElement {
@@ -67,19 +67,9 @@ export class SwimLaneView extends LitElement {
       display: inline-block;
     }
 
-    step-card {
-      margin-bottom: 4px;
-    }
-
-    .unsupported {
-      padding: 8px 12px;
-      margin-bottom: 4px;
-      font-size: 12px;
-      color: #7f849c;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px dashed rgba(255, 255, 255, 0.08);
-      border-radius: 6px;
-    }
+    step-card { margin-bottom: 4px; }
+    swim-lane-view { margin: 8px 0; }
+    step-block-view { margin: 8px 0; }
   `;
 
   override render() {
@@ -100,7 +90,7 @@ export class SwimLaneView extends LitElement {
         ${branches.map(branch => html`
           <div class="lane">
             <div class="lane-name">${branch.name}</div>
-            ${branch.steps.map(step => this.renderStep(step))}
+            ${branch.steps.map(step => renderStepContent(step))}
           </div>
         `)}
       </div>
@@ -110,12 +100,5 @@ export class SwimLaneView extends LitElement {
   private renderMeta(branches: Array<{ name: string; steps: ResolvedStep[] }>): string {
     const totalSteps = branches.reduce((sum, b) => sum + b.steps.length, 0);
     return `${branches.length} branches, ${totalSteps} steps`;
-  }
-
-  private renderStep(step: ResolvedStep): TemplateResult {
-    if (step.kind === 'plugin') {
-      return html`<step-card .step=${step}></step-card>`;
-    }
-    return html`<div class="unsupported">${step.kind} (not yet rendered)</div>`;
   }
 }

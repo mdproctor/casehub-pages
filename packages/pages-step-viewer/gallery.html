@@ -121,9 +121,8 @@
   step-card { margin-bottom: 4px; }
   step-card:last-child { margin-bottom: 0; }
 
-  swim-lane-view {
-    margin: 8px 0;
-  }
+  swim-lane-view { margin: 8px 0; }
+  step-block-view { margin: 8px 0; }
 
   .badge-grid {
     display: flex;
@@ -218,8 +217,7 @@
 
 
 <script type="module">
-  import './src/step-card.ts';
-  import './src/swim-lane-view.ts';
+  import './src/step-dispatch.ts';
   import './src/decorator-badge.ts';
   import { Walker } from '@casehubio/yaml-core/step';
   import { parse } from 'yaml';
@@ -290,16 +288,23 @@
       const target = document.getElementById(`rendered-${id}`);
       const diffStates = opts.diffStates ?? [];
       steps.forEach((step, i) => {
+        let el;
         if (step.kind === 'plugin') {
-          const card = document.createElement('step-card');
-          card.step = step;
-          if (diffStates[i]) card.diffState = diffStates[i];
-          target.appendChild(card);
+          el = document.createElement('step-card');
+          el.step = step;
+          if (diffStates[i]) el.diffState = diffStates[i];
         } else if (step.kind === 'parallel') {
-          const lane = document.createElement('swim-lane-view');
-          lane.step = step;
-          target.appendChild(lane);
+          el = document.createElement('swim-lane-view');
+          el.step = step;
+        } else if (step.kind === 'block') {
+          el = document.createElement('step-block-view');
+          el.step = step;
+        } else {
+          el = document.createElement('div');
+          el.className = 'error-banner';
+          el.textContent = `${step.kind} (not yet rendered)`;
         }
+        target.appendChild(el);
       });
     } catch (e) {
       const err = document.createElement('div');
@@ -462,9 +467,8 @@
   `);
 
   // ═══════════════════════════════════════════════
-  // 6a. Composition — Login Flow
-  // Sequential steps, then a parallel block, then more steps.
-  // This is the most common playbook shape.
+  // 6a. Composition — Sequential + Parallel + Sequential
+  // The most common playbook shape: setup, concurrent work, teardown.
   // ═══════════════════════════════════════════════
   renderSection('section-6a', `
 # Sequential setup
@@ -474,10 +478,6 @@
     target: textbox
     value: "Username"
     content: "alice@example.com"
-- fill:
-    target: textbox
-    value: "Password"
-    content: "••••••••"
 - click:
     target: button
     value: "Sign In"
@@ -506,40 +506,45 @@
   `);
 
   // ═══════════════════════════════════════════════
-  // 6b. Composition — Decorated Parallel in Context
-  // Parallel block with retry/timeout, between decorated steps.
+  // 6b. Composition — forEach wrapping a parallel
+  // "For each member, do these things concurrently."
+  // Block + forEach decorator containing a parallel step.
   // ═══════════════════════════════════════════════
   renderSection('section-6b', `
-# Setup with expressions
+# Setup
 - navigate:
-    value: "/org/\${params.orgId}/settings"
+    value: "/org/\${params.orgId}/members"
 
-# Parallel data fetch with timeout on the whole block
-- parallel:
-    fetch-users:
-      - graphql:
-          value: "query { users { id name } }"
-    fetch-roles:
-      - graphql:
-          value: "query { roles { id label } }"
-    fetch-perms:
-      - graphql:
-          value: "query { permissions { scope } }"
-  timeout: 15000
+# For each member: fill their profile, then verify in parallel
+- block:
+    - fill:
+        target: textbox
+        value: "Full Name"
+        content: "\${each.member.name}"
+    - parallel:
+        update-role:
+          - click:
+              target: combobox
+              value: "Role"
+          - click:
+              target: option
+              value: "\${each.member.role}"
+        update-perms:
+          - fill:
+              target: checkbox-group
+              value: "Permissions"
+              content: "\${each.member.perms}"
+    - click:
+        target: button
+        value: "Save Member"
+      retry: 2
+  forEach: "member in members"
 
-# Post-processing after all fetches complete
-- fill:
-    target: table
-    value: "Users"
-    content: "\${from.users}"
-- click:
-    target: button
-    value: "Save"
-  retry: 3
+# After all members processed
 - assert:
     target: alert
-    value: "Settings saved"
-  timeout: 5000
+    value: "All members updated"
+  timeout: 10000
   `);
 
   // ═══════════════════════════════════════════════
