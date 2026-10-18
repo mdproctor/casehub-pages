@@ -188,7 +188,7 @@
 <h3>how sequential steps and parallel blocks compose in a real playbook flow</h3>
 <div id="section-6a"></div>
 
-<h3>parallel block with decorators, sandwiched between sequential steps</h3>
+<h3>forEach as structural key (#571) — no block wrapper needed</h3>
 <div id="section-6b"></div>
 
 
@@ -508,7 +508,7 @@
   // ═══════════════════════════════════════════════
   // 6b. Composition — forEach wrapping a parallel
   // "For each member, do these things concurrently."
-  // Block + forEach decorator containing a parallel step.
+  // forEach as a structural key — no block wrapper needed (#571).
   // ═══════════════════════════════════════════════
   renderSection('section-6b', `
 # Setup
@@ -516,29 +516,30 @@
     value: "/org/\${params.orgId}/members"
 
 # For each member: fill their profile, then verify in parallel
-- block:
-    - fill:
-        target: textbox
-        value: "Full Name"
-        content: "\${each.member.name}"
-    - parallel:
-        update-role:
-          - click:
-              target: combobox
-              value: "Role"
-          - click:
-              target: option
-              value: "\${each.member.role}"
-        update-perms:
-          - fill:
-              target: checkbox-group
-              value: "Permissions"
-              content: "\${each.member.perms}"
-    - click:
-        target: button
-        value: "Save Member"
-      retry: 2
-  forEach: "member in members"
+- forEach:
+    each: "member in members"
+    steps:
+      - fill:
+          target: textbox
+          value: "Full Name"
+          content: "\${each.member.name}"
+      - parallel:
+          update-role:
+            - click:
+                target: combobox
+                value: "Role"
+            - click:
+                target: option
+                value: "\${each.member.role}"
+          update-perms:
+            - fill:
+                target: checkbox-group
+                value: "Permissions"
+                content: "\${each.member.perms}"
+      - click:
+          target: button
+          value: "Save Member"
+        retry: 2
 
 # After all members processed
 - assert:
