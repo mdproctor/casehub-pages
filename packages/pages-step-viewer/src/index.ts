@@ -3,6 +3,9 @@ export type { DiffState } from './step-card.js';
 
 export { SwimLaneView } from './swim-lane-view.js';
 export { StepBlockView } from './step-block-view.js';
+export { IfElseView } from './if-else-view.js';
+export { MatchView } from './match-view.js';
+export { TryCatchView } from './try-catch-view.js';
 export { renderStepContent } from './step-dispatch.js';
 
 export { DecoratorBadge } from './decorator-badge.js';

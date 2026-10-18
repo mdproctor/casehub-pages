@@ -193,25 +193,43 @@
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>7. Expression Pills</h2>
-<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
+<h2>7. Control Flow — If/Else</h2>
+<h3>side-by-side then/else branches with condition in header</h3>
 <div id="section-7"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>8. Diff States</h2>
-<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<h2>8. Control Flow — Match/Cases</h2>
+<h3>pattern table: pattern → step card(s)</h3>
 <div id="section-8"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>9. Edge Cases</h2>
-<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<h2>9. Control Flow — Try/Catch/Finally</h2>
+<h3>stacked colored regions: green (try), red (catch), teal (finally)</h3>
 <div id="section-9"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>10. Decorator Badges — Isolated</h2>
+<h2>10. Expression Pills</h2>
+<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
+<div id="section-10"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>11. Diff States</h2>
+<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<div id="section-11"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>12. Edge Cases</h2>
+<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<div id="section-12"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>13. Decorator Badges — Isolated</h2>
 <h3>standalone badge rendering outside step cards</h3>
 <div class="badge-grid" id="badge-grid"></div>
 
@@ -298,6 +316,15 @@
           el.step = step;
         } else if (step.kind === 'block') {
           el = document.createElement('step-block-view');
+          el.step = step;
+        } else if (step.kind === 'if-else') {
+          el = document.createElement('if-else-view');
+          el.step = step;
+        } else if (step.kind === 'match') {
+          el = document.createElement('match-view');
+          el.step = step;
+        } else if (step.kind === 'try-catch-finally') {
+          el = document.createElement('try-catch-view');
           el.step = step;
         } else {
           el = document.createElement('div');
@@ -547,10 +574,68 @@
   `);
 
   // ═══════════════════════════════════════════════
-  // 7. Expression Pills
-  // Expression syntax ${scope.path} in param values gets colored pills.
+  // 7. If/Else
+  // Side-by-side then/else branches with condition header.
   // ═══════════════════════════════════════════════
   renderSection('section-7', `
+- if: "\${.score >= 0.8}"
+  then:
+    - log:
+        value: "Approved"
+    - click:
+        target: button
+        value: "Continue"
+  else:
+    - log:
+        value: "Rejected"
+    - navigate:
+        value: /review/manual
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 8. Match/Cases
+  // Pattern table with arrow notation.
+  // ═══════════════════════════════════════════════
+  renderSection('section-8', `
+- match: "\${.severity}"
+  cases:
+    - when: "error"
+      log:
+        value: "Matched: error"
+    - when: "warning"
+      log:
+        value: "Matched: warning"
+    - default:
+        - log:
+            value: "No match — default"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 9. Try/Catch/Finally
+  // Stacked colored regions.
+  // ═══════════════════════════════════════════════
+  renderSection('section-9', `
+- try:
+    - log:
+        value: "Attempting risky operation"
+    - click:
+        target: button
+        value: "Submit Payment"
+  catch:
+    - log:
+        value: "Caught error — recovering"
+    - navigate:
+        value: /error/recovery
+  finally:
+    - log:
+        value: "Cleanup — always runs"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 10. Expression Pills
+  // Expression syntax ${scope.path} in param values gets colored pills.
+  // ═══════════════════════════════════════════════
+  renderSection('section-10', `
 # params scope — blue pills
 - navigate:
     value: "#teams/\${params.teamName}"
@@ -580,7 +665,7 @@
   // 5. Diff States
   // Diff overlays are applied post-resolution — not part of YAML.
   // ═══════════════════════════════════════════════
-  renderSection('section-8', `
+  renderSection('section-11', `
 # These steps get diff overlays applied after resolution
 - click:
     target: button
@@ -603,7 +688,7 @@
   // ═══════════════════════════════════════════════
   // 6. Edge Cases
   // ═══════════════════════════════════════════════
-  renderSection('section-9', `
+  renderSection('section-12', `
 # Unknown action — falls back to default icon
 - custom-plugin:
     value: "falls back to default icon"
