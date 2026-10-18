@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Step Viewer — Component Gallery</title>
+<style>
+  :root {
+    --bg: #1e1e2e;
+    --surface: #282a3a;
+    --surface-hover: #313348;
+    --border: #3b3d52;
+    --text: #cdd6f4;
+    --text-dim: #7f849c;
+    --text-bright: #f0f4ff;
+
+    --blue: #89b4fa;
+    --green: #a6e3a1;
+    --red: #f38ba8;
+    --amber: #f9e2af;
+    --purple: #cba6f7;
+    --teal: #94e2d5;
+    --peach: #fab387;
+    --pink: #f5c2e7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+  }
+  p.subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .card-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 16px 0;
+  }
+
+  step-card { margin-bottom: 4px; }
+  step-card:last-child { margin-bottom: 0; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  .badge-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .compare-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Step Viewer — Component Gallery</h1>
+<p class="subtitle">Live rendering of &lt;step-card&gt; and &lt;decorator-badge&gt; components. Compare with <a href="http://localhost:8793/step-review-viewer.html" style="color: var(--blue);">design mockup</a>.</p>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>1. Action Icons</h2>
+<h3>every registered action type with its icon and color</h3>
+
+<div class="card-container" id="action-icons"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>2. Sequential Steps — Form Automation</h2>
+<h3>matching mockup section 3: navigate, fill, select, click, assert</h3>
+
+<div class="card-container" id="form-sequence"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>3. Decorator Badges</h2>
+<h3>all six badge types, isolated then combined</h3>
+
+<div class="two-col">
+  <div>
+    <div class="compare-label">Individual decorators</div>
+    <div class="card-container" id="decorators-single"></div>
+  </div>
+  <div>
+    <div class="compare-label">Multiple decorators on one step</div>
+    <div class="card-container" id="decorators-multi"></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>4. Expression Pills</h2>
+<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
+
+<div class="card-container" id="expressions"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>5. Diff States</h2>
+<h3>added (green + NEW), removed (red strikethrough - REMOVED), modified (amber MODIFIED)</h3>
+
+<div class="card-container" id="diff-states"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>6. Edge Cases</h2>
+<h3>unknown actions, long values, empty params, deeply nested expressions</h3>
+
+<div class="card-container" id="edge-cases"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>7. Decorator Badges — Isolated</h2>
+<h3>standalone badge rendering outside step cards</h3>
+
+<div class="badge-grid" id="badge-grid"></div>
+
+
+<script type="module">
+  import './src/step-card.ts';
+  import './src/decorator-badge.ts';
+
+  function pluginStep(action, params, decorators = {}, name = null) {
+    return {
+      kind: 'plugin',
+      name,
+      entry: {
+        qualifiedName: action,
+        definition: {},
+        action: { execute: async () => ({ kind: 'success', output: {}, executionMetadata: {} }) },
+      },
+      params,
+      decorators,
+    };
+  }
+
+  function addCard(id, step, diffState) {
+    const card = document.createElement('step-card');
+    card.step = step;
+    if (diffState) card.diffState = diffState;
+    document.getElementById(id).appendChild(card);
+  }
+
+  function addBadge(id, kind, label) {
+    const badge = document.createElement('decorator-badge');
+    badge.kind = kind;
+    badge.label = label;
+    document.getElementById(id).appendChild(badge);
+  }
+
+  // ── 1. Action Icons ──
+  addCard('action-icons', pluginStep('click', { target: 'button', value: '"Login"' }));
+  addCard('action-icons', pluginStep('fill', { target: 'textbox', value: '"Username"', content: '"admin"' }));
+  addCard('action-icons', pluginStep('select', { target: 'combobox', value: '"Role"', content: '"Editor"' }));
+  addCard('action-icons', pluginStep('navigate', { value: '/dashboard/settings' }));
+  addCard('action-icons', pluginStep('assert', { target: 'heading', value: '"Dashboard"' }));
+  addCard('action-icons', pluginStep('log', { value: '"checkpoint reached"' }));
+  addCard('action-icons', pluginStep('signal', { value: 'data-ready' }));
+  addCard('action-icons', pluginStep('await', { target: 'signal:', value: 'data-ready' }));
+  addCard('action-icons', pluginStep('graphql', { value: 'query { users { id name } }' }));
+  addCard('action-icons', pluginStep('delay', { value: '2000ms' }));
+  addCard('action-icons', pluginStep('custom-action', { value: 'unknown action renders default icon' }));
+
+  // ── 2. Form Sequence ──
+  addCard('form-sequence', pluginStep('navigate', { value: '/helpdesk/intake' }));
+  addCard('form-sequence', pluginStep('fill', { target: 'textbox', value: '"Customer Name"', content: '"Alice Chen"' }));
+  addCard('form-sequence', pluginStep('fill', { target: 'textbox', value: '"Description"', content: '"Cannot access dashboard"' }));
+  addCard('form-sequence', pluginStep('select', { target: 'combobox', value: '"Priority"', content: '"High"' }));
+  addCard('form-sequence', pluginStep('click', { target: 'button', value: '"Submit"' }, { retry: 3 }));
+  addCard('form-sequence', pluginStep('assert', { target: 'alert', value: '"Submission confirmation"' }, { timeout: 5000 }));
+
+  // ── 3. Decorators ──
+  addCard('decorators-single', pluginStep('click', { target: 'button', value: '"Retry me"' }, { retry: 3 }));
+  addCard('decorators-single', pluginStep('assert', { target: 'alert', value: '"Wait for me"' }, { timeout: 5000 }));
+  addCard('decorators-single', pluginStep('log', { value: '"Looping"' }, { loop: 'continuous' }));
+  addCard('decorators-single', pluginStep('click', { target: 'button', value: '"Conditional"' }, { when: '${each.member.admin}' }));
+  addCard('decorators-single', pluginStep('fill', { target: 'field', value: '"Critical"' }, { mutex: 'write-lock' }));
+  addCard('decorators-single', pluginStep('fill', { target: 'row', value: '"Name"' }, { forEach: 'member in members' }));
+
+  addCard('decorators-multi', pluginStep('click', { target: 'button', value: '"Submit"' }, { retry: 3, timeout: 10000 }));
+  addCard('decorators-multi', pluginStep('fill', { target: 'textbox', value: '"Data"' }, { forEach: 'item in list', when: '${each.item.active}' }));
+  addCard('decorators-multi', pluginStep('assert', { target: 'table', value: '"Results"' }, { timeout: 30000, retry: 5, mutex: 'db-lock' }));
+
+  // ── 4. Expression Pills ──
+  addCard('expressions', pluginStep('navigate', { value: '#teams/${params.teamName}' }));
+  addCard('expressions', pluginStep('fill', { target: 'textbox', value: '"Full Name"', content: '${each.member.name}' }));
+  addCard('expressions', pluginStep('click', { target: 'button', value: '"Grant Admin"' }, { when: '${each.member.admin}' }), undefined);
+  addCard('expressions', pluginStep('log', { value: '"Processing ${from.value}."' }));
+  addCard('expressions', pluginStep('fill', { target: 'dataset', value: '${module.ops.panelId}', content: '-feed' }));
+  addCard('expressions', pluginStep('navigate', { value: '/org/${params.orgId}/team/${params.teamId}/member/${each.memberId}' }));
+
+  // ── 5. Diff States ──
+  addCard('diff-states', pluginStep('click', { target: 'button', value: '"New Step"' }), 'added');
+  addCard('diff-states', pluginStep('fill', { target: 'textbox', value: '"Old Field"', content: '"deprecated"' }), 'removed');
+  addCard('diff-states', pluginStep('navigate', { value: '/updated/path' }), 'modified');
+  addCard('diff-states', pluginStep('click', { target: 'button', value: '"Unchanged"' }));
+  addCard('diff-states', pluginStep('assert', { target: 'alert', value: '"New assertion"' }, { timeout: 3000 }), 'added');
+  addCard('diff-states', pluginStep('fill', { target: 'textbox', value: '"Changed"' }, { retry: 2 }), 'modified');
+
+  // ── 6. Edge Cases ──
+  addCard('edge-cases', pluginStep('custom-plugin', { value: '"falls back to default ▸ icon"' }));
+  addCard('edge-cases', pluginStep('com.casehub.actions.click', { target: 'button', value: '"qualified name extracts last segment"' }));
+  addCard('edge-cases', pluginStep('fill', {
+    target: 'textarea',
+    value: '"A very long value that should not break the card layout even when it extends past the normal expected width of a step card in the viewer"'
+  }));
+  addCard('edge-cases', pluginStep('click', {}));
+  addCard('edge-cases', pluginStep('navigate', { value: '/${params.org}/${each.team}/${from.channel}/${module.panel}' }));
+  addCard('edge-cases', pluginStep('fill', { target: 'field', value: '"data"' }, {
+    retry: 3, timeout: 5000, loop: 10, when: '${params.enabled}', mutex: 'global', forEach: 'row in dataset'
+  }));
+
+  // ── 7. Isolated Badges ──
+  addBadge('badge-grid', 'retry', 'retry: 3');
+  addBadge('badge-grid', 'timeout', '5000ms');
+  addBadge('badge-grid', 'loop', 'continuous');
+  addBadge('badge-grid', 'when', '${score >= 0.8}');
+  addBadge('badge-grid', 'mutex', 'write-lock');
+  addBadge('badge-grid', 'foreach', 'item in collection');
+</script>
+
+</body>
+</html>
