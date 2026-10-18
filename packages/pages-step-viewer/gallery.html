@@ -251,9 +251,34 @@
 
 
 
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>20. State Machine — Transition Diagram</h2>
+<h3>sm-create → states rendered as nodes, transitions as arrows</h3>
+<div id="section-20"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>21. Unified Diff Overlay</h2>
+<h3>adding a 4th branch to a concurrent block — green lanes, modified badges</h3>
+<div id="section-21"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>22. Mutex Coordination</h2>
+<h3>steps tagged with same mutex never run simultaneously — lock badges visually link contending steps</h3>
+<div id="section-22"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>23. Channel Producer / Consumer</h2>
+<h3>bounded channel with publish/from lifecycle — producer, consumer, supervisor</h3>
+<div id="section-23"></div>
+
+
 <script type="module">
   import './src/step-dispatch.ts';
-
+  import './src/state-machine-view.ts';
+  import './src/diff-summary.ts';
   import './src/invoke-card.ts';
   import './src/decorator-badge.ts';
   import { Walker } from '@casehubio/yaml-core/step';
@@ -326,7 +351,10 @@
       const diffStates = opts.diffStates ?? [];
       steps.forEach((step, i) => {
         let el;
-        if (step.kind === 'plugin') {
+        if (step.kind === 'plugin' && step.entry.qualifiedName === 'sm-create') {
+          el = document.createElement('state-machine-view');
+          el.step = step;
+        } else if (step.kind === 'plugin') {
           el = document.createElement('step-card');
           el.step = step;
           if (diffStates[i]) el.diffState = diffStates[i];
@@ -348,6 +376,10 @@
         } else if (step.kind === 'try-catch-finally') {
           el = document.createElement('try-catch-view');
           el.step = step;
+        } else if (step.kind === 'delay') {
+          el = document.createElement('div');
+          el.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 12px;color:#7f849c;font-size:12px';
+          el.innerHTML = `<span style="color:#f9e2af">⏱</span><span style="background:rgba(249,226,175,0.15);color:#f9e2af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${step.duration}ms</span>`;
         } else {
           el = document.createElement('div');
           el.className = 'error-banner';
@@ -881,6 +913,134 @@
   `);
 
   // ═══════════════════════════════════════════════
+  // 8. State Machine — Transition Diagram
+  // sm-create renders as a state diagram with nodes and arrows.
+  // ═══════════════════════════════════════════════
+  renderSection('section-20', `
+- sm-create:
+    name: order
+    states: [draft, submitted, approved, rejected]
+    initial: draft
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 9. Unified Diff Overlay
+  // Adding a 4th branch — existing branches normal, new branch green.
+  // ═══════════════════════════════════════════════
+  {
+    const diffYaml = `
+- parallel:
+    fast:
+      - click:
+          target: button
+          value: "A"
+    medium:
+      - click:
+          target: button
+          value: "B"
+        delay: 1000
+    slow:
+      - click:
+          target: button
+          value: "C"
+        delay: 2000
+    extra:
+      - click:
+          target: button
+          value: "G"
+        delay: 3000
+`;
+    const diffContainer = document.getElementById('section-21');
+    const diffPanel = document.createElement('div');
+    diffPanel.className = 'tab-panel';
+    const dId = panelId++;
+    diffPanel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${dId}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${dId}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${dId}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${dId}">
+        <pre>${highlightYaml(diffYaml.trim())}</pre>
+      </div>
+    `;
+    diffContainer.appendChild(diffPanel);
+    diffPanel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        diffPanel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        diffPanel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    const diffTarget = document.getElementById(`rendered-${dId}`);
+    const summary = document.createElement('diff-summary');
+    summary.stats = [
+      { kind: 'added', count: 1, label: 'branch added' },
+      { kind: 'added', count: 2, label: 'steps added' },
+    ];
+    diffTarget.appendChild(summary);
+
+    const steps = resolveYaml(diffYaml);
+    const laneView = document.createElement('swim-lane-view');
+    laneView.step = steps[0];
+    laneView.diffState = 'modified';
+    laneView.branchDiffStates = { extra: 'added' };
+    diffTarget.appendChild(laneView);
+  }
+
+  // ═══════════════════════════════════════════════
+  // 10. Mutex Coordination
+  // Steps sharing the same mutex visually linked via matching badges.
+  // ═══════════════════════════════════════════════
+  renderSection('section-22', `
+- parallel:
+    branch-a:
+      - click:
+          target: button
+          value: "A"
+        mutex: db-write
+      - click:
+          target: button
+          value: "B"
+        mutex: db-write
+    branch-b:
+      - click:
+          target: button
+          value: "C"
+        mutex: db-write
+      - click:
+          target: button
+          value: "D"
+        mutex: db-write
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 11. Channel Producer / Consumer
+  // publish → channel ← from lifecycle with cancel signal.
+  // ═══════════════════════════════════════════════
+  renderSection('section-23', `
+- parallel:
+    source:
+      - log:
+          value: "Emitting events"
+        publish: raw-events
+        loop: 10
+    enricher:
+      - log:
+          value: "Enriching event"
+        from: raw-events
+        loop: continuous
+        cancel: shutdown
+        timeout: 30000
+    supervisor:
+      - delay: "500ms"
+      - log:
+          value: "Enricher stopped"
+  `);
+
+  // ═══════════════════════════════════════════════
   // 7. Isolated Badges
   // ═══════════════════════════════════════════════
   function addBadge(id, kind, label) {
@@ -895,6 +1055,9 @@
   addBadge('badge-grid', 'when', '${score >= 0.8}');
   addBadge('badge-grid', 'mutex', 'write-lock');
   addBadge('badge-grid', 'foreach', 'item in collection');
+  addBadge('badge-grid', 'publish', '→ raw-events');
+  addBadge('badge-grid', 'from', '← raw-events');
+  addBadge('badge-grid', 'cancel', 'cancel: shutdown');
 
 
 

@@ -98,9 +98,10 @@ export class StepCard extends LitElement {
 
     .decorators {
       display: flex;
+      flex-wrap: wrap;
       gap: 4px;
       margin-left: auto;
-      flex-shrink: 0;
+      justify-content: flex-end;
     }
 
     .diff-marker {
@@ -190,6 +191,15 @@ export class StepCard extends LitElement {
         ? fe
         : `${(fe as Record<string, unknown>).item ?? ''} in ${(fe as Record<string, unknown>).collection ?? ''}`;
       badges.push(html`<decorator-badge kind="foreach" label="${label}"></decorator-badge>`);
+    }
+    if (decs.publish != null) {
+      badges.push(html`<decorator-badge kind="publish" label="→ ${decs.publish}"></decorator-badge>`);
+    }
+    if (decs.from != null) {
+      badges.push(html`<decorator-badge kind="from" label="← ${decs.from}"></decorator-badge>`);
+    }
+    if (decs.cancel != null) {
+      badges.push(html`<decorator-badge kind="cancel" label="cancel: ${decs.cancel}"></decorator-badge>`);
     }
 
     return badges.length > 0

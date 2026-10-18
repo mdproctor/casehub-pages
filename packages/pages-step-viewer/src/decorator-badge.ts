@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-export type DecoratorKind = 'retry' | 'timeout' | 'loop' | 'when' | 'mutex' | 'foreach';
+export type DecoratorKind = 'retry' | 'timeout' | 'loop' | 'when' | 'mutex' | 'foreach' | 'publish' | 'from' | 'cancel';
 
 const ICONS: Record<string, string> = {
   retry: '↻',
@@ -10,6 +10,9 @@ const ICONS: Record<string, string> = {
   when: '?',
   mutex: '🔒',
   foreach: '∀',
+  publish: '📡',
+  from: '📥',
+  cancel: '⏹',
 };
 
 @customElement('decorator-badge')
@@ -35,6 +38,9 @@ export class DecoratorBadge extends LitElement {
     :host([kind="when"])    { background: rgba(203, 166, 247, 0.2); color: #cba6f7; }
     :host([kind="mutex"])   { background: rgba(243, 139, 168, 0.2); color: #f38ba8; }
     :host([kind="foreach"]) { background: rgba(137, 180, 250, 0.2); color: #89b4fa; }
+    :host([kind="publish"]) { background: rgba(203, 166, 247, 0.2); color: #cba6f7; }
+    :host([kind="from"])    { background: rgba(250, 179, 135, 0.2); color: #fab387; }
+    :host([kind="cancel"])  { background: rgba(243, 139, 168, 0.2); color: #f38ba8; }
   `;
 
   override render() {

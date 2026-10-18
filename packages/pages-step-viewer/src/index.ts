@@ -18,3 +18,8 @@ export type { ActionIcon } from './icons.js';
 export { parseExpressions } from './expression.js';
 export type { ExpressionSegment, ExpressionScope } from './expression.js';
 
+export { StateMachineView } from './state-machine-view.js';
+export type { StateMachineData } from './state-machine-view.js';
+
+export { DiffSummary } from './diff-summary.js';
+export type { DiffStat } from './diff-summary.js';
