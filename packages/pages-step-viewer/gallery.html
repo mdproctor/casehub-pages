@@ -64,23 +64,62 @@
     margin-bottom: 12px;
   }
 
-  .card-container {
-    background: var(--surface);
+  /* ─── Tab Panel ─── */
+  .tab-panel {
+    margin: 16px 0;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 12px;
-    margin: 16px 0;
+    overflow: hidden;
   }
+  .tab-bar {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 8px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: inherit;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+  .tab-content {
+    display: none;
+    padding: 12px;
+    background: var(--surface);
+  }
+  .tab-content.active { display: block; }
+  .tab-content.yaml-tab {
+    padding: 0;
+  }
+  .tab-content.yaml-tab pre {
+    margin: 0;
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .yaml-key { color: var(--blue); }
+  .yaml-str { color: var(--green); }
+  .yaml-num { color: var(--peach); }
+  .yaml-comment { color: var(--text-dim); font-style: italic; }
 
   step-card { margin-bottom: 4px; }
   step-card:last-child { margin-bottom: 0; }
-
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin: 16px 0;
-  }
 
   .badge-grid {
     display: flex;
@@ -93,175 +132,340 @@
     border-radius: 8px;
   }
 
-  .compare-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
+  .error-banner {
+    padding: 12px 16px;
+    background: rgba(243, 139, 168, 0.12);
+    border: 1px solid rgba(243, 139, 168, 0.4);
+    border-radius: 6px;
+    color: var(--red);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    margin: 8px 0;
   }
 </style>
 </head>
 <body>
 
 <h1>Step Viewer — Component Gallery</h1>
-<p class="subtitle">Live rendering of &lt;step-card&gt; and &lt;decorator-badge&gt; components. Compare with <a href="http://localhost:8793/step-review-viewer.html" style="color: var(--blue);">design mockup</a>.</p>
+<p class="subtitle">Each section renders from YAML through Walker.resolve(). Switch tabs to see the source YAML that produced the rendering.</p>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>1. Action Icons</h2>
-<h3>every registered action type with its icon and color</h3>
-
-<div class="card-container" id="action-icons"></div>
+<h3>plugin actions resolved through the catalog — each icon maps to an action name</h3>
+<div id="section-1"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>2. Sequential Steps — Form Automation</h2>
-<h3>matching mockup section 3: navigate, fill, select, click, assert</h3>
-
-<div class="card-container" id="form-sequence"></div>
+<h3>matching mockup section 3: navigate, fill, click, assert</h3>
+<div id="section-2"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>3. Decorator Badges</h2>
-<h3>all six badge types, isolated then combined</h3>
-
-<div class="two-col">
-  <div>
-    <div class="compare-label">Individual decorators</div>
-    <div class="card-container" id="decorators-single"></div>
-  </div>
-  <div>
-    <div class="compare-label">Multiple decorators on one step</div>
-    <div class="card-container" id="decorators-multi"></div>
-  </div>
-</div>
+<h3>decorators are sibling keys of the action — Walker extracts them automatically</h3>
+<div id="section-3"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>4. Expression Pills</h2>
 <h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
-
-<div class="card-container" id="expressions"></div>
+<div id="section-4"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>5. Diff States</h2>
-<h3>added (green + NEW), removed (red strikethrough - REMOVED), modified (amber MODIFIED)</h3>
-
-<div class="card-container" id="diff-states"></div>
+<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<div id="section-5"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>6. Edge Cases</h2>
-<h3>unknown actions, long values, empty params, deeply nested expressions</h3>
-
-<div class="card-container" id="edge-cases"></div>
+<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<div id="section-6"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>7. Decorator Badges — Isolated</h2>
 <h3>standalone badge rendering outside step cards</h3>
-
 <div class="badge-grid" id="badge-grid"></div>
 
 
 <script type="module">
   import './src/step-card.ts';
   import './src/decorator-badge.ts';
+  import { Walker } from '@casehubio/yaml-core/step';
+  import { parse } from 'yaml';
 
-  function pluginStep(action, params, decorators = {}, name = null) {
-    return {
-      kind: 'plugin',
-      name,
-      entry: {
-        qualifiedName: action,
-        definition: {},
+  // ── Demo Catalog ──
+  // Resolves any non-reserved action name. The gallery is about rendering,
+  // not validation — so every action lookup succeeds.
+  const demoCatalog = {
+    resolve(name) {
+      return {
+        qualifiedName: name,
+        definition: { name, inputs: {}, outputs: {} },
         action: { execute: async () => ({ kind: 'success', output: {}, executionMetadata: {} }) },
-      },
-      params,
-      decorators,
-    };
+      };
+    },
+    availableActions() { return new Set(); },
+  };
+
+  // ── YAML → ResolvedStep[] ──
+  function resolveYaml(yamlText) {
+    const doc = parse(yamlText);
+    const steps = Array.isArray(doc) ? doc : doc.steps ?? doc;
+    return Walker.resolve(steps, demoCatalog);
   }
 
-  function addCard(id, step, diffState) {
-    const card = document.createElement('step-card');
-    card.step = step;
-    if (diffState) card.diffState = diffState;
-    document.getElementById(id).appendChild(card);
+  // ── Syntax highlighting for YAML source ──
+  function highlightYaml(text) {
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/(#.*)$/gm, '<span class="yaml-comment">$1</span>')
+      .replace(/^(\s*)([\w-]+)(:)/gm, '$1<span class="yaml-key">$2</span>$3')
+      .replace(/:\s*(".*?")/g, ': <span class="yaml-str">$1</span>')
+      .replace(/:\s*(\d+)(\s|$)/g, ': <span class="yaml-num">$1</span>$2');
   }
 
+  // ── Tab Panel Builder ──
+  let panelId = 0;
+  function renderSection(containerId, yamlText, opts = {}) {
+    const id = panelId++;
+    const container = document.getElementById(containerId);
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${id}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${id}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${id}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${id}">
+        <pre>${highlightYaml(yamlText.trim())}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+
+    // Wire tab switching
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Resolve and render
+    try {
+      const steps = resolveYaml(yamlText);
+      const target = document.getElementById(`rendered-${id}`);
+      const diffStates = opts.diffStates ?? [];
+      steps.forEach((step, i) => {
+        if (step.kind === 'plugin') {
+          const card = document.createElement('step-card');
+          card.step = step;
+          if (diffStates[i]) card.diffState = diffStates[i];
+          target.appendChild(card);
+        }
+      });
+    } catch (e) {
+      const err = document.createElement('div');
+      err.className = 'error-banner';
+      err.textContent = `Walker error: ${e.message}`;
+      document.getElementById(`rendered-${id}`).appendChild(err);
+    }
+  }
+
+  // ═══════════════════════════════════════════════
+  // 1. Action Icons
+  // Only plugin actions (catalog-resolved). Reserved keys like signal,
+  // await, delay, select are Walker-level constructs — not plugin steps.
+  // ═══════════════════════════════════════════════
+  renderSection('section-1', `
+# Plugin actions resolved through the catalog
+- click:
+    target: button
+    value: "Login"
+- fill:
+    target: textbox
+    value: "Username"
+    content: "admin"
+- navigate:
+    value: /dashboard/settings
+- assert:
+    target: heading
+    value: "Dashboard"
+- log:
+    value: "checkpoint reached"
+- graphql:
+    value: "query { users { id name } }"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 2. Form Sequence
+  // Decorators (retry, timeout) are sibling keys of the action key.
+  // Walker separates them from action params automatically.
+  // ═══════════════════════════════════════════════
+  renderSection('section-2', `
+- navigate:
+    value: /helpdesk/intake
+- fill:
+    target: textbox
+    value: "Customer Name"
+    content: "Alice Chen"
+- fill:
+    target: textbox
+    value: "Description"
+    content: "Cannot access dashboard"
+- click:
+    target: button
+    value: "Submit"
+  retry: 3
+- assert:
+    target: alert
+    value: "Submission confirmation"
+  timeout: 5000
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 3. Decorator Badges
+  // Each decorator is a sibling key in the step YAML object.
+  // ═══════════════════════════════════════════════
+  renderSection('section-3', `
+# retry — peach badge
+- click:
+    target: button
+    value: "Retry me"
+  retry: 3
+
+# timeout — amber badge
+- assert:
+    target: alert
+    value: "Wait for me"
+  timeout: 5000
+
+# loop — teal badge (requires timeout or cancel)
+- log:
+    value: "Looping"
+  loop: continuous
+  timeout: 30000
+
+# when — purple badge
+- click:
+    target: button
+    value: "Conditional"
+  when: "\${each.member.admin}"
+
+# mutex — red badge
+- fill:
+    target: field
+    value: "Critical"
+  mutex: write-lock
+
+# forEach — blue badge
+- fill:
+    target: row
+    value: "Name"
+  forEach: "member in members"
+
+# Multiple decorators on one step
+- click:
+    target: button
+    value: "Submit order"
+  retry: 3
+  timeout: 10000
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 4. Expression Pills
+  // Expression syntax ${scope.path} in param values gets colored pills.
+  // ═══════════════════════════════════════════════
+  renderSection('section-4', `
+# params scope — blue pills
+- navigate:
+    value: "#teams/\${params.teamName}"
+
+# each scope — green pills
+- fill:
+    target: textbox
+    value: "Full Name"
+    content: "\${each.member.name}"
+
+# from scope — peach pills
+- log:
+    value: "Processing \${from.value}."
+
+# module scope — purple pills
+- fill:
+    target: dataset
+    value: "\${module.ops.panelId}"
+    content: "-feed"
+
+# Mixed scopes in one value
+- navigate:
+    value: "/org/\${params.orgId}/team/\${params.teamId}/member/\${each.memberId}"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 5. Diff States
+  // Diff overlays are applied post-resolution — not part of YAML.
+  // ═══════════════════════════════════════════════
+  renderSection('section-5', `
+# These steps get diff overlays applied after resolution
+- click:
+    target: button
+    value: "New Step"
+- fill:
+    target: textbox
+    value: "Old Field"
+    content: "deprecated"
+- navigate:
+    value: /updated/path
+- click:
+    target: button
+    value: "Unchanged"
+- assert:
+    target: alert
+    value: "New assertion"
+  timeout: 3000
+  `, { diffStates: ['added', 'removed', 'modified', undefined, 'added'] });
+
+  // ═══════════════════════════════════════════════
+  // 6. Edge Cases
+  // ═══════════════════════════════════════════════
+  renderSection('section-6', `
+# Unknown action — falls back to default icon
+- custom-plugin:
+    value: "falls back to default icon"
+
+# Empty params
+- click: {}
+
+# All four expression scopes in one value
+- navigate:
+    value: "/\${params.org}/\${each.team}/\${from.channel}/\${module.panel}"
+
+# All decorators on one step
+- fill:
+    target: field
+    value: "data"
+  retry: 3
+  timeout: 5000
+  forEach: "row in dataset"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 7. Isolated Badges
+  // ═══════════════════════════════════════════════
   function addBadge(id, kind, label) {
     const badge = document.createElement('decorator-badge');
     badge.kind = kind;
     badge.label = label;
     document.getElementById(id).appendChild(badge);
   }
-
-  // ── 1. Action Icons ──
-  addCard('action-icons', pluginStep('click', { target: 'button', value: '"Login"' }));
-  addCard('action-icons', pluginStep('fill', { target: 'textbox', value: '"Username"', content: '"admin"' }));
-  addCard('action-icons', pluginStep('select', { target: 'combobox', value: '"Role"', content: '"Editor"' }));
-  addCard('action-icons', pluginStep('navigate', { value: '/dashboard/settings' }));
-  addCard('action-icons', pluginStep('assert', { target: 'heading', value: '"Dashboard"' }));
-  addCard('action-icons', pluginStep('log', { value: '"checkpoint reached"' }));
-  addCard('action-icons', pluginStep('signal', { value: 'data-ready' }));
-  addCard('action-icons', pluginStep('await', { target: 'signal:', value: 'data-ready' }));
-  addCard('action-icons', pluginStep('graphql', { value: 'query { users { id name } }' }));
-  addCard('action-icons', pluginStep('delay', { value: '2000ms' }));
-  addCard('action-icons', pluginStep('custom-action', { value: 'unknown action renders default icon' }));
-
-  // ── 2. Form Sequence ──
-  addCard('form-sequence', pluginStep('navigate', { value: '/helpdesk/intake' }));
-  addCard('form-sequence', pluginStep('fill', { target: 'textbox', value: '"Customer Name"', content: '"Alice Chen"' }));
-  addCard('form-sequence', pluginStep('fill', { target: 'textbox', value: '"Description"', content: '"Cannot access dashboard"' }));
-  addCard('form-sequence', pluginStep('select', { target: 'combobox', value: '"Priority"', content: '"High"' }));
-  addCard('form-sequence', pluginStep('click', { target: 'button', value: '"Submit"' }, { retry: 3 }));
-  addCard('form-sequence', pluginStep('assert', { target: 'alert', value: '"Submission confirmation"' }, { timeout: 5000 }));
-
-  // ── 3. Decorators ──
-  addCard('decorators-single', pluginStep('click', { target: 'button', value: '"Retry me"' }, { retry: 3 }));
-  addCard('decorators-single', pluginStep('assert', { target: 'alert', value: '"Wait for me"' }, { timeout: 5000 }));
-  addCard('decorators-single', pluginStep('log', { value: '"Looping"' }, { loop: 'continuous' }));
-  addCard('decorators-single', pluginStep('click', { target: 'button', value: '"Conditional"' }, { when: '${each.member.admin}' }));
-  addCard('decorators-single', pluginStep('fill', { target: 'field', value: '"Critical"' }, { mutex: 'write-lock' }));
-  addCard('decorators-single', pluginStep('fill', { target: 'row', value: '"Name"' }, { forEach: 'member in members' }));
-
-  addCard('decorators-multi', pluginStep('click', { target: 'button', value: '"Submit"' }, { retry: 3, timeout: 10000 }));
-  addCard('decorators-multi', pluginStep('fill', { target: 'textbox', value: '"Data"' }, { forEach: 'item in list', when: '${each.item.active}' }));
-  addCard('decorators-multi', pluginStep('assert', { target: 'table', value: '"Results"' }, { timeout: 30000, retry: 5, mutex: 'db-lock' }));
-
-  // ── 4. Expression Pills ──
-  addCard('expressions', pluginStep('navigate', { value: '#teams/${params.teamName}' }));
-  addCard('expressions', pluginStep('fill', { target: 'textbox', value: '"Full Name"', content: '${each.member.name}' }));
-  addCard('expressions', pluginStep('click', { target: 'button', value: '"Grant Admin"' }, { when: '${each.member.admin}' }), undefined);
-  addCard('expressions', pluginStep('log', { value: '"Processing ${from.value}."' }));
-  addCard('expressions', pluginStep('fill', { target: 'dataset', value: '${module.ops.panelId}', content: '-feed' }));
-  addCard('expressions', pluginStep('navigate', { value: '/org/${params.orgId}/team/${params.teamId}/member/${each.memberId}' }));
-
-  // ── 5. Diff States ──
-  addCard('diff-states', pluginStep('click', { target: 'button', value: '"New Step"' }), 'added');
-  addCard('diff-states', pluginStep('fill', { target: 'textbox', value: '"Old Field"', content: '"deprecated"' }), 'removed');
-  addCard('diff-states', pluginStep('navigate', { value: '/updated/path' }), 'modified');
-  addCard('diff-states', pluginStep('click', { target: 'button', value: '"Unchanged"' }));
-  addCard('diff-states', pluginStep('assert', { target: 'alert', value: '"New assertion"' }, { timeout: 3000 }), 'added');
-  addCard('diff-states', pluginStep('fill', { target: 'textbox', value: '"Changed"' }, { retry: 2 }), 'modified');
-
-  // ── 6. Edge Cases ──
-  addCard('edge-cases', pluginStep('custom-plugin', { value: '"falls back to default ▸ icon"' }));
-  addCard('edge-cases', pluginStep('com.casehub.actions.click', { target: 'button', value: '"qualified name extracts last segment"' }));
-  addCard('edge-cases', pluginStep('fill', {
-    target: 'textarea',
-    value: '"A very long value that should not break the card layout even when it extends past the normal expected width of a step card in the viewer"'
-  }));
-  addCard('edge-cases', pluginStep('click', {}));
-  addCard('edge-cases', pluginStep('navigate', { value: '/${params.org}/${each.team}/${from.channel}/${module.panel}' }));
-  addCard('edge-cases', pluginStep('fill', { target: 'field', value: '"data"' }, {
-    retry: 3, timeout: 5000, loop: 10, when: '${params.enabled}', mutex: 'global', forEach: 'row in dataset'
-  }));
-
-  // ── 7. Isolated Badges ──
   addBadge('badge-grid', 'retry', 'retry: 3');
   addBadge('badge-grid', 'timeout', '5000ms');
   addBadge('badge-grid', 'loop', 'continuous');
