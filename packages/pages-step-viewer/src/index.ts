@@ -1,6 +1,8 @@
 export { StepCard } from './step-card.js';
 export type { DiffState } from './step-card.js';
 
+export { SwimLaneView } from './swim-lane-view.js';
+
 export { DecoratorBadge } from './decorator-badge.js';
 export type { DecoratorKind } from './decorator-badge.js';
 

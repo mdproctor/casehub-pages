@@ -169,31 +169,44 @@
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>4. Expression Pills</h2>
-<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
+<h2>4. Swim Lanes — Named Branches</h2>
+<h3>parallel step with named branches rendered as CSS Grid columns</h3>
 <div id="section-4"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>5. Diff States</h2>
-<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<h2>5. Swim Lanes — Three Branches</h2>
+<h3>three-branch concurrent block with steps in each lane</h3>
 <div id="section-5"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>6. Edge Cases</h2>
-<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<h2>6. Expression Pills</h2>
+<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
 <div id="section-6"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>7. Decorator Badges — Isolated</h2>
+<h2>7. Diff States</h2>
+<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<div id="section-7"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>8. Edge Cases</h2>
+<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<div id="section-8"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>9. Decorator Badges — Isolated</h2>
 <h3>standalone badge rendering outside step cards</h3>
 <div class="badge-grid" id="badge-grid"></div>
 
 
 <script type="module">
   import './src/step-card.ts';
+  import './src/swim-lane-view.ts';
   import './src/decorator-badge.ts';
   import { Walker } from '@casehubio/yaml-core/step';
   import { parse } from 'yaml';
@@ -269,6 +282,10 @@
           card.step = step;
           if (diffStates[i]) card.diffState = diffStates[i];
           target.appendChild(card);
+        } else if (step.kind === 'parallel') {
+          const lane = document.createElement('swim-lane-view');
+          lane.step = step;
+          target.appendChild(lane);
         }
       });
     } catch (e) {
@@ -380,10 +397,62 @@
   `);
 
   // ═══════════════════════════════════════════════
-  // 4. Expression Pills
-  // Expression syntax ${scope.path} in param values gets colored pills.
+  // 4. Swim Lanes — Named Branches
+  // parallel: { branchName: [...steps] } creates named swim lanes
   // ═══════════════════════════════════════════════
   renderSection('section-4', `
+# Named branches become labeled swim lane columns
+- parallel:
+    init:
+      - click:
+          target: button
+          value: "A"
+      - log:
+          value: "init complete"
+    worker:
+      - fill:
+          target: textbox
+          value: "Data"
+          content: "payload"
+      - click:
+          target: button
+          value: "B"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 5. Swim Lanes — Three Branches
+  // ═══════════════════════════════════════════════
+  renderSection('section-5', `
+# Three named branches — fast, medium, slow
+- parallel:
+    fast:
+      - click:
+          target: button
+          value: "A"
+    medium:
+      - click:
+          target: button
+          value: "B"
+      - log:
+          value: "medium done"
+    slow:
+      - click:
+          target: button
+          value: "C"
+      - fill:
+          target: textbox
+          value: "Result"
+          content: "complete"
+      - assert:
+          target: alert
+          value: "Finished"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 6. Expression Pills
+  // Expression syntax ${scope.path} in param values gets colored pills.
+  // ═══════════════════════════════════════════════
+  renderSection('section-6', `
 # params scope — blue pills
 - navigate:
     value: "#teams/\${params.teamName}"
@@ -413,7 +482,7 @@
   // 5. Diff States
   // Diff overlays are applied post-resolution — not part of YAML.
   // ═══════════════════════════════════════════════
-  renderSection('section-5', `
+  renderSection('section-7', `
 # These steps get diff overlays applied after resolution
 - click:
     target: button
@@ -436,7 +505,7 @@
   // ═══════════════════════════════════════════════
   // 6. Edge Cases
   // ═══════════════════════════════════════════════
-  renderSection('section-6', `
+  renderSection('section-8', `
 # Unknown action — falls back to default icon
 - custom-plugin:
     value: "falls back to default icon"
