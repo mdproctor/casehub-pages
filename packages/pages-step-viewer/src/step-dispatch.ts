@@ -6,11 +6,14 @@ import './step-block-view.js';
 import './if-else-view.js';
 import './match-view.js';
 import './try-catch-view.js';
+import './invoke-card.js';
 
 export function renderStepContent(step: ResolvedStep): TemplateResult {
   switch (step.kind) {
     case 'plugin':
       return html`<step-card .step=${step}></step-card>`;
+    case 'invoke':
+      return html`<invoke-card .step=${step}></invoke-card>`;
     case 'parallel':
       return html`<swim-lane-view .step=${step}></swim-lane-view>`;
     case 'block':

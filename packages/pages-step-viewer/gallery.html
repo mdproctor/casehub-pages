@@ -211,31 +211,38 @@
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>10. Expression Pills</h2>
-<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
+<h2>10. Invoke Cards</h2>
+<h3>REST, GraphQL, MCP call cards with method badges and request bodies</h3>
 <div id="section-10"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>11. Diff States</h2>
-<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<h2>11. Expression Pills</h2>
+<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
 <div id="section-11"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>12. Edge Cases</h2>
-<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<h2>12. Diff States</h2>
+<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
 <div id="section-12"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>13. Decorator Badges — Isolated</h2>
+<h2>13. Edge Cases</h2>
+<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<div id="section-13"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>14. Decorator Badges — Isolated</h2>
 <h3>standalone badge rendering outside step cards</h3>
 <div class="badge-grid" id="badge-grid"></div>
 
 
 <script type="module">
   import './src/step-dispatch.ts';
+  import './src/invoke-card.ts';
   import './src/decorator-badge.ts';
   import { Walker } from '@casehubio/yaml-core/step';
   import { parse } from 'yaml';
@@ -316,6 +323,9 @@
           el.step = step;
         } else if (step.kind === 'block') {
           el = document.createElement('step-block-view');
+          el.step = step;
+        } else if (step.kind === 'invoke') {
+          el = document.createElement('invoke-card');
           el.step = step;
         } else if (step.kind === 'if-else') {
           el = document.createElement('if-else-view');
@@ -632,10 +642,44 @@
   `);
 
   // ═══════════════════════════════════════════════
-  // 10. Expression Pills
-  // Expression syntax ${scope.path} in param values gets colored pills.
+  // 10. Invoke Cards
+  // REST, GraphQL, MCP call cards.
   // ═══════════════════════════════════════════════
   renderSection('section-10', `
+# REST call
+- step: create-case
+  invoke:
+    rest:
+      method: POST
+      url: /api/cases
+      customer: "Alice Chen"
+      channel: "web"
+      summary: "Dashboard access issue"
+
+# GraphQL call
+- step: inject-chat
+  invoke:
+    graphql:
+      query: "mutation injectChat"
+      platform: "slack"
+      sender: "Alice"
+      channel: "support"
+      text: "My laptop won't boot"
+
+# MCP tool call
+- step: greet-user
+  invoke:
+    mcp:
+      tool: greeter
+      name: "Alice"
+      locale: "en-GB"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 11. Expression Pills
+  // Expression syntax ${scope.path} in param values gets colored pills.
+  // ═══════════════════════════════════════════════
+  renderSection('section-11', `
 # params scope — blue pills
 - navigate:
     value: "#teams/\${params.teamName}"
@@ -665,7 +709,7 @@
   // 5. Diff States
   // Diff overlays are applied post-resolution — not part of YAML.
   // ═══════════════════════════════════════════════
-  renderSection('section-11', `
+  renderSection('section-12', `
 # These steps get diff overlays applied after resolution
 - click:
     target: button
@@ -688,7 +732,7 @@
   // ═══════════════════════════════════════════════
   // 6. Edge Cases
   // ═══════════════════════════════════════════════
-  renderSection('section-12', `
+  renderSection('section-13', `
 # Unknown action — falls back to default icon
 - custom-plugin:
     value: "falls back to default icon"

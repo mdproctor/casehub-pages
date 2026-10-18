@@ -6,6 +6,7 @@ export { StepBlockView } from './step-block-view.js';
 export { IfElseView } from './if-else-view.js';
 export { MatchView } from './match-view.js';
 export { TryCatchView } from './try-catch-view.js';
+export { InvokeCard } from './invoke-card.js';
 export { renderStepContent } from './step-dispatch.js';
 
 export { DecoratorBadge } from './decorator-badge.js';
