@@ -23,7 +23,7 @@ const BADGE_MAP: Record<string, { badge: string; badgeClass: string }> = {
 @customElement('invoke-card')
 export class InvokeCard extends LitElement {
   @property({ attribute: false }) step!: InvokeStep;
-  @property({ reflect: true, attribute: 'body-layout' }) bodyLayout: 'block' | 'inline' = 'block';
+  @property({ reflect: true, attribute: 'body-layout' }) bodyLayout: 'block' | 'inline' | 'compact' = 'block';
 
   static override styles = css`
     :host {
@@ -92,6 +92,44 @@ export class InvokeCard extends LitElement {
     }
     :host([body-layout="inline"]) .body-entry:last-child::after {
       content: '';
+    }
+
+    :host([body-layout="compact"]) {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    :host([body-layout="compact"]:hover) {
+      background: rgba(255, 255, 255, 0.07);
+    }
+    :host([body-layout="compact"]) .header {
+      display: contents;
+      padding: 0;
+      background: none;
+      border: none;
+    }
+    :host([body-layout="compact"]) .body {
+      display: contents;
+      padding: 0;
+    }
+    :host([body-layout="compact"]) .body-entry {
+      display: inline;
+    }
+    :host([body-layout="compact"]) .body-entry::after {
+      content: ',';
+      color: #7f849c;
+      margin-right: 4px;
+    }
+    :host([body-layout="compact"]) .body-entry:last-child::after {
+      content: '';
+    }
+    :host([body-layout="compact"]) .step-name {
+      margin-left: auto;
     }
 
     .decorators {

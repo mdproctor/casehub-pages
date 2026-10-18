@@ -7,6 +7,7 @@ import './if-else-view.js';
 import './match-view.js';
 import './try-catch-view.js';
 import './invoke-card.js';
+import './error-step.js';
 
 export function renderStepContent(step: ResolvedStep): TemplateResult {
   switch (step.kind) {
@@ -25,6 +26,6 @@ export function renderStepContent(step: ResolvedStep): TemplateResult {
     case 'try-catch-finally':
       return html`<try-catch-view .step=${step}></try-catch-view>`;
     default:
-      return html`<div class="unsupported-step">${step.kind} (not yet rendered)</div>`;
+      return html`<error-step kind="${step.kind}" message="unsupported step type"></error-step>`;
   }
 }

@@ -678,13 +678,15 @@
       locale: "en-GB"
   `);
 
-  // Layout toggle for invoke cards
+  // Layout toggle for invoke cards — cycles block → inline → compact
+  const LAYOUTS = ['block', 'inline', 'compact'];
   document.getElementById('layout-toggle').addEventListener('click', () => {
     const cards = document.querySelectorAll('invoke-card');
     const current = cards[0]?.getAttribute('body-layout') ?? 'block';
-    const next = current === 'block' ? 'inline' : 'block';
+    const next = LAYOUTS[(LAYOUTS.indexOf(current) + 1) % LAYOUTS.length];
     cards.forEach(c => c.setAttribute('body-layout', next));
-    document.getElementById('layout-toggle').textContent = `Toggle layout: ${next} → ${next === 'block' ? 'inline' : 'block'}`;
+    const after = LAYOUTS[(LAYOUTS.indexOf(next) + 1) % LAYOUTS.length];
+    document.getElementById('layout-toggle').textContent = `Toggle layout: ${next} → ${after}`;
   });
 
   // ═══════════════════════════════════════════════
