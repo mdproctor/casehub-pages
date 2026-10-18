@@ -121,6 +121,10 @@
   step-card { margin-bottom: 4px; }
   step-card:last-child { margin-bottom: 0; }
 
+  swim-lane-view {
+    margin: 8px 0;
+  }
+
   .badge-grid {
     display: flex;
     flex-wrap: wrap;
@@ -181,25 +185,34 @@
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>6. Expression Pills</h2>
-<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
-<div id="section-6"></div>
+<h2>6. Compositions</h2>
+<h3>how sequential steps and parallel blocks compose in a real playbook flow</h3>
+<div id="section-6a"></div>
+
+<h3>parallel block with decorators, sandwiched between sequential steps</h3>
+<div id="section-6b"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>7. Diff States</h2>
-<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
+<h2>7. Expression Pills</h2>
+<h3>colored by scope: params (blue), each (green), from (peach), module (purple)</h3>
 <div id="section-7"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>8. Edge Cases</h2>
-<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<h2>8. Diff States</h2>
+<h3>added, removed, modified overlays applied to walker-resolved steps</h3>
 <div id="section-8"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<h2>9. Decorator Badges — Isolated</h2>
+<h2>9. Edge Cases</h2>
+<h3>empty params, multi-expression paths, all decorators on one step</h3>
+<div id="section-9"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>10. Decorator Badges — Isolated</h2>
 <h3>standalone badge rendering outside step cards</h3>
 <div class="badge-grid" id="badge-grid"></div>
 
@@ -449,10 +462,91 @@
   `);
 
   // ═══════════════════════════════════════════════
-  // 6. Expression Pills
+  // 6a. Composition — Login Flow
+  // Sequential steps, then a parallel block, then more steps.
+  // This is the most common playbook shape.
+  // ═══════════════════════════════════════════════
+  renderSection('section-6a', `
+# Sequential setup
+- navigate:
+    value: /app/login
+- fill:
+    target: textbox
+    value: "Username"
+    content: "alice@example.com"
+- fill:
+    target: textbox
+    value: "Password"
+    content: "••••••••"
+- click:
+    target: button
+    value: "Sign In"
+
+# Parallel verification — two things happen at once
+- parallel:
+    verify-ui:
+      - assert:
+          target: heading
+          value: "Welcome, Alice"
+      - assert:
+          target: nav
+          value: "Dashboard"
+    verify-data:
+      - graphql:
+          value: "query { me { role permissions } }"
+      - assert:
+          target: role
+          value: "admin"
+
+# Sequential teardown after parallel completes
+- log:
+    value: "login verified"
+- navigate:
+    value: /app/dashboard
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 6b. Composition — Decorated Parallel in Context
+  // Parallel block with retry/timeout, between decorated steps.
+  // ═══════════════════════════════════════════════
+  renderSection('section-6b', `
+# Setup with expressions
+- navigate:
+    value: "/org/\${params.orgId}/settings"
+
+# Parallel data fetch with timeout on the whole block
+- parallel:
+    fetch-users:
+      - graphql:
+          value: "query { users { id name } }"
+    fetch-roles:
+      - graphql:
+          value: "query { roles { id label } }"
+    fetch-perms:
+      - graphql:
+          value: "query { permissions { scope } }"
+  timeout: 15000
+
+# Post-processing after all fetches complete
+- fill:
+    target: table
+    value: "Users"
+    content: "\${from.users}"
+- click:
+    target: button
+    value: "Save"
+  retry: 3
+- assert:
+    target: alert
+    value: "Settings saved"
+  timeout: 5000
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 7. Expression Pills
   // Expression syntax ${scope.path} in param values gets colored pills.
   // ═══════════════════════════════════════════════
-  renderSection('section-6', `
+  renderSection('section-7', `
 # params scope — blue pills
 - navigate:
     value: "#teams/\${params.teamName}"
@@ -482,7 +576,7 @@
   // 5. Diff States
   // Diff overlays are applied post-resolution — not part of YAML.
   // ═══════════════════════════════════════════════
-  renderSection('section-7', `
+  renderSection('section-8', `
 # These steps get diff overlays applied after resolution
 - click:
     target: button
@@ -505,7 +599,7 @@
   // ═══════════════════════════════════════════════
   // 6. Edge Cases
   // ═══════════════════════════════════════════════
-  renderSection('section-8', `
+  renderSection('section-9', `
 # Unknown action — falls back to default icon
 - custom-plugin:
     value: "falls back to default icon"
