@@ -10,6 +10,8 @@ export { InvokeCard } from './invoke-card.js';
 export { BarrierBar } from './barrier-bar.js';
 export { DataTableView } from './data-table-view.js';
 export type { ForEachBinding } from './data-table-view.js';
+export { YamlErrorBanner } from './yaml-error-banner.js';
+export type { ErrorCategory } from './yaml-error-banner.js';
 export { renderStepContent } from './step-dispatch.js';
 
 export { DecoratorBadge } from './decorator-badge.js';

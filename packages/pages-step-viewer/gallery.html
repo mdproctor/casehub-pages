@@ -296,6 +296,22 @@
 <div id="section-27"></div>
 
 
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>28. Degraded Mode — Parse Error</h2>
+<h3>invalid YAML syntax shows error banner instead of blank screen</h3>
+<div id="section-28"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>29. Degraded Mode — Walker Error (Partial Rendering)</h2>
+<h3>valid steps render normally, broken step shows inline error</h3>
+<div id="section-29"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>30. Degraded Mode — Semantic Warning</h2>
+<h3>signal references unresolved target — red dashed arrow with warning</h3>
+<div id="section-30"></div>
+
+
 <script type="module">
   import './src/step-dispatch.ts';
   import './src/state-machine-view.ts';
@@ -304,6 +320,7 @@
   import './src/decorator-badge.ts';
   import './src/barrier-bar.ts';
   import './src/data-table-view.ts';
+  import './src/yaml-error-banner.ts';
   import { Walker } from '@casehubio/yaml-core/step';
   import { CsvParser } from '@casehubio/yaml-core';
   import { parse } from 'yaml';
@@ -408,16 +425,16 @@
           el.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 12px;color:#7f849c;font-size:12px';
           el.innerHTML = `<span style="color:#f9e2af">⏱</span><span style="background:rgba(249,226,175,0.15);color:#f9e2af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${step.duration}ms</span>`;
         } else {
-          el = document.createElement('div');
-          el.className = 'error-banner';
-          el.textContent = `${step.kind} (not yet rendered)`;
+          el = document.createElement('error-step');
+          el.kind = step.kind;
+          el.message = 'unsupported step type';
         }
         target.appendChild(el);
       });
     } catch (e) {
-      const err = document.createElement('div');
-      err.className = 'error-banner';
-      err.textContent = `Walker error: ${e.message}`;
+      const err = document.createElement('yaml-error-banner');
+      err.category = 'walker';
+      err.message = e.message;
       document.getElementById(`rendered-${id}`).appendChild(err);
     }
   }
@@ -1181,6 +1198,138 @@
     tableView.data = csvData;
     tableView.forEach = { as: 'member', in: 'members' };
     document.getElementById(`rendered-${tId}`).appendChild(tableView);
+  }
+
+  // ═══════════════════════════════════════════════
+  // 16. Degraded Mode — Parse Error
+  // ═══════════════════════════════════════════════
+  {
+    const badYaml = `- click:
+    target: button
+    value: "A"
+- this is not valid: [yaml
+  missing: closing bracket`;
+    const container = document.getElementById('section-28');
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    const pId = panelId++;
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${pId}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${pId}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${pId}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${pId}">
+        <pre>${highlightYaml(badYaml)}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    const target = document.getElementById(`rendered-${pId}`);
+    try {
+      parse(badYaml);
+    } catch (e) {
+      const banner = document.createElement('yaml-error-banner');
+      banner.category = 'parse';
+      banner.message = e.message.split('\n')[0];
+      if (e.linePos) {
+        banner.line = e.linePos[0].line;
+        banner.column = e.linePos[0].col;
+      }
+      target.appendChild(banner);
+    }
+  }
+
+  // ═══════════════════════════════════════════════
+  // 17. Degraded Mode — Walker Error (Partial Rendering)
+  // ═══════════════════════════════════════════════
+  renderSection('section-29', `
+# First step renders fine, second has a Walker error
+- click:
+    target: button
+    value: "This renders normally"
+- barrier:
+    await: [nonexistent-step-a, nonexistent-step-b]
+- log:
+    value: "This also renders"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 18. Degraded Mode — Semantic Warning
+  // ═══════════════════════════════════════════════
+  {
+    const semanticYaml = `# Signal name doesn't match any await — unresolved
+- parallel:
+    sender:
+      - click:
+          target: button
+          value: "Send"
+        signal: data-ready
+    receiver:
+      - click:
+          target: button
+          value: "Waiting"
+        await: wrong-signal-name`;
+    const container = document.getElementById('section-30');
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    const sId = panelId++;
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${sId}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${sId}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${sId}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${sId}">
+        <pre>${highlightYaml(semanticYaml)}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    const target = document.getElementById(`rendered-${sId}`);
+    try {
+      const steps = resolveYaml(semanticYaml);
+      steps.forEach(step => {
+        let el;
+        if (step.kind === 'parallel') {
+          el = document.createElement('swim-lane-view');
+          el.step = step;
+        } else if (step.kind === 'plugin') {
+          el = document.createElement('step-card');
+          el.step = step;
+        } else {
+          el = document.createElement('error-step');
+          el.kind = step.kind;
+          el.message = 'unsupported';
+        }
+        target.appendChild(el);
+      });
+      const warn = document.createElement('yaml-error-banner');
+      warn.category = 'semantic';
+      warn.message = 'signal "data-ready" has no matching await — arrow has no target';
+      target.appendChild(warn);
+    } catch (e) {
+      const err = document.createElement('yaml-error-banner');
+      err.category = 'walker';
+      err.message = e.message;
+      target.appendChild(err);
+    }
   }
 
   // ═══════════════════════════════════════════════
