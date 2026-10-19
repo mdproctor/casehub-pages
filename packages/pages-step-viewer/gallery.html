@@ -259,8 +259,8 @@
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <h2>21. Unified Diff Overlay</h2>
-<h3>adding a 4th branch to a concurrent block — green lanes, modified badges</h3>
-<div id="section-21"></div>
+<h3>adding a 4th branch to a concurrent block — YAML-driven diff via &lt;pages-step-viewer&gt;</h3>
+<div id="section-21" style="display: flex; flex-direction: column; gap: 12px;"></div>
 
 
 <!-- ═══════════════════════════════════════════════════════ -->
@@ -326,6 +326,7 @@
   import './src/step-dispatch.ts';
   import './src/state-machine-view.ts';
   import './src/diff-summary.ts';
+  import './src/pages-step-viewer.ts';
   import './src/invoke-card.ts';
   import './src/decorator-badge.ts';
   import './src/barrier-bar.ts';
@@ -986,11 +987,28 @@
   `);
 
   // ═══════════════════════════════════════════════
-  // 9. Unified Diff Overlay
-  // Adding a 4th branch — existing branches normal, new branch green.
+  // 9. Unified Diff Overlay (YAML-driven)
+  // Two YAML inputs parsed and diffed via pages-step-viewer.
   // ═══════════════════════════════════════════════
   {
-    const diffYaml = `
+    const oldYaml = `
+- parallel:
+    fast:
+      - click:
+          target: button
+          value: "A"
+    medium:
+      - click:
+          target: button
+          value: "B"
+        delay: 1000
+    slow:
+      - click:
+          target: button
+          value: "C"
+        delay: 2000
+`;
+    const newYaml = `
 - parallel:
     fast:
       - click:
@@ -1013,43 +1031,36 @@
         delay: 3000
 `;
     const diffContainer = document.getElementById('section-21');
-    const diffPanel = document.createElement('div');
-    diffPanel.className = 'tab-panel';
-    const dId = panelId++;
-    diffPanel.innerHTML = `
-      <div class="tab-bar">
-        <button class="tab-btn active" data-tab="rendered-${dId}">Rendered</button>
-        <button class="tab-btn" data-tab="yaml-${dId}">YAML</button>
-      </div>
-      <div class="tab-content active" id="rendered-${dId}"></div>
-      <div class="tab-content yaml-tab" id="yaml-${dId}">
-        <pre>${highlightYaml(diffYaml.trim())}</pre>
-      </div>
-    `;
-    diffContainer.appendChild(diffPanel);
-    diffPanel.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        diffPanel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        diffPanel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-      });
-    });
 
-    const diffTarget = document.getElementById(`rendered-${dId}`);
-    const summary = document.createElement('diff-summary');
-    summary.stats = [
-      { state: 'added', count: 1, label: 'branch added' },
-      { state: 'added', count: 2, label: 'steps added' },
-    ];
-    diffTarget.appendChild(summary);
+    const yamlRow = document.createElement('div');
+    yamlRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px';
+    const makeEditor = (label, value) => {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `<div style="font-size:11px;font-weight:600;color:#7f849c;text-transform:uppercase;margin-bottom:4px">${label}</div>`;
+      const ta = document.createElement('textarea');
+      ta.style.cssText = 'width:100%;min-height:180px;background:#1e1e2e;color:#cdd6f4;border:1px solid #3b3d52;border-radius:6px;padding:8px;font-family:JetBrains Mono,Fira Code,monospace;font-size:12px;resize:vertical';
+      ta.value = value.trim();
+      wrap.appendChild(ta);
+      return { wrap, ta };
+    };
+    const oldEd = makeEditor('Old YAML', oldYaml);
+    const newEd = makeEditor('New YAML', newYaml);
+    yamlRow.appendChild(oldEd.wrap);
+    yamlRow.appendChild(newEd.wrap);
+    diffContainer.appendChild(yamlRow);
 
-    const steps = resolveYaml(diffYaml);
-    const laneView = document.createElement('swim-lane-view');
-    laneView.step = steps[0];
-    laneView.diffState = 'modified';
-    laneView.branchDiffStates = { extra: 'added' };
-    diffTarget.appendChild(laneView);
+    const viewer = document.createElement('pages-step-viewer');
+    diffContainer.appendChild(viewer);
+
+    const updateDiff = () => {
+      try {
+        viewer.oldSteps = resolveYaml(oldEd.ta.value);
+        viewer.newSteps = resolveYaml(newEd.ta.value);
+      } catch (e) { /* ignore parse errors during typing */ }
+    };
+    oldEd.ta.addEventListener('input', updateDiff);
+    newEd.ta.addEventListener('input', updateDiff);
+    updateDiff();
   }
 
   // ═══════════════════════════════════════════════

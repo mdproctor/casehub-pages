@@ -143,13 +143,7 @@ export class SwimLaneView extends LitElement {
   }
 
   private renderHeaderDiff(): TemplateResult | typeof nothing {
-    if (!this.diffState) return nothing;
-    const labels: Record<DiffState, string> = {
-      added: 'ADDED',
-      removed: 'REMOVED',
-      modified: 'MODIFIED',
-    };
-    return html`<span class="diff-marker ${this.diffState}">${labels[this.diffState]}</span>`;
+    return renderDiffMarker(this.diffState);
   }
 
   private renderBranch(branch: { name: string; steps: ResolvedStep[] }): TemplateResult {
