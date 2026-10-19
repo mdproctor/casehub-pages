@@ -275,13 +275,37 @@
 <div id="section-23"></div>
 
 
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>24. Barrier — Synchronization Point</h2>
+<h3>all branches must reach the barrier before execution continues</h3>
+<div id="section-24"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>25. Quorum — Partial Synchronization</h2>
+<h3>only N of M branches must complete before continuing</h3>
+<div id="section-25"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>26. Signal Arrows — Cross-Lane Communication</h2>
+<h3>signal/await pairs shown as dashed arrows between branches</h3>
+<div id="section-26"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>27. Inline CSV Data Table</h2>
+<h3>CSV data section rendered as a typed table with forEach binding</h3>
+<div id="section-27"></div>
+
+
 <script type="module">
   import './src/step-dispatch.ts';
   import './src/state-machine-view.ts';
   import './src/diff-summary.ts';
   import './src/invoke-card.ts';
   import './src/decorator-badge.ts';
+  import './src/barrier-bar.ts';
+  import './src/data-table-view.ts';
   import { Walker } from '@casehubio/yaml-core/step';
+  import { CsvParser } from '@casehubio/yaml-core';
   import { parse } from 'yaml';
 
   // ── Demo Catalog ──
@@ -375,6 +399,9 @@
           el.step = step;
         } else if (step.kind === 'try-catch-finally') {
           el = document.createElement('try-catch-view');
+          el.step = step;
+        } else if (step.kind === 'barrier' || step.kind === 'quorum') {
+          el = document.createElement('barrier-bar');
           el.step = step;
         } else if (step.kind === 'delay') {
           el = document.createElement('div');
@@ -1039,6 +1066,122 @@
       - log:
           value: "Enricher stopped"
   `);
+
+  // ═══════════════════════════════════════════════
+  // 12. Barrier — Synchronization Point
+  // ═══════════════════════════════════════════════
+  renderSection('section-24', `
+# Named steps, then barrier synchronizes on them
+- click:
+    target: button
+    value: "Start Init"
+  step: init-done
+- click:
+    target: button
+    value: "Start Worker"
+  step: worker-done
+- barrier:
+    name: sync
+    await: [init-done, worker-done]
+- click:
+    target: button
+    value: "Post-barrier work"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 13. Quorum — Partial Synchronization
+  // ═══════════════════════════════════════════════
+  renderSection('section-25', `
+# Three named steps, quorum requires 2 of 3
+- click:
+    target: button
+    value: "Task A"
+  step: task-a
+- click:
+    target: button
+    value: "Task B"
+  step: task-b
+- click:
+    target: button
+    value: "Task C"
+  step: task-c
+- quorum:
+    name: majority
+    required: 2
+    of: [task-a, task-b, task-c]
+    timeout: "5000ms"
+- log:
+    value: "Quorum reached — continuing"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 14. Signal Arrows — Cross-Lane Communication
+  // ═══════════════════════════════════════════════
+  renderSection('section-26', `
+# init signals ready, worker awaits it — signal/await are decorators
+- parallel:
+    init:
+      - click:
+          target: button
+          value: "A"
+      - log:
+          value: "init complete"
+        signal: ready
+    worker:
+      - log:
+          value: "waiting"
+        await: ready
+      - click:
+          target: button
+          value: "B"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 15. Inline CSV Data Table
+  // ═══════════════════════════════════════════════
+  {
+    const csvData = CsvParser.parse('members',
+      'name:STRING,email:STRING,role:STRING,admin:BOOLEAN\n' +
+      'Alice Chen,alice@example.com,Developer,true\n' +
+      'Bob Martin,bob@example.com,Viewer,false\n' +
+      'Carol White,carol@example.com,Lead,true'
+    );
+    const container = document.getElementById('section-27');
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel';
+    const tId = panelId++;
+    const csvYaml = `data:
+  members:
+    inline: |
+      name:STRING,email:STRING,role:STRING,admin:BOOLEAN
+      Alice Chen,alice@example.com,Developer,true
+      Bob Martin,bob@example.com,Viewer,false
+      Carol White,carol@example.com,Lead,true`;
+    panel.innerHTML = `
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="rendered-${tId}">Rendered</button>
+        <button class="tab-btn" data-tab="yaml-${tId}">YAML</button>
+      </div>
+      <div class="tab-content active" id="rendered-${tId}"></div>
+      <div class="tab-content yaml-tab" id="yaml-${tId}">
+        <pre>${highlightYaml(csvYaml)}</pre>
+      </div>
+    `;
+    container.appendChild(panel);
+    panel.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    const tableView = document.createElement('data-table-view');
+    tableView.data = csvData;
+    tableView.forEach = { as: 'member', in: 'members' };
+    document.getElementById(`rendered-${tId}`).appendChild(tableView);
+  }
 
   // ═══════════════════════════════════════════════
   // 7. Isolated Badges

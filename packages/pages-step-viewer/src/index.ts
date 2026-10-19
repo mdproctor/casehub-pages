@@ -7,6 +7,9 @@ export { IfElseView } from './if-else-view.js';
 export { MatchView } from './match-view.js';
 export { TryCatchView } from './try-catch-view.js';
 export { InvokeCard } from './invoke-card.js';
+export { BarrierBar } from './barrier-bar.js';
+export { DataTableView } from './data-table-view.js';
+export type { ForEachBinding } from './data-table-view.js';
 export { renderStepContent } from './step-dispatch.js';
 
 export { DecoratorBadge } from './decorator-badge.js';
