@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { SelectStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import { renderDiffContent } from './diff-dispatch.js';
 import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
@@ -102,9 +103,11 @@ export class SelectView extends LitElement {
             <span class="branch-name">${branch.name}</span>
             <span class="arrow">→</span>
             <div class="branch-steps">
-              ${branch.steps.length > 0
-                ? branch.steps.map(s => renderStepContent(s))
-                : html`<div style="color: #7f849c; font-size: 12px; font-style: italic; margin-top: 8px;">no steps</div>`
+              ${this.diffNode?.scopes?.[branch.name]
+                ? this.diffNode.scopes[branch.name].map(n => renderDiffContent(n))
+                : branch.steps.length > 0
+                  ? branch.steps.map(s => renderStepContent(s))
+                  : html`<div style="color: #7f849c; font-size: 12px; font-style: italic; margin-top: 8px;">no steps</div>`
               }
             </div>
           </div>

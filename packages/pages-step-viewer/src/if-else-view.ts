@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { IfElseStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import { renderDiffContent } from './diff-dispatch.js';
 import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
@@ -81,13 +82,17 @@ export class IfElseView extends LitElement {
       <div class="branches">
         <div class="branch">
           <div class="branch-label then">THEN</div>
-          ${this.step.thenSteps.map(s => renderStepContent(s))}
+          ${this.diffNode?.scopes?.['then']
+            ? this.diffNode.scopes['then'].map(n => renderDiffContent(n))
+            : this.step.thenSteps.map(s => renderStepContent(s))}
         </div>
         <div class="branch">
           <div class="branch-label else">ELSE</div>
-          ${this.step.elseSteps.length > 0
-            ? this.step.elseSteps.map(s => renderStepContent(s))
-            : html`<div style="color: #7f849c; font-size: 12px; font-style: italic;">no steps</div>`
+          ${this.diffNode?.scopes?.['else']
+            ? this.diffNode.scopes['else'].map(n => renderDiffContent(n))
+            : this.step.elseSteps.length > 0
+              ? this.step.elseSteps.map(s => renderStepContent(s))
+              : html`<div style="color: #7f849c; font-size: 12px; font-style: italic;">no steps</div>`
           }
         </div>
       </div>

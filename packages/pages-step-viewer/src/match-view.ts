@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { MatchStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import { renderDiffContent } from './diff-dispatch.js';
 import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
@@ -92,12 +93,14 @@ export class MatchView extends LitElement {
         <span class="scrutinee">${this.step.scrutinee}</span>
       </div>
       <div class="cases">
-        ${this.step.cases.map(c => html`
+        ${this.step.cases.map((c, i) => html`
           <div class="case-row">
             <span class="pattern ${c.pattern.type === 'default' ? 'default' : ''}">${this.formatPattern(c)}</span>
             <span class="arrow">→</span>
             <div class="case-steps">
-              ${c.steps.map(s => renderStepContent(s))}
+              ${this.diffNode?.scopes?.[`case-${i}`]
+                ? this.diffNode.scopes[`case-${i}`].map(n => renderDiffContent(n))
+                : c.steps.map(s => renderStepContent(s))}
             </div>
           </div>
         `)}

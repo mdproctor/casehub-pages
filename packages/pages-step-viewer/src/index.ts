@@ -34,3 +34,6 @@ export type { DiffStat, DiffNode, DiffResult, FieldChange, DiffStatState } from 
 export { renderDiffMarker, renderFieldChanges, diffTokenStyles, diffMarkerStyles } from './diff-shared.js';
 
 export { PagesDelayStep } from './delay-step.js';
+
+export { PagesStepViewer } from './pages-step-viewer.js';
+export { renderDiffContent } from './diff-dispatch.js';

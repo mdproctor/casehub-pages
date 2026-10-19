@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { TryCatchFinallyStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import { renderDiffContent } from './diff-dispatch.js';
 import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
@@ -68,18 +69,24 @@ export class TryCatchView extends LitElement {
       </div>
       <div class="region try">
         <div class="region-label try">TRY</div>
-        ${this.step.trySteps.map(s => renderStepContent(s))}
+        ${this.diffNode?.scopes?.['try']
+          ? this.diffNode.scopes['try'].map(n => renderDiffContent(n))
+          : this.step.trySteps.map(s => renderStepContent(s))}
       </div>
       ${this.step.catchSteps.length > 0 ? html`
         <div class="region catch">
           <div class="region-label catch">CATCH</div>
-          ${this.step.catchSteps.map(s => renderStepContent(s))}
+          ${this.diffNode?.scopes?.['catch']
+            ? this.diffNode.scopes['catch'].map(n => renderDiffContent(n))
+            : this.step.catchSteps.map(s => renderStepContent(s))}
         </div>
       ` : nothing}
       ${this.step.finallySteps.length > 0 ? html`
         <div class="region finally">
           <div class="region-label finally">FINALLY</div>
-          ${this.step.finallySteps.map(s => renderStepContent(s))}
+          ${this.diffNode?.scopes?.['finally']
+            ? this.diffNode.scopes['finally'].map(n => renderDiffContent(n))
+            : this.step.finallySteps.map(s => renderStepContent(s))}
         </div>
       ` : nothing}
       ${renderDiffMarker(this.diffState)}

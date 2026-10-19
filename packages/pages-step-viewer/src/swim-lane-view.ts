@@ -2,7 +2,8 @@ import { LitElement, html, css, nothing, svg, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { ParallelStep, ResolvedStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
-import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { renderDiffContent } from './diff-dispatch.js';
+import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 interface SignalPair {
@@ -16,6 +17,7 @@ export class SwimLaneView extends LitElement {
   @property({ attribute: false }) step!: ParallelStep;
   @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
   @property({ attribute: false }) fieldChanges: FieldChange[] = [];
+  @property({ attribute: false }) diffNode?: DiffNode;
 
   static override styles = [diffTokenStyles, css`
     :host {
@@ -117,6 +119,7 @@ export class SwimLaneView extends LitElement {
   override render() {
     if (!this.step) return nothing;
 
+    const hasNamedBranches = !!this.step.branches;
     const branches = this.step.branches
       ?? this.step.steps.map((s, i) => ({ name: `lane-${i + 1}`, steps: [s] }));
 
@@ -131,7 +134,9 @@ export class SwimLaneView extends LitElement {
         <span class="header-meta">${this.renderMeta(branches)}</span>
       </div>
       <div class="lanes" style="grid-template-columns: repeat(${cols}, 1fr)">
-        ${branches.map(branch => this.renderBranch(branch))}
+        ${!hasNamedBranches && this.diffNode?.children
+          ? this.diffNode.children.map(child => html`<div class="lane">${renderDiffContent(child)}</div>`)
+          : branches.map(branch => this.renderBranch(branch))}
       </div>
       ${pairs.map(pair => this.renderSignalArrow(pair, cols))}
     `;
@@ -151,7 +156,9 @@ export class SwimLaneView extends LitElement {
     return html`
       <div class="lane">
         <div class="lane-name">${branch.name}</div>
-        ${branch.steps.map(step => renderStepContent(step))}
+        ${this.diffNode?.scopes?.[branch.name]
+          ? this.diffNode.scopes[branch.name].map(n => renderDiffContent(n))
+          : branch.steps.map(step => renderStepContent(step))}
       </div>
     `;
   }

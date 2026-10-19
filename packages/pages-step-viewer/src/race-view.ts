@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { RaceStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import { renderDiffContent } from './diff-dispatch.js';
 import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
@@ -89,11 +90,9 @@ export class RaceView extends LitElement {
         <span class="header-meta">${steps.length} competitors</span>
       </div>
       <div class="lanes" style="grid-template-columns: repeat(${steps.length}, 1fr)">
-        ${steps.map(step => html`
-          <div class="lane">
-            ${renderStepContent(step)}
-          </div>
-        `)}
+        ${this.diffNode?.children
+          ? this.diffNode.children.map(child => html`<div class="lane">${renderDiffContent(child)}</div>`)
+          : steps.map(step => html`<div class="lane">${renderStepContent(step)}</div>`)}
       </div>
       ${renderDiffMarker(this.diffState)}
       ${renderFieldChanges(this.fieldChanges)}

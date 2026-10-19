@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { BlockStep, ResolvedStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import { renderDiffContent } from './diff-dispatch.js';
 import './decorator-badge.js';
 import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
 import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
@@ -63,7 +64,9 @@ export class StepBlockView extends LitElement {
     return html`
       ${hasDecorators || hasName ? this.renderHeader() : nothing}
       <div class="block-body">
-        ${this.step.steps.map(s => renderStepContent(s))}
+        ${this.diffNode?.children
+          ? this.diffNode.children.map(child => renderDiffContent(child))
+          : this.step.steps.map(s => renderStepContent(s))}
       </div>
       ${renderDiffMarker(this.diffState)}
       ${renderFieldChanges(this.fieldChanges)}
