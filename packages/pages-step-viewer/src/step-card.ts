@@ -4,8 +4,7 @@ import type { PluginStep } from '@casehubio/yaml-core/step';
 import { getActionIcon } from './icons.js';
 import { parseExpressions } from './expression.js';
 import './decorator-badge.js';
-
-export type DiffState = 'added' | 'removed' | 'modified';
+import type { DiffState } from '@casehubio/yaml-core/step/diff';
 
 const TARGET_KEYS = new Set(['target', 'selector', 'element', 'role']);
 
@@ -213,6 +212,7 @@ export class StepCard extends LitElement {
       added: '+ NEW',
       removed: '- REMOVED',
       modified: 'MODIFIED',
+      unchanged: '',
     };
     return html`<span class="diff-marker ${this.diffState}">${labels[this.diffState]}</span>`;
   }

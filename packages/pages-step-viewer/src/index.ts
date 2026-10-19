@@ -1,5 +1,5 @@
 export { StepCard } from './step-card.js';
-export type { DiffState } from './step-card.js';
+export type { DiffState } from '@casehubio/yaml-core/step/diff';
 
 export { SwimLaneView } from './swim-lane-view.js';
 export { StepBlockView } from './step-block-view.js';
@@ -29,4 +29,4 @@ export { StateMachineView } from './state-machine-view.js';
 export type { StateMachineData } from './state-machine-view.js';
 
 export { DiffSummary } from './diff-summary.js';
-export type { DiffStat } from './diff-summary.js';
+export type { DiffStat, DiffNode, DiffResult, FieldChange, DiffStatState } from '@casehubio/yaml-core/step/diff';

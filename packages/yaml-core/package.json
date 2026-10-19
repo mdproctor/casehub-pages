@@ -10,7 +10,8 @@
     "./schema": "./src/schema.ts",
     "./orchestration": "./src/orchestration/index.ts",
     "./condition": "./src/condition/condition-evaluator.ts",
-    "./step": "./src/step/index.ts"
+    "./step": "./src/step/index.ts",
+    "./step/diff": "./src/step/diff.ts"
   },
   "devDependencies": {
     "@casehubio/pages-tsconfig": "workspace:*",

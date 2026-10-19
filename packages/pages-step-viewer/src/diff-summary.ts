@@ -1,11 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-
-export interface DiffStat {
-  kind: 'added' | 'removed' | 'modified';
-  count: number;
-  label: string;
-}
+import type { DiffStat } from '@casehubio/yaml-core/step/diff';
 
 @customElement('diff-summary')
 export class DiffSummary extends LitElement {
@@ -50,7 +45,7 @@ export class DiffSummary extends LitElement {
       <span class="title">Diff</span>
       ${this.stats.map(s => html`
         <span class="stat">
-          <span class="dot ${s.kind}"></span>
+          <span class="dot ${s.state}"></span>
           ${s.count} ${s.label}
         </span>
       `)}

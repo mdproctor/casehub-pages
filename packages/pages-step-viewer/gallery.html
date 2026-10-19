@@ -1039,8 +1039,8 @@
     const diffTarget = document.getElementById(`rendered-${dId}`);
     const summary = document.createElement('diff-summary');
     summary.stats = [
-      { kind: 'added', count: 1, label: 'branch added' },
-      { kind: 'added', count: 2, label: 'steps added' },
+      { state: 'added', count: 1, label: 'branch added' },
+      { state: 'added', count: 2, label: 'steps added' },
     ];
     diffTarget.appendChild(summary);
 

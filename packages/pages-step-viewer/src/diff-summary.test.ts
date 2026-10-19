@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import './diff-summary.js';
-import type { DiffStat } from './diff-summary.js';
+import type { DiffStat } from '@casehubio/yaml-core/step/diff';
 
 describe('diff-summary', () => {
   it('renders stat dots and labels', async () => {
     const el = document.createElement('diff-summary') as HTMLElement & { stats: DiffStat[] };
     el.stats = [
-      { kind: 'added', count: 1, label: 'branch added' },
-      { kind: 'modified', count: 1, label: 'barrier modified' },
+      { state: 'added', count: 1, label: 'branch added' },
+      { state: 'modified', count: 1, label: 'barrier modified' },
     ];
     document.body.appendChild(el);
     await (el as any).updateComplete;

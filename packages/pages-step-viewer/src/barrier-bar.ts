@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { BarrierStep, QuorumStep } from '@casehubio/yaml-core/step';
-import type { DiffState } from './step-card.js';
+import type { DiffState } from '@casehubio/yaml-core/step/diff';
 
 @customElement('barrier-bar')
 export class BarrierBar extends LitElement {

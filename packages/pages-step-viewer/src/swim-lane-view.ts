@@ -2,7 +2,7 @@ import { LitElement, html, css, nothing, svg, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { ParallelStep, ResolvedStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
-import type { DiffState } from './step-card.js';
+import type { DiffState } from '@casehubio/yaml-core/step/diff';
 
 interface SignalPair {
   name: string;
