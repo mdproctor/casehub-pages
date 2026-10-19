@@ -2,6 +2,8 @@ import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { InvokeStep } from '@casehubio/yaml-core/step';
 import './decorator-badge.js';
+import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 interface InvokeDisplay {
   badge: string;
@@ -24,8 +26,10 @@ const BADGE_MAP: Record<string, { badge: string; badgeClass: string }> = {
 export class InvokeCard extends LitElement {
   @property({ attribute: false }) step!: InvokeStep;
   @property({ reflect: true, attribute: 'body-layout' }) bodyLayout: 'block' | 'inline' | 'compact' = 'block';
+  @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, diffMarkerStyles, css`
     :host {
       display: block;
       background: #282a3a;
@@ -139,7 +143,7 @@ export class InvokeCard extends LitElement {
       border-top: 1px solid rgba(255, 255, 255, 0.03);
       justify-content: flex-end;
     }
-  `;
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -160,6 +164,8 @@ export class InvokeCard extends LitElement {
         </div>
       ` : nothing}
       ${this.renderDecorators()}
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 

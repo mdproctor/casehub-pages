@@ -2,12 +2,17 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { SelectStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 @customElement('select-view')
 export class SelectView extends LitElement {
   @property({ attribute: false }) step!: SelectStep;
+  @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
+  @property({ attribute: false }) diffNode?: DiffNode;
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, diffMarkerStyles, css`
     :host {
       display: block;
       background: #282a3a;
@@ -81,7 +86,7 @@ export class SelectView extends LitElement {
       flex: 1;
     }
     step-card { margin-bottom: 4px; }
-  `;
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -105,6 +110,8 @@ export class SelectView extends LitElement {
           </div>
         `)}
       </div>
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 }

@@ -2,12 +2,17 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { IfElseStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
+import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 @customElement('if-else-view')
 export class IfElseView extends LitElement {
   @property({ attribute: false }) step!: IfElseStep;
+  @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
+  @property({ attribute: false }) diffNode?: DiffNode;
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, diffMarkerStyles, css`
     :host {
       display: block;
       background: #282a3a;
@@ -63,7 +68,7 @@ export class IfElseView extends LitElement {
     step-card { margin-bottom: 4px; }
     swim-lane-view { margin: 8px 0; }
     step-block-view { margin: 8px 0; }
-  `;
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -86,6 +91,8 @@ export class IfElseView extends LitElement {
           }
         </div>
       </div>
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 }

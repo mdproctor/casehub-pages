@@ -3,12 +3,17 @@ import { customElement, property } from 'lit/decorators.js';
 import type { BlockStep, ResolvedStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
 import './decorator-badge.js';
+import type { DiffState, DiffNode, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 @customElement('step-block-view')
 export class StepBlockView extends LitElement {
   @property({ attribute: false }) step!: BlockStep;
+  @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
+  @property({ attribute: false }) diffNode?: DiffNode;
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, diffMarkerStyles, css`
     :host {
       display: block;
       border: 1px solid rgba(255, 255, 255, 0.06);
@@ -47,7 +52,7 @@ export class StepBlockView extends LitElement {
     step-card { margin-bottom: 4px; }
     swim-lane-view { margin: 8px 0; }
     step-block-view { margin: 8px 0; }
-  `;
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -60,6 +65,8 @@ export class StepBlockView extends LitElement {
       <div class="block-body">
         ${this.step.steps.map(s => renderStepContent(s))}
       </div>
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 

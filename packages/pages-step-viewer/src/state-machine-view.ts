@@ -1,6 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { PluginStep } from '@casehubio/yaml-core/step';
+import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 export interface StateMachineData {
   name: string;
@@ -11,8 +13,10 @@ export interface StateMachineData {
 @customElement('state-machine-view')
 export class StateMachineView extends LitElement {
   @property({ attribute: false }) step!: PluginStep;
+  @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, diffMarkerStyles, css`
     :host {
       display: block;
       background: #282a3a;
@@ -73,7 +77,7 @@ export class StateMachineView extends LitElement {
       font-size: 12px;
       color: #7f849c;
     }
-  `;
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -86,6 +90,8 @@ export class StateMachineView extends LitElement {
       <div class="diagram">
         ${this.renderStates(data)}
       </div>
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 

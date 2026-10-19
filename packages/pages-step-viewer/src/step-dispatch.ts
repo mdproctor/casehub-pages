@@ -12,6 +12,7 @@ import './state-machine-view.js';
 import './barrier-bar.js';
 import './race-view.js';
 import './select-view.js';
+import './delay-step.js';
 
 const SM_ACTIONS = new Set(['sm-create']);
 
@@ -38,7 +39,7 @@ export function renderStepContent(step: ResolvedStep): TemplateResult {
     case 'quorum':
       return html`<barrier-bar .step=${step}></barrier-bar>`;
     case 'delay':
-      return html`<div style="display:flex;align-items:center;gap:6px;padding:4px 12px;color:#7f849c;font-size:12px;font-family:Inter,system-ui,sans-serif"><span style="color:#f9e2af">⏱</span><span style="background:rgba(249,226,175,0.15);color:#f9e2af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${step.duration}ms</span></div>`;
+      return html`<pages-delay-step .step=${step}></pages-delay-step>`;
     case 'race':
       return html`<race-view .step=${step}></race-view>`;
     case 'select':

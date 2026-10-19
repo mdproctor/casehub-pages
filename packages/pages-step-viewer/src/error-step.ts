@@ -1,12 +1,16 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 @customElement('error-step')
 export class ErrorStep extends LitElement {
   @property() kind = '';
   @property() message = '';
+  @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, diffMarkerStyles, css`
     :host {
       display: flex;
       align-items: center;
@@ -57,7 +61,7 @@ export class ErrorStep extends LitElement {
       color: #f38ba8;
       flex-shrink: 0;
     }
-  `;
+  `];
 
   override render() {
     return html`
@@ -65,6 +69,8 @@ export class ErrorStep extends LitElement {
       <span class="error-kind">${this.kind || 'unknown'}</span>
       ${this.message ? html`<span class="error-msg">${this.message}</span>` : ''}
       <span class="badge">ERROR</span>
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 }
