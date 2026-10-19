@@ -8,6 +8,8 @@ export { MatchView } from './match-view.js';
 export { TryCatchView } from './try-catch-view.js';
 export { InvokeCard } from './invoke-card.js';
 export { BarrierBar } from './barrier-bar.js';
+export { RaceView } from './race-view.js';
+export { SelectView } from './select-view.js';
 export { DataTableView } from './data-table-view.js';
 export type { ForEachBinding } from './data-table-view.js';
 export { YamlErrorBanner } from './yaml-error-banner.js';

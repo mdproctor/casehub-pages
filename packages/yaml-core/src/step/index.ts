@@ -17,7 +17,7 @@ export type { Violation } from './validator.js';
 export type {
   ResolvedStep, PluginStep, InvokeStep, BlockStep, IfElseStep,
   MatchStep, ParallelStep, TryCatchFinallyStep, SelectStep,
-  BarrierStep, QuorumStep, DelayStep, SelectBranch, ResolvedMatchCase,
+  BarrierStep, QuorumStep, DelayStep, RaceStep, SelectBranch, ResolvedMatchCase,
   Action, Result, ServiceRegistry, Catalog, CatalogEntry,
 } from './walker.js';
 export { Walker, MapServiceRegistry, stepSuccess, stepFailure } from './walker.js';

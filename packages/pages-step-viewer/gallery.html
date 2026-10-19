@@ -311,6 +311,16 @@
 <h3>signal references unresolved target — red dashed arrow with warning</h3>
 <div id="section-30"></div>
 
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>31. Race — First Wins</h2>
+<h3>competing branches — first to complete wins, rest cancelled</h3>
+<div id="section-31"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<h2>32. Select — Reactive Dispatch</h2>
+<h3>branches with subscribe (channel) or wait (signal) triggers</h3>
+<div id="section-32"></div>
+
 
 <script type="module">
   import './src/step-dispatch.ts';
@@ -319,6 +329,8 @@
   import './src/invoke-card.ts';
   import './src/decorator-badge.ts';
   import './src/barrier-bar.ts';
+  import './src/race-view.ts';
+  import './src/select-view.ts';
   import './src/data-table-view.ts';
   import './src/yaml-error-banner.ts';
   import { Walker } from '@casehubio/yaml-core/step';
@@ -419,6 +431,12 @@
           el.step = step;
         } else if (step.kind === 'barrier' || step.kind === 'quorum') {
           el = document.createElement('barrier-bar');
+          el.step = step;
+        } else if (step.kind === 'race') {
+          el = document.createElement('race-view');
+          el.step = step;
+        } else if (step.kind === 'select') {
+          el = document.createElement('select-view');
           el.step = step;
         } else if (step.kind === 'delay') {
           el = document.createElement('div');
@@ -1331,6 +1349,36 @@
       target.appendChild(err);
     }
   }
+
+  // ═══════════════════════════════════════════════
+  // 31. Race — First Wins
+  // ═══════════════════════════════════════════════
+  renderSection('section-31', `
+- race:
+    - api.fetchData:
+        endpoint: "/users"
+        timeout: "3s"
+    - cache.lookup:
+        key: "users-cache"
+    - fallback.default:
+        value: "[]"
+  `);
+
+  // ═══════════════════════════════════════════════
+  // 32. Select — Reactive Dispatch
+  // ═══════════════════════════════════════════════
+  renderSection('section-32', `
+- select:
+    - subscribe: orders-channel
+      process.order:
+        mode: "batch"
+    - subscribe: returns-channel
+      process.return:
+        mode: "immediate"
+    - wait: shutdown-signal
+      log.info:
+        message: "shutting down gracefully"
+  `);
 
   // ═══════════════════════════════════════════════
   // 7. Isolated Badges
