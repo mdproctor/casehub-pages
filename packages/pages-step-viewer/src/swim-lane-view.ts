@@ -2,7 +2,8 @@ import { LitElement, html, css, nothing, svg, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { ParallelStep, ResolvedStep } from '@casehubio/yaml-core/step';
 import { renderStepContent } from './step-dispatch.js';
-import type { DiffState } from '@casehubio/yaml-core/step/diff';
+import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 interface SignalPair {
   name: string;
@@ -13,10 +14,10 @@ interface SignalPair {
 @customElement('swim-lane-view')
 export class SwimLaneView extends LitElement {
   @property({ attribute: false }) step!: ParallelStep;
-  @property({ attribute: false }) branchDiffStates?: Record<string, DiffState>;
   @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, css`
     :host {
       display: block;
       background: #282a3a;
@@ -57,8 +58,8 @@ export class SwimLaneView extends LitElement {
       margin-left: auto;
       flex-shrink: 0;
     }
-    .diff-marker.added    { background: rgba(166, 227, 161, 0.12); color: #a6e3a1; }
-    .diff-marker.modified { background: rgba(249, 226, 175, 0.15); color: #f9e2af; }
+    .diff-marker.added    { background: var(--pages-diff-added-bg); color: var(--pages-diff-added-text); }
+    .diff-marker.modified { background: var(--pages-diff-modified-bg); color: var(--pages-diff-modified-text); }
 
     .lanes {
       display: grid;
@@ -76,16 +77,9 @@ export class SwimLaneView extends LitElement {
     .lane:last-child {
       border-right: none;
     }
-    .lane.added {
-      background: rgba(166, 227, 161, 0.06);
-    }
-    .lane.removed {
-      background: rgba(243, 139, 168, 0.06);
-      opacity: 0.7;
-    }
-    .lane.modified {
-      background: rgba(249, 226, 175, 0.06);
-    }
+    .lane.added { background: var(--pages-diff-added-bg); }
+    .lane.removed { background: var(--pages-diff-removed-bg); opacity: 0.7; }
+    .lane.modified { background: var(--pages-diff-modified-bg); }
 
     .lane-name {
       font-size: 13px;
@@ -97,8 +91,8 @@ export class SwimLaneView extends LitElement {
       display: inline-block;
     }
     .lane-name.added {
-      color: #a6e3a1;
-      border-bottom-color: #a6e3a1;
+      color: var(--pages-diff-added-text);
+      border-bottom-color: var(--pages-diff-added-text);
     }
 
     step-card { margin-bottom: 4px; }
@@ -118,7 +112,7 @@ export class SwimLaneView extends LitElement {
       overflow: visible;
       pointer-events: none;
     }
-  `;
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -154,18 +148,10 @@ export class SwimLaneView extends LitElement {
   }
 
   private renderBranch(branch: { name: string; steps: ResolvedStep[] }): TemplateResult {
-    const branchDiff = this.branchDiffStates?.[branch.name];
-    const laneClass = branchDiff ? `lane ${branchDiff}` : 'lane';
-    const nameClass = branchDiff === 'added' ? 'lane-name added' : 'lane-name';
-
     return html`
-      <div class="${laneClass}">
-        <div class="${nameClass}">${branch.name}</div>
-        ${branch.steps.map(step =>
-          branchDiff && step.kind === 'plugin'
-            ? html`<step-card .step=${step} diff-state="${branchDiff}"></step-card>`
-            : renderStepContent(step)
-        )}
+      <div class="lane">
+        <div class="lane-name">${branch.name}</div>
+        ${branch.steps.map(step => renderStepContent(step))}
       </div>
     `;
   }

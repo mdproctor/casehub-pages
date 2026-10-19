@@ -30,3 +30,5 @@ export type { StateMachineData } from './state-machine-view.js';
 
 export { DiffSummary } from './diff-summary.js';
 export type { DiffStat, DiffNode, DiffResult, FieldChange, DiffStatState } from '@casehubio/yaml-core/step/diff';
+
+export { renderDiffMarker, renderFieldChanges, diffTokenStyles, diffMarkerStyles } from './diff-shared.js';

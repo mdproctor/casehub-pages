@@ -33,9 +33,9 @@ export class DiffSummary extends LitElement {
       height: 8px;
       border-radius: 50%;
     }
-    .dot.added    { background: #a6e3a1; }
-    .dot.removed  { background: #f38ba8; }
-    .dot.modified { background: #f9e2af; }
+    .dot.added    { background: var(--pages-diff-added-text, #a6e3a1); }
+    .dot.removed  { background: var(--pages-diff-removed-text, #f38ba8); }
+    .dot.modified { background: var(--pages-diff-modified-text, #f9e2af); }
   `;
 
   override render() {

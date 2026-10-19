@@ -4,7 +4,8 @@ import type { PluginStep } from '@casehubio/yaml-core/step';
 import { getActionIcon } from './icons.js';
 import { parseExpressions } from './expression.js';
 import './decorator-badge.js';
-import type { DiffState } from '@casehubio/yaml-core/step/diff';
+import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, diffMarkerStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 const TARGET_KEYS = new Set(['target', 'selector', 'element', 'role']);
 
@@ -12,8 +13,9 @@ const TARGET_KEYS = new Set(['target', 'selector', 'element', 'role']);
 export class StepCard extends LitElement {
   @property({ attribute: false }) step!: PluginStep;
   @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, css`
     :host {
       display: flex;
       align-items: center;
@@ -32,18 +34,14 @@ export class StepCard extends LitElement {
       background: rgba(255, 255, 255, 0.07);
     }
     :host([diff-state="added"]) {
-      background: rgba(166, 227, 161, 0.12);
-      border-color: rgba(166, 227, 161, 0.4);
+      background: var(--pages-diff-added-bg); border-color: var(--pages-diff-added-border);
     }
     :host([diff-state="removed"]) {
-      background: rgba(243, 139, 168, 0.12);
-      border-color: rgba(243, 139, 168, 0.4);
-      text-decoration: line-through;
-      opacity: 0.7;
+      background: var(--pages-diff-removed-bg); border-color: var(--pages-diff-removed-border);
+      text-decoration: line-through; opacity: 0.7;
     }
     :host([diff-state="modified"]) {
-      background: rgba(249, 226, 175, 0.15);
-      border-color: rgba(249, 226, 175, 0.4);
+      background: var(--pages-diff-modified-bg); border-color: var(--pages-diff-modified-border);
     }
 
     .step-icon {
@@ -111,10 +109,10 @@ export class StepCard extends LitElement {
       margin-left: auto;
       flex-shrink: 0;
     }
-    .diff-marker.added    { background: rgba(166, 227, 161, 0.12); color: #a6e3a1; }
-    .diff-marker.removed  { background: rgba(243, 139, 168, 0.12); color: #f38ba8; }
-    .diff-marker.modified { background: rgba(249, 226, 175, 0.15); color: #f9e2af; }
-  `;
+    .diff-marker.added    { background: var(--pages-diff-added-bg); color: var(--pages-diff-added-text); }
+    .diff-marker.removed  { background: var(--pages-diff-removed-bg); color: var(--pages-diff-removed-text); }
+    .diff-marker.modified { background: var(--pages-diff-modified-bg); color: var(--pages-diff-modified-text); }
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -127,7 +125,8 @@ export class StepCard extends LitElement {
       <span class="step-action">${actionName}</span>
       ${this.renderParams()}
       ${this.renderDecorators()}
-      ${this.renderDiffMarker()}
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 
@@ -206,14 +205,5 @@ export class StepCard extends LitElement {
       : nothing;
   }
 
-  private renderDiffMarker(): TemplateResult | typeof nothing {
-    if (!this.diffState) return nothing;
-    const labels: Record<DiffState, string> = {
-      added: '+ NEW',
-      removed: '- REMOVED',
-      modified: 'MODIFIED',
-      unchanged: '',
-    };
-    return html`<span class="diff-marker ${this.diffState}">${labels[this.diffState]}</span>`;
-  }
+
 }

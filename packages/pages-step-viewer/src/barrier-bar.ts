@@ -1,14 +1,16 @@
 import { LitElement, html, css, nothing, type TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { BarrierStep, QuorumStep } from '@casehubio/yaml-core/step';
-import type { DiffState } from '@casehubio/yaml-core/step/diff';
+import type { DiffState, FieldChange } from '@casehubio/yaml-core/step/diff';
+import { diffTokenStyles, renderDiffMarker, renderFieldChanges } from './diff-shared.js';
 
 @customElement('barrier-bar')
 export class BarrierBar extends LitElement {
   @property({ attribute: false }) step!: BarrierStep | QuorumStep;
   @property({ reflect: true, attribute: 'diff-state' }) diffState?: DiffState;
+  @property({ attribute: false }) fieldChanges: FieldChange[] = [];
 
-  static override styles = css`
+  static override styles = [diffTokenStyles, css`
     :host {
       display: flex;
       align-items: center;
@@ -21,16 +23,13 @@ export class BarrierBar extends LitElement {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     }
     :host([diff-state="added"]) {
-      border-color: #a6e3a1;
-      background: rgba(166, 227, 161, 0.06);
+      border-color: var(--pages-diff-added-text); background: var(--pages-diff-added-bg);
     }
     :host([diff-state="modified"]) {
-      border-color: #f9e2af;
-      background: rgba(249, 226, 175, 0.06);
+      border-color: var(--pages-diff-modified-text); background: var(--pages-diff-modified-bg);
     }
     :host([diff-state="removed"]) {
-      border-color: #f38ba8;
-      background: rgba(243, 139, 168, 0.06);
+      border-color: var(--pages-diff-removed-text); background: var(--pages-diff-removed-bg);
       opacity: 0.7;
     }
 
@@ -42,8 +41,8 @@ export class BarrierBar extends LitElement {
       letter-spacing: 0.3px;
       white-space: nowrap;
     }
-    :host([diff-state="modified"]) .label { color: #f9e2af; }
-    :host([diff-state="added"]) .label { color: #a6e3a1; }
+    :host([diff-state="modified"]) .label { color: var(--pages-diff-modified-text); }
+    :host([diff-state="added"]) .label { color: var(--pages-diff-added-text); }
 
     .name {
       font-size: 11px;
@@ -56,8 +55,8 @@ export class BarrierBar extends LitElement {
       height: 0;
       border-top: 1px dashed #89b4fa;
     }
-    :host([diff-state="modified"]) .line { border-color: #f9e2af; }
-    :host([diff-state="added"]) .line { border-color: #a6e3a1; }
+    :host([diff-state="modified"]) .line { border-color: var(--pages-diff-modified-text); }
+    :host([diff-state="added"]) .line { border-color: var(--pages-diff-added-text); }
 
     .count {
       font-size: 11px;
@@ -74,7 +73,7 @@ export class BarrierBar extends LitElement {
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       font-weight: 500;
     }
-  `;
+  `];
 
   override render() {
     if (!this.step) return nothing;
@@ -89,6 +88,8 @@ export class BarrierBar extends LitElement {
       <span class="line"></span>
       ${this.renderCount()}
       ${this.renderTimeout()}
+      ${renderDiffMarker(this.diffState)}
+      ${renderFieldChanges(this.fieldChanges)}
     `;
   }
 
