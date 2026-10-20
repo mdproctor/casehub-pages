@@ -13,26 +13,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./a11y": {
-      "types": "./dist/a11y/index.d.ts",
-      "default": "./dist/a11y/index.js"
-    },
-    "./modal": {
-      "types": "./dist/modal/index.d.ts",
-      "default": "./dist/modal/index.js"
-    },
-    "./context-menu": {
-      "types": "./dist/context-menu/index.d.ts",
-      "default": "./dist/context-menu/index.js"
-    },
-    "./dock": {
-      "types": "./dist/dock/index.d.ts",
-      "default": "./dist/dock/index.js"
-    }
+    ".": "./src/index.ts",
+    "./a11y": "./src/a11y/index.ts",
+    "./modal": "./src/modal/index.ts",
+    "./context-menu": "./src/context-menu/index.ts",
+    "./dock": "./src/dock/index.ts",
+    "./playbook": "./src/playbook/index.ts"
   },
   "sideEffects": [
     "./dist/index.js",

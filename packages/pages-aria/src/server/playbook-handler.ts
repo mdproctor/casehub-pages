@@ -660,8 +660,25 @@ function executeAriaAction(action: string, params: Record<string, unknown>, curr
       narrativeTarget.dispatchEvent(new CustomEvent('playbook-narrative', { detail }));
       return;
     }
-    default:
-      throw new Error(`Unknown action: ${action}`);
+    default: {
+      const { resolvePlaybookCapability, mapParams, kebabToCamel } = await import('../executor/playbook-resolve.js');
+      const tgt = buildAriaTarget(params);
+      if (!tgt) throw new Error(`Unknown action: ${action}`);
+      const elem = resolveTarget(tgt);
+      const cap = resolvePlaybookCapability(elem);
+      const methodName = kebabToCamel(action);
+      if (!cap || !cap[methodName]) {
+        throw new Error(`Unknown action: ${action}`);
+      }
+      const method = (elem as any)[methodName];
+      if (typeof method !== 'function') {
+        throw new Error(`Target declares '${methodName}' but has no such method`);
+      }
+      const args = mapParams(params, cap[methodName]);
+      const result = method.call(elem, ...args);
+      if (result instanceof Promise) await result;
+      break;
+    }
   }
 }
 

@@ -1,5 +1,9 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { click, fill, select, expand, collapse, assertState, resolveTarget } from './command-executor.js';
+import { PLAYBOOK_ACTIONS } from '@casehubio/pages-primitives';
 
 describe('ARIA command executor', () => {
   beforeEach(() => {
@@ -219,11 +223,20 @@ describe('ARIA command executor', () => {
     });
   });
 
-  describe('generic method invocation', () => {
-    it('calls a method on the target element by action name', async () => {
+  describe('inferred method dispatch (PLAYBOOK_ACTIONS)', () => {
+    function addPlaybookElement(capability: Record<string, any>, methods: Record<string, any> = {}) {
       document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
       const el = document.querySelector('[role="region"]')! as any;
-      el.toggleSync = vi.fn().mockReturnValue(true);
+      el.constructor[PLAYBOOK_ACTIONS] = capability;
+      for (const [k, v] of Object.entries(methods)) el[k] = v;
+      return el;
+    }
+
+    it('calls a declared playbook method by action name', async () => {
+      const el = addPlaybookElement(
+        { toggleSync: {} },
+        { toggleSync: vi.fn().mockReturnValue(true) },
+      );
 
       const { executeStep } = await import('./command-executor.js');
       await executeStep({
@@ -234,10 +247,11 @@ describe('ARIA command executor', () => {
       expect(el.toggleSync).toHaveBeenCalledOnce();
     });
 
-    it('passes step properties as arguments', async () => {
-      document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
-      const el = document.querySelector('[role="region"]')! as any;
-      el.loadContent = vi.fn();
+    it('maps named params to positional args via descriptor', async () => {
+      const el = addPlaybookElement(
+        { loadContent: { params: { panel: { type: 'string', required: true }, content: { type: 'string', required: true }, label: 'string' } } },
+        { loadContent: vi.fn() },
+      );
 
       const { executeStep } = await import('./command-executor.js');
       await executeStep({
@@ -252,9 +266,10 @@ describe('ARIA command executor', () => {
     });
 
     it('awaits async methods', async () => {
-      document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
-      const el = document.querySelector('[role="region"]')! as any;
-      el.loadFile = vi.fn().mockResolvedValue(undefined);
+      const el = addPlaybookElement(
+        { loadFile: { params: { panel: 'string', path: 'string' } } },
+        { loadFile: vi.fn().mockResolvedValue(undefined) },
+      );
 
       const { executeStep } = await import('./command-executor.js');
       await executeStep({
@@ -267,14 +282,24 @@ describe('ARIA command executor', () => {
       expect(el.loadFile).toHaveBeenCalledWith('a', '/docs/readme.md');
     });
 
-    it('throws when target has no matching method', async () => {
-      document.body.innerHTML = '<div role="region" aria-label="Diff"></div>';
+    it('rejects method on element without PLAYBOOK_ACTIONS', async () => {
+      document.body.innerHTML = '<span role="status" aria-label="NoCap"></span>';
 
       const { executeStep } = await import('./command-executor.js');
       await expect(executeStep({
-        action: 'nonExistentMethod',
+        action: 'remove',
+        target: { role: 'status', name: 'NoCap' },
+      })).rejects.toThrow('not playbook-callable');
+    });
+
+    it('rejects when target declares method but it does not exist', async () => {
+      addPlaybookElement({ phantom: {} });
+
+      const { executeStep } = await import('./command-executor.js');
+      await expect(executeStep({
+        action: 'phantom',
         target: { role: 'region', name: 'Diff' },
-      })).rejects.toThrow("has no method 'nonExistentMethod'");
+      })).rejects.toThrow('has no such method');
     });
 
     it('throws when no target provided', async () => {
