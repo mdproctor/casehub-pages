@@ -24,6 +24,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@casehubio/pages-primitives": "workspace:*",
     "lit": "^3.3.3",
     "marked": "^15.0.0"
   },

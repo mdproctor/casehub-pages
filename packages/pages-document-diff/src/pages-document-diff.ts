@@ -1,6 +1,8 @@
 import { LitElement, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { marked } from 'marked';
+import { PLAYBOOK_ACTIONS } from '@casehubio/pages-primitives';
+import type { PlaybookCapability } from '@casehubio/pages-primitives';
 import type { DiffChunk, DiffSummary, PanelState, ScrollAnchor } from './types.js';
 
 @customElement('pages-document-diff')
@@ -30,6 +32,36 @@ export class PagesDocumentDiff extends LitElement {
 
   protected _$(id: string): HTMLElement {
     return (this.renderRoot as ShadowRoot).getElementById(id)!;
+  }
+
+  static get [PLAYBOOK_ACTIONS](): PlaybookCapability {
+    return {
+      loadContent: {
+        params: {
+          panel: { type: 'string', required: true },
+          content: { type: 'string', required: true },
+          label: 'string',
+        },
+        description: 'Load content into a diff panel',
+      },
+      nextDiff: { description: 'Navigate to next diff chunk' },
+      prevDiff: { description: 'Navigate to previous diff chunk' },
+      setViewMode: {
+        params: { mode: { type: 'string', required: true } },
+        description: 'Switch between split and unified view',
+      },
+      toggleSync: { description: 'Toggle scroll synchronisation' },
+      swapPanels: { description: 'Swap panel A and B' },
+      getDiffSummary: { returns: 'object', description: 'Get current diff summary' },
+      scrollToLocation: {
+        params: { location: { type: 'string', required: true } },
+        description: 'Scroll to a named location',
+      },
+      highlightSection: {
+        params: { location: { type: 'string', required: true } },
+        description: 'Highlight a diff section',
+      },
+    };
   }
 
   static override styles = css`
