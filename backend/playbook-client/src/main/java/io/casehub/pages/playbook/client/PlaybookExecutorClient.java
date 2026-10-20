@@ -314,7 +314,7 @@ public class PlaybookExecutorClient {
             msg.put("op", "executor-register");
             msg.put("id", UUID.randomUUID().toString());
             msg.put("name", name);
-            msg.put("actions", new ArrayList<>(actionRegistry.actions()));
+            msg.put("actions", new ArrayList<>(actionRegistry.allActions()));
             sender.accept(JSON.writeValueAsString(msg));
         } catch (IOException e) {
             throw new IllegalStateException("Failed to serialize register message", e);

@@ -1750,6 +1750,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@casehubio/pages-document-diff@workspace:packages/pages-document-diff"
   dependencies:
+    "@casehubio/pages-primitives": "workspace:*"
     "@casehubio/pages-tsconfig": "workspace:*"
     jsdom: "npm:^26.0.0"
     lit: "npm:^3.3.3"
