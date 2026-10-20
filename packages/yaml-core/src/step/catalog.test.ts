@@ -66,4 +66,17 @@ describe('ImportScopedCatalog', () => {
     const catalog = new ImportScopedCatalog(imported, delegate);
     expect(catalog.availableActions()).toEqual(new Set(['shared', 'base', 'extra']));
   });
+
+  it('delegates resolveInferred to wrapped catalog', () => {
+    const inferredEntry = entry('load-content');
+    const inner = {
+      resolve: () => undefined,
+      availableActions: () => new Set<string>(),
+      resolveInferred: (name: string) =>
+        name === 'load-content' ? inferredEntry : undefined,
+    };
+    const catalog = new ImportScopedCatalog(new Map(), inner);
+    expect(catalog.resolveInferred?.('load-content')?.qualifiedName).toBe('load-content');
+    expect(catalog.resolveInferred?.('unknown')).toBeUndefined();
+  });
 });

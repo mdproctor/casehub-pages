@@ -19,7 +19,8 @@ export type InvokeBinding =
   | ProcessBinding
   | AriaBinding
   | GraphqlDomainBinding
-  | SimulatedBinding;
+  | SimulatedBinding
+  | ElementMethodBinding;
 
 export interface McpBinding {
   kind: 'mcp';
@@ -65,6 +66,11 @@ export interface ProcessBinding {
   env: Record<string, string>;
   workingDir?: string;
   onError: string;
+}
+
+export interface ElementMethodBinding {
+  kind: 'element-method';
+  method: string;
 }
 
 export interface Definition {

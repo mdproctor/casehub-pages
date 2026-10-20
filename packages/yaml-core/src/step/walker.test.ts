@@ -742,4 +742,49 @@ describe('Walker', () => {
       expect(s.decorators.timeout).toBe('5s');
     });
   });
+
+  describe('inferred method dispatch', () => {
+    it('resolves unknown key via resolveInferred', () => {
+      const inferredEntry = makeEntry('load-content');
+      const catalog = {
+        ...makeCatalog({ click: makeEntry('click') }),
+        resolveInferred: (name: string) =>
+          name === 'load-content' ? inferredEntry : undefined,
+      };
+      const steps = [{ step: 'load-panel', 'load-content': { role: 'region', name: 'Diff' } }];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved).toHaveLength(1);
+      expect(resolved[0].kind).toBe('plugin');
+      expect(resolved[0].name).toBe('load-panel');
+      expect((resolved[0] as any).entry.qualifiedName).toBe('load-content');
+    });
+
+    it('throws for unknown key when resolveInferred returns undefined', () => {
+      const catalog = {
+        ...makeCatalog({}),
+        resolveInferred: () => undefined,
+      };
+      const steps = [{ 'bad-key': {} }];
+      expect(() => Walker.resolve(steps, catalog)).toThrow('unknown step key');
+    });
+
+    it('throws for unknown key when resolveInferred is not present', () => {
+      const catalog = makeCatalog({});
+      const steps = [{ 'bad-key': {} }];
+      expect(() => Walker.resolve(steps, catalog)).toThrow('unknown step key');
+    });
+
+    it('catalog.resolve takes priority over resolveInferred', () => {
+      const registeredEntry = makeEntry('click-registered');
+      const inferredEntry = makeEntry('click-inferred');
+      const catalog = {
+        ...makeCatalog({ click: registeredEntry }),
+        resolveInferred: () => inferredEntry,
+      };
+      const steps = [{ click: {} }];
+      const resolved = Walker.resolve(steps, catalog);
+      expect(resolved[0].kind).toBe('plugin');
+      expect((resolved[0] as any).entry.qualifiedName).toBe('click-registered');
+    });
+  });
 });

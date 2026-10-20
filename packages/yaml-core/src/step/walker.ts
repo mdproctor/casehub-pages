@@ -48,6 +48,7 @@ export class MapServiceRegistry implements ServiceRegistry {
 
 export interface Catalog {
   resolve(actionName: string): CatalogEntry | undefined;
+  resolveInferred?(actionName: string): CatalogEntry | undefined;
   availableActions(): Set<string>;
 }
 
@@ -256,6 +257,7 @@ export class Walker {
     let structuralValue: unknown = undefined;
     let actionKey: string | null = null;
     let actionValue: unknown = undefined;
+    let actionEntry: CatalogEntry | undefined = undefined;
     let invokeSpec: Record<string, unknown> | null = null;
     const decorators: Record<string, unknown> = {};
     const companions: Record<string, unknown> = {};
@@ -318,10 +320,11 @@ export class Walker {
           structuralValue = value;
         }
       } else if (!RESERVED_KEYS.has(key)) {
-        const entry = catalog.resolve(key);
-        if (entry) {
+        const resolved = catalog.resolve(key) ?? catalog.resolveInferred?.(key);
+        if (resolved) {
           actionKey = key;
           actionValue = value;
+          actionEntry = resolved;
         } else {
           throw new Error(`${stepPath}: unknown step key '${key}' — not a reserved keyword and not found in catalog`);
         }
@@ -530,7 +533,7 @@ export class Walker {
     }
 
     if (actionKey) {
-      const entry = catalog.resolve(actionKey)!;
+      const entry = actionEntry ?? catalog.resolve(actionKey)!;
       const params = (typeof actionValue === 'object' && actionValue !== null && !Array.isArray(actionValue))
         ? actionValue as Record<string, unknown>
         : { value: actionValue };

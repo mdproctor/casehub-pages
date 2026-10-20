@@ -40,6 +40,10 @@ export class ImportScopedCatalog implements Catalog {
     return this.importedEntries.get(actionName) ?? this.delegate.resolve(actionName);
   }
 
+  resolveInferred(actionName: string): CatalogEntry | undefined {
+    return this.delegate.resolveInferred?.(actionName);
+  }
+
   availableActions(): Set<string> {
     const all = new Set(this.delegate.availableActions());
     for (const name of this.importedEntries.keys()) all.add(name);
