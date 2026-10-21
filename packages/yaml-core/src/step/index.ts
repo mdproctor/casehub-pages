@@ -69,3 +69,6 @@ export { McpToolSource } from './sources/mcp-source.js';
 export { RuntimePluginSource } from './sources/plugin-source.js';
 export { ScriptSource } from './sources/script-source.js';
 export type { ScriptFileEntry } from './sources/script-source.js';
+
+export type { DataRealism, JournalEntry, CorpusEntry, SimulationConfig } from './simulation-runtime.js';
+export { InvocationJournal, SimulationOverlay, SimulationRuntime } from './simulation-runtime.js';
