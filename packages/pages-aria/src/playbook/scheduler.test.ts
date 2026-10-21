@@ -3,7 +3,8 @@ import { createScheduler } from './scheduler.js';
 import type { SchedulerOptions } from './scheduler.js';
 import type { SchedulerStep } from './types.js';
 import type { PluginStep, ParallelStep, BlockStep, DelayStep } from '@casehubio/yaml-core/step';
-import { stepSuccess, stepFailure } from '@casehubio/yaml-core/step';
+import { stepSuccess, stepFailure, SimulationRuntime } from '@casehubio/yaml-core/step';
+import type { ServiceRegistry } from '@casehubio/yaml-core/step';
 
 function pluginStep(name: string, calls: unknown[], params: Record<string, unknown> = {}, decorators: Record<string, unknown> = {}): PluginStep {
   return {
@@ -216,5 +217,99 @@ describe('DES Scheduler', () => {
     await vi.waitFor(() => { expect(runner.state).toBe('done'); });
     expect(errors).toHaveLength(1);
     expect((errors[0] as any).message).toBe('something broke');
+  });
+
+  it('top-level simulation block registers runtime in service registry', async () => {
+    let hadOverlay = false;
+    let strategy: string | undefined;
+    const step: PluginStep = {
+      kind: 'plugin', name: null, params: {}, decorators: {},
+      entry: {
+        qualifiedName: 'probe',
+        definition: { name: 'probe', inputs: {}, outputs: {} },
+        action: {
+          async execute(_p: Record<string, unknown>, services: ServiceRegistry) {
+            const rt = services.lookup<SimulationRuntime>({ name: 'SimulationRuntime' });
+            hadOverlay = rt.hasActiveOverlay();
+            strategy = rt.strategyFor('svc.op');
+            return stepSuccess({});
+          },
+        },
+      },
+    };
+    const scenario = {
+      scenario: 'test',
+      simulation: { strategies: { 'svc.op': 'sequential' } },
+      steps: [step],
+    };
+    const runner = createScheduler(scenario, testOptions());
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+    expect(hadOverlay).toBe(true);
+    expect(strategy).toBe('sequential');
+  });
+
+  it('simulation decorator on step pushes additional overlay', async () => {
+    const strategies: Array<string | undefined> = [];
+    const probeStep = (name: string, svcName: string): PluginStep => ({
+      kind: 'plugin', name: null, params: {}, decorators: {},
+      entry: {
+        qualifiedName: name,
+        definition: { name, inputs: {}, outputs: {} },
+        action: {
+          async execute(_p: Record<string, unknown>, services: ServiceRegistry) {
+            const rt = services.lookup<SimulationRuntime>({ name: 'SimulationRuntime' });
+            strategies.push(rt.strategyFor(svcName));
+            return stepSuccess({});
+          },
+        },
+      },
+    });
+    const simulationStep: PluginStep = {
+      kind: 'plugin', name: 'switch-sim', params: {},
+      decorators: { simulation: { strategies: { 'svc.op': 'key-lookup' } } },
+      entry: {
+        qualifiedName: 'noop',
+        definition: { name: 'noop', inputs: {}, outputs: {} },
+        action: { async execute() { return stepSuccess({}); } },
+      },
+    };
+    const scenario = {
+      scenario: 'test',
+      simulation: { strategies: { 'svc.op': 'sequential' } },
+      steps: [probeStep('before', 'svc.op'), simulationStep, probeStep('after', 'svc.op')],
+    };
+    const runner = createScheduler(scenario, testOptions());
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+    expect(strategies[0]).toBe('sequential');
+    expect(strategies[1]).toBe('key-lookup');
+  });
+
+  it('simulation runtime cleaned up on dispose', async () => {
+    let capturedRuntime: SimulationRuntime | undefined;
+    const step: PluginStep = {
+      kind: 'plugin', name: null, params: {}, decorators: {},
+      entry: {
+        qualifiedName: 'probe',
+        definition: { name: 'probe', inputs: {}, outputs: {} },
+        action: {
+          async execute(_p: Record<string, unknown>, services: ServiceRegistry) {
+            capturedRuntime = services.lookup<SimulationRuntime>({ name: 'SimulationRuntime' });
+            return stepSuccess({});
+          },
+        },
+      },
+    };
+    const scenario = {
+      scenario: 'test',
+      simulation: { strategies: { 'svc.op': 'sequential' } },
+      steps: [step],
+    };
+    const runner = createScheduler(scenario, testOptions());
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); });
+    expect(capturedRuntime).toBeDefined();
+    expect(capturedRuntime!.hasActiveOverlay()).toBe(false);
   });
 });

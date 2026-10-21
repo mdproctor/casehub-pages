@@ -33,10 +33,17 @@ export interface TutorialSection {
   steps: SchedulerStep[];
 }
 
+export interface SimulationBlock {
+  strategies: Record<string, string>;
+  corpus?: string[];
+  capture?: string[];
+}
+
 export interface PlaybookBase {
   playbook?: string;
   meta?: TutorialMeta;
   orchestration?: OrchestrationBlock;
+  simulation?: SimulationBlock;
 }
 
 export interface FlatPlaybook extends PlaybookBase {

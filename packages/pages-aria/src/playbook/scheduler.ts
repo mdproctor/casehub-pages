@@ -1,15 +1,15 @@
 import { DefaultScenarioScope, parseDuration, parseRetryDirective, parseLoopDirective } from '@casehubio/yaml-core/orchestration';
 import type { ScenarioScope } from '@casehubio/yaml-core/orchestration';
 import { ConditionEvaluator } from '@casehubio/yaml-core/condition';
-import type { Playbook, SchedulerStep, SectionContent, TimeTrigger, OrchestrationBlock } from './types.js';
+import type { Playbook, SchedulerStep, SectionContent, TimeTrigger, OrchestrationBlock, SimulationBlock } from './types.js';
 import type { LoopDirective } from '@casehubio/yaml-core/orchestration';
 import { isSectioned } from './types.js';
 import type { PlaybookState, OutlineNode } from '../controller/playbook-connection-controller';
 import { DefaultVirtualClock } from './virtual-clock.js';
 import type { VirtualClock } from './virtual-clock.js';
 import { StepQueue } from './step-queue.js';
-import { MapServiceRegistry } from '@casehubio/yaml-core/step';
-import type { Result } from '@casehubio/yaml-core/step';
+import { MapServiceRegistry, SimulationRuntime } from '@casehubio/yaml-core/step';
+import type { Result, SimulationConfig } from '@casehubio/yaml-core/step';
 import { bindPlaybook } from './yaml-binder.js';
 import type { BindResult } from './yaml-binder.js';
 import { evaluateTrigger } from './trigger-evaluator.js';
@@ -58,6 +58,11 @@ export function createScheduler(
 
   for (const q of queues) {
     if (q.state === 'ready' && q.isDone()) q.state = 'done';
+  }
+
+  const simulationRuntime = scenario.simulation ? new SimulationRuntime() : undefined;
+  if (scenario.simulation && simulationRuntime) {
+    simulationRuntime.pushOverlay(simulationBlockToConfig(scenario.simulation));
   }
 
   let runnerState: RunnerState = options.startPaused ? 'paused' : 'idle';
@@ -163,6 +168,7 @@ export function createScheduler(
         const services = new MapServiceRegistry()
           .register({ name: 'EventTarget' }, options.eventTarget)
           .register({ name: 'Speed' }, clock.speed());
+        if (simulationRuntime) services.register({ name: 'SimulationRuntime' }, simulationRuntime);
         return step.entry.action.execute(step.params, services);
       }
       case 'parallel': {
@@ -274,6 +280,12 @@ export function createScheduler(
               queue.advance();
               return;
             }
+          }
+
+          if (decorators['simulation'] != null && simulationRuntime) {
+            simulationRuntime.pushOverlay(
+              simulationBlockToConfig(decorators['simulation'] as SimulationBlock),
+            );
           }
 
           const result = await dispatchStep(step, queue);
@@ -423,6 +435,7 @@ export function createScheduler(
     }
 
     runnerState = 'done';
+    simulationRuntime?.popAll();
     emitState();
     if (scenario.playbook) options.onComplete?.(scenario.playbook);
   }
@@ -505,6 +518,7 @@ export function createScheduler(
     dispose(): void {
       disposed = true;
       options.eventTarget.removeEventListener('scenario-command', onCommand);
+      simulationRuntime?.popAll();
       scope.close();
       queues.length = 0;
       if (resumeResolve) {
@@ -551,6 +565,14 @@ function countTotalSteps(queues: StepQueue[]): number {
 
 function countCompletedSteps(queues: StepQueue[]): number {
   return queues.reduce((sum, q) => sum + Math.min(q.position, q.steps.length), 0);
+}
+
+function simulationBlockToConfig(block: SimulationBlock): SimulationConfig {
+  return {
+    strategies: block.strategies,
+    corpus: (block.corpus ?? []).map(path => ({ file: path })),
+    capture: block.capture ?? [],
+  };
 }
 
 function resolveTemplates(
