@@ -200,6 +200,7 @@ const RESERVED_KEYS = new Set([
   'from', 'cancel', 'background',
   'advance-after', 'cancel-remaining', 'collection-timeout',
   'emit-event', 'emit-to',
+  'simulation',
 ]);
 
 const DECORATOR_KEYS = new Set([
@@ -209,6 +210,7 @@ const DECORATOR_KEYS = new Set([
   'semaphore', 'barrier', 'quorum',
   'label', 'target', 'actor', 'when', 'speed', 'content', 'await', 'mode', 'mutex', 'wait',
   'from', 'cancel', 'background',
+  'simulation',
 ]);
 
 const PROMOTABLE_DECORATORS = new Set(['forEach', 'retry', 'timeout', 'when', 'mutex', 'loop']);

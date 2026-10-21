@@ -787,4 +787,46 @@ describe('Walker', () => {
       expect((resolved[0] as any).entry.qualifiedName).toBe('click-registered');
     });
   });
+
+  describe('simulation decorator', () => {
+    const catalog = makeCatalog({ 'test-action': makeEntry('test-action') });
+
+    it('block with simulation decorator resolves to BlockStep with simulation in decorators', () => {
+      const steps = Walker.resolve([{
+        step: 'sim-phase',
+        simulation: {
+          strategies: { 'agent-provider.invoke': 'sequential' },
+          corpus: [{ file: 'fixtures/data.yaml' }],
+        },
+        block: [
+          { 'test-action': {} },
+        ],
+      }], catalog);
+
+      expect(steps).toHaveLength(1);
+      expect(steps[0]!.kind).toBe('block');
+      expect(steps[0]!.name).toBe('sim-phase');
+      expect(steps[0]!.decorators['simulation']).toEqual({
+        strategies: { 'agent-provider.invoke': 'sequential' },
+        corpus: [{ file: 'fixtures/data.yaml' }],
+      });
+    });
+
+    it('simulation key without block is accepted as decorator on action step', () => {
+      const steps = Walker.resolve([{
+        simulation: { strategies: { 'a': 'random' } },
+        'test-action': {},
+      }], catalog);
+
+      expect(steps).toHaveLength(1);
+      expect(steps[0]!.decorators['simulation']).toBeDefined();
+    });
+
+    it('simulation key does not throw unknown key error', () => {
+      expect(() => Walker.resolve([{
+        simulation: { strategies: {} },
+        block: [{ 'test-action': {} }],
+      }], catalog)).not.toThrow();
+    });
+  });
 });
