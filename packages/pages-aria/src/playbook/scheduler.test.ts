@@ -178,6 +178,28 @@ describe('DES Scheduler', () => {
     expect(runner.clock.speed()).toBe(2);
   });
 
+  it('failure in parallel branch resolves parent without deadlock', async () => {
+    const calls: unknown[] = [];
+    const et = new EventTarget();
+    const errors: unknown[] = [];
+    et.addEventListener('pages-event', (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.payload?.error) errors.push(detail.payload.error);
+    });
+    const scenario = {
+      scenario: 'test',
+      steps: [parallelStep({
+        'success-branch': [pluginStep('click', calls, { name: 'OK' })],
+        'fail-branch': [failingPluginStep('bad', 'boom')],
+      })],
+    };
+    const runner = createScheduler(scenario, { eventTarget: et, speed: Infinity, startPaused: true });
+    runner.play();
+    await vi.waitFor(() => { expect(runner.state).toBe('done'); }, { timeout: 1000 });
+    const deadlockErrors = errors.filter(e => (e as any).step === 'scheduler');
+    expect(deadlockErrors).toHaveLength(0);
+  });
+
   it('Result failure triggers error event', async () => {
     const et = new EventTarget();
     const errors: unknown[] = [];

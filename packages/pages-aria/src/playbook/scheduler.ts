@@ -301,6 +301,7 @@ export function createScheduler(
                   error: { step: stepName, message: result.message },
                 } },
               }));
+              resolveParentIfChildrenDone(queue);
             }
             return;
           }
