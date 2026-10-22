@@ -2,7 +2,7 @@
 title: The extraction that found its layers
 date: 2026-08-23
 project: casehub-pages, blocks-ui
-issues: [casehubio/casehub-pages#354, casehubio/blocks-ui#126]
+issues: [casehubio/casehub-pages#354, casehubio/agency-ui#126]
 ---
 
 The audit-trail-viewer at 695 lines had been doing three jobs: rendering a

@@ -1094,7 +1094,7 @@ describe("EventStreamController", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `yarn --cwd /Users/mdproctor/claude/casehub/blocks-ui workspace @casehubio/blocks-ui-core run test -- --run src/event-stream/event-stream-controller.test.ts`
+Run: `yarn --cwd /Users/mdproctor/claude/casehub/blocks-ui workspace @casehubio/agency-ui-core run test -- --run src/event-stream/event-stream-controller.test.ts`
 Expected: FAIL — module does not exist
 
 - [ ] **Step 3: Create EventStreamController**
@@ -1164,12 +1164,12 @@ export * from './event-stream/index.js';
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `yarn --cwd /Users/mdproctor/claude/casehub/blocks-ui workspace @casehubio/blocks-ui-core run test -- --run src/event-stream/event-stream-controller.test.ts`
+Run: `yarn --cwd /Users/mdproctor/claude/casehub/blocks-ui workspace @casehubio/agency-ui-core run test -- --run src/event-stream/event-stream-controller.test.ts`
 Expected: all tests PASS
 
 - [ ] **Step 7: Run full blocks-ui-core test suite**
 
-Run: `yarn --cwd /Users/mdproctor/claude/casehub/blocks-ui workspace @casehubio/blocks-ui-core run test`
+Run: `yarn --cwd /Users/mdproctor/claude/casehub/blocks-ui workspace @casehubio/agency-ui-core run test`
 Expected: all existing tests still PASS
 
 - [ ] **Step 8: Commit**

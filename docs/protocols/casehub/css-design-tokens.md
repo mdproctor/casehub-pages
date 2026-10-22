@@ -4,7 +4,7 @@ title: "CSS design tokens use --pages- prefix, OKLCH 12-step colour scales, and 
 type: rule
 scope: repo
 applies_to: "all CSS custom property declarations and token definitions in casehub-pages"
-cross_repo_consumers: ["casehubio/blocks-ui"]
+cross_repo_consumers: ["casehubio/agency-ui"]
 severity: important
 refs: []
 violation_hint: "CSS custom property does not use --pages- prefix or uses non-standard category/key naming"

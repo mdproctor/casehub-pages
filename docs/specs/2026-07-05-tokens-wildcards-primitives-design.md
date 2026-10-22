@@ -435,7 +435,7 @@ All new code follows version alignment protocol (PP-20260705-8fcb31): packages s
 | casehubio/casehub-pages#112 | blocks-ui migration from `--blocks-*` to `--pages-*` tokens |
 | casehubio/casehub-pages#118 | Establish TypeScript/pages protocols in garden |
 | casehubio/casehub-pages#119 | Trie-based TopicRegistry optimisation |
-| casehubio/blocks-ui#21 | blocks-ui migration to pages-* packages |
+| casehubio/agency-ui#21 | blocks-ui migration to pages-* packages |
 | casehubio/parent#349 | PLATFORM.md capability entry update |
 
 ---

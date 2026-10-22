@@ -366,9 +366,9 @@ All CaseHub web applications:
 
 **Integration path:** Each app includes `casehub-pages-*` Java modules in its POM, Quinoa extension for bundling, and a `src/main/webui/` workspace with TypeScript sources. Maven `initialize` phase unpacks the `casehub-pages-npm` SNAPSHOT JAR to `.casehub-packages/`.
 
-**Component reuse:** Apps import `@casehubio/blocks-ui-*` components and host them via `registerPanel()` + `hostPanel()` in their YAML dashboards.
+**Component reuse:** Apps import `@casehubio/agency-ui-*` components and host them via `registerPanel()` + `hostPanel()` in their YAML dashboards.
 
-**blocks-ui dependency:** `casehub-blocks-ui` depends on `@casehubio/pages-primitives` (a11y mixins), `@casehubio/pages-table` (data table component), and `@casehubio/pages-ui-components` (standalone form inputs).
+**blocks-ui dependency:** `casehub-agency-ui` depends on `@casehubio/pages-primitives` (a11y mixins), `@casehubio/pages-table` (data table component), and `@casehubio/pages-ui-components` (standalone form inputs).
 
 ---
 

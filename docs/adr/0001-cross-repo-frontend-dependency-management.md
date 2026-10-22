@@ -76,5 +76,5 @@ Three consumption tiers:
 ## Links
 
 * [#246 — publish frontend webapp as Maven SNAPSHOT artifact](https://github.com/casehubio/casehub-pages/issues/246)
-* Applies equally to casehubio/blocks-ui
+* Applies equally to casehubio/agency-ui
 * Consumer repos: aml, chat-app, claudony, clinical, devtown, drafthouse, iot, life, openclaw

@@ -56,7 +56,7 @@ All in `docs/protocols/casehub/` in the pages repo.
 
 **Scope:** `repo`
 **Applies to:** all CSS custom property declarations and token definitions in casehub-pages
-**Cross-repo consumers:** `casehubio/blocks-ui` (migrating to `--pages-*` tokens via blocks-ui#21)
+**Cross-repo consumers:** `casehubio/agency-ui` (migrating to `--pages-*` tokens via blocks-ui#21)
 
 Three rules in one file (tightly coupled — can't understand one without the others):
 

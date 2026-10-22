@@ -1,6 +1,6 @@
 # Data Table Cell Spanning Design Spec
 
-**Issue:** casehubio/blocks-ui#26
+**Issue:** casehubio/agency-ui#26
 **Date:** 2026-07-19
 **Status:** Approved
 **Implementation target:** `packages/pages-table/` in casehub-pages

@@ -4,7 +4,7 @@ title: "Gallery viewer data must come exclusively from real YAML — no mocks, n
 type: rule
 scope: repo
 applies_to: "pages-step-viewer gallery, blocks-ui pattern/eidos gallery — any Rendered/YAML tab section"
-cross_repo_consumers: ["casehubio/blocks-ui"]
+cross_repo_consumers: ["casehubio/agency-ui"]
 severity: important
 refs: []
 violation_hint: "Gallery callback transforms parsed YAML with hardcoded values (confidence: 0.9, score: 0.8, rounds: [...]) instead of passing parsed data directly"

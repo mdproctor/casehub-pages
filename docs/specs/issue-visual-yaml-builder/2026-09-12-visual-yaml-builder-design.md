@@ -954,7 +954,7 @@ archetype/
 - Backstage Template Builder — visual YAML authoring without hiding YAML
 - Google Blockly — block-based visual programming library
 - `engine/schema/src/main/resources/schema/CaseDefinition.yaml` — engine case schema
-- `blocks/agentic-yaml/src/main/java/io/casehub/blocks/agentic/yaml/spec/` — blocks pattern specs
+- `blocks/agentic-yaml/src/main/java/io/casehub/agency/agentic/yaml/spec/` — blocks pattern specs
 - `eidos/org-api/src/main/java/io/casehub/eidos/org/api/` — org structure types
 - `eidos/api/src/main/java/io/casehub/eidos/api/` — agent descriptor types
 - `eidos/examples/org-scenarios/src/test/resources/archetypes/` — org archetype templates

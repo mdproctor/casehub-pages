@@ -103,7 +103,7 @@ as all other decoration fields:
 ## References
 
 - casehubio/casehub-pages#404 — this issue
-- casehubio/blocks-ui#150 — trust score rendering (blocked by this)
+- casehubio/agency-ui#150 — trust score rendering (blocked by this)
 - packages/graph-core/src/model.ts:22 — NodeDecoration interface
 - packages/graph-renderer/src/stencil-wrapper.tsx:50-76 — DecorationBadge pattern
 - docs/protocols/casehub/graph-core-pure-data.md — pure data constraint (pills is a data type, compliant)

@@ -1176,8 +1176,8 @@ independently of the core DataSource abstraction (phases 1-4).
 
 - casehubio/casehub-pages#140 — this feature (scope note: §13)
 - casehubio/aml#101 — AML simulation scenarios (consumer)
-- casehubio/blocks-ui#37 — AML workbench (component migration)
-- casehubio/blocks-ui#35 — cross-repo migration tracking
+- casehubio/agency-ui#37 — AML workbench (component migration)
+- casehubio/agency-ui#35 — cross-repo migration tracking
 - `docs/protocols/casehub/dataset-contract.md` — DatasetContract protocol (needs update for DataSourceBinding)
 
 ---

@@ -15,7 +15,7 @@ but neither supports per-row detail panels — a full-width area below a
 single row showing supplementary information.
 
 The immediate consumer is `audit-trail-viewer` in `blocks-ui` (issue
-casehubio/blocks-ui#47), which needs to show attestations, payloads, and
+casehubio/agency-ui#47), which needs to show attestations, payloads, and
 trace IDs below each audit entry row. But this is a general-purpose table
 feature — order line items, log context, entity metadata all follow the
 same pattern.
@@ -354,7 +354,7 @@ accessibility testing:
 
 ## Consumer Example
 
-`audit-trail-viewer` in `blocks-ui` (casehubio/blocks-ui#47) would use
+`audit-trail-viewer` in `blocks-ui` (casehubio/agency-ui#47) would use
 this as:
 
 ```typescript

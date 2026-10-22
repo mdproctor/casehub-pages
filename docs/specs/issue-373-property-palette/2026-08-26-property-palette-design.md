@@ -581,4 +581,4 @@ packages/pages-property-palette/
 - `docs/protocols/casehub/web-component-strategy.md` — PP-20260705-c7687d (Lit conventions)
 - `docs/protocols/casehub/css-design-tokens.md` — PP-20260705-2ae91d (token naming)
 - casehubio/casehub-pages#373 — issue specification
-- casehubio/blocks-ui#136 — companion issue (domain-specific schemas)
+- casehubio/agency-ui#136 — companion issue (domain-specific schemas)

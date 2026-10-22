@@ -1106,5 +1106,5 @@ These emerged late in the brainstorming and aren't captured as separate issues:
 - casehub-platform `yaml-step-runtime` — Java ResolvedStep sealed interface (server-side execution)
 - casehub-eidos `AgentDescriptor.java` — full agent identity specification
 - casehub-engine `CaseDefinition.yaml` schema — case definition structure
-- casehub-blocks `agentic-yaml` — 8 pattern topologies (PatternSpec, PatternCompiler)
+- casehub-agency `agentic-yaml` — 8 pattern topologies (PatternSpec, PatternCompiler)
 - casehub-work `WorkItem.java` — 11-state work item lifecycle
