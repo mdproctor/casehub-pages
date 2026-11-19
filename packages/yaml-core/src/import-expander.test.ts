@@ -5,7 +5,7 @@ import type { CsvDataSource } from './csv-parser.js';
 
 describe('ImportExpander', () => {
   describe('expand', () => {
-    it('passes through imports without forEach or loop unchanged', () => {
+    it('passes through imports without for-each or loop unchanged', () => {
       const imports: YamlImport[] = [
         { module: 'dashboard', as: 'dash', parameters: { title: 'Main' } },
       ];
@@ -15,7 +15,7 @@ describe('ImportExpander', () => {
       expect(result[0]!.parameters).toEqual({ title: 'Main' });
     });
 
-    it('expands import with inline forEach', () => {
+    it('expands import with inline for-each', () => {
       const imports: YamlImport[] = [
         {
           module: 'regional',
@@ -42,7 +42,7 @@ describe('ImportExpander', () => {
       expect(result[0]!.module).toBeUndefined();
     });
 
-    it('expands import with group-ref forEach', () => {
+    it('expands import with group-ref for-each', () => {
       const imports: YamlImport[] = [
         {
           module: 'svc',
@@ -62,7 +62,7 @@ describe('ImportExpander', () => {
       expect(result[2]!.as).toBe('service.prod');
     });
 
-    it('strips forEach and loop from expanded imports', () => {
+    it('strips for-each and loop from expanded imports', () => {
       const imports: YamlImport[] = [
         {
           module: 'mod',
@@ -172,7 +172,7 @@ describe('ImportExpander', () => {
       expect(result[1]!.module).toBeUndefined();
     });
 
-    it('throws for forEach referencing unknown group', () => {
+    it('throws for for-each referencing unknown group', () => {
       const imports: YamlImport[] = [
         {
           module: 'mod',
@@ -195,7 +195,7 @@ describe('ImportExpander', () => {
       expect(result.map(r => r.as)).toEqual(['dash', 'login', 'footer']);
     });
 
-    it('expands action-based imports with forEach', () => {
+    it('expands action-based imports with for-each', () => {
       const imports: YamlImport[] = [
         {
           actions: 'flow',
@@ -209,7 +209,7 @@ describe('ImportExpander', () => {
       expect(result.map(r => r.as)).toEqual(['flow.us', 'flow.eu']);
     });
 
-    it('throws when forEach value contains dot separator', () => {
+    it('throws when for-each value contains dot separator', () => {
       const imports: YamlImport[] = [
         {
           module: 'mod',
@@ -324,7 +324,7 @@ describe('ImportExpander', () => {
       expect(result[1]!.as).toBe('replica.1');
     });
 
-    it('forEach takes precedence over loop when both present', () => {
+    it('for-each takes precedence over loop when both present', () => {
       const imports: YamlImport[] = [
         {
           module: 'mod',

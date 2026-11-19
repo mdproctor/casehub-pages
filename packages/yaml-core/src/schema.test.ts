@@ -46,16 +46,16 @@ describe('yaml-core schemas', () => {
     expect(importSchema.safeParse(imp).success).toBe(false);
   });
 
-  it('validates forEach as string', () => {
+  it('validates for-each as string', () => {
     expect(forEachSchema.safeParse('regional').success).toBe(true);
   });
 
-  it('validates forEach as inline object', () => {
+  it('validates for-each as inline object', () => {
     const fe = { as: 'item', in: ['a', 'b'] };
     expect(forEachSchema.safeParse(fe).success).toBe(true);
   });
 
-  it('rejects invalid forEach (number)', () => {
+  it('rejects invalid for-each (number)', () => {
     expect(forEachSchema.safeParse(42).success).toBe(false);
   });
 

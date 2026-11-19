@@ -9,7 +9,7 @@ describe('rewriteVariablePrefixes', () => {
     expect(rewriteVariablePrefixes('${env.HOST}', 'step', known, forEach)).toBe('${env.HOST}');
   });
 
-  it('adds each. prefix to forEach vars', () => {
+  it('adds each. prefix to for-each vars', () => {
     expect(rewriteVariablePrefixes('${item.name}', 'step', known, forEach)).toBe('${each.item.name}');
   });
 

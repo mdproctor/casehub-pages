@@ -30,7 +30,7 @@ describe('expand', () => {
     expect((pages[0]!['config'] as Record<string, unknown>)['env']).toBe('prod');
   });
 
-  it('expands forEach with inline values', () => {
+  it('expands for-each with inline values', () => {
     const input = {
       pages: [{
         name: 'dashboard',
@@ -111,7 +111,7 @@ describe('expand', () => {
     expect(result.diagnostics[0]!.category).toBe('unresolved-variable');
   });
 
-  it('resolves variables then forEach in correct order', () => {
+  it('resolves variables then for-each in correct order', () => {
     const input = {
       variables: { config: { regions: 'us,eu,ap' } },
       pages: [{
@@ -151,7 +151,7 @@ describe('expand', () => {
     expect(svc['env']).toBe('production');
   });
 
-  it('handles CSV data sources with forEach', () => {
+  it('handles CSV data sources with for-each', () => {
     const input = {
       data: {
         envs: { inline: 'name:STRING,port:INTEGER\nstaging,8080\nprod,443' },
@@ -176,7 +176,7 @@ describe('expand', () => {
     expect(comps['deploy-step.prod']).toBeDefined();
   });
 
-  it('handles when conditions on forEach elements', () => {
+  it('handles when conditions on for-each elements', () => {
     const input = {
       variables: { features: { showMetrics: 'true', showTable: 'false' } },
       pages: [{
@@ -193,7 +193,7 @@ describe('expand', () => {
     expect(comps['table']).toBeUndefined();
   });
 
-  it('expands imports with forEach before module expansion', () => {
+  it('expands imports with for-each before module expansion', () => {
     const input = {
       modules: {
         regional: {
@@ -252,7 +252,7 @@ describe('expand', () => {
     expect((svcs['w.1.task-runner'] as any).index).toBe('1');
   });
 
-  it('expands imports with forEach using iteration groups', () => {
+  it('expands imports with for-each using iteration groups', () => {
     const input = {
       iterations: {
         envs: { as: 'env', in: ['dev', 'prod'] },

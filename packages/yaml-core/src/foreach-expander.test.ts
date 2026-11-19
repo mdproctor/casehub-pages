@@ -26,7 +26,7 @@ const testAdapter: ForEachAdapter<TestElement> = {
 
 const resolver = new VariableResolver({}, new Set());
 
-describe('ForEachExpander — inline forEach', () => {
+describe('ForEachExpander — inline for-each', () => {
   it('stamps three copies', () => {
     const elements = new Map<string, TestElement>();
     elements.set('regional-source', {
@@ -103,7 +103,7 @@ describe('ForEachExpander — named groups', () => {
     ]);
   });
 
-  it('two forEach same group expand independently', () => {
+  it('two for-each same group expand independently', () => {
     const groups = { regional: { as: 'region', in: ['us-east', 'eu-west'] } };
     const elements = new Map<string, TestElement>();
     elements.set('source', {
@@ -234,7 +234,7 @@ describe('ForEachExpander — when conditions', () => {
     expect(result.excludedIds.has('node')).toBe(true);
   });
 
-  it('forEach when false excludes all copies', () => {
+  it('for-each when false excludes all copies', () => {
     const varResolver = new VariableResolver(
       { var: (name) => name === 'enable_sources' ? 'false' : undefined }, new Set());
     const elements = new Map<string, TestElement>();
@@ -249,7 +249,7 @@ describe('ForEachExpander — when conditions', () => {
     expect(result.excludedIds).toEqual(new Set(['source.us-east', 'source.eu-west']));
   });
 
-  it('forEach when per-copy selective exclusion', () => {
+  it('for-each when per-copy selective exclusion', () => {
     const elements = new Map<string, TestElement>();
     elements.set('source', {
       id: 'source', spec: { name: '${each.flag}' },
